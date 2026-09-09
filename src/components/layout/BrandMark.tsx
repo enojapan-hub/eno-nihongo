@@ -4,9 +4,9 @@ export function BrandMark({ size = "sm" }: { size?: "sm" | "lg" }) {
       <img
         src="/Logo%20eno%20nihongo%20icon.png"
         alt="ENO NIHONGO"
-        className={size === "lg" ? "size-16 rounded-2xl object-cover" : "size-12 rounded-xl object-cover"}
+        className={size === "lg" ? "size-[58px] rounded-2xl object-cover" : "size-[58px] rounded-xl object-cover"}
       />
-      <span className={size === "lg" ? "text-[26px] font-semibold tracking-tight" : "text-[19px] font-semibold tracking-tight"}>enonihongo</span>
+      <span className="text-[29px] font-semibold tracking-tight">enonihongo</span>
     </span>
   );
 }
