@@ -5,98 +5,10 @@ import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 
-function NotFoundComponent() {
-  return <div className="grid min-h-screen place-items-center bg-background px-4"><div className="max-w-md text-center"><h1 className="text-7xl font-bold">404</h1><h2 className="mt-4 text-xl font-semibold">Halaman tidak ditemukan</h2><p className="mt-2 text-sm text-muted-foreground">Halaman yang kamu cari tidak ada atau sudah dipindahkan.</p><Link to="/" className="mt-6 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Kembali ke beranda</Link></div></div>;
-}
+function NotFoundComponent() { return <div className="grid min-h-screen place-items-center bg-background px-4"><div className="max-w-md text-center"><h1 className="text-7xl font-bold">404</h1><h2 className="mt-4 text-xl font-semibold">Halaman tidak ditemukan</h2><p className="mt-2 text-sm text-muted-foreground">Halaman yang kamu cari tidak ada atau sudah dipindahkan.</p><Link to="/" className="mt-6 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Kembali ke beranda</Link></div></div>; }
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) { console.error(error); const detail = error?.message || String(error || "Unknown client error"); const moduleFailure = /importing a module script failed|failed to fetch dynamically imported module|error loading dynamically imported module|load failed/i.test(detail); useEffect(() => { if (!moduleFailure || typeof window === "undefined") return; const key = `eno-module-recovery:${window.location.pathname}`; if (window.sessionStorage.getItem(key) === "1") return; window.sessionStorage.setItem(key, "1"); const url = new URL(window.location.href); url.searchParams.set("_eno_build", Date.now().toString()); window.location.replace(url.toString()); }, [moduleFailure]); function retry() { if (typeof window !== "undefined" && moduleFailure) { window.sessionStorage.removeItem(`eno-module-recovery:${window.location.pathname}`); const url = new URL(window.location.href); url.searchParams.set("_eno_build", Date.now().toString()); window.location.replace(url.toString()); return; } reset(); } return <div className="grid min-h-screen place-items-center bg-background px-4"><div className="max-w-md text-center"><h1 className="text-xl font-semibold">Halaman ini gagal dimuat</h1><p className="mt-2 text-sm text-muted-foreground">{moduleFailure ? "Versi aplikasi di browser sudah lama. Memuat versi terbaru…" : "Terjadi kesalahan pada aplikasi."}</p><pre className="mt-4 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-white p-3 text-left text-xs text-red-700">{detail}</pre><div className="mt-6 flex justify-center gap-2"><button onClick={retry} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Muat versi terbaru</button><a href="/auth" className="rounded-lg border px-4 py-2 text-sm font-medium">Login ulang</a></div></div></div>; }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
-  const detail = error?.message || String(error || "Unknown client error");
-  const moduleFailure = /importing a module script failed|failed to fetch dynamically imported module|error loading dynamically imported module|load failed/i.test(detail);
-
-  useEffect(() => {
-    if (!moduleFailure || typeof window === "undefined") return;
-    const key = `eno-module-recovery:${window.location.pathname}`;
-    if (window.sessionStorage.getItem(key) === "1") return;
-    window.sessionStorage.setItem(key, "1");
-    const url = new URL(window.location.href);
-    url.searchParams.set("_eno_build", Date.now().toString());
-    window.location.replace(url.toString());
-  }, [moduleFailure]);
-
-  function retry() {
-    if (typeof window !== "undefined" && moduleFailure) {
-      window.sessionStorage.removeItem(`eno-module-recovery:${window.location.pathname}`);
-      const url = new URL(window.location.href);
-      url.searchParams.set("_eno_build", Date.now().toString());
-      window.location.replace(url.toString());
-      return;
-    }
-    reset();
-  }
-
-  return <div className="grid min-h-screen place-items-center bg-background px-4"><div className="max-w-md text-center"><h1 className="text-xl font-semibold">Halaman ini gagal dimuat</h1><p className="mt-2 text-sm text-muted-foreground">{moduleFailure ? "Versi aplikasi di browser sudah lama. Memuat versi terbaru…" : "Terjadi kesalahan pada aplikasi."}</p><pre className="mt-4 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-white p-3 text-left text-xs text-red-700">{detail}</pre><div className="mt-6 flex justify-center gap-2"><button onClick={retry} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Muat versi terbaru</button><a href="/auth" className="rounded-lg border px-4 py-2 text-sm font-medium">Login ulang</a></div></div></div>;
-}
-
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "enonihongo — Belajar Bahasa Jepang & Persiapan JLPT" },
-      { name: "description", content: "Platform belajar bahasa Jepang N5–N1: kanji, kotoba, bunpo, dokkai, listening, kuis, dan simulasi JLPT." },
-      { name: "author", content: "enonihongo" },
-      { property: "og:type", content: "website" },
-      { property: "og:title", content: "enonihongo — Belajar Bahasa Jepang & Persiapan JLPT" },
-      { property: "og:description", content: "Platform belajar bahasa Jepang N5–N1: kanji, kotoba, bunpo, dokkai, listening, kuis, dan simulasi JLPT." },
-      { property: "og:url", content: "https://enonihongo.vercel.app" },
-      { property: "og:image", content: "https://enonihongo.vercel.app/Logo%20eno%20nihongo%20icon.png" },
-      { property: "og:image:type", content: "image/png" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "enonihongo — Belajar Bahasa Jepang & Persiapan JLPT" },
-      { name: "twitter:description", content: "Platform belajar bahasa Jepang N5–N1: kanji, kotoba, bunpo, dokkai, listening, kuis, dan simulasi JLPT." },
-      { name: "twitter:image", content: "https://enonihongo.vercel.app/Logo%20eno%20nihongo%20icon.png" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-      { rel: "apple-touch-icon", href: "/Logo%20eno%20nihongo%20icon.png" },
-    ],
-  }),
-  shellComponent: RootShell,
-  component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
-});
-
-function RootShell({ children }: { children: ReactNode }) {
-  return <html lang="id"><head><HeadContent /></head><body>{children}<Scripts /></body></html>;
-}
-
-function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.removeItem(`eno-module-recovery:${window.location.pathname}`);
-    }
-    const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        queryClient.clear();
-        if (typeof window !== "undefined" && window.location.pathname !== "/auth") {
-          window.location.replace("/auth");
-        }
-        return;
-      }
-      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        void queryClient.invalidateQueries();
-      }
-    });
-    return () => data.subscription.unsubscribe();
-  }, [queryClient]);
-
-  return <QueryClientProvider client={queryClient}><Outlet /><Toaster position="top-center" richColors /></QueryClientProvider>;
-}
+const SHARE_LOGO = "https://enonihongo.vercel.app/enonihongo-logo-dark.png?v=20260909-new";
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({ head: () => ({ meta: [{ charSet: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" }, { title: "enonihongo — Belajar Bahasa Jepang & Persiapan JLPT" }, { name: "description", content: "Platform belajar bahasa Jepang N5–N1: kanji, kotoba, bunpo, dokkai, listening, kuis, dan simulasi JLPT." }, { name: "author", content: "enonihongo" }, { property: "og:type", content: "website" }, { property: "og:title", content: "enonihongo — Belajar Bahasa Jepang & Persiapan JLPT" }, { property: "og:description", content: "Platform belajar bahasa Jepang N5–N1: kanji, kotoba, bunpo, dokkai, listening, kuis, dan simulasi JLPT." }, { property: "og:url", content: "https://enonihongo.vercel.app" }, { property: "og:image", content: SHARE_LOGO }, { property: "og:image:type", content: "image/png" }, { name: "twitter:card", content: "summary" }, { name: "twitter:title", content: "enonihongo — Belajar Bahasa Jepang & Persiapan JLPT" }, { name: "twitter:description", content: "Platform belajar bahasa Jepang N5–N1: kanji, kotoba, bunpo, dokkai, listening, kuis, dan simulasi JLPT." }, { name: "twitter:image", content: SHARE_LOGO }], links: [{ rel: "stylesheet", href: appCss }, { rel: "preconnect", href: "https://fonts.googleapis.com" }, { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" }, { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" }, { rel: "icon", href: "/enonihongo-logo-dark.png?v=20260909-new", type: "image/png" }, { rel: "apple-touch-icon", href: "/enonihongo-logo-dark.png?v=20260909-new" }] }), shellComponent: RootShell, component: RootComponent, notFoundComponent: NotFoundComponent, errorComponent: ErrorComponent });
+function RootShell({ children }: { children: ReactNode }) { return <html lang="id"><head><HeadContent /></head><body>{children}<Scripts /></body></html>; }
+function RootComponent() { const { queryClient } = Route.useRouteContext(); useEffect(() => { if (typeof window !== "undefined") window.sessionStorage.removeItem(`eno-module-recovery:${window.location.pathname}`); const { data } = supabase.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT") { queryClient.clear(); if (typeof window !== "undefined" && window.location.pathname !== "/auth") window.location.replace("/auth"); return; } if (event === "SIGNED_IN" || event === "USER_UPDATED") void queryClient.invalidateQueries(); }); return () => data.subscription.unsubscribe(); }, [queryClient]); return <QueryClientProvider client={queryClient}><Outlet /><Toaster position="top-center" richColors /></QueryClientProvider>; }
