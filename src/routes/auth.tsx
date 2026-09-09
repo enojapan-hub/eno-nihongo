@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ArrowRight, BookOpen, Loader2, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, Loader2, Sparkles, BookOpen, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/layout/BrandMark";
@@ -10,39 +10,23 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "enonihongo — Belajar Bahasa Jepang" },
-      {
-        name: "description",
-        content:
-          "Belajar bahasa Jepang dengan cara yang lebih terarah. Kuasai Kanji, Kotoba, Bunpou, Dokkai, Choukai, dan persiapkan JLPT N5–N1 bersama enonihongo.",
-      },
+      { name: "description", content: "Belajar bahasa Jepang dengan cara yang lebih terarah. Kuasai Kanji, Kotoba, Bunpou, Dokkai, Choukai, dan persiapkan JLPT N5–N1 bersama enonihongo." },
       { property: "og:title", content: "enonihongo — Belajar Bahasa Jepang" },
-      {
-        property: "og:description",
-        content: "Mulai perjalanan bahasa Jepangmu bersama enonihongo dan capai target JLPT-mu.",
-      },
+      { property: "og:description", content: "Mulai perjalanan bahasa Jepangmu bersama enonihongo dan capai target JLPT-mu." },
     ],
   }),
   component: AuthPage,
 });
 
 const CANONICAL_ORIGIN = "https://enonihongo.vercel.app";
-
-function getAuthRedirectUrl() {
-  return `${CANONICAL_ORIGIN}/`;
-}
+function getAuthRedirectUrl() { return `${CANONICAL_ORIGIN}/`; }
 
 async function continueAfterAuth() {
   const { data, error } = await supabase.auth.getSession();
   if (error) throw error;
   const user = data.session?.user;
   if (!user) throw new Error("Sesi login tidak ditemukan.");
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", user.id)
-    .maybeSingle();
-
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("onboarding_completed").eq("id", user.id).maybeSingle();
   const metadataCompleted = user.user_metadata?.["onboarding_completed"] === true;
   const completed = profileError ? metadataCompleted : profile?.onboarding_completed === true;
   window.location.replace(completed ? "/dashboard" : "/onboarding");
@@ -55,134 +39,64 @@ function AuthPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.origin !== CANONICAL_ORIGIN) {
-      window.location.replace(
-        `${CANONICAL_ORIGIN}${window.location.pathname}${window.location.search}${window.location.hash}`,
-      );
+      window.location.replace(`${CANONICAL_ORIGIN}${window.location.pathname}${window.location.search}${window.location.hash}`);
       return;
     }
-
     let active = true;
-    const timeout = window.setTimeout(() => {
-      if (active) setChecking(false);
-    }, 5000);
-
+    const timeout = window.setTimeout(() => { if (active) setChecking(false); }, 5000);
     void supabase.auth.getSession().then(async ({ data, error: sessionError }) => {
       if (!active) return;
-      if (sessionError) {
-        setError(sessionError.message);
-        setChecking(false);
-        return;
-      }
-      if (!data.session) {
-        setChecking(false);
-        return;
-      }
-      try {
-        await continueAfterAuth();
-      } catch (caught) {
-        if (active) {
-          setError(caught instanceof Error ? caught.message : "Sesi tidak dapat diverifikasi.");
-          setChecking(false);
-        }
-      }
+      if (sessionError) { setError(sessionError.message); setChecking(false); return; }
+      if (!data.session) { setChecking(false); return; }
+      try { await continueAfterAuth(); }
+      catch (caught) { if (active) { setError(caught instanceof Error ? caught.message : "Sesi tidak dapat diverifikasi."); setChecking(false); } }
     });
-
-    return () => {
-      active = false;
-      window.clearTimeout(timeout);
-    };
+    return () => { active = false; window.clearTimeout(timeout); };
   }, []);
 
   async function signInWithGoogle() {
     if (loading) return;
-    setError(null);
-    setLoading(true);
+    setError(null); setLoading(true);
     try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: getAuthRedirectUrl() },
-      });
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: getAuthRedirectUrl() } });
       if (oauthError) throw oauthError;
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "Gagal masuk dengan Google.";
-      setError(message);
-      toast.error(message);
-      setLoading(false);
+      setError(message); toast.error(message); setLoading(false);
     }
   }
 
-  if (checking) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-[#f7f7f4]">
-        <Loader2 aria-label="Memuat" className="size-5 animate-spin text-[#1f6f4a]" />
-      </div>
-    );
-  }
+  if (checking) return <div className="grid min-h-screen place-items-center bg-[#f7f7f4]"><Loader2 aria-label="Memuat" className="size-5 animate-spin text-[#1f6f4a]" /></div>;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f7f4] px-0 py-0 sm:px-5 sm:py-4">
       <section className="relative flex min-h-screen w-full max-w-[390px] flex-col overflow-hidden bg-white px-6 pb-7 pt-12 shadow-xl shadow-[#1f6f4a]/15 sm:min-h-[720px] sm:rounded-[34px] sm:px-7 sm:pt-14">
         <header className="text-center">
-          <Link to="/" aria-label="enonihongo" className="inline-flex flex-col items-center gap-2">
-            <BrandMark size="md" />
-            <span className="text-[28px] font-black tracking-[-0.06em] text-[#1f6f4a]">enonihongo</span>
+          <Link to="/" aria-label="enonihongo" className="inline-flex items-center">
+            <BrandMark size="lg" />
           </Link>
         </header>
 
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="mb-5 grid size-20 place-items-center rounded-[26px] bg-[#eef5f0] text-[#1f6f4a] shadow-sm">
-            <BookOpen className="size-9" strokeWidth={1.7} />
-          </div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#1f6f4a]">
-            Your Japanese Journey Starts Here
-          </p>
-          <h1 className="mt-3 max-w-[330px] text-[30px] font-black leading-[1.08] tracking-[-0.045em] text-[#263b31]">
-            Belajar bahasa Jepang,
-            <br />
-            lebih terarah dan menyenangkan.
-          </h1>
-          <p className="mt-4 max-w-[310px] text-[13px] leading-5 text-[#63756d]">
-            Bangun kemampuanmu dari N5 sampai N1. Pelajari Kanji, Kotoba, Bunpou, Dokkai, dan Choukai sambil melihat progresmu setiap hari.
-          </p>
-
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#1f6f4a]">Your Japanese Journey Starts Here</p>
+          <h1 className="mt-3 max-w-[330px] text-[30px] font-black leading-[1.08] tracking-[-0.045em] text-[#263b31]">Belajar bahasa Jepang,<br />lebih terarah dan menyenangkan.</h1>
+          <p className="mt-4 max-w-[310px] text-[13px] leading-5 text-[#63756d]">Bangun kemampuanmu dari N5 sampai N1. Pelajari Kanji, Kotoba, Bunpou, Dokkai, dan Choukai sambil melihat progresmu setiap hari.</p>
           <div className="mt-7 grid w-full max-w-[320px] grid-cols-3 gap-2">
-            <div className="rounded-2xl bg-[#f5f8f6] px-2 py-3">
-              <Sparkles className="mx-auto size-4 text-[#1f6f4a]" />
-              <p className="mt-1.5 text-[10px] font-semibold text-[#30483c]">Belajar</p>
-            </div>
-            <div className="rounded-2xl bg-[#f5f8f6] px-2 py-3">
-              <BookOpen className="mx-auto size-4 text-[#1f6f4a]" />
-              <p className="mt-1.5 text-[10px] font-semibold text-[#30483c]">Latihan</p>
-            </div>
-            <div className="rounded-2xl bg-[#f5f8f6] px-2 py-3">
-              <Trophy className="mx-auto size-4 text-[#1f6f4a]" />
-              <p className="mt-1.5 text-[10px] font-semibold text-[#30483c]">JLPT</p>
-            </div>
+            <div className="rounded-2xl bg-[#f5f8f6] px-2 py-3"><Sparkles className="mx-auto size-4 text-[#1f6f4a]" /><p className="mt-1.5 text-[10px] font-semibold text-[#30483c]">Belajar</p></div>
+            <div className="rounded-2xl bg-[#f5f8f6] px-2 py-3"><BookOpen className="mx-auto size-4 text-[#1f6f4a]" /><p className="mt-1.5 text-[10px] font-semibold text-[#30483c]">Latihan</p></div>
+            <div className="rounded-2xl bg-[#f5f8f6] px-2 py-3"><Trophy className="mx-auto size-4 text-[#1f6f4a]" /><p className="mt-1.5 text-[10px] font-semibold text-[#30483c]">JLPT</p></div>
           </div>
         </div>
 
         <div className="space-y-3">
-          {error && (
-            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] leading-4 text-red-700">
-              {error}
-            </p>
-          )}
-          <Button
-            type="button"
-            onClick={signInWithGoogle}
-            disabled={loading}
-            className="h-12 w-full rounded-full bg-[#1f6f4a] text-sm font-bold text-white shadow-lg shadow-[#1f6f4a]/20 hover:bg-[#164c35]"
-          >
+          {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] leading-4 text-red-700">{error}</p>}
+          <Button type="button" onClick={signInWithGoogle} disabled={loading} className="h-12 w-full rounded-full bg-[#1f6f4a] text-sm font-bold text-white shadow-lg shadow-[#1f6f4a]/20 hover:bg-[#164c35]">
             {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <span className="mr-2 grid size-5 place-items-center rounded-full bg-white/15 text-[11px] font-black">G</span>}
             {loading ? "Menghubungkan Google…" : "Lanjutkan dengan Google"}
             {!loading && <ArrowRight className="ml-1 size-4" />}
           </Button>
-          <p className="text-center text-[10px] leading-4 text-[#7f9189]">
-            Satu akun Google untuk menyimpan progres, target belajar, dan hasil latihanmu.
-          </p>
-          <p className="pt-1 text-center text-[9px] leading-4 text-[#a0afa9]">
-            © {new Date().getFullYear()} enonihongo · Belajar Jepang bersama-sama
-          </p>
+          <p className="text-center text-[10px] leading-4 text-[#7f9189]">Satu akun Google untuk menyimpan progres, target belajar, dan hasil latihanmu.</p>
+          <p className="pt-1 text-center text-[9px] leading-4 text-[#a0afa9]">© {new Date().getFullYear()} enonihongo · Belajar Jepang bersama-sama</p>
         </div>
       </section>
     </main>
