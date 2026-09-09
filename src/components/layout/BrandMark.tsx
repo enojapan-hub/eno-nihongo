@@ -6,7 +6,7 @@ export function BrandMark({ size = "sm" }: { size?: "sm" | "lg" }) {
         alt="ENO NIHONGO"
         className={size === "lg" ? "size-[58px] rounded-2xl object-cover" : "size-[58px] rounded-xl object-cover"}
       />
-      <span className="text-[29px] font-semibold tracking-tight">enonihongo</span>
+      <span className="text-[25px] font-semibold tracking-tight">enonihongo</span>
     </span>
   );
 }
