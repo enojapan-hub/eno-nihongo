@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { fetchTargetLevel } from "@/lib/target-level";
@@ -14,6 +14,7 @@ function KotobaPage(){
  const {data:targetLevel,isLoading:levelLoading,error:levelError}=useQuery({queryKey:["target-level"],queryFn:fetchTargetLevel,retry:1,staleTime:300000});
  const level:Level=targetLevel??"N5",ready=!levelLoading&&Boolean(targetLevel);
  const [page,setPage]=useState(0),[selected,setSelected]=useState<VocabRow|null>(null);
+ useEffect(()=>{setPage(0);setSelected(null)},[level]);
  const {data:total=0}=useQuery({queryKey:["vocab-count",level],queryFn:()=>fetchVocabCount(level),enabled:ready,staleTime:600000});
  const {data:rows=[],isLoading,error}=useQuery({queryKey:["vocab-page",level,page],queryFn:()=>fetchVocabPage(level,page*VOCAB_PAGE_SIZE,VOCAB_PAGE_SIZE),enabled:ready,staleTime:600000,placeholderData:p=>p});
  const {data:senses=[]}=useQuery({queryKey:["vocab-senses",selected?.id],queryFn:()=>fetchVocabSenses(selected!.id),enabled:Boolean(selected?.id),staleTime:600000});
