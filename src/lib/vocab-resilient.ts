@@ -23,5 +23,9 @@ export async function fetchVocabSenses(vocabularyId:string){
  return res.data??[];
 }
 
-// Kompatibilitas untuk pemanggil lama: hanya halaman pertama, bukan ribuan record sekaligus.
-export async function fetchVocabListResilient(level:Level){return fetchVocabPage(level,0,VOCAB_PAGE_SIZE);}
+// Kompatibilitas untuk pemanggil lama: memuat bertahap agar tidak mengirim ribuan ID dalam satu query.
+export async function fetchVocabListResilient(level:Level){
+ const total=await fetchVocabCount(level),rows:any[]=[];
+ for(let offset=0;offset<total;offset+=200)rows.push(...await fetchVocabPage(level,offset,200));
+ return rows;
+}
