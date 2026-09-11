@@ -38,7 +38,7 @@ type PlannerClient = {
   ): Promise<PlannerRpcResult>;
   rpc(
     name: "generate_daily_study_tasks" | "sync_daily_study_task_progress",
-    params: { p_study_date: string },
+    params: Record<string, never>,
   ): Promise<PlannerRpcResult>;
 };
 
@@ -125,14 +125,10 @@ function EditProfilePage() {
       });
       if (planError) throw new Error(`Rencana belajar gagal dibuat: ${planError.message}`);
 
-      const { error: taskError } = await plannerClient.rpc("generate_daily_study_tasks", {
-        p_study_date: targetDate,
-      });
+      const { error: taskError } = await plannerClient.rpc("generate_daily_study_tasks", {});
       if (taskError) throw new Error(`Target harian gagal dibuat: ${taskError.message}`);
 
-      const { error: syncError } = await plannerClient.rpc("sync_daily_study_task_progress", {
-        p_study_date: targetDate,
-      });
+      const { error: syncError } = await plannerClient.rpc("sync_daily_study_task_progress", {});
       if (syncError) throw new Error(`Progres target gagal disinkronkan: ${syncError.message}`);
 
       const { error: metaError } = await supabase.auth.updateUser({
