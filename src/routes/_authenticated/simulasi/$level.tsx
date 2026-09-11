@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -103,6 +103,45 @@ function SimulationRunner() {
   const current = questions[index];
   const selected = current ? answers[current.id] : undefined;
 
+  function stopListening() {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+  }
+
+  async function finishSection() {
+    if (sectionFinished || finished || !questions.length) return;
+    setSectionFinished(true);
+    stopListening();
+    if (sectionIndex < levelSections.length - 1) return;
+
+    setFinished(true);
+    setSaving(true);
+    try {
+      const allQuestions = Object.values({ ...questionSets, [section.key]: questions }).flat();
+      const correct = allQuestions.reduce(
+        (n, q) => n + (answers[q.id] === q.correct_index ? 1 : 0),
+        0,
+      );
+      const persistable = allQuestions.filter((q) => q.persistAnswer);
+      await saveAttempt({
+        level,
+        skill: null,
+        total: allQuestions.length,
+        correct,
+        durationSeconds: levelSections.reduce((n, s) => n + s.minutes * 60, 0) - seconds,
+        answers: persistable.map((q) => ({
+          questionId: q.id,
+          selectedIndex: answers[q.id] ?? -1,
+          isCorrect: answers[q.id] === q.correct_index,
+        })),
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const finishSectionOnTimeout = useEffectEvent(finishSection);
+
   useEffect(() => {
     if (!query.data) return;
     setQuestionSets((old) => ({ ...old, [section.key]: query.data }));
@@ -119,7 +158,7 @@ function SimulationRunner() {
 
   useEffect(() => {
     if (started && seconds === 0 && questions.length && !sectionFinished && !finished) {
-      void finishSection();
+      void finishSectionOnTimeout();
     }
   }, [seconds, started, questions.length, sectionFinished, finished]);
 
@@ -161,43 +200,6 @@ function SimulationRunner() {
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     window.speechSynthesis?.speak(utterance);
-  }
-
-  function stopListening() {
-    window.speechSynthesis?.cancel();
-    setSpeaking(false);
-  }
-
-  async function finishSection() {
-    if (sectionFinished || finished || !questions.length) return;
-    setSectionFinished(true);
-    stopListening();
-    if (sectionIndex < levelSections.length - 1) return;
-
-    setFinished(true);
-    setSaving(true);
-    try {
-      const allQuestions = Object.values({ ...questionSets, [section.key]: questions }).flat();
-      const correct = allQuestions.reduce(
-        (n, q) => n + (answers[q.id] === q.correct_index ? 1 : 0),
-        0,
-      );
-      const persistable = allQuestions.filter((q) => q.persistAnswer);
-      await saveAttempt({
-        level,
-        skill: null,
-        total: allQuestions.length,
-        correct,
-        durationSeconds: levelSections.reduce((n, s) => n + s.minutes * 60, 0) - seconds,
-        answers: persistable.map((q) => ({
-          questionId: q.id,
-          selectedIndex: answers[q.id] ?? -1,
-          isCorrect: answers[q.id] === q.correct_index,
-        })),
-      });
-    } finally {
-      setSaving(false);
-    }
   }
 
   function nextSection() {
