@@ -33,7 +33,8 @@ function ReferralPage() {
   const [copied, setCopied] = useState(false);
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
-  const profile = data?.profile as (typeof data.profile & ReferralProfile) | undefined;
+  type AccountProfile = NonNullable<typeof data>["profile"];
+  const profile = data?.profile as (AccountProfile & ReferralProfile) | undefined;
   const points = profile?.referral_points ?? 0;
   const plan = profile?.plan ?? "free";
   const premiumUntil = profile?.premium_until;
