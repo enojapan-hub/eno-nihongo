@@ -21,6 +21,10 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // React Hooks 6 adds compiler-oriented diagnostics to the recommended set.
+      // Existing state synchronization effects remain visible as warnings while
+      // correctness rules (rules-of-hooks/exhaustive-deps) stay blocking.
+      "react-hooks/set-state-in-effect": "warn",
       "no-restricted-imports": [
         "error",
         {
