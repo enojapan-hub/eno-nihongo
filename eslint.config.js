@@ -53,4 +53,12 @@ export default tseslint.config(
       "prefer-const": "warn",
     },
   },
+  {
+    // Shared UI primitives intentionally co-export component helpers such as
+    // variants and hooks. They are library modules, not route-level refresh boundaries.
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 );
