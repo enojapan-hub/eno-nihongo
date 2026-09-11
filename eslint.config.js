@@ -21,10 +21,6 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // React Hooks 6 adds compiler-oriented diagnostics to the recommended set.
-      // Existing state synchronization effects remain visible as warnings while
-      // correctness rules (rules-of-hooks/exhaustive-deps) stay blocking.
-      "react-hooks/set-state-in-effect": "warn",
       "no-restricted-imports": [
         "error",
         {
@@ -48,8 +44,6 @@ export default tseslint.config(
       "react-refresh": reactRefresh,
     },
     rules: {
-      // Existing cleanup debt remains visible without masking syntax, invalid
-      // hooks usage, restricted server/client imports, or build failures.
       "@typescript-eslint/no-explicit-any": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "prettier/prettier": "warn",
@@ -58,8 +52,6 @@ export default tseslint.config(
     },
   },
   {
-    // Shared UI primitives intentionally co-export component helpers such as
-    // variants and hooks. They are library modules, not route-level refresh boundaries.
     files: ["src/components/ui/**/*.{ts,tsx}"],
     rules: {
       "react-refresh/only-export-components": "off",
