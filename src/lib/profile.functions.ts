@@ -38,7 +38,7 @@ async function readMemberData(context: AuthContext) {
       context.supabase
         .from("profiles")
         .select(
-          "id,display_name,avatar_url,ui_language,target_level,country,onboarding_completed,plan,premium_until,created_at,role",
+          "id,display_name,avatar_url,ui_language,target_level,country,onboarding_completed,plan,premium_until,referral_points,referral_code,created_at,role",
         )
         .eq("id", context.userId)
         .maybeSingle(),
