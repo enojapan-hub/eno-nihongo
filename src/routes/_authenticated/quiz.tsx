@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpenCheck, Brain, Languages, ListChecks, Shuffle, Sparkles, Type } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -6,8 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fetchTargetLevel } from "@/lib/target-level";
 
-export const Route = createFileRoute("/_authenticated/quiz")({ head: () => ({ meta: [{ title: "Quiz — ENO NIHONGO" }] }), component: QuizPage });
+export const Route = createFileRoute("/_authenticated/quiz")({ head: () => ({ meta: [{ title: "Quiz — ENO NIHONGO" }] }), component: QuizRoute });
 const skills=[{key:"kanji",label:"Kanji",icon:Type,description:"Arti dan pemahaman kanji."},{key:"vocabulary",label:"Kotoba",icon:Languages,description:"Arti dan penggunaan kosakata."},{key:"grammar",label:"Bunpou",icon:BookOpenCheck,description:"Pola dan penggunaan tata bahasa."},{key:"reading",label:"Dokkai",icon:ListChecks,description:"Pemahaman bacaan."},{key:"listening",label:"Choukai",icon:Brain,description:"Pemahaman audio."}] as const;
+
+function QuizRoute(){
+ const pathname=useRouterState({select:s=>s.location.pathname});
+ const isQuizRoot=pathname.replace(/\/+$/,"")==="/quiz";
+ return isQuizRoot?<QuizPage/>:<Outlet/>;
+}
+
 function QuizPage(){
  const target=useQuery({queryKey:["target-level"],queryFn:fetchTargetLevel,retry:1}); const level=target.data??"N5";
  const openPractice=(skill?:(typeof skills)[number]["key"])=>{const suffix=skill?`-${skill}`:"";window.location.assign(`/quiz/latihan-${level.toLowerCase()}${suffix}`)};
