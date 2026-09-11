@@ -25,8 +25,7 @@ export type AdaptivePlan = {
 const emptyPlan: AdaptivePlan = { active: false, targetLevel: null, targetDate: null, daysLeft: null, tasks: [], target: 0, completed: 0 };
 
 async function enrichTasksWithSuggestions(userId:string, level:string, tasks:AdaptiveTask[]):Promise<AdaptiveTask[]> {
-  const client=supabase as any;
-  const {data:progress}=await client.from("user_item_progress").select("item_type,item_id,status,due_at").eq("user_id",userId).eq("level",level);
+  const {data:progress}=await supabase.from("user_item_progress").select("item_type,item_id,status,due_at").eq("user_id",userId).eq("level",level);
   const rows=(progress??[]) as Array<{item_type:string;item_id:string;status:string;due_at:string|null}>;
   const mastered=(type:string)=>new Set(rows.filter(r=>r.item_type===type&&r.status==="mastered").map(r=>r.item_id));
   const known=(type:string)=>new Set(rows.filter(r=>r.item_type===type).map(r=>r.item_id));
@@ -37,32 +36,32 @@ async function enrichTasksWithSuggestions(userId:string, level:string, tasks:Ada
     try{
       if(task.task_type==="new_kanji"){
         const skip=known("kanji");
-        const {data}=await client.from("kanji").select("id,character,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.character??"Kanji"),subtitle:x.meaning_id?String(x.meaning_id):null}));
+        const {data}=await supabase.from("kanji").select("id,character,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
+        const suggestions=(data??[]).filter(x=>!skip.has(String(x.id))).slice(0,wanted).map(x=>({id:String(x.id),label:String(x.character??"Kanji"),subtitle:x.meaning_id?String(x.meaning_id):null}));
         return {...task,suggestions};
       }
       if(task.task_type==="new_vocabulary"){
         const skip=known("vocabulary");
-        const {data}=await client.from("vocabulary").select("id,term,reading,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.term??"Kosakata"),subtitle:[x.reading,x.meaning_id].filter(Boolean).map(String).join(" · ")}));
+        const {data}=await supabase.from("vocabulary").select("id,term,reading,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
+        const suggestions=(data??[]).filter(x=>!skip.has(String(x.id))).slice(0,wanted).map(x=>({id:String(x.id),label:String(x.term??"Kosakata"),subtitle:[x.reading,x.meaning_id].filter(Boolean).map(String).join(" · ")}));
         return {...task,suggestions};
       }
       if(task.task_type==="new_grammar"){
         const skip=known("grammar");
-        const {data}=await client.from("grammar_points").select("id,pattern,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.pattern??"Bunpou"),subtitle:x.meaning_id?String(x.meaning_id):null}));
+        const {data}=await supabase.from("grammar_points").select("id,pattern,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
+        const suggestions=(data??[]).filter(x=>!skip.has(String(x.id))).slice(0,wanted).map(x=>({id:String(x.id),label:String(x.pattern??"Bunpou"),subtitle:x.meaning_id?String(x.meaning_id):null}));
         return {...task,suggestions};
       }
       if(task.task_type==="reading"){
         const skip=mastered("reading");
-        const {data}=await client.from("reading_passages").select("id,title").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.title??"Dokkai")}));
+        const {data}=await supabase.from("reading_passages").select("id,title").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);
+        const suggestions=(data??[]).filter(x=>!skip.has(String(x.id))).slice(0,wanted).map(x=>({id:String(x.id),label:String(x.title??"Dokkai")}));
         return {...task,suggestions};
       }
       if(task.task_type==="listening"){
         const skip=mastered("listening");
-        const {data}=await client.from("listening_items").select("id,title,duration_seconds").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.title??"Choukai"),subtitle:x.duration_seconds?`${Math.ceil(Number(x.duration_seconds)/60)} menit`:null}));
+        const {data}=await supabase.from("listening_items").select("id,title,duration_seconds").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);
+        const suggestions=(data??[]).filter(x=>!skip.has(String(x.id))).slice(0,wanted).map(x=>({id:String(x.id),label:String(x.title??"Choukai"),subtitle:x.duration_seconds?`${Math.ceil(Number(x.duration_seconds)/60)} menit`:null}));
         return {...task,suggestions};
       }
       if(task.task_type==="review"){
@@ -70,13 +69,13 @@ async function enrichTasksWithSuggestions(userId:string, level:string, tasks:Ada
         const suggestions:AdaptiveSuggestion[]=[];
         for(const r of due){
           if(r.item_type==="kanji"){
-            const {data}=await client.from("kanji").select("character,meaning_id").eq("id",r.item_id).maybeSingle();
+            const {data}=await supabase.from("kanji").select("character,meaning_id").eq("id",r.item_id).maybeSingle();
             if(data)suggestions.push({id:r.item_id,label:String(data.character??"Kanji"),subtitle:data.meaning_id?String(data.meaning_id):"Review Kanji"});
           } else if(r.item_type==="vocabulary"){
-            const {data}=await client.from("vocabulary").select("term,meaning_id").eq("id",r.item_id).maybeSingle();
+            const {data}=await supabase.from("vocabulary").select("term,meaning_id").eq("id",r.item_id).maybeSingle();
             if(data)suggestions.push({id:r.item_id,label:String(data.term??"Kosakata"),subtitle:data.meaning_id?String(data.meaning_id):"Review Kosakata"});
           } else if(r.item_type==="grammar"){
-            const {data}=await client.from("grammar_points").select("pattern,meaning_id").eq("id",r.item_id).maybeSingle();
+            const {data}=await supabase.from("grammar_points").select("pattern,meaning_id").eq("id",r.item_id).maybeSingle();
             if(data)suggestions.push({id:r.item_id,label:String(data.pattern??"Bunpou"),subtitle:data.meaning_id?String(data.meaning_id):"Review Bunpou"});
           }
         }
@@ -91,16 +90,15 @@ export async function fetchAdaptivePlan(): Promise<AdaptivePlan> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) return emptyPlan;
 
-  const client = supabase as any;
-  await client.rpc("ensure_active_study_plan", {});
-  await client.rpc("generate_daily_study_tasks", {});
-  await client.rpc("sync_daily_study_task_progress", {});
+  await supabase.rpc("ensure_active_study_plan", {});
+  await supabase.rpc("generate_daily_study_tasks", {});
+  await supabase.rpc("sync_daily_study_task_progress", {});
 
   const now = new Date();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
   const [{ data: plans }, { data: tasks }] = await Promise.all([
-    client.from("study_plans").select("id,target_level,target_date,status").eq("user_id", auth.user.id).eq("status", "active").order("created_at", { ascending: false }).limit(1),
-    client.from("daily_study_tasks").select("id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id", auth.user.id).eq("study_date", today).order("priority", { ascending: false }),
+    supabase.from("study_plans").select("id,target_level,target_date,status").eq("user_id", auth.user.id).eq("status", "active").order("created_at", { ascending: false }).limit(1),
+    supabase.from("daily_study_tasks").select("id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id", auth.user.id).eq("study_date", today).order("priority", { ascending: false }),
   ]);
 
   const plan = plans?.[0];
