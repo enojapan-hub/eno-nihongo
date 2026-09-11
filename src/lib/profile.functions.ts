@@ -1,6 +1,8 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 const settingsSchema = z.object({
   display_name: z.string().trim().min(2).max(60),
@@ -24,38 +26,24 @@ const DEFAULT_SETTINGS = {
   daily_reminder: false,
 };
 
-type SupabaseError = { message: string } | null;
-type QueryResult<T> = { data: T | null; error: SupabaseError };
-type QueryBuilder<T> = {
-  select: (columns: string) => QueryBuilder<T>;
-  eq: (column: string, value: string) => QueryBuilder<T>;
-  maybeSingle: () => Promise<QueryResult<T>>;
-  update: (values: Record<string, unknown>) => QueryBuilder<T>;
-  upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<QueryResult<unknown>>;
+type AuthContext = {
+  supabase: SupabaseClient<Database>;
+  userId: string;
 };
-type SupabaseLike = {
-  from: <T = Record<string, unknown>>(table: string) => QueryBuilder<T>;
-};
-type AuthContext = { supabase: SupabaseLike; userId: string };
-
-type ProfileRow = {
-  role?: string | null;
-  [key: string]: unknown;
-};
-type SettingsRow = Partial<typeof DEFAULT_SETTINGS>;
+type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 async function readMemberData(context: AuthContext) {
   const [{ data: profile, error: profileError }, { data: settings, error: settingsError }] =
     await Promise.all([
       context.supabase
-        .from<ProfileRow>("profiles")
+        .from("profiles")
         .select(
           "id,display_name,avatar_url,ui_language,target_level,country,onboarding_completed,plan,premium_until,created_at,role",
         )
         .eq("id", context.userId)
         .maybeSingle(),
       context.supabase
-        .from<SettingsRow>("user_settings")
+        .from("user_settings")
         .select(
           "daily_kanji_target,daily_vocab_target,daily_grammar_target,furigana_enabled,daily_reminder",
         )
@@ -71,7 +59,7 @@ async function readMemberData(context: AuthContext) {
 export const getMyAccount = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { profile, settings } = await readMemberData(context as AuthContext);
+    const { profile, settings } = await readMemberData(context);
     if (!profile) throw new Error("Profil akun belum tersedia.");
     return { profile, settings, roles: profile.role ? [profile.role] : ["student"] };
   });
@@ -80,11 +68,10 @@ export const updateMyAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => settingsSchema.parse(data))
   .handler(async ({ context, data }) => {
-    const authContext = context as AuthContext;
-    const { profile } = await readMemberData(authContext);
+    const { profile } = await readMemberData(context);
     if (!profile) throw new Error("Profil akun belum tersedia.");
 
-    const update: Record<string, unknown> = {
+    const update: ProfileUpdate = {
       display_name: data.display_name,
       target_level: data.target_level,
       ui_language: data.ui_language,
@@ -94,26 +81,23 @@ export const updateMyAccount = createServerFn({ method: "POST" })
       update.onboarding_completed = true;
     }
 
-    const { error: profileError } = await authContext.supabase
+    const { error: profileError } = await context.supabase
       .from("profiles")
       .update(update)
-      .eq("id", authContext.userId)
-      .maybeSingle();
+      .eq("id", context.userId);
     if (profileError) throw new Error(`Profil gagal disimpan: ${profileError.message}`);
 
-    const { error: settingsError } = await authContext.supabase
-      .from("user_settings")
-      .upsert(
-        {
-          user_id: authContext.userId,
-          daily_kanji_target: data.daily_kanji_target,
-          daily_vocab_target: data.daily_vocab_target,
-          daily_grammar_target: data.daily_grammar_target,
-          furigana_enabled: data.furigana_enabled,
-          daily_reminder: data.daily_reminder,
-        },
-        { onConflict: "user_id" },
-      );
+    const { error: settingsError } = await context.supabase.from("user_settings").upsert(
+      {
+        user_id: context.userId,
+        daily_kanji_target: data.daily_kanji_target,
+        daily_vocab_target: data.daily_vocab_target,
+        daily_grammar_target: data.daily_grammar_target,
+        furigana_enabled: data.furigana_enabled,
+        daily_reminder: data.daily_reminder,
+      },
+      { onConflict: "user_id" },
+    );
     if (settingsError)
       throw new Error(`Pengaturan gagal disimpan: ${settingsError.message}`);
 
