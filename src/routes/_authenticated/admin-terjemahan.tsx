@@ -7,6 +7,8 @@ export const Route = createFileRoute('/_authenticated/admin-terjemahan')({
 })
 
 type Stats = { total: number; pending: number; processing: number; completed: number; failed: number }
+type BatchResult = { status?: string }
+type BatchResponse = { stats?: Stats; results?: BatchResult[]; error?: string }
 
 async function authHeaders() {
   const { data } = await supabase.auth.getSession()
@@ -23,12 +25,12 @@ function TranslationAdminPage() {
   const load = useCallback(async () => {
     const headers = await authHeaders()
     const response = await fetch('/api/admin-translation', { headers })
-    const data = await response.json()
+    const data = (await response.json()) as Stats & { error?: string }
     if (!response.ok) throw new Error(data.error ?? 'Gagal memuat statistik.')
     setStats(data)
   }, [])
 
-  useEffect(() => { load().catch((error) => setMessage(error.message)) }, [load])
+  useEffect(() => { load().catch((error) => setMessage(error instanceof Error ? error.message : String(error))) }, [load])
 
   async function runBatch() {
     setBusy(true)
@@ -38,10 +40,13 @@ function TranslationAdminPage() {
       const response = await fetch('/api/admin-translation', {
         method: 'POST', headers, body: JSON.stringify({ limit: 5 }),
       })
-      const data = await response.json()
+      const data = (await response.json()) as BatchResponse
       if (!response.ok) throw new Error(data.error ?? 'Batch gagal dijalankan.')
+      if (!data.stats || !Array.isArray(data.results)) throw new Error('Respons batch terjemahan tidak valid.')
       setStats(data.stats)
-      setMessage(`Batch selesai: ${data.results.filter((r: any) => r.status === 'completed').length} berhasil, ${data.results.filter((r: any) => r.status === 'failed').length} gagal.`)
+      const completed = data.results.filter((result) => result.status === 'completed').length
+      const failed = data.results.filter((result) => result.status === 'failed').length
+      setMessage(`Batch selesai: ${completed} berhasil, ${failed} gagal.`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error))
     } finally {
@@ -55,7 +60,7 @@ function TranslationAdminPage() {
     ['Processing', stats.processing],
     ['Selesai', stats.completed],
     ['Gagal', stats.failed],
-  ]
+  ] as const
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
