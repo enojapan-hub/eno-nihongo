@@ -22,6 +22,30 @@ type LeaderboardRow = {
   quizzes_completed: number | null; correct_answers: number | null; total_answers: number | null; current_streak: number | null;
 };
 
+type CompetitionRow = {
+  rank: number | null;
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  jlpt_level: string | null;
+  period_xp: number | null;
+  total_xp: number | null;
+  total_points: number | null;
+  current_streak: number | null;
+};
+
+type CompetitionRpcResult = {
+  data: CompetitionRow[] | null;
+  error: unknown;
+};
+
+type CompetitionRpcClient = {
+  rpc(
+    name: "get_competition_leaderboard",
+    params: { p_period: "weekly" | "monthly"; p_limit: number },
+  ): Promise<CompetitionRpcResult>;
+};
+
 export type CompetitionUser = {
   rank: number;
   userId: string;
@@ -48,9 +72,10 @@ export async function fetchLeaderboard(limit = 10): Promise<LeaderboardUser[]> {
 
 export async function fetchCompetitionLeaderboard(period: "weekly" | "monthly", limit = 50): Promise<CompetitionUser[]> {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
-  const { data, error } = await (supabase as any).rpc("get_competition_leaderboard", { p_period: period, p_limit: safeLimit });
+  const competitionRpc = supabase as unknown as CompetitionRpcClient;
+  const { data, error } = await competitionRpc.rpc("get_competition_leaderboard", { p_period: period, p_limit: safeLimit });
   if (error || !data) return [];
-  return (data as any[]).map((row) => ({
+  return data.map((row) => ({
     rank: Number(row.rank ?? 0), userId: String(row.user_id), displayName: String(row.display_name || "Pengguna ENO NIHONGO"),
     avatarUrl: row.avatar_url ?? null, jlptLevel: String(row.jlpt_level || "N5"), periodXp: Number(row.period_xp ?? 0),
     totalXp: Number(row.total_xp ?? 0), points: Number(row.total_points ?? 0), streak: Number(row.current_streak ?? 0),

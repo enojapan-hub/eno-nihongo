@@ -5,7 +5,7 @@ import { Fragment, useRef, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { fetchKanjiList, fetchKanjiStudy, fetchVocabList, markItemLearned, type Level } from "@/lib/learn-queries";
+import { fetchKanjiList, fetchKanjiStudy, markItemLearned, type Level } from "@/lib/learn-queries";
 
 export const Route = createFileRoute("/_authenticated/kanji/$id")({ component: KanjiDetailPage });
 
@@ -27,7 +27,6 @@ function KanjiDetailPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["kanji-study", id], queryFn: () => fetchKanjiStudy(id) });
   const level = (data?.kanji?.level ?? "N5") as Level;
   const list = useQuery({ queryKey: ["kanji-list", level], queryFn: () => fetchKanjiList(level), enabled: Boolean(data?.kanji) });
-  const vocab = useQuery({ queryKey: ["vocab-list", level], queryFn: () => fetchVocabList(level), enabled: Boolean(data?.kanji) });
   const k = data?.kanji;
 
   const currentIndex = list.data?.findIndex((item) => item.id === id) ?? -1;
@@ -65,11 +64,7 @@ function KanjiDetailPage() {
   if (error || !k) return <AppShell compact title="Kanji"><Card><CardContent className="py-8 text-center text-[11px] text-destructive">Kanji tidak ditemukan.</CardContent></Card></AppShell>;
 
   const readings = [...(k.onyomi ?? []), ...(k.kunyomi ?? [])].filter(Boolean).join("・");
-  const relatedWords = (vocab.data ?? [])
-    .filter((word: any) => String(word.level ?? "") === level && String(word.term ?? "").includes(String(k.character)))
-    .filter((word: any, index: number, rows: any[]) => rows.findIndex((candidate: any) => String(candidate.id) === String(word.id)) === index)
-    .slice(0, 5)
-    .map((word: any) => ({ term: String(word.term ?? ""), reading: word.reading ? String(word.reading) : null, meaning: word.meaning_id ? String(word.meaning_id) : null }));
+  const relatedWords = (data.relatedWords ?? []).slice(0, 5);
   const examples = data.examples?.slice(0, 3) ?? [];
 
   return (

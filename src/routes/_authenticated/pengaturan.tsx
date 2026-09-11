@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Bell, BookOpenCheck, CircleHelp, Globe2, Instagram, LogOut, MessageSquareText, Moon, Music2, RefreshCw, Shield, Sun, UserRound, Users, X } from "lucide-react";
+import { Bell, BookOpenCheck, CircleHelp, Globe2, Instagram, LogOut, MessageSquareText, Moon, Music2, RefreshCw, Shield, Sun, UserRound, Users, X, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route=createFileRoute("/_authenticated/pengaturan")({component:SettingsPage});
-function Row({icon:Icon,title,desc,onClick,children}:{icon:any;title:string;desc:string;onClick?:()=>void;children?:React.ReactNode}){return <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition hover:bg-muted/50 active:bg-muted"><span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4"/></span><span className="min-w-0 flex-1"><span className="block text-[12px] font-semibold">{title}</span><span className="block text-[9px] leading-4 text-muted-foreground">{desc}</span></span>{children}</button>}
+function Row({icon:Icon,title,desc,onClick,children}:{icon:LucideIcon;title:string;desc:string;onClick?:()=>void;children?:React.ReactNode}){return <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition hover:bg-muted/50 active:bg-muted"><span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4"/></span><span className="min-w-0 flex-1"><span className="block text-[12px] font-semibold">{title}</span><span className="block text-[9px] leading-4 text-muted-foreground">{desc}</span></span>{children}</button>}
 
 type ModalKind="guide"|"target"|"notifications"|"appearance"|"refresh"|"edit"|"security"|"report"|"support"|"faq"|"about"|"instagram"|"tiktok"|"logout"|null;
 const modalCopy:Record<Exclude<ModalKind,null|"logout">,{title:string;text:string;actionLabel?:string;action?:"profile"|"report"|"support"|"refresh"|"instagram"|"tiktok"}>={

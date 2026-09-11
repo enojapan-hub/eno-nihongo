@@ -10,6 +10,21 @@ export type DashboardMetrics = {
   last: { type: string; id: string; level: string; at: string } | null;
 };
 
+type DynamicRow = Record<string, unknown>;
+type DashboardRpcResult = { data: unknown; error: unknown };
+type DynamicQueryResult = { data: DynamicRow | null };
+type DynamicQuery = {
+  select(columns: string): {
+    eq(column: string, value: string): {
+      maybeSingle(): Promise<DynamicQueryResult>;
+    };
+  };
+};
+type DashboardClient = {
+  rpc(name: "get_my_dashboard_metrics", params: Record<string, never>): Promise<DashboardRpcResult>;
+  from(table: string): DynamicQuery;
+};
+
 const empty: DashboardMetrics = {
   level: "N5",
   progress: {
@@ -63,7 +78,8 @@ function normalizeDashboardMetrics(value: unknown): DashboardMetrics {
 
 export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   try {
-    const { data, error } = await (supabase as any).rpc("get_my_dashboard_metrics", {});
+    const dashboardClient = supabase as unknown as DashboardClient;
+    const { data, error } = await dashboardClient.rpc("get_my_dashboard_metrics", {});
     if (error || !data) return empty;
     return normalizeDashboardMetrics(data);
   } catch (error) {
@@ -84,7 +100,8 @@ export async function resolveContinueLesson(last: DashboardMetrics["last"]): Pro
   const cfg = map[last.type];
   if (!cfg) return null;
   try {
-    const { data } = await (supabase as any).from(cfg.table).select(cfg.select).eq("id", last.id).maybeSingle();
+    const dashboardClient = supabase as unknown as DashboardClient;
+    const { data } = await dashboardClient.from(cfg.table).select(cfg.select).eq("id", last.id).maybeSingle();
     return {
       ...last,
       title: String(data?.[cfg.title] ?? `${last.type} ${last.level}`),

@@ -44,13 +44,17 @@ export default tseslint.config(
       "react-refresh": reactRefresh,
     },
     rules: {
-      // Existing cleanup debt remains visible without masking syntax, invalid
-      // hooks usage, restricted server/client imports, or build failures.
       "@typescript-eslint/no-explicit-any": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "prettier/prettier": "warn",
       "no-useless-escape": "warn",
       "prefer-const": "warn",
+    },
+  },
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
 );

@@ -20,6 +20,9 @@ type Translated = {
   explanation_id: string | null
 }
 
+type GeminiPart = { text?: string }
+type GeminiResponse = { candidates?: Array<{ content?: { parts?: GeminiPart[] } }> }
+
 export async function runQuestionTranslationBatch(limit = 100) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('Missing GEMINI_API_KEY')
@@ -85,8 +88,8 @@ export async function runQuestionTranslationBatch(limit = 100) {
     throw new Error(`Gemini ${response.status}: ${body.slice(0, 500)}`)
   }
 
-  const json = await response.json()
-  const raw = json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text || '').join('') || ''
+  const json = (await response.json()) as GeminiResponse
+  const raw = json.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || ''
   const parsed = JSON.parse(raw)
   const translated = (Array.isArray(parsed?.questions) ? parsed.questions : []) as Translated[]
   const byId = new Map(translated.map((q) => [q.id, q]))

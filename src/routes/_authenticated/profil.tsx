@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Camera, Edit3, Flame, Globe2, Settings, Sparkles, Trophy } from "lucide-react";
+import { CalendarDays, Camera, Edit3, Flame, Globe2, Settings, Sparkles, Trophy, type LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,6 @@ function ProfilePage(){
   <Button asChild variant="outline" className="w-full rounded-xl"><Link to="/pengaturan"><Settings className="mr-2 size-4"/>Pengaturan</Link></Button>
  </div></AppShell>;
 }
-function Stat({icon:Icon,label,value}:{icon:any;label:string;value:string}){return <div className="rounded-2xl border bg-card p-3 text-center"><Icon className="mx-auto size-4 text-primary"/><p className="mt-1 text-[12px] font-bold">{value}</p><p className="text-[8px] text-muted-foreground">{label}</p></div>}
-function Row({icon:Icon,label,value}:{icon:any;label:string;value:string}){return <div className="flex items-center gap-3 rounded-xl px-2 py-2"><span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4"/></span><span className="flex-1 text-[11px] font-semibold">{label}</span><span className="text-[10px] text-muted-foreground">{value}</span></div>}
+function Stat({icon:Icon,label,value}:{icon:LucideIcon;label:string;value:string}){return <div className="rounded-2xl border bg-card p-3 text-center"><Icon className="mx-auto size-4 text-primary"/><p className="mt-1 text-[12px] font-bold">{value}</p><p className="text-[8px] text-muted-foreground">{label}</p></div>}
+function Row({icon:Icon,label,value}:{icon:LucideIcon;label:string;value:string}){return <div className="flex items-center gap-3 rounded-xl px-2 py-2"><span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4"/></span><span className="flex-1 text-[11px] font-semibold">{label}</span><span className="text-[10px] text-muted-foreground">{value}</span></div>}
 function Mini({label,value}:{label:string;value:string}){return <div className="rounded-xl border bg-background/80 p-2.5"><p className="text-[9px] text-muted-foreground">{label}</p><p className="mt-0.5 text-[11px] font-bold">{value}</p></div>}
