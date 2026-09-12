@@ -18,6 +18,18 @@ const ALLOWED_IMAGE_IDS = new Set([
   '1BiN2r7JxYAfq3YwpjDmlTTkRYkUOqVqo',
   '14ykuLqKR__w8m4Q_3d7bN-luK-v0eJEX',
   '1lhrsIBQKzinl0FyvvdVMwJM-ckolketW',
+  '1hFmoNMjlMhQ_0I6GhVImTkQ_OLW_1Vo3',
+  '1tyLMzP4wxrSYlK1OFcjRTxRAQ4Xti1xF',
+  '1_yFru5C_4juZpLniCyybr5JAEFTrYrqx',
+  '1YdFL75fEPM8GapH_Y-mcYDcyC6qYim7C',
+  '1xNqbhgANibATwvBgtm1OQ61QIHfs4dQv',
+  '1LbNDQ69ksjrCwk0RD1alYM4HQnG2_H6A',
+  '1q3xq5vCNEBIx99fTJoECfSiyEIcZ4xfw',
+  '1j0qeueguTfV80gb7E8_--wqNabN6S9hB',
+  '1n1y6S7G5b2n8y4QW_2DgAVy6ry5cpz1J',
+  '11BFs2Rob8H_7pPqPkiAfMkSSL5FstfER',
+  '1lf_OHa87t80fKAjhrjRIKJ-zKbkeBakT',
+  '1oBnO-qJ_hX39XraInz8lKAHmJOI8cfLI',
 ])
 
 export const Route = createFileRoute('/api/jlpt-image')({
