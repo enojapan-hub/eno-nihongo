@@ -8,6 +8,11 @@ const ALLOWED_IMAGE_IDS = new Set([
   '1nnsKVZbQekC0hbrvCR7ePNcA7kznEPCm',
   '1D5FCBI8cFGKvKFLVfCe-aX5krddYov6J',
   '1T7YBrG3xUqsTUVvw2CfbVF5SNLQw32Ed',
+  '1yhI5RT76oOpRzDoh_FbC1Ak3H6NZEKaf',
+  '190Rh2aG_7umo2_v0SHxG61-2jfNnH7IZ',
+  '1bfqHxwSAZky_oIbgK-XgE6jeCfdX0IoZ',
+  '1eal-PduKFl_H356pMVU8RLeopppxkyDT',
+  '1SpUNUfIawYWgFoNLhaF8reIRF11VYPuJ',
 ])
 
 export const Route = createFileRoute('/api/jlpt-image')({
