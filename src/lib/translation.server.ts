@@ -159,20 +159,16 @@ async function discoverWork(sourceType: SourceType, limit: number) {
   const table = sourceType === 'kanji' ? 'kanji' : sourceType === 'vocabulary' ? 'vocabulary' : sourceType === 'grammar' ? 'grammar_points' : 'reading_passages'
   const sourceColumn = sourceType === 'reading' ? 'translation_en' : 'meaning_en'
   const targetColumn = sourceType === 'reading' ? 'translation_id' : 'meaning_id'
-  const { data, error } = await supabaseAdmin
-    .from(table)
-    .select(`id, ${sourceColumn}, ${targetColumn}`)
-    .eq('is_published', true)
-    .not(sourceColumn, 'is', null)
-    .eq(targetColumn, '')
-    .order('id')
-    .limit(Math.min(Math.max(limit, 1), DISCOVERY_PAGE_SIZE))
-  if (error) throw error
-  return (data || []).filter((row: any) => {
-    const source = row[sourceColumn] as string | null
-    if (!source || !source.trim()) return false
-    return true
+  const { data, error } = await supabaseAdmin.rpc('pending_translation_work', {
+    p_source_type: sourceType,
+    p_limit: Math.min(Math.max(limit, 1), DISCOVERY_PAGE_SIZE),
   })
+  if (error) throw error
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    [sourceColumn]: row.source_text,
+    [targetColumn]: row.target_text,
+  }))
 }
 
 async function translateOne(sourceType: SourceType, row: any): Promise<TranslationResult> {
