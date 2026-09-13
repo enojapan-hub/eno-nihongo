@@ -4,20 +4,6 @@
   "git": {
     "deploymentEnabled": true
   },
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "eno-japan-hub-enonihongo.vercel.app" }],
-      "destination": "https://www.enonihongo.com/:path*",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "eno-japan-hub-git-main-enonihongo.vercel.app" }],
-      "destination": "https://www.enonihongo.com/:path*",
-      "permanent": false
-    }
-  ],
   "headers": [
     {
       "source": "/:path*",
