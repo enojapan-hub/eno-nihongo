@@ -43,7 +43,9 @@ function AuthPage() {
   async function signInWithGoogle() {
     if (loading) return; setError(null); setLoading(true);
     try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${CANONICAL_ORIGIN}/auth`, skipBrowserRedirect: false } });
+      // The Supabase client uses PKCE with detectSessionInUrl=false. The root route
+      // is the single callback owner and exchanges ?code= for a persisted session.
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${CANONICAL_ORIGIN}/`, skipBrowserRedirect: false } });
       if (oauthError) throw oauthError;
     } catch (caught) { const message = caught instanceof Error ? caught.message : "Gagal masuk dengan Google."; setError(message); toast.error(message); setLoading(false); }
   }
