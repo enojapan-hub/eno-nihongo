@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "enonihongo — Belajar Bahasa Jepang" }, { name: "description", content: "Belajar bahasa Jepang N5–N1 bersama enonihongo." }] }),
   component: RootEntry,
 });
-const CANONICAL_ORIGIN = "https://enonihongo.vercel.app";
+const CANONICAL_ORIGIN = "https://enonihongo.com";
 const sleep = (ms: number) => new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("timeout")), ms));
 function RootEntry() {
   const [message, setMessage] = useState("Memuat enonihongo…");
