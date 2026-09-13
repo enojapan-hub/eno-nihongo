@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BrandLogo, BrandMark } from "@/components/layout/BrandMark";
 
 export const Route = createFileRoute("/auth")({ head: () => ({ meta: [{ title: "enonihongo — Belajar Bahasa Jepang" }, { name: "description", content: "Belajar bahasa Jepang dengan cara yang lebih terarah. Kuasai Kanji, Kotoba, Bunpou, Dokkai, Choukai, dan persiapkan JLPT N5–N1 bersama enonihongo." }] }), component: AuthPage });
-const CANONICAL_ORIGIN = "https://enonihongo.vercel.app";
+const CANONICAL_ORIGIN = "https://enonihongo.com";
 
 async function continueAfterAuth() {
   const { data, error } = await supabase.auth.getSession();
