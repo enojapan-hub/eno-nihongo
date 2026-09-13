@@ -8,8 +8,23 @@ import { BrandLogo, BrandMark } from "@/components/layout/BrandMark";
 
 export const Route = createFileRoute("/auth")({ head: () => ({ meta: [{ title: "enonihongo — Belajar Bahasa Jepang" }, { name: "description", content: "Belajar bahasa Jepang dengan cara yang lebih terarah. Kuasai Kanji, Kotoba, Bunpou, Dokkai, Choukai, dan persiapkan JLPT N5–N1 bersama enonihongo." }, { property: "og:title", content: "enonihongo — Belajar Bahasa Jepang" }, { property: "og:description", content: "Mulai perjalanan bahasa Jepangmu bersama enonihongo dan capai target JLPT-mu." }] }), component: AuthPage });
 const CANONICAL_ORIGIN = "https://enonihongo.vercel.app";
-function getAuthRedirectUrl() { return `${CANONICAL_ORIGIN}/`; }
-async function continueAfterAuth() { const { data, error } = await supabase.auth.getSession(); if (error) throw error; const user = data.session?.user; if (!user) throw new Error("Sesi login tidak ditemukan."); const { data: profile, error: profileError } = await supabase.from("profiles").select("onboarding_completed").eq("id", user.id).maybeSingle(); const metadataCompleted = user.user_metadata?.["onboarding_completed"] === true; const completed = profileError ? metadataCompleted : profile?.onboarding_completed === true; window.location.replace(completed ? "/dashboard" : "/onboarding"); }
+function getAuthRedirectUrl() { return `${CANONICAL_ORIGIN}/auth`; }
+async function continueAfterAuth() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  const user = data.session?.user;
+  if (!user) throw new Error("Sesi login tidak ditemukan.");
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("onboarding_completed, role").eq("id", user.id).maybeSingle();
+  if (profileError) throw profileError;
+  const role = profile?.role ?? "student";
+  if (role === "owner" || role === "admin") {
+    window.location.replace("/admin");
+    return;
+  }
+  const metadataCompleted = user.user_metadata?.["onboarding_completed"] === true;
+  const completed = profile?.onboarding_completed === true || metadataCompleted;
+  window.location.replace(completed ? "/dashboard" : "/onboarding");
+}
 function LogoLoader() { return <div className="grid min-h-screen place-items-center bg-[#f7f7f4] dark:bg-background"><div role="status" aria-label="Memuat" className="animate-[pulse_1.25s_ease-in-out_infinite]"><div className="animate-[bounce_1.25s_ease-in-out_infinite]"><BrandLogo className="size-[84px]" /></div></div></div>; }
 function AuthPage() {
   const [checking, setChecking] = useState(true); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null);
