@@ -8,14 +8,14 @@
     {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "eno-japan-hub-enonihongo.vercel.app" }],
-      "destination": "https://enonihongo.vercel.app/:path*",
-      "permanent": true
+      "destination": "https://www.enonihongo.com/:path*",
+      "permanent": false
     },
     {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "eno-japan-hub-git-main-enonihongo.vercel.app" }],
-      "destination": "https://enonihongo.vercel.app/:path*",
-      "permanent": true
+      "destination": "https://www.enonihongo.com/:path*",
+      "permanent": false
     }
   ],
   "headers": [
