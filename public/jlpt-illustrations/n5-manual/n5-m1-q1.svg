@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrasi Choukai N5 Mondai 1 nomor 1</title>
+  <desc id="desc">Empat pilihan gambar: satu orang menulis di meja rendah, dua orang membuat peta, satu orang menggambar papan besar, dan dua orang belajar di meja rendah.</desc>
+  <defs>
+    <style>
+      .frame{fill:#fff;stroke:#222;stroke-width:5}.line{fill:none;stroke:#222;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.shade{fill:#e9ecef;stroke:#222;stroke-width:5}.ink{fill:#222}.label{font:700 42px sans-serif;fill:#222}.thin{fill:none;stroke:#222;stroke-width:3}
+    </style>
+  </defs>
+  <rect width="1200" height="900" fill="#fff"/>
+  <!-- 1: man works alone at a low table -->
+  <g transform="translate(55 55)"><rect class="frame" width="500" height="340" rx="4"/>
+    <path class="thin" d="M25 90Q100 35 185 85Q295 25 440 105"/><path class="thin" d="M25 105Q125 55 205 108Q315 50 465 125"/>
+    <rect class="shade" x="112" y="226" width="290" height="42" rx="5"/><path class="line" d="M135 268v45M370 268v45"/>
+    <circle class="shade" cx="252" cy="135" r="38"/><path class="ink" d="M216 130q28-47 73-4v-24q-39-35-73 8z"/>
+    <path class="shade" d="M208 171q44-20 90 3l17 62h-121z"/><path class="line" d="M232 186l-21 60M281 187l21 60"/>
+    <path class="line" d="M209 246l-18 34M302 246l20 34"/>
+    <path class="thin" d="M205 220l62-14 18 31-61 14zM285 208l43 12-11 30-43-12z"/>
+    <rect class="shade" x="80" y="185" width="35" height="38" rx="4"/><path class="thin" d="M115 194q22 0 16 18"/>
+    <text class="label" x="235" y="325">1</text></g>
+  <!-- 2: man and woman draw a large map -->
+  <g transform="translate(645 55)"><rect class="frame" width="500" height="340" rx="4"/>
+    <rect class="shade" x="78" y="215" width="340" height="48" rx="5"/><path class="line" d="M105 263v44M385 263v44"/>
+    <path class="thin" d="M105 200l243-40 52 66-242 40zM144 196l68 58M246 177l68 60M340 161l29 67"/>
+    <circle class="shade" cx="222" cy="96" r="34"/><path class="ink" d="M188 92q34-43 68-2l1-22q-36-28-67 3z"/>
+    <path class="shade" d="M182 131q41-18 79 3l27 66H161z"/><path class="line" d="M205 147l-34 60M245 147l39 47"/>
+    <circle class="shade" cx="360" cy="150" r="31"/><path class="ink" d="M329 147q30-37 60-4v-17q-30-23-60 3z"/>
+    <path class="shade" d="M325 181q35-15 67 4l30 53h-107z"/><path class="line" d="M349 194l-24 45M381 194l33 32"/>
+    <text class="label" x="235" y="325">2</text></g>
+  <!-- 3: man draws alone on upright board -->
+  <g transform="translate(55 480)"><rect class="frame" width="500" height="340" rx="4"/>
+    <path class="shade" d="M70 62h220v205H70z"/><path class="thin" d="M95 85v155M145 85v155M205 85v155M255 85v155M78 125h202M78 180h202"/>
+    <path class="line" d="M80 270l-30 44M275 270l32 44"/><path class="line" d="M177 268v55"/>
+    <circle class="shade" cx="355" cy="96" r="35"/><path class="ink" d="M321 91q37-43 68-1v-23q-35-27-67 3z"/>
+    <path class="shade" d="M316 133q42-18 79 4l26 75H292z"/><path class="line" d="M337 145l-49 44M382 148l15 60"/>
+    <path class="line" d="M288 189l-19 24M397 212l27 47"/>
+    <path class="thin" d="M300 284l98-23 27 42-99 20z"/>
+    <text class="label" x="235" y="325">3</text></g>
+  <!-- 4: man and woman work at a low table, meal tray beside -->
+  <g transform="translate(645 480)"><rect class="frame" width="500" height="340" rx="4"/>
+    <rect class="shade" x="103" y="220" width="293" height="45" rx="5"/><path class="line" d="M128 265v44M367 265v44"/>
+    <path class="thin" d="M155 205h118v35H155zM280 202h88v36h-88z"/>
+    <circle class="shade" cx="205" cy="132" r="34"/><path class="ink" d="M171 126q33-41 68-2v-20q-35-29-68 2z"/>
+    <path class="shade" d="M165 169q42-18 79 3l21 59H143z"/><path class="line" d="M185 183l-20 45M226 183l30 43"/>
+    <circle class="shade" cx="332" cy="140" r="31"/><path class="ink" d="M302 137q31-37 60-2v-18q-30-24-60 3z"/>
+    <path class="shade" d="M299 171q35-15 68 4l21 56H280z"/><path class="line" d="M319 185l-22 44M351 185l26 43"/>
+    <ellipse class="shade" cx="102" cy="286" rx="67" ry="27"/><circle class="thin" cx="80" cy="286" r="12"/><circle class="thin" cx="112" cy="286" r="12"/><rect class="thin" x="135" y="277" width="22" height="18" rx="4"/>
+    <text class="label" x="235" y="325">4</text></g>
+  <image x="420" y="270" width="360" height="360" opacity=".18" xlink:href="/enonihongo-logo-light.png"/>
+</svg>

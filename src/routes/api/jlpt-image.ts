@@ -1,6 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 const IMAGE_CACHE = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
+// These original, in-app illustrations replace the former third-party watermarked
+// N5 listening images while keeping the question-bank URLs stable.
+const N5_ILLUSTRATION_PATHS: Record<string, string> = {
+  '1hFmoNMjlMhQ_0I6GhVImTkQ_OLW_1Vo3': '/jlpt-illustrations/n5-manual/n5-m1-q1.svg',
+  '1tyLMzP4wxrSYlK1OFcjRTxRAQ4Xti1xF': '/jlpt-illustrations/n5-manual/n5-m1-q2.svg',
+  '1_yFru5C_4juZpLniCyybr5JAEFTrYrqx': '/jlpt-illustrations/n5-manual/n5-m1-q3.svg',
+  '1YdFL75fEPM8GapH_Y-mcYDcyC6qYim7C': '/jlpt-illustrations/n5-manual/n5-m1-q4.svg',
+  '1xNqbhgANibATwvBgtm1OQ61QIHfs4dQv': '/jlpt-illustrations/n5-manual/n5-m2-q1.svg',
+  '1LbNDQ69ksjrCwk0RD1alYM4HQnG2_H6A': '/jlpt-illustrations/n5-manual/n5-m2-q2.svg',
+  '1q3xq5vCNEBIx99fTJoECfSiyEIcZ4xfw': '/jlpt-illustrations/n5-manual/n5-m2-q3.svg',
+  '1j0qeueguTfV80gb7E8_--wqNabN6S9hB': '/jlpt-illustrations/n5-manual/n5-m3-q1.svg',
+  '1n1y6S7G5b2n8y4QW_2DgAVy6ry5cpz1J': '/jlpt-illustrations/n5-manual/n5-m3-q2.svg',
+  '11BFs2Rob8H_7pPqPkiAfMkSSL5FstfER': '/jlpt-illustrations/n5-manual/n5-m3-q3.svg',
+  '1lf_OHa87t80fKAjhrjRIKJ-zKbkeBakT': '/jlpt-illustrations/n5-manual/n5-m3-q4.svg',
+  '1oBnO-qJ_hX39XraInz8lKAHmJOI8cfLI': '/jlpt-illustrations/n5-manual/n5-m3-q5.svg',
+  '1n7uuOeCPCsvQYrNu9fYKeA2mQzVEsu75': '/jlpt-illustrations/n5-manual/n5-m4-q1.svg',
+}
 const ALLOWED_IMAGE_IDS = new Set([
   '1ZAP_hLEs8XnnZq_aoyxBqwYhLqD4dBi9',
   '1l_dqKz19zm_ue_QrwzoB-VJSoB5zDFsd',
@@ -41,6 +58,11 @@ export const Route = createFileRoute('/api/jlpt-image')({
 
         if (!id || !ALLOWED_IMAGE_IDS.has(id)) {
           return Response.json({ error: 'Image not available' }, { status: 404 })
+        }
+
+        const localIllustration = N5_ILLUSTRATION_PATHS[id]
+        if (localIllustration) {
+          return Response.redirect(new URL(localIllustration, url), 302)
         }
 
         const sourceUrl = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(id)}&export=download&confirm=t`
