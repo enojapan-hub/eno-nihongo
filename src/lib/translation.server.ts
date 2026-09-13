@@ -164,16 +164,14 @@ async function discoverWork(sourceType: SourceType, limit: number) {
     .select(`id, ${sourceColumn}, ${targetColumn}`)
     .eq('is_published', true)
     .not(sourceColumn, 'is', null)
+    .eq(targetColumn, '')
     .order('id')
     .limit(Math.min(Math.max(limit, 1), DISCOVERY_PAGE_SIZE))
   if (error) throw error
   return (data || []).filter((row: any) => {
     const source = row[sourceColumn] as string | null
-    const target = row[targetColumn] as string | null
     if (!source || !source.trim()) return false
-    if (!target || !target.trim()) return true
-    if (target.trim() === source.trim() && !looksJapanese(source)) return true
-    return false
+    return true
   })
 }
 
