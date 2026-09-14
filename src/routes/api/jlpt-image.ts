@@ -4,6 +4,10 @@ const IMAGE_CACHE = 'public, max-age=3600, s-maxage=86400, stale-while-revalidat
 // These original, in-app illustrations replace the former third-party watermarked
 // N5 listening images while keeping the question-bank URLs stable.
 const N5_ILLUSTRATION_PATHS: Record<string, string> = {
+  '1KhBl5HLohMttYlAFOV1iKGgJ2bMNoH5M': '/jlpt-illustrations/n3-v2/n3-m4-q1-watermarked.webp',
+  '1BiN2r7JxYAfq3YwpjDmlTTkRYkUOqVqo': '/jlpt-illustrations/n3-v2/n3-m4-q2-watermarked.webp',
+  '14ykuLqKR__w8m4Q_3d7bN-luK-v0eJEX': '/jlpt-illustrations/n3-v2/n3-m4-q3-watermarked.webp',
+  '1lhrsIBQKzinl0FyvvdVMwJM-ckolketW': '/jlpt-illustrations/n3-v2/n3-m4-q4-watermarked.webp',
   '1ZAP_hLEs8XnnZq_aoyxBqwYhLqD4dBi9': '/jlpt-illustrations/n4-v2/n4-m3-q1-watermarked.webp',
   '1l_dqKz19zm_ue_QrwzoB-VJSoB5zDFsd': '/jlpt-illustrations/n4-v2/n4-m3-q2-watermarked.webp',
   '1ZwE4Z7KrL-DMONIwxE7Dtg_Pl7cW5y1K': '/jlpt-illustrations/n4-v2/n4-m3-q3-watermarked.webp',
