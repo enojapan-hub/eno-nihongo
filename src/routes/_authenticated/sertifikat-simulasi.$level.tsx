@@ -38,8 +38,15 @@ function Certificate() {
   const verification = `ENO-${level}-${progress.startedAt.toString(36).toUpperCase()}`;
   const share = async () => {
     const data = { title: `Sertifikat Simulasi JLPT ${level} · ENO NIHONGO`, text: `${name} lulus Simulasi Penuh JLPT ${level} ENO NIHONGO dengan skor ${result.total}/180${result.cefr ? ` · CEFR ${result.cefr}` : ""}.`, url: window.location.href };
-    if (navigator.share) { try { await navigator.share(data); } catch {} }
-    else { await navigator.clipboard?.writeText(`${data.text} ${data.url}`); }
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch {
+        // The native share sheet can be dismissed by the user; no action is required.
+      }
+    } else {
+      await navigator.clipboard?.writeText(`${data.text} ${data.url}`);
+    }
   };
 
   return <AppShell title="Sertifikat Simulasi" compact><div className="mx-auto max-w-5xl space-y-3">
