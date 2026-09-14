@@ -8,7 +8,7 @@ export const Route = createFileRoute("/")({
   component: RootEntry,
 });
 
-const CANONICAL_ORIGIN = "https://enonihongo.com";
+const CANONICAL_ORIGIN = "https://www.enonihongo.com";
 
 function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -24,8 +24,6 @@ function RootEntry() {
     let active = true;
     const redirect = (path: string) => window.location.replace(`${CANONICAL_ORIGIN}${path}`);
 
-    // Absolute escape hatch: the splash screen must never remain forever,
-    // including Safari/WebView cases where an auth/storage request stalls.
     const escapeTimer = window.setTimeout(() => {
       if (active) redirect("/auth");
     }, 10000);
