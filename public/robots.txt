@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://enonihongo.com/sitemap.xml
+Sitemap: https://www.enonihongo.com/sitemap.xml
