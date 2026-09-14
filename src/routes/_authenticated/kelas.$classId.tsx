@@ -1,85 +1,10 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute,Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, ExternalLink, UserPlus, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-
 export const Route = createFileRoute("/_authenticated/kelas/$classId")({ component: Detail });
-
-function Detail() {
-  const { classId } = Route.useParams();
-  const queryClient = useQueryClient();
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-
-  const classQuery = useQuery({
-    queryKey: ["class", classId],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_public_class", { p_class_id: classId });
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
-  });
-
-  const accessQuery = useQuery({
-    queryKey: ["class-access", classId],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_class_member_access", { p_class_id: classId });
-      if (error) throw error;
-      return data?.[0] ?? { enrolled: false, meeting_url: null };
-    },
-  });
-
-  async function enroll() {
-    setBusy(true);
-    setMessage("");
-    const { error } = await (supabase as any).rpc("enroll_in_class", { p_class_id: classId });
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage("Berhasil bergabung ke kelas.");
-      await queryClient.invalidateQueries({ queryKey: ["class-access", classId] });
-    }
-    setBusy(false);
-  }
-
-  const c: any = classQuery.data;
-  if (classQuery.isLoading) return <AppShell title="Kelas" backTo="/kelas"><p>Memuat kelas…</p></AppShell>;
-  if (!c) return <AppShell title="Kelas" backTo="/kelas"><p>Kelas tidak ditemukan atau belum dipublikasikan.</p></AppShell>;
-
-  const member = Boolean(accessQuery.data?.enrolled);
-  const meetingUrl = accessQuery.data?.meeting_url;
-
-  return (
-    <AppShell title={c.title} backTo="/kelas">
-      <div className="mx-auto max-w-3xl space-y-4">
-        {c.banner_url && <img src={c.banner_url} alt={c.title} className="aspect-video w-full rounded-3xl object-cover" />}
-        <div>
-          <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">{c.level}</span>
-          <h1 className="mt-2 text-2xl font-black">{c.title}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{c.description}</p>
-        </div>
-        <Card><CardContent className="grid gap-3 p-4 text-xs sm:grid-cols-3">
-          <span className="flex items-center gap-2"><CalendarDays className="size-4" />{c.starts_at ? new Date(c.starts_at).toLocaleString("id-ID") : "Jadwal menyusul"}</span>
-          <span className="flex items-center gap-2"><Users className="size-4" />{c.capacity ? `${c.capacity} siswa` : "Tanpa batas"}</span>
-          <strong>{Number(c.price) > 0 ? `${c.currency} ${Number(c.price).toLocaleString("id-ID")}` : "Gratis"}</strong>
-        </CardContent></Card>
-        {member ? (
-          <Card><CardContent className="p-4">
-            <p className="text-xs font-black">Anda sudah terdaftar</p>
-            {meetingUrl ? <Button className="mt-3" asChild><a href={meetingUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 size-4" />Masuk Kelas Live</a></Button> : <p className="mt-2 text-xs text-muted-foreground">Link kelas live belum tersedia.</p>}
-          </CardContent></Card>
-        ) : Number(c.price) > 0 ? (
-          <p className="rounded-xl bg-muted p-3 text-xs">Pendaftaran kelas berbayar akan dibuka setelah sistem pembayaran aktif.</p>
-        ) : (
-          <Button disabled={busy} onClick={enroll}><UserPlus className="mr-2 size-4" />{busy ? "Mendaftarkan…" : "Gabung Kelas Gratis"}</Button>
-        )}
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <p className="text-[11px] text-muted-foreground">Link kelas live hanya dapat diakses peserta yang sudah terdaftar.</p>
-      </div>
-    </AppShell>
-  );
-}
+function Detail(){const{classId}=Route.useParams();const queryClient=useQueryClient();const[busy,setBusy]=useState(false);const[message,setMessage]=useState("");const classQuery=useQuery({queryKey:["class",classId],queryFn:async()=>{const{data,error}=await(supabase as any).rpc("get_public_class",{p_class_id:classId});if(error)throw error;return data?.[0]??null}});const accessQuery=useQuery({queryKey:["class-access",classId],queryFn:async()=>{const{data,error}=await(supabase as any).rpc("get_class_member_access",{p_class_id:classId});if(error)throw error;return data?.[0]??{enrolled:false,meeting_url:null}}});async function enroll(){setBusy(true);setMessage("");const{error}=await(supabase as any).rpc("enroll_in_class",{p_class_id:classId});if(error)setMessage(error.message);else{setMessage("Berhasil bergabung ke kelas.");await queryClient.invalidateQueries({queryKey:["class-access",classId]})}setBusy(false)}const c:any=classQuery.data;if(classQuery.isLoading)return <AppShell title="Kelas" backTo="/kelas"><p>Memuat kelas…</p></AppShell>;if(!c)return <AppShell title="Kelas" backTo="/kelas"><p>Kelas tidak ditemukan atau belum dipublikasikan.</p></AppShell>;const member=Boolean(accessQuery.data?.enrolled);const meetingUrl=accessQuery.data?.meeting_url;return <AppShell title={c.title} backTo="/kelas"><div className="mx-auto max-w-3xl space-y-4">{c.banner_url&&<img src={c.banner_url} alt={c.title} className="aspect-video w-full rounded-3xl object-cover"/>}<div><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">{c.level}</span><h1 className="mt-2 text-2xl font-black">{c.title}</h1><p className="mt-2 text-sm text-muted-foreground">{c.description}</p></div><Card><CardContent className="grid gap-3 p-4 text-xs sm:grid-cols-3"><span className="flex items-center gap-2"><CalendarDays className="size-4"/>{c.starts_at?new Date(c.starts_at).toLocaleString("id-ID"):"Jadwal menyusul"}</span><span className="flex items-center gap-2"><Users className="size-4"/>{c.capacity?`${c.capacity} siswa`:"Tanpa batas"}</span><strong>{Number(c.price)>0?`${c.currency} ${Number(c.price).toLocaleString("id-ID")}`:"Gratis"}</strong></CardContent></Card>{member?<Card><CardContent className="p-4"><p className="text-xs font-black">Anda sudah terdaftar</p><div className="mt-3 flex flex-wrap gap-2"><Button asChild><Link to="/kelas/$classId/workspace" params={{classId}}>Masuk Ruang Kelas</Link></Button>{meetingUrl&&<Button variant="outline" asChild><a href={meetingUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 size-4"/>Kelas Live</a></Button>}</div>{!meetingUrl&&<p className="mt-2 text-xs text-muted-foreground">Link live belum tersedia atau belum memasuki waktu akses.</p>}</CardContent></Card>:Number(c.price)>0?<p className="rounded-xl bg-muted p-3 text-xs">Pendaftaran kelas berbayar akan dibuka setelah sistem pembayaran aktif.</p>:<Button disabled={busy} onClick={enroll}><UserPlus className="mr-2 size-4"/>{busy?"Mendaftarkan…":"Gabung Kelas Gratis"}</Button>}{message&&<p className="text-xs text-muted-foreground">{message}</p>}<p className="text-[11px] text-muted-foreground">Link kelas live hanya dapat diakses peserta yang sudah terdaftar.</p></div></AppShell>}
