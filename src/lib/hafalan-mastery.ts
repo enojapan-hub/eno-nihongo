@@ -11,12 +11,17 @@ export type MasteryCard = {
   aspect: MasteryAspect;
 };
 
-type KanjiSource = { id: string; character?: string | null; meaning_id?: string | null; onyomi?: string | null; kunyomi?: string | null };
+type ReadingValue = string | string[] | null;
+type KanjiSource = { id: string; character?: string | null; meaning_id?: string | null; onyomi?: ReadingValue; kunyomi?: ReadingValue };
 type VocabSource = { id: string; term?: string | null; meaning_id?: string | null; reading?: string | null; part_of_speech?: string | null; example?: string };
 type GrammarSource = { id: string; pattern?: string | null; meaning_id?: string | null; structure?: string | null; example?: string };
 
 const clean = (value: unknown) => typeof value === 'string' ? value.trim() : '';
-const joinReadings = (on?: string | null, kun?: string | null) => [clean(on) && `On: ${clean(on)}`, clean(kun) && `Kun: ${clean(kun)}`].filter(Boolean).join(' · ');
+const cleanReading = (value: ReadingValue | undefined) => Array.isArray(value) ? value.map(clean).filter(Boolean).join('、') : clean(value);
+const joinReadings = (on?: ReadingValue, kun?: ReadingValue) => {
+  const onyomi = cleanReading(on), kunyomi = cleanReading(kun);
+  return [onyomi && `On’yomi: ${onyomi}`, kunyomi && `Kun’yomi: ${kunyomi}`].filter(Boolean).join(' · ');
+};
 const cloze = (sentence: string, answer: string) => sentence.includes(answer) ? sentence.split(answer).join('＿＿＿') : '';
 
 export function buildKanjiMasteryCards(item: KanjiSource): MasteryCard[] {
