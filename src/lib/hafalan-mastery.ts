@@ -17,6 +17,7 @@ type GrammarSource = { id: string; pattern?: string | null; meaning_id?: string 
 
 const clean = (value: unknown) => typeof value === 'string' ? value.trim() : '';
 const joinReadings = (on?: string | null, kun?: string | null) => [clean(on) && `On: ${clean(on)}`, clean(kun) && `Kun: ${clean(kun)}`].filter(Boolean).join(' · ');
+const cloze = (sentence: string, answer: string) => sentence.includes(answer) ? sentence.split(answer).join('＿＿＿') : '';
 
 export function buildKanjiMasteryCards(item: KanjiSource): MasteryCard[] {
   const character = clean(item.character), meaning = clean(item.meaning_id), reading = joinReadings(item.onyomi, item.kunyomi);
@@ -31,7 +32,8 @@ export function buildVocabularyMasteryCards(item: VocabSource): MasteryCard[] {
   const cards: MasteryCard[] = [];
   if (term && meaning) cards.push({ id: item.id, kind: 'vocabulary', front: term, back: meaning, sub: reading, aspect: 'meaning' });
   if (term && reading) cards.push({ id: item.id, kind: 'vocabulary', front: term, back: reading, sub: meaning, aspect: 'reading' });
-  if (term && example) cards.push({ id: item.id, kind: 'vocabulary', front: example, back: term, sub: meaning, example, aspect: 'usage' });
+  const usagePrompt = term && example ? cloze(example, term) : '';
+  if (usagePrompt) cards.push({ id: item.id, kind: 'vocabulary', front: usagePrompt, back: term, sub: meaning, example, aspect: 'usage' });
   return cards;
 }
 
@@ -39,7 +41,8 @@ export function buildGrammarMasteryCards(item: GrammarSource): MasteryCard[] {
   const pattern = clean(item.pattern), meaning = clean(item.meaning_id), structure = clean(item.structure), example = clean(item.example);
   const cards: MasteryCard[] = [];
   if (pattern && (meaning || structure)) cards.push({ id: item.id, kind: 'grammar', front: pattern, back: meaning || structure, sub: structure, example, aspect: 'function' });
-  if (pattern && example) cards.push({ id: item.id, kind: 'grammar', front: example, back: pattern, sub: meaning || structure, example, aspect: 'context' });
+  const contextPrompt = pattern && example ? cloze(example, pattern) : '';
+  if (contextPrompt) cards.push({ id: item.id, kind: 'grammar', front: contextPrompt, back: pattern, sub: meaning || structure, example, aspect: 'context' });
   return cards;
 }
 
