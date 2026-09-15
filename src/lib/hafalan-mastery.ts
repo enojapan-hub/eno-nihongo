@@ -17,10 +17,10 @@ type VocabSource = { id: string; term?: string | null; meaning_id?: string | nul
 type GrammarSource = { id: string; pattern?: string | null; meaning_id?: string | null; structure?: string | null; example?: string };
 
 const clean = (value: unknown) => typeof value === 'string' ? value.trim() : '';
-const cleanReading = (value: ReadingValue | undefined) => Array.isArray(value) ? value.map(clean).filter(Boolean).join('、') : clean(value);
+const cleanReading = (value: ReadingValue | undefined) => Array.isArray(value) ? value.map(clean).filter(Boolean).join('・') : clean(value);
 const joinReadings = (on?: ReadingValue, kun?: ReadingValue) => {
   const onyomi = cleanReading(on), kunyomi = cleanReading(kun);
-  return [onyomi && `On’yomi: ${onyomi}`, kunyomi && `Kun’yomi: ${kunyomi}`].filter(Boolean).join(' · ');
+  return [kunyomi && `KUN: ${kunyomi}`, onyomi && `ON: ${onyomi}`].filter(Boolean).join('\n');
 };
 const cloze = (sentence: string, answer: string) => sentence.includes(answer) ? sentence.split(answer).join('＿＿＿') : '';
 
