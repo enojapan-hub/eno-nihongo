@@ -2,135 +2,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type AdaptiveTaskType = "new_kanji" | "new_vocabulary" | "new_grammar" | "review" | "quiz" | "reading" | "listening";
 export type AdaptiveSuggestion = { id: string; label: string; subtitle?: string | null };
-export type AdaptiveTask = {
-  id: string;
-  task_type: AdaptiveTaskType;
-  target_count: number;
-  completed_count: number;
-  priority: number;
-  reason: string | null;
-  metadata: Record<string, unknown> | null;
-  suggestions?: AdaptiveSuggestion[];
-};
-export type AdaptivePlan = {
-  active: boolean;
-  targetLevel: string | null;
-  targetDate: string | null;
-  daysLeft: number | null;
-  tasks: AdaptiveTask[];
-  target: number;
-  completed: number;
-};
+export type AdaptiveTask = { id:string; task_type:AdaptiveTaskType; target_count:number; completed_count:number; priority:number; reason:string|null; metadata:Record<string,unknown>|null; suggestions?:AdaptiveSuggestion[] };
+export type AdaptivePlan = { active:boolean; targetLevel:string|null; targetDate:string|null; daysLeft:number|null; tasks:AdaptiveTask[]; target:number; completed:number };
+const emptyPlan:AdaptivePlan={active:false,targetLevel:null,targetDate:null,daysLeft:null,tasks:[],target:0,completed:0};
+type ProgressRow={item_type:string;item_id:string;status:string;due_at:string|null;ease_factor?:number|null};
+type ReviewRow={item_type:string;item_id:string;rating:number;used_hint:boolean|null;response_ms:number|null;direction:string|null;aspect:string|null;created_at:string|null};
 
-const emptyPlan: AdaptivePlan = { active: false, targetLevel: null, targetDate: null, daysLeft: null, tasks: [], target: 0, completed: 0 };
+function weakScores(reviews:ReviewRow[]){const grouped=new Map<string,ReviewRow[]>();for(const r of reviews){const k=`${r.item_type}:${r.item_id}`,a=grouped.get(k)??[];a.push(r);grouped.set(k,a)}const out=new Map<string,number>();for(const[k,a0]of grouped){const a=a0.slice(0,8),n=Math.max(1,a.length),wrong=a.filter(x=>x.rating<2).length/n,hint=a.filter(x=>x.used_hint).length/n,slow=a.filter(x=>Number(x.response_ms??0)>8000).length/n,dirs=new Set(a.map(x=>x.direction).filter(Boolean)).size,oneWay=dirs<2?.12:0;out.set(k,wrong*.55+hint*.18+slow*.15+oneWay)}return out}
+async function itemSuggestion(client:any,r:{item_type:string;item_id:string},weak=false):Promise<AdaptiveSuggestion|null>{if(r.item_type==="kanji"){const{data}=await client.from("kanji").select("character,meaning_id").eq("id",r.item_id).maybeSingle();return data?{id:r.item_id,label:String(data.character??"Kanji"),subtitle:weak?`Prioritas kelemahan · ${data.meaning_id??"Kanji"}`:(data.meaning_id?String(data.meaning_id):"Review Kanji")}:null}if(r.item_type==="vocabulary"){const{data}=await client.from("vocabulary").select("term,meaning_id").eq("id",r.item_id).maybeSingle();return data?{id:r.item_id,label:String(data.term??"Kosakata"),subtitle:weak?`Prioritas kelemahan · ${data.meaning_id??"Kosakata"}`:(data.meaning_id?String(data.meaning_id):"Review Kosakata")}:null}if(r.item_type==="grammar"){const{data}=await client.from("grammar_points").select("pattern,meaning_id").eq("id",r.item_id).maybeSingle();return data?{id:r.item_id,label:String(data.pattern??"Bunpou"),subtitle:weak?`Prioritas kelemahan · ${data.meaning_id??"Bunpou"}`:(data.meaning_id?String(data.meaning_id):"Review Bunpou")}:null}return null}
 
-async function enrichTasksWithSuggestions(userId:string, level:string, tasks:AdaptiveTask[]):Promise<AdaptiveTask[]> {
-  const client=supabase as any;
-  const {data:progress}=await client.from("user_item_progress").select("item_type,item_id,status,due_at").eq("user_id",userId).eq("level",level);
-  const rows=(progress??[]) as Array<{item_type:string;item_id:string;status:string;due_at:string|null}>;
-  const mastered=(type:string)=>new Set(rows.filter(r=>r.item_type===type&&r.status==="mastered").map(r=>r.item_id));
-  const known=(type:string)=>new Set(rows.filter(r=>r.item_type===type).map(r=>r.item_id));
-  const nowIso=new Date().toISOString();
+async function enrichTasksWithSuggestions(userId:string,level:string,tasks:AdaptiveTask[]):Promise<AdaptiveTask[]>{const client=supabase as any;const[{data:progress},{data:reviewData}]=await Promise.all([client.from("user_item_progress").select("item_type,item_id,status,due_at,ease_factor").eq("user_id",userId).eq("level",level),client.from("flashcard_reviews").select("item_type,item_id,rating,used_hint,response_ms,direction,aspect,created_at").eq("user_id",userId).eq("level",level).order("created_at",{ascending:false}).limit(500)]);const rows=(progress??[]) as ProgressRow[],reviews=(reviewData??[]) as ReviewRow[],weak=weakScores(reviews),nowIso=new Date().toISOString();const mastered=(type:string)=>new Set(rows.filter(r=>r.item_type===type&&r.status==="mastered").map(r=>r.item_id));const known=(type:string)=>new Set(rows.filter(r=>r.item_type===type).map(r=>r.item_id));return Promise.all(tasks.map(async task=>{const wanted=Math.max(1,Math.min(12,Number(task.target_count||1)));try{if(task.task_type==="review"){const due=rows.filter(r=>r.due_at&&r.due_at<=nowIso).map(r=>({...r,score:2+(weak.get(`${r.item_type}:${r.item_id}`)??0)}));const weakNotDue=rows.filter(r=>!(r.due_at&&r.due_at<=nowIso)).map(r=>({...r,score:weak.get(`${r.item_type}:${r.item_id}`)??0})).filter(r=>r.score>=.28);const queue=[...due.sort((a,b)=>b.score-a.score),...weakNotDue.sort((a,b)=>b.score-a.score)].slice(0,wanted);const suggestions=(await Promise.all(queue.map(r=>itemSuggestion(client,r,r.score<2&&r.score>=.28)))).filter(Boolean) as AdaptiveSuggestion[];return{...task,priority:Math.max(task.priority,queue.length?100:task.priority),reason:queue.length?"Review jatuh tempo dan materi dengan recall terlemah diprioritaskan sebelum materi baru.":task.reason,suggestions,metadata:{...(task.metadata??{}),smartReview:true,weakCount:weakNotDue.length,dueCount:due.length}}}if(task.task_type==="new_kanji"){const skip=known("kanji");const{data}=await client.from("kanji").select("id,character,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);return{...task,suggestions:(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.character??"Kanji"),subtitle:x.meaning_id?String(x.meaning_id):null}))}}if(task.task_type==="new_vocabulary"){const skip=known("vocabulary");const{data}=await client.from("vocabulary").select("id,term,reading,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);return{...task,suggestions:(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.term??"Kosakata"),subtitle:[x.reading,x.meaning_id].filter(Boolean).map(String).join(" · ")}))}}if(task.task_type==="new_grammar"){const skip=known("grammar");const{data}=await client.from("grammar_points").select("id,pattern,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);return{...task,suggestions:(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.pattern??"Bunpou"),subtitle:x.meaning_id?String(x.meaning_id):null}))}}if(task.task_type==="reading"){const skip=mastered("reading");const{data}=await client.from("reading_passages").select("id,title").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);return{...task,suggestions:(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.title??"Dokkai")}))}}if(task.task_type==="listening"){const skip=mastered("listening");const{data}=await client.from("listening_items").select("id,title,duration_seconds").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);return{...task,suggestions:(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.title??"Choukai"),subtitle:x.duration_seconds?`${Math.ceil(Number(x.duration_seconds)/60)} menit`:null}))}}return task}catch{return task}}))}
 
-  return Promise.all(tasks.map(async task=>{
-    const wanted=Math.max(1,Math.min(12,Number(task.target_count||1)));
-    try{
-      if(task.task_type==="new_kanji"){
-        const skip=known("kanji");
-        const {data}=await client.from("kanji").select("id,character,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.character??"Kanji"),subtitle:x.meaning_id?String(x.meaning_id):null}));
-        return {...task,suggestions};
-      }
-      if(task.task_type==="new_vocabulary"){
-        const skip=known("vocabulary");
-        const {data}=await client.from("vocabulary").select("id,term,reading,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.term??"Kosakata"),subtitle:[x.reading,x.meaning_id].filter(Boolean).map(String).join(" · ")}));
-        return {...task,suggestions};
-      }
-      if(task.task_type==="new_grammar"){
-        const skip=known("grammar");
-        const {data}=await client.from("grammar_points").select("id,pattern,meaning_id").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*4);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.pattern??"Bunpou"),subtitle:x.meaning_id?String(x.meaning_id):null}));
-        return {...task,suggestions};
-      }
-      if(task.task_type==="reading"){
-        const skip=mastered("reading");
-        const {data}=await client.from("reading_passages").select("id,title").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.title??"Dokkai")}));
-        return {...task,suggestions};
-      }
-      if(task.task_type==="listening"){
-        const skip=mastered("listening");
-        const {data}=await client.from("listening_items").select("id,title,duration_seconds").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true}).limit(wanted*3);
-        const suggestions=(data??[]).filter((x:any)=>!skip.has(String(x.id))).slice(0,wanted).map((x:any)=>({id:String(x.id),label:String(x.title??"Choukai"),subtitle:x.duration_seconds?`${Math.ceil(Number(x.duration_seconds)/60)} menit`:null}));
-        return {...task,suggestions};
-      }
-      if(task.task_type==="review"){
-        const due=rows.filter(r=>r.due_at&&r.due_at<=nowIso).slice(0,wanted);
-        const suggestions:AdaptiveSuggestion[]=[];
-        for(const r of due){
-          if(r.item_type==="kanji"){
-            const {data}=await client.from("kanji").select("character,meaning_id").eq("id",r.item_id).maybeSingle();
-            if(data)suggestions.push({id:r.item_id,label:String(data.character??"Kanji"),subtitle:data.meaning_id?String(data.meaning_id):"Review Kanji"});
-          } else if(r.item_type==="vocabulary"){
-            const {data}=await client.from("vocabulary").select("term,meaning_id").eq("id",r.item_id).maybeSingle();
-            if(data)suggestions.push({id:r.item_id,label:String(data.term??"Kosakata"),subtitle:data.meaning_id?String(data.meaning_id):"Review Kosakata"});
-          } else if(r.item_type==="grammar"){
-            const {data}=await client.from("grammar_points").select("pattern,meaning_id").eq("id",r.item_id).maybeSingle();
-            if(data)suggestions.push({id:r.item_id,label:String(data.pattern??"Bunpou"),subtitle:data.meaning_id?String(data.meaning_id):"Review Bunpou"});
-          }
-        }
-        return {...task,suggestions};
-      }
-      return task;
-    }catch{return task;}
-  }));
-}
-
-export async function fetchAdaptivePlan(): Promise<AdaptivePlan> {
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError || !auth.user) return emptyPlan;
-
-  const client = supabase as any;
-  await client.rpc("ensure_active_study_plan", {});
-  await client.rpc("generate_daily_study_tasks", {});
-  await client.rpc("sync_daily_study_task_progress", {});
-
-  const now = new Date();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
-  const [{ data: plans }, { data: tasks }] = await Promise.all([
-    client.from("study_plans").select("id,target_level,target_date,status").eq("user_id", auth.user.id).eq("status", "active").order("created_at", { ascending: false }).limit(1),
-    client.from("daily_study_tasks").select("id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id", auth.user.id).eq("study_date", today).order("priority", { ascending: false }),
-  ]);
-
-  const plan = plans?.[0];
-  if (!plan) return emptyPlan;
-
-  const rawTasks = (tasks ?? []) as AdaptiveTask[];
-  const taskRows = await enrichTasksWithSuggestions(auth.user.id,String(plan.target_level??"N5"),rawTasks);
-  const target = taskRows.reduce((sum, task) => sum + Number(task.target_count || 0), 0);
-  const completed = taskRows.reduce((sum, task) => sum + Math.min(Number(task.completed_count || 0), Number(task.target_count || 0)), 0);
-  const targetMs = new Date(`${plan.target_date}T00:00:00+09:00`).getTime();
-  const todayMs = new Date(`${today}T00:00:00+09:00`).getTime();
-  const daysLeft = Math.max(0, Math.ceil((targetMs - todayMs) / 86400000));
-
-  return {
-    active: true,
-    targetLevel: plan.target_level ?? null,
-    targetDate: plan.target_date ?? null,
-    daysLeft,
-    tasks: taskRows,
-    target,
-    completed,
-  };
-}
-
-export const adaptiveTaskLabels: Record<AdaptiveTaskType, string> = {
-  new_kanji: "Kanji baru",
-  new_vocabulary: "Kotoba baru",
-  new_grammar: "Bunpō baru",
-  review: "Review",
-  quiz: "Kuis",
-  reading: "Dokkai",
-  listening: "Listening",
-};
+export async function fetchAdaptivePlan():Promise<AdaptivePlan>{const{data:auth,error:authError}=await supabase.auth.getUser();if(authError||!auth.user)return emptyPlan;const client=supabase as any;await client.rpc("ensure_active_study_plan",{});await client.rpc("generate_daily_study_tasks",{});await client.rpc("sync_daily_study_task_progress",{});const now=new Date(),today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);const[{data:plans},{data:tasks}]=await Promise.all([client.from("study_plans").select("id,target_level,target_date,status").eq("user_id",auth.user.id).eq("status","active").order("created_at",{ascending:false}).limit(1),client.from("daily_study_tasks").select("id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id",auth.user.id).eq("study_date",today).order("priority",{ascending:false})]);const plan=plans?.[0];if(!plan)return emptyPlan;const raw=(tasks??[]) as AdaptiveTask[],enriched=await enrichTasksWithSuggestions(auth.user.id,String(plan.target_level??"N5"),raw);const taskRows=[...enriched].sort((a,b)=>b.priority-a.priority);const target=taskRows.reduce((s,t)=>s+Number(t.target_count||0),0),completed=taskRows.reduce((s,t)=>s+Math.min(Number(t.completed_count||0),Number(t.target_count||0)),0),targetMs=new Date(`${plan.target_date}T00:00:00+09:00`).getTime(),todayMs=new Date(`${today}T00:00:00+09:00`).getTime(),daysLeft=Math.max(0,Math.ceil((targetMs-todayMs)/86400000));return{active:true,targetLevel:plan.target_level??null,targetDate:plan.target_date??null,daysLeft,tasks:taskRows,target,completed}}
+export const adaptiveTaskLabels:Record<AdaptiveTaskType,string>={new_kanji:"Kanji baru",new_vocabulary:"Kotoba baru",new_grammar:"Bunpō baru",review:"Review",quiz:"Kuis",reading:"Dokkai",listening:"Listening"};
