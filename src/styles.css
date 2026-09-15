@@ -211,6 +211,19 @@
   50% { transform: scale(1.035); opacity: .92; }
 }
 
+/* Hafalan reveal: keep the answer compact and let KUN/ON readings breathe. */
+button .border-t.pt-4 > p.font-jp[class~="text-[22px]"] {
+  font-size: 1.05rem !important;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+button .border-t.pt-4 > p.font-jp[class~="text-[10px]"] {
+  white-space: pre-line;
+  font-size: 0.72rem !important;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important;
