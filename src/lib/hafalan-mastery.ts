@@ -22,8 +22,8 @@ const cloze = (sentence: string, answer: string) => sentence.includes(answer) ? 
 export function buildKanjiMasteryCards(item: KanjiSource): MasteryCard[] {
   const character = clean(item.character), meaning = clean(item.meaning_id), reading = joinReadings(item.onyomi, item.kunyomi);
   const cards: MasteryCard[] = [];
-  if (character && meaning) cards.push({ id: item.id, kind: 'kanji', front: character, back: meaning, aspect: 'meaning' });
-  if (character && reading) cards.push({ id: item.id, kind: 'kanji', front: character, back: reading, aspect: 'reading' });
+  if (character && meaning) cards.push({ id: item.id, kind: 'kanji', front: character, back: meaning, sub: reading || undefined, aspect: 'meaning' });
+  if (character && reading) cards.push({ id: item.id, kind: 'kanji', front: character, back: reading, sub: meaning || undefined, aspect: 'reading' });
   return cards;
 }
 
