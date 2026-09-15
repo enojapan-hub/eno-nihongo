@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
 
-const AUDIO_CACHE = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
+const REDIRECT_CACHE = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'
 
 export const Route = createFileRoute('/api/jlpt-audio')({
   server: {
@@ -16,7 +16,7 @@ export const Route = createFileRoute('/api/jlpt-audio')({
 
         const { data, error } = await (supabaseAdmin as any)
           .from('jlpt_simulation_audio_source_map')
-          .select('drive_file_id,status,structure_verified')
+          .select('drive_file_id,status,structure_verified,delivery_path')
           .eq('id', id)
           .maybeSingle()
 
@@ -29,42 +29,33 @@ export const Route = createFileRoute('/api/jlpt-audio')({
           return Response.json({ error: 'Audio not available' }, { status: 404 })
         }
 
-        const sourceUrl = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(data.drive_file_id)}&export=download&confirm=t`
-        const range = request.headers.get('range')
-        const sourceHeaders = new Headers()
-        if (range) sourceHeaders.set('Range', range)
-
-        let upstream: Response
-        try {
-          upstream = await fetch(sourceUrl, {
-            method: 'GET',
-            headers: sourceHeaders,
-            redirect: 'follow',
+        // Prefer a CDN/storage URL once a source has been migrated. This keeps
+        // the route compatible with the Supabase Storage rollout without
+        // another frontend change.
+        const deliveryPath = typeof data.delivery_path === 'string' ? data.delivery_path.trim() : ''
+        if (/^https:\/\//i.test(deliveryPath)) {
+          return new Response(null, {
+            status: 307,
+            headers: {
+              Location: deliveryPath,
+              'Cache-Control': REDIRECT_CACHE,
+              'X-Content-Type-Options': 'nosniff',
+            },
           })
-        } catch (fetchError) {
-          console.error('JLPT Drive audio fetch failed', fetchError)
-          return Response.json({ error: 'Audio source unavailable' }, { status: 502 })
         }
 
-        if (!upstream.ok && upstream.status !== 206) {
-          console.error('JLPT Drive audio returned', upstream.status)
-          return Response.json({ error: 'Audio source unavailable' }, { status: 502 })
-        }
-
-        const headers = new Headers()
-        headers.set('Content-Type', upstream.headers.get('content-type') || 'audio/mpeg')
-        headers.set('Cache-Control', AUDIO_CACHE)
-        headers.set('Accept-Ranges', upstream.headers.get('accept-ranges') || 'bytes')
-        headers.set('X-Content-Type-Options', 'nosniff')
-
-        const contentLength = upstream.headers.get('content-length')
-        const contentRange = upstream.headers.get('content-range')
-        if (contentLength) headers.set('Content-Length', contentLength)
-        if (contentRange) headers.set('Content-Range', contentRange)
-
-        return new Response(upstream.body, {
-          status: upstream.status,
-          headers,
+        // Drive is the temporary fallback. Redirect the browser instead of
+        // proxying the MP3 body through the Vercel function. Proxy streaming
+        // kept the serverless invocation open for the full audio transfer and
+        // could surface as Gateway Timeout even though the DB lookup was fast.
+        const sourceUrl = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(data.drive_file_id)}&export=download&confirm=t`
+        return new Response(null, {
+          status: 307,
+          headers: {
+            Location: sourceUrl,
+            'Cache-Control': REDIRECT_CACHE,
+            'X-Content-Type-Options': 'nosniff',
+          },
         })
       },
     },
