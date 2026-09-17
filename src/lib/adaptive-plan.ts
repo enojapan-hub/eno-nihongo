@@ -58,9 +58,9 @@ export async function fetchAdaptivePlan():Promise<AdaptivePlan>{
   const{data:auth,error:authError}=await supabase.auth.getUser();if(authError||!auth.user)return emptyPlan;
   const client=supabase as any;await client.rpc("ensure_active_study_plan",{});await client.rpc("generate_daily_study_tasks",{});await client.rpc("sync_daily_study_task_progress",{});
   const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-  const[{data:plans},{data:tasks}]=await Promise.all([client.from("study_plans").select("id,target_level,target_date,status").eq("user_id",auth.user.id).eq("status","active").order("created_at",{ascending:false}).limit(1),client.from("daily_study_tasks").select("id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id",auth.user.id).eq("study_date",today).order("priority",{ascending:false})]);
+  const[{data:plans},{data:tasks}]=await Promise.all([client.from("study_plans").select("id,target_level,target_date,status").eq("user_id",auth.user.id).eq("status","active").order("created_at",{ascending:false}).limit(1),client.from("daily_study_tasks").select("id,plan_id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id",auth.user.id).eq("study_date",today).order("priority",{ascending:false})]);
   const plan=plans?.[0];if(!plan)return emptyPlan;
-  const taskRows=[...(await enrichTasksWithSuggestions(auth.user.id,String(plan.target_level??"N5"),(tasks??[]) as AdaptiveTask[]))].sort((a,b)=>b.priority-a.priority);
+  const taskRows=[...(await enrichTasksWithSuggestions(auth.user.id,String(plan.target_level??"N5"),(tasks??[]).filter((task:any)=>task.plan_id===plan.id) as AdaptiveTask[]))].sort((a,b)=>b.priority-a.priority);
   const target=taskRows.reduce((s,t)=>s+Number(t.target_count||0),0),completed=taskRows.reduce((s,t)=>s+Math.min(Number(t.completed_count||0),Number(t.target_count||0)),0),targetMs=new Date(`${plan.target_date}T00:00:00+09:00`).getTime(),todayMs=new Date(`${today}T00:00:00+09:00`).getTime(),daysLeft=Math.max(0,Math.ceil((targetMs-todayMs)/86400000));
   return{active:true,targetLevel:plan.target_level??null,targetDate:plan.target_date??null,daysLeft,tasks:taskRows,target,completed};
 }
