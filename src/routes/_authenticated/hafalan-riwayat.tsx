@@ -152,9 +152,9 @@ function HafalanHistoryPage() {
         >
           <ArrowLeft className="size-4" /> Kembali ke Hafalan
         </a>
-        <section className="rounded-3xl border bg-gradient-to-b from-violet-50 to-card p-4">
+        <section className="rounded-3xl border bg-gradient-to-b from-violet-50 to-card p-4 dark:bg-card dark:bg-none">
           <div className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-2xl bg-violet-100 text-violet-700">
+            <span className="grid size-11 place-items-center rounded-2xl bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
               <BarChart3 className="size-5" />
             </span>
             <div>
@@ -228,7 +228,7 @@ function HafalanHistoryPage() {
             </section>
             <section className="rounded-3xl border bg-card p-4">
               <div className="flex items-center gap-2">
-                <span className="grid size-8 place-items-center rounded-xl bg-rose-100 text-rose-700">
+                <span className="grid size-8 place-items-center rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
                   <TriangleAlert className="size-4" />
                 </span>
                 <div>
