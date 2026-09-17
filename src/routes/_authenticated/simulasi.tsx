@@ -7,7 +7,7 @@ import { fetchFullSimulationAccess } from "@/lib/membership";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { PremiumBadge } from "@/components/membership/PremiumBadge";
 export const Route=createFileRoute("/_authenticated/simulasi")({component:SimulationPage});
-const sections=[{key:"vocabulary",jp:"文字・語彙",label:"Kanji & Kosakata",icon:Type,tone:"bg-emerald-50 text-emerald-600"},{key:"grammar",jp:"文法",label:"Bunpou",icon:Languages,tone:"bg-amber-50 text-amber-600"},{key:"reading",jp:"読解",label:"Dokkai",icon:BookOpen,tone:"bg-sky-50 text-sky-600"},{key:"listening",jp:"聴解",label:"Choukai",icon:Headphones,tone:"bg-rose-50 text-rose-500"}] as const;
+const sections=[{key:"vocabulary",jp:"文字・語彙",label:"Kanji & Kosakata",icon:Type,tone:"bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300"},{key:"grammar",jp:"文法",label:"Bunpou",icon:Languages,tone:"bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300"},{key:"reading",jp:"読解",label:"Dokkai",icon:BookOpen,tone:"bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300"},{key:"listening",jp:"聴解",label:"Choukai",icon:Headphones,tone:"bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300"}] as const;
 function SimulationPage(){
  const target=useQuery({queryKey:["target-level"],queryFn:fetchTargetLevel,retry:1}); const level=target.data??"N5"; const access=useQuery({queryKey:["full-simulation-access"],queryFn:fetchFullSimulationAccess,staleTime:30000}); const a=access.data;
  return <AppShell title="Simulasi JLPT" compact><div className="mx-auto max-w-md"><h1 className="text-[20px] font-bold">Simulasi JLPT {level}</h1><p className="mt-1 text-[10px] text-muted-foreground">Level mengikuti target JLPT yang dipilih di Profil.</p>
