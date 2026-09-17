@@ -108,6 +108,37 @@
   --sidebar-ring: oklch(0.68 0.13 155);
 }
 
+/* Legacy utility colours: keep older screens readable in dark mode. */
+.dark [class*="bg-white"] { background-color: var(--card) !important; }
+.dark [class*="border-slate-"] { border-color: oklch(1 0 0 / 14%) !important; }
+.dark [class*="text-slate-"] { color: var(--muted-foreground) !important; }
+.dark [class*="bg-emerald-50"] { background-color: oklch(0.34 0.07 155 / 30%) !important; }
+.dark [class*="text-emerald-6"],
+.dark [class*="text-emerald-7"] { color: oklch(0.80 0.12 155) !important; }
+.dark [class*="bg-sky-50"] { background-color: oklch(0.34 0.06 235 / 30%) !important; }
+.dark [class*="text-sky-6"] { color: oklch(0.78 0.10 235) !important; }
+.dark [class*="bg-violet-50"] { background-color: oklch(0.34 0.06 295 / 30%) !important; }
+.dark [class*="text-violet-6"] { color: oklch(0.78 0.10 295) !important; }
+.dark [class*="bg-amber-50"],
+.dark [class*="bg-yellow-50"] { background-color: oklch(0.34 0.06 85 / 30%) !important; }
+.dark [class*="border-amber-"],
+.dark [class*="border-yellow-"] { border-color: oklch(0.76 0.12 85 / 38%) !important; }
+.dark [class*="text-amber-7"],
+.dark [class*="text-amber-8"],
+.dark [class*="text-amber-9"] { color: oklch(0.84 0.12 85) !important; }
+.dark [class*="bg-red-50"],
+.dark [class*="bg-rose-50"] { background-color: oklch(0.34 0.07 20 / 30%) !important; }
+.dark [class*="border-red-"] { border-color: oklch(0.70 0.16 20 / 38%) !important; }
+.dark [class*="text-red-7"],
+.dark [class*="text-rose-6"] { color: oklch(0.78 0.13 20) !important; }
+.dark [class*="bg-blue-100"] { background-color: oklch(0.34 0.06 245 / 30%) !important; }
+.dark [class*="text-blue-6"] { color: oklch(0.78 0.10 245) !important; }
+.dark [class*="bg-teal-100"] { background-color: oklch(0.34 0.06 185 / 30%) !important; }
+.dark [class*="text-teal-7"] { color: oklch(0.80 0.10 185) !important; }
+.dark [class*="bg-orange-100"] { background-color: oklch(0.36 0.07 55 / 30%) !important; }
+.dark [class*="text-orange-5"],
+.dark [class*="text-orange-6"] { color: oklch(0.80 0.13 55) !important; }
+
 @layer base {
   * { border-color: var(--color-border); }
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
