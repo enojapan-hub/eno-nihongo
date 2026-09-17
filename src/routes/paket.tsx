@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Crown, Gem, Mail, MapPin, Phone } from "lucide-react";
 import { PUBLIC_PLANS, formatRupiah } from "@/lib/public-plans";
+import { supabase } from "@/integrations/supabase/client";
 
 const ORIGIN = "https://www.enonihongo.com";
 
@@ -16,9 +18,11 @@ export const Route = createFileRoute("/paket")({
 });
 
 function PaketPage() {
+  const [backTo, setBackTo] = useState("/");
+  useEffect(() => { void supabase.auth.getSession().then(({ data }) => { if (data.session) setBackTo("/dashboard"); }); }, []);
   return <main className="min-h-screen bg-[#f6faf7] px-4 py-6 text-[#10221a] sm:py-10">
     <div className="mx-auto max-w-4xl">
-      <a href="/" className="text-sm font-bold text-[#087d48]">← ENO NIHONGO</a>
+      <a href={backTo} className="text-sm font-bold text-[#087d48]">← {backTo === "/dashboard" ? "Kembali ke Dashboard" : "ENO NIHONGO"}</a>
       <section className="mt-7 text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-800"><Gem className="size-3.5 fill-amber-400" /> PREMIUM ENO NIHONGO</span>
         <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Pilih akses belajarmu.</h1>
