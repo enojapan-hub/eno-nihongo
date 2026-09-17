@@ -18,7 +18,7 @@ export async function fetchMembershipAccess(): Promise<MembershipAccess> {
   const userId = userData.user?.id;
   if (!userId) return { ...membership, hasPremiumAccess: false };
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
-  const privileged = profile?.role === "owner" || profile?.role === "admin";
+  const privileged = ["owner", "admin", "editor", "teacher"].includes(profile?.role ?? "");
   return { ...membership, hasPremiumAccess: privileged || membership.plan !== "free" };
 }
 
