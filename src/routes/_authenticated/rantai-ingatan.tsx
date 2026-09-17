@@ -221,7 +221,7 @@ function MemoryChainPage() {
         >
           <ArrowLeft className="size-4" /> Kembali ke Materi
         </a>
-        <section className="rounded-3xl border bg-gradient-to-b from-emerald-50 to-card p-4">
+        <section className="rounded-3xl border bg-gradient-to-b from-emerald-50 to-card p-4 dark:from-emerald-500/[.10]">
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-primary/10">
               <BrainCircuit className="size-6 text-primary" />
@@ -239,18 +239,18 @@ function MemoryChainPage() {
         </section>
         <a
           href="/jebakan-ingatan"
-          className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-3"
+          className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-500/35 dark:bg-amber-500/[.10]"
         >
-          <span className="grid size-9 place-items-center rounded-xl bg-amber-100 text-amber-700">
+          <span className="grid size-9 place-items-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
             <TriangleAlert className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-amber-900">Jebakan Ingatan</p>
-            <p className="text-[8px] text-amber-800/70">
+            <p className="text-[10px] font-bold text-amber-900 dark:text-amber-200">Jebakan Ingatan</p>
+            <p className="text-[8px] text-amber-800/70 dark:text-amber-100/70">
               Pasangan membingungkan + deteksi “merasa hafal”
             </p>
           </div>
-          <ChevronRight className="size-4 text-amber-700" />
+          <ChevronRight className="size-4 text-amber-700 dark:text-amber-300" />
         </a>
         {!chain || !step ? (
           <section className="rounded-2xl border bg-card p-5 text-center text-[10px] text-muted-foreground">
@@ -303,7 +303,7 @@ function MemoryChainPage() {
                 <button
                   disabled={saving}
                   onClick={() => void answer(false)}
-                  className="rounded-2xl border border-red-200 bg-red-50 py-3 text-[10px] font-bold text-red-700 disabled:opacity-60"
+                  className="rounded-2xl border border-red-200 bg-red-50 py-3 text-[10px] font-bold text-red-700 disabled:opacity-60 dark:border-red-500/35 dark:bg-red-500/[.12] dark:text-red-200"
                 >
                   Belum ingat
                 </button>
