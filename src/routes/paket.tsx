@@ -20,11 +20,11 @@ export const Route = createFileRoute("/paket")({
 function PaketPage() {
   const [backTo, setBackTo] = useState("/");
   useEffect(() => { void supabase.auth.getSession().then(({ data }) => { if (data.session) setBackTo("/dashboard"); }); }, []);
-  return <main className="min-h-screen bg-[#f6faf7] px-4 py-6 text-[#10221a] sm:py-10">
+  return <main className="min-h-screen bg-[#f6faf7] px-4 py-6 text-[#10221a] sm:py-10 dark:bg-background dark:text-foreground">
     <div className="mx-auto max-w-4xl">
       <a href={backTo} className="text-sm font-bold text-[#087d48]">← {backTo === "/dashboard" ? "Kembali ke Dashboard" : "ENO NIHONGO"}</a>
       <section className="mt-7 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-800"><Gem className="size-3.5 fill-amber-400" /> PREMIUM ENO NIHONGO</span>
+        <span className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-800 dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-200"><Gem className="size-3.5 fill-amber-400" /> PREMIUM ENO NIHONGO</span>
         <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Pilih akses belajarmu.</h1>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600">Semua materi dasar tetap bisa dinikmati gratis. Premium membuka fitur belajar yang lebih personal.</p>
       </section>
