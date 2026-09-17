@@ -37,9 +37,9 @@ function createSupabaseClient() {
       storage: browserStorage(),
       persistSession: true,
       autoRefreshToken: true,
-      // Root route explicitly owns exchangeCodeForSession(). Keeping automatic
-      // URL detection on can make Safari attempt the same PKCE code twice.
-      detectSessionInUrl: false,
+      // Let Supabase process either the PKCE `code` callback or an OAuth hash
+      // callback. Some mobile in-app browsers return the latter.
+      detectSessionInUrl: true,
       flowType: 'pkce',
     },
   });
