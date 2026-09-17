@@ -9,12 +9,22 @@ import { BrandLogo, BrandMark } from "@/components/layout/BrandMark";
 export const Route = createFileRoute("/auth")({ head: () => ({ meta: [{ title: "enonihongo — Belajar Bahasa Jepang" }, { name: "description", content: "Belajar bahasa Jepang dengan cara yang lebih terarah. Kuasai Kanji, Kotoba, Bunpou, Dokkai, Choukai, dan persiapkan JLPT N5–N1 bersama enonihongo." }] }), component: AuthPage });
 const CANONICAL_ORIGIN = "https://www.enonihongo.com";
 
+function selectedPlanCheckout() {
+  if (typeof window === "undefined") return null;
+  const plan = new URLSearchParams(window.location.search).get("paket");
+  return plan && ["premium_monthly", "premium_yearly", "lifetime"].includes(plan) ? `/checkout?plan=${plan}` : null;
+}
 async function continueAfterAuth() {
   const { data, error } = await supabase.auth.getSession();
   if (error) throw error;
   const user = data.session?.user;
   if (!user) return false;
   const { data: profile } = await supabase.from("profiles").select("onboarding_completed, role").eq("id", user.id).maybeSingle();
+  const checkout = selectedPlanCheckout();
+  if (checkout) {
+    window.location.replace(checkout);
+    return true;
+  }
   if (profile?.role === "owner" || profile?.role === "admin") {
     window.location.replace("/admin");
     return true;
@@ -43,8 +53,6 @@ function AuthPage() {
   async function signInWithGoogle() {
     if (loading) return; setError(null); setLoading(true);
     try {
-      // The Supabase client uses PKCE with detectSessionInUrl=false. The root route
-      // is the single callback owner and exchanges ?code= for a persisted session.
       const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${CANONICAL_ORIGIN}/`, skipBrowserRedirect: false, queryParams: { prompt: "select_account" } } });
       if (oauthError) throw oauthError;
     } catch (caught) { const message = caught instanceof Error ? caught.message : "Gagal masuk dengan Google."; setError(message); toast.error(message); setLoading(false); }
