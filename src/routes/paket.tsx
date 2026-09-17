@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Crown, Mail, MapPin, Phone } from "lucide-react";
+import { Check, Crown, Gem, Mail, MapPin, Phone } from "lucide-react";
 import { PUBLIC_PLANS, formatRupiah } from "@/lib/public-plans";
 
 const ORIGIN = "https://www.enonihongo.com";
@@ -16,23 +16,21 @@ export const Route = createFileRoute("/paket")({
 });
 
 function PaketPage() {
-  return <main className="min-h-screen bg-[#f7fbf8] px-4 py-8 text-[#10221a] sm:py-12">
-    <div className="mx-auto max-w-5xl">
+  return <main className="min-h-screen bg-[#f6faf7] px-4 py-6 text-[#10221a] sm:py-10">
+    <div className="mx-auto max-w-4xl">
       <a href="/" className="text-sm font-bold text-[#087d48]">← ENO NIHONGO</a>
-      <section className="mt-8 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-[#087d48]/10 px-3 py-1 text-xs font-black text-[#087d48]"><Crown className="size-3.5" /> PAKET PREMIUM</span>
-        <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Belajar lebih lengkap sesuai kebutuhanmu.</h1>
-        <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600">Pilih akses Premium untuk latihan, simulasi, dan ENO Exam Bulanan. Harga ditampilkan dalam Rupiah.</p>
+      <section className="mt-7 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-800"><Gem className="size-3.5 fill-amber-400" /> PREMIUM ENO NIHONGO</span>
+        <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Pilih akses belajarmu.</h1>
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600">Semua materi dasar tetap bisa dinikmati gratis. Premium membuka fitur belajar yang lebih personal.</p>
       </section>
-      <section className="mt-8 grid gap-4 md:grid-cols-3">
-        {PUBLIC_PLANS.map((plan) => <article key={plan.code} className={`relative flex flex-col rounded-3xl border bg-white p-6 shadow-sm ${plan.featured ? "border-[#087d48] ring-2 ring-[#087d48]/15" : "border-slate-200"}`}>
-          {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#087d48] px-3 py-1 text-[11px] font-black text-white">PALING HEMAT</span>}
-          <h2 className="text-lg font-black">{plan.name}</h2>
-          <p className="mt-3 text-3xl font-black text-[#087d48]">{formatRupiah(plan.price)}</p>
-          <p className="mt-1 text-xs text-slate-500">{plan.billing}</p>
-          <p className="mt-5 min-h-10 text-sm leading-5 text-slate-600">{plan.description}</p>
-          <ul className="mt-5 space-y-2 text-sm text-slate-700"><li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-[#087d48]" />Materi dan latihan Premium</li><li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-[#087d48]" />ENO Exam Bulanan</li><li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-[#087d48]" />Progres tersimpan di akun</li></ul>
-          <a href={`/auth?paket=${plan.code}`} className="mt-7 flex h-11 items-center justify-center rounded-xl bg-[#087d48] px-4 text-sm font-black text-white">Pilih {plan.name}</a>
+      <section className="mt-8 grid gap-3 md:grid-cols-3">
+        {PUBLIC_PLANS.map((plan) => <article key={plan.code} className={`relative flex flex-col rounded-2xl border bg-white p-5 ${plan.featured ? "border-[#087d48] shadow-lg shadow-[#087d48]/10" : "border-slate-200"}`}>
+          {plan.featured && <span className="absolute -top-3 left-4 inline-flex items-center gap-1 rounded-full bg-[#087d48] px-2.5 py-1 text-[10px] font-black text-white"><Crown className="size-3" /> PILIHAN TERBAIK</span>}
+          <div className={plan.featured ? "mt-2" : ""}><h2 className="text-base font-black">{plan.name}</h2><p className="mt-2 text-3xl font-black text-[#087d48]">{formatRupiah(plan.price)}</p><p className="mt-0.5 text-xs text-slate-500">{plan.billing}</p></div>
+          <p className="mt-4 text-sm leading-5 text-slate-600">{plan.description}</p>
+          <ul className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-xs text-slate-700"><li className="flex gap-2"><Check className="size-4 shrink-0 text-[#087d48]" />Latihan Premium dan progres akun</li><li className="flex gap-2"><Check className="size-4 shrink-0 text-[#087d48]" />ENO Exam Bulanan</li></ul>
+          <a href={`/auth?paket=${plan.code}`} className={`mt-5 flex h-10 items-center justify-center rounded-xl px-4 text-sm font-black ${plan.featured ? "bg-[#087d48] text-white" : "border border-[#087d48] text-[#087d48]"}`}>Pilih Paket</a>
         </article>)}
       </section>
       <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6">
