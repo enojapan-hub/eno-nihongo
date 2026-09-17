@@ -48,12 +48,7 @@ type AudioManifestItem = { id: string; level: string; mondai_no: number | null; 
 
 async function fetchQuestions(level: Level, section: string): Promise<Row[]> {
   const { data, error } = await (supabase as any)
-    .from("jlpt_simulation_questions_public")
-    .select("id,mondai_no,question_no,display_question_no,question_type,instruction_jp,prompt_jp,choices,passage_title,passage_jp,audio_url,image_url,transcript_jp")
-    .eq("level", level)
-    .eq("section", section)
-    .order("mondai_no")
-    .order("question_no");
+    .rpc("get_published_simulation_questions", { p_level: level, p_section: section });
   if (error) throw error;
   return (data ?? []).filter((x: any) => x.prompt_jp && Array.isArray(x.choices) && (x.choices.length === 3 || x.choices.length === 4));
 }
@@ -230,6 +225,7 @@ function SectionRunner() {
   };
 
   if (q.isLoading) return <AppShell title="Simulasi JLPT"><p className="py-10 text-center text-xs text-muted-foreground">問題を読み込んでいます…</p></AppShell>;
+  if (q.isError) return <AppShell title="Simulasi JLPT"><Card><CardContent className="p-6 text-center text-xs"><p className="text-destructive">Bank soal gagal dimuat. Coba masuk ulang bila sesi akun telah berakhir.</p><Button className="mt-4" onClick={() => void q.refetch()}>Coba lagi</Button></CardContent></Card></AppShell>;
   if (!questions.length) return <AppShell title="Simulasi JLPT"><Card><CardContent className="p-6 text-center text-xs">Bank Simulasi {level} · {labels[section]} sedang disiapkan.<Button asChild className="mt-4"><Link to="/simulasi">Kembali</Link></Button></CardContent></Card></AppShell>;
   if (finished) {
     const fullExamActive = typeof window !== "undefined" && Boolean(window.localStorage.getItem(storageKey));
