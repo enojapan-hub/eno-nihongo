@@ -119,6 +119,10 @@
 .dark [class*="text-sky-6"] { color: oklch(0.78 0.10 235) !important; }
 .dark [class*="bg-violet-50"] { background-color: oklch(0.34 0.06 295 / 30%) !important; }
 .dark [class*="text-violet-6"] { color: oklch(0.78 0.10 295) !important; }
+.dark [class*="bg-violet-100"] { background-color: oklch(0.34 0.06 295 / 30%) !important; }
+.dark [class*="bg-emerald-100"] { background-color: oklch(0.34 0.07 155 / 30%) !important; }
+.dark [class*="bg-rose-100"] { background-color: oklch(0.34 0.07 20 / 30%) !important; }
+.dark [class*="bg-sky-100"] { background-color: oklch(0.34 0.06 235 / 30%) !important; }
 .dark [class*="bg-amber-50"],
 .dark [class*="bg-yellow-50"] { background-color: oklch(0.34 0.06 85 / 30%) !important; }
 .dark [class*="border-amber-"],
@@ -138,6 +142,10 @@
 .dark [class*="bg-orange-100"] { background-color: oklch(0.36 0.07 55 / 30%) !important; }
 .dark [class*="text-orange-5"],
 .dark [class*="text-orange-6"] { color: oklch(0.80 0.13 55) !important; }
+/* A gradient keeps its own background-image, so it must be disabled explicitly. */
+.dark [class*="from-violet-50"],
+.dark [class*="from-slate-"],
+.dark [class*="from-gray-"] { background-image: none !important; }
 
 @layer base {
   * { border-color: var(--color-border); }
