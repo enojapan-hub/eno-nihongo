@@ -12,21 +12,87 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as PaketRouteImport } from './routes/paket'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TentangRouteImport } from './routes/tentang'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminAnalitikRouteImport } from './routes/_authenticated/admin-analitik'
+import { Route as AuthenticatedAdminEnoExamRouteImport } from './routes/_authenticated/admin-eno-exam'
+import { Route as AuthenticatedAdminKelasRouteImport } from './routes/_authenticated/admin-kelas'
+import { Route as AuthenticatedAdminKontenRouteImport } from './routes/_authenticated/admin-konten'
+import { Route as AuthenticatedAdminLanggananRouteImport } from './routes/_authenticated/admin-langganan'
+import { Route as AuthenticatedAdminOperasionalRouteImport } from './routes/_authenticated/admin-operasional'
+import { Route as AuthenticatedAdminPenggunaRouteImport } from './routes/_authenticated/admin-pengguna'
+import { Route as AuthenticatedAdminSistemRouteImport } from './routes/_authenticated/admin-sistem'
+import { Route as AuthenticatedAdminTerjemahanRouteImport } from './routes/_authenticated/admin-terjemahan'
 import { Route as AuthenticatedBelajarRouteImport } from './routes/_authenticated/belajar'
 import { Route as AuthenticatedBunpoRouteImport } from './routes/_authenticated/bunpo'
+import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
+import { Route as AuthenticatedChoukaiRouteImport } from './routes/_authenticated/choukai'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDokkaiRouteImport } from './routes/_authenticated/dokkai'
+import { Route as AuthenticatedEditProfilRouteImport } from './routes/_authenticated/edit-profil'
+import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated/editor'
+import { Route as AuthenticatedEnoExamRouteImport } from './routes/_authenticated/eno-exam'
+import { Route as AuthenticatedGuruRouteImport } from './routes/_authenticated/guru'
+import { Route as AuthenticatedGuruKelasBaruRouteImport } from './routes/_authenticated/guru-kelas-baru'
+import { Route as AuthenticatedHafalanRouteImport } from './routes/_authenticated/hafalan'
+import { Route as AuthenticatedHafalanRiwayatRouteImport } from './routes/_authenticated/hafalan-riwayat'
+import { Route as AuthenticatedJebakanIngatanRouteImport } from './routes/_authenticated/jebakan-ingatan'
+import { Route as AuthenticatedKanaRouteImport } from './routes/_authenticated/kana'
 import { Route as AuthenticatedKanjiRouteImport } from './routes/_authenticated/kanji'
+import { Route as AuthenticatedKelasRouteImport } from './routes/_authenticated/kelas'
+import { Route as AuthenticatedKelasSayaRouteImport } from './routes/_authenticated/kelas-saya'
 import { Route as AuthenticatedKotobaRouteImport } from './routes/_authenticated/kotoba'
+import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedListeningRouteImport } from './routes/_authenticated/listening'
+import { Route as AuthenticatedNotifikasiRouteImport } from './routes/_authenticated/notifikasi'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authenticated/pengaturan'
+import { Route as AuthenticatedPetaKelemahanRouteImport } from './routes/_authenticated/peta-kelemahan'
 import { Route as AuthenticatedProfilRouteImport } from './routes/_authenticated/profil'
+import { Route as AuthenticatedProfilFotoRouteImport } from './routes/_authenticated/profil-foto'
 import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedQuizRouteImport } from './routes/_authenticated/quiz'
+import { Route as AuthenticatedRantaiIngatanRouteImport } from './routes/_authenticated/rantai-ingatan'
 import { Route as AuthenticatedReferralRouteImport } from './routes/_authenticated/referral'
+import { Route as AuthenticatedSimulasiRouteImport } from './routes/_authenticated/simulasi'
+import { Route as AuthenticatedStudyItemRouteImport } from './routes/_authenticated/study-item'
+import { Route as AuthenticatedTargetRouteImport } from './routes/_authenticated/target'
+import { Route as AuthenticatedTargetTertundaRouteImport } from './routes/_authenticated/target-tertunda'
+import { Route as ApiAdminTranslationRouteImport } from './routes/api/admin-translation'
+import { Route as ApiJlptAudioRouteImport } from './routes/api/jlpt-audio'
+import { Route as ApiJlptAudioManifestRouteImport } from './routes/api/jlpt-audio-manifest'
+import { Route as ApiJlptImageRouteImport } from './routes/api/jlpt-image'
+import { Route as ApiLeaderboardRouteImport } from './routes/api/leaderboard'
+import { Route as AuthenticatedAdminEnoExamExamIdRouteImport } from './routes/_authenticated/admin-eno-exam.$examId'
+import { Route as AuthenticatedDokkaiBacaIdRouteImport } from './routes/_authenticated/dokkai-baca/$id'
 import { Route as AuthenticatedDokkaiIdRouteImport } from './routes/_authenticated/dokkai/$id'
+import { Route as AuthenticatedEnoExamExamIdRouteImport } from './routes/_authenticated/eno-exam.$examId'
+import { Route as AuthenticatedGuruKelasClassIdRouteImport } from './routes/_authenticated/guru-kelas.$classId'
 import { Route as AuthenticatedKanjiIdRouteImport } from './routes/_authenticated/kanji/$id'
+import { Route as AuthenticatedKelasClassIdRouteImport } from './routes/_authenticated/kelas.$classId'
+import { Route as AuthenticatedListeningIdRouteImport } from './routes/_authenticated/listening/$id'
 import { Route as AuthenticatedQuizSlugRouteImport } from './routes/_authenticated/quiz/$slug'
+import { Route as AuthenticatedSertifikatSimulasiLevelRouteImport } from './routes/_authenticated/sertifikat-simulasi.$level'
+import { Route as AuthenticatedSimulasiHasilLevelRouteImport } from './routes/_authenticated/simulasi-hasil.$level'
+import { Route as AuthenticatedSimulasiPenuhLevelRouteImport } from './routes/_authenticated/simulasi-penuh.$level'
+import { Route as AuthenticatedSimulasiReviewAttemptIdRouteImport } from './routes/_authenticated/simulasi-review.$attemptId'
+import { Route as AuthenticatedSimulasiLevelRouteImport } from './routes/_authenticated/simulasi/$level'
+import { Route as ApiBunpoExamplesRouteImport } from './routes/api/bunpo/examples'
+import { Route as ApiCronTranslationRouteImport } from './routes/api/cron/translation'
+import { Route as ApiDuitkuCreateInvoiceRouteImport } from './routes/api/duitku/create-invoice'
+import { Route as ApiKotobaExamplesRouteImport } from './routes/api/kotoba/examples'
+import { Route as PembayaranDuitkuCallbackRouteImport } from './routes/pembayaran/duitku/callback'
+import { Route as AuthenticatedGuruKelasClassIdKontenRouteImport } from './routes/_authenticated/guru-kelas.$classId.konten'
+import { Route as AuthenticatedGuruKelasClassIdNilaiRouteImport } from './routes/_authenticated/guru-kelas.$classId.nilai'
+import { Route as AuthenticatedKelasClassIdWorkspaceRouteImport } from './routes/_authenticated/kelas.$classId.workspace'
+import { Route as AuthenticatedPembayaranDuitkuSelesaiRouteImport } from './routes/_authenticated/pembayaran/duitku/selesai'
+import { Route as AuthenticatedSimulasiBagianLevelSectionRouteImport } from './routes/_authenticated/simulasi-bagian.$level.$section'
+import { Route as AuthenticatedGuruKelasClassIdQuizQuizIdRouteImport } from './routes/_authenticated/guru-kelas.$classId.quiz.$quizId'
+import { Route as AuthenticatedKelasClassIdQuizQuizIdRouteImport } from './routes/_authenticated/kelas.$classId.quiz.$quizId'
+import { Route as AuthenticatedKelasClassIdTugasAssignmentIdRouteImport } from './routes/_authenticated/kelas.$classId.tugas.$assignmentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -42,11 +108,84 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaketRoute = PaketRouteImport.update({
+  id: '/paket',
+  path: '/paket',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TentangRoute = TentangRouteImport.update({
+  id: '/tentang',
+  path: '/tentang',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminAnalitikRoute =
+  AuthenticatedAdminAnalitikRouteImport.update({
+    id: '/admin-analitik',
+    path: '/admin-analitik',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminEnoExamRoute =
+  AuthenticatedAdminEnoExamRouteImport.update({
+    id: '/admin-eno-exam',
+    path: '/admin-eno-exam',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminKelasRoute = AuthenticatedAdminKelasRouteImport.update({
+  id: '/admin-kelas',
+  path: '/admin-kelas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminKontenRoute =
+  AuthenticatedAdminKontenRouteImport.update({
+    id: '/admin-konten',
+    path: '/admin-konten',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminLanggananRoute =
+  AuthenticatedAdminLanggananRouteImport.update({
+    id: '/admin-langganan',
+    path: '/admin-langganan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminOperasionalRoute =
+  AuthenticatedAdminOperasionalRouteImport.update({
+    id: '/admin-operasional',
+    path: '/admin-operasional',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPenggunaRoute =
+  AuthenticatedAdminPenggunaRouteImport.update({
+    id: '/admin-pengguna',
+    path: '/admin-pengguna',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSistemRoute =
+  AuthenticatedAdminSistemRouteImport.update({
+    id: '/admin-sistem',
+    path: '/admin-sistem',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTerjemahanRoute =
+  AuthenticatedAdminTerjemahanRouteImport.update({
+    id: '/admin-terjemahan',
+    path: '/admin-terjemahan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBelajarRoute = AuthenticatedBelajarRouteImport.update({
   id: '/belajar',
   path: '/belajar',
@@ -55,6 +194,16 @@ const AuthenticatedBelajarRoute = AuthenticatedBelajarRouteImport.update({
 const AuthenticatedBunpoRoute = AuthenticatedBunpoRouteImport.update({
   id: '/bunpo',
   path: '/bunpo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChoukaiRoute = AuthenticatedChoukaiRouteImport.update({
+  id: '/choukai',
+  path: '/choukai',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -67,9 +216,67 @@ const AuthenticatedDokkaiRoute = AuthenticatedDokkaiRouteImport.update({
   path: '/dokkai',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEditProfilRoute = AuthenticatedEditProfilRouteImport.update({
+  id: '/edit-profil',
+  path: '/edit-profil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEditorRoute = AuthenticatedEditorRouteImport.update({
+  id: '/editor',
+  path: '/editor',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEnoExamRoute = AuthenticatedEnoExamRouteImport.update({
+  id: '/eno-exam',
+  path: '/eno-exam',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGuruRoute = AuthenticatedGuruRouteImport.update({
+  id: '/guru',
+  path: '/guru',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGuruKelasBaruRoute =
+  AuthenticatedGuruKelasBaruRouteImport.update({
+    id: '/guru-kelas-baru',
+    path: '/guru-kelas-baru',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHafalanRoute = AuthenticatedHafalanRouteImport.update({
+  id: '/hafalan',
+  path: '/hafalan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHafalanRiwayatRoute =
+  AuthenticatedHafalanRiwayatRouteImport.update({
+    id: '/hafalan-riwayat',
+    path: '/hafalan-riwayat',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedJebakanIngatanRoute =
+  AuthenticatedJebakanIngatanRouteImport.update({
+    id: '/jebakan-ingatan',
+    path: '/jebakan-ingatan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedKanaRoute = AuthenticatedKanaRouteImport.update({
+  id: '/kana',
+  path: '/kana',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedKanjiRoute = AuthenticatedKanjiRouteImport.update({
   id: '/kanji',
   path: '/kanji',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedKelasRoute = AuthenticatedKelasRouteImport.update({
+  id: '/kelas',
+  path: '/kelas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedKelasSayaRoute = AuthenticatedKelasSayaRouteImport.update({
+  id: '/kelas-saya',
+  path: '/kelas-saya',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedKotobaRoute = AuthenticatedKotobaRouteImport.update({
@@ -77,14 +284,46 @@ const AuthenticatedKotobaRoute = AuthenticatedKotobaRouteImport.update({
   path: '/kotoba',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLeaderboardRoute =
+  AuthenticatedLeaderboardRouteImport.update({
+    id: '/leaderboard',
+    path: '/leaderboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedListeningRoute = AuthenticatedListeningRouteImport.update({
   id: '/listening',
   path: '/listening',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotifikasiRoute = AuthenticatedNotifikasiRouteImport.update({
+  id: '/notifikasi',
+  path: '/notifikasi',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPengaturanRoute = AuthenticatedPengaturanRouteImport.update({
+  id: '/pengaturan',
+  path: '/pengaturan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPetaKelemahanRoute =
+  AuthenticatedPetaKelemahanRouteImport.update({
+    id: '/peta-kelemahan',
+    path: '/peta-kelemahan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfilRoute = AuthenticatedProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfilFotoRoute = AuthenticatedProfilFotoRouteImport.update({
+  id: '/profil-foto',
+  path: '/profil-foto',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
@@ -97,152 +336,753 @@ const AuthenticatedQuizRoute = AuthenticatedQuizRouteImport.update({
   path: '/quiz',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRantaiIngatanRoute =
+  AuthenticatedRantaiIngatanRouteImport.update({
+    id: '/rantai-ingatan',
+    path: '/rantai-ingatan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
   id: '/referral',
   path: '/referral',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSimulasiRoute = AuthenticatedSimulasiRouteImport.update({
+  id: '/simulasi',
+  path: '/simulasi',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStudyItemRoute = AuthenticatedStudyItemRouteImport.update({
+  id: '/study-item',
+  path: '/study-item',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTargetRoute = AuthenticatedTargetRouteImport.update({
+  id: '/target',
+  path: '/target',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTargetTertundaRoute =
+  AuthenticatedTargetTertundaRouteImport.update({
+    id: '/target-tertunda',
+    path: '/target-tertunda',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiAdminTranslationRoute = ApiAdminTranslationRouteImport.update({
+  id: '/api/admin-translation',
+  path: '/api/admin-translation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiJlptAudioRoute = ApiJlptAudioRouteImport.update({
+  id: '/api/jlpt-audio',
+  path: '/api/jlpt-audio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiJlptAudioManifestRoute = ApiJlptAudioManifestRouteImport.update({
+  id: '/api/jlpt-audio-manifest',
+  path: '/api/jlpt-audio-manifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiJlptImageRoute = ApiJlptImageRouteImport.update({
+  id: '/api/jlpt-image',
+  path: '/api/jlpt-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLeaderboardRoute = ApiLeaderboardRouteImport.update({
+  id: '/api/leaderboard',
+  path: '/api/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminEnoExamExamIdRoute =
+  AuthenticatedAdminEnoExamExamIdRouteImport.update({
+    id: '/$examId',
+    path: '/$examId',
+    getParentRoute: () => AuthenticatedAdminEnoExamRoute,
+  } as any)
+const AuthenticatedDokkaiBacaIdRoute =
+  AuthenticatedDokkaiBacaIdRouteImport.update({
+    id: '/dokkai-baca/$id',
+    path: '/dokkai-baca/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDokkaiIdRoute = AuthenticatedDokkaiIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AuthenticatedDokkaiRoute,
 } as any)
+const AuthenticatedEnoExamExamIdRoute =
+  AuthenticatedEnoExamExamIdRouteImport.update({
+    id: '/$examId',
+    path: '/$examId',
+    getParentRoute: () => AuthenticatedEnoExamRoute,
+  } as any)
+const AuthenticatedGuruKelasClassIdRoute =
+  AuthenticatedGuruKelasClassIdRouteImport.update({
+    id: '/guru-kelas/$classId',
+    path: '/guru-kelas/$classId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedKanjiIdRoute = AuthenticatedKanjiIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AuthenticatedKanjiRoute,
 } as any)
+const AuthenticatedKelasClassIdRoute =
+  AuthenticatedKelasClassIdRouteImport.update({
+    id: '/$classId',
+    path: '/$classId',
+    getParentRoute: () => AuthenticatedKelasRoute,
+  } as any)
+const AuthenticatedListeningIdRoute =
+  AuthenticatedListeningIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedListeningRoute,
+  } as any)
 const AuthenticatedQuizSlugRoute = AuthenticatedQuizSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => AuthenticatedQuizRoute,
 } as any)
+const AuthenticatedSertifikatSimulasiLevelRoute =
+  AuthenticatedSertifikatSimulasiLevelRouteImport.update({
+    id: '/sertifikat-simulasi/$level',
+    path: '/sertifikat-simulasi/$level',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSimulasiHasilLevelRoute =
+  AuthenticatedSimulasiHasilLevelRouteImport.update({
+    id: '/simulasi-hasil/$level',
+    path: '/simulasi-hasil/$level',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSimulasiPenuhLevelRoute =
+  AuthenticatedSimulasiPenuhLevelRouteImport.update({
+    id: '/simulasi-penuh/$level',
+    path: '/simulasi-penuh/$level',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSimulasiReviewAttemptIdRoute =
+  AuthenticatedSimulasiReviewAttemptIdRouteImport.update({
+    id: '/simulasi-review/$attemptId',
+    path: '/simulasi-review/$attemptId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSimulasiLevelRoute =
+  AuthenticatedSimulasiLevelRouteImport.update({
+    id: '/$level',
+    path: '/$level',
+    getParentRoute: () => AuthenticatedSimulasiRoute,
+  } as any)
+const ApiBunpoExamplesRoute = ApiBunpoExamplesRouteImport.update({
+  id: '/api/bunpo/examples',
+  path: '/api/bunpo/examples',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronTranslationRoute = ApiCronTranslationRouteImport.update({
+  id: '/api/cron/translation',
+  path: '/api/cron/translation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDuitkuCreateInvoiceRoute = ApiDuitkuCreateInvoiceRouteImport.update({
+  id: '/api/duitku/create-invoice',
+  path: '/api/duitku/create-invoice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKotobaExamplesRoute = ApiKotobaExamplesRouteImport.update({
+  id: '/api/kotoba/examples',
+  path: '/api/kotoba/examples',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PembayaranDuitkuCallbackRoute =
+  PembayaranDuitkuCallbackRouteImport.update({
+    id: '/pembayaran/duitku/callback',
+    path: '/pembayaran/duitku/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedGuruKelasClassIdKontenRoute =
+  AuthenticatedGuruKelasClassIdKontenRouteImport.update({
+    id: '/konten',
+    path: '/konten',
+    getParentRoute: () => AuthenticatedGuruKelasClassIdRoute,
+  } as any)
+const AuthenticatedGuruKelasClassIdNilaiRoute =
+  AuthenticatedGuruKelasClassIdNilaiRouteImport.update({
+    id: '/nilai',
+    path: '/nilai',
+    getParentRoute: () => AuthenticatedGuruKelasClassIdRoute,
+  } as any)
+const AuthenticatedKelasClassIdWorkspaceRoute =
+  AuthenticatedKelasClassIdWorkspaceRouteImport.update({
+    id: '/workspace',
+    path: '/workspace',
+    getParentRoute: () => AuthenticatedKelasClassIdRoute,
+  } as any)
+const AuthenticatedPembayaranDuitkuSelesaiRoute =
+  AuthenticatedPembayaranDuitkuSelesaiRouteImport.update({
+    id: '/pembayaran/duitku/selesai',
+    path: '/pembayaran/duitku/selesai',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSimulasiBagianLevelSectionRoute =
+  AuthenticatedSimulasiBagianLevelSectionRouteImport.update({
+    id: '/simulasi-bagian/$level/$section',
+    path: '/simulasi-bagian/$level/$section',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGuruKelasClassIdQuizQuizIdRoute =
+  AuthenticatedGuruKelasClassIdQuizQuizIdRouteImport.update({
+    id: '/quiz/$quizId',
+    path: '/quiz/$quizId',
+    getParentRoute: () => AuthenticatedGuruKelasClassIdRoute,
+  } as any)
+const AuthenticatedKelasClassIdQuizQuizIdRoute =
+  AuthenticatedKelasClassIdQuizQuizIdRouteImport.update({
+    id: '/quiz/$quizId',
+    path: '/quiz/$quizId',
+    getParentRoute: () => AuthenticatedKelasClassIdRoute,
+  } as any)
+const AuthenticatedKelasClassIdTugasAssignmentIdRoute =
+  AuthenticatedKelasClassIdTugasAssignmentIdRouteImport.update({
+    id: '/tugas/$assignmentId',
+    path: '/tugas/$assignmentId',
+    getParentRoute: () => AuthenticatedKelasClassIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/faq': typeof FaqRoute
+  '/paket': typeof PaketRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/tentang': typeof TentangRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/admin-analitik': typeof AuthenticatedAdminAnalitikRoute
+  '/admin-eno-exam': typeof AuthenticatedAdminEnoExamRouteWithChildren
+  '/admin-kelas': typeof AuthenticatedAdminKelasRoute
+  '/admin-konten': typeof AuthenticatedAdminKontenRoute
+  '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
+  '/admin-operasional': typeof AuthenticatedAdminOperasionalRoute
+  '/admin-pengguna': typeof AuthenticatedAdminPenggunaRoute
+  '/admin-sistem': typeof AuthenticatedAdminSistemRoute
+  '/admin-terjemahan': typeof AuthenticatedAdminTerjemahanRoute
   '/belajar': typeof AuthenticatedBelajarRoute
   '/bunpo': typeof AuthenticatedBunpoRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
+  '/choukai': typeof AuthenticatedChoukaiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/dokkai': typeof AuthenticatedDokkaiRouteWithChildren
+  '/edit-profil': typeof AuthenticatedEditProfilRoute
+  '/editor': typeof AuthenticatedEditorRoute
+  '/eno-exam': typeof AuthenticatedEnoExamRouteWithChildren
+  '/guru': typeof AuthenticatedGuruRoute
+  '/guru-kelas-baru': typeof AuthenticatedGuruKelasBaruRoute
+  '/hafalan': typeof AuthenticatedHafalanRoute
+  '/hafalan-riwayat': typeof AuthenticatedHafalanRiwayatRoute
+  '/jebakan-ingatan': typeof AuthenticatedJebakanIngatanRoute
+  '/kana': typeof AuthenticatedKanaRoute
   '/kanji': typeof AuthenticatedKanjiRouteWithChildren
+  '/kelas': typeof AuthenticatedKelasRouteWithChildren
+  '/kelas-saya': typeof AuthenticatedKelasSayaRoute
   '/kotoba': typeof AuthenticatedKotobaRoute
-  '/listening': typeof AuthenticatedListeningRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/listening': typeof AuthenticatedListeningRouteWithChildren
+  '/notifikasi': typeof AuthenticatedNotifikasiRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/pengaturan': typeof AuthenticatedPengaturanRoute
+  '/peta-kelemahan': typeof AuthenticatedPetaKelemahanRoute
   '/profil': typeof AuthenticatedProfilRoute
+  '/profil-foto': typeof AuthenticatedProfilFotoRoute
   '/progress': typeof AuthenticatedProgressRoute
   '/quiz': typeof AuthenticatedQuizRouteWithChildren
+  '/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/referral': typeof AuthenticatedReferralRoute
+  '/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
+  '/study-item': typeof AuthenticatedStudyItemRoute
+  '/target': typeof AuthenticatedTargetRoute
+  '/target-tertunda': typeof AuthenticatedTargetTertundaRoute
+  '/api/admin-translation': typeof ApiAdminTranslationRoute
+  '/api/jlpt-audio': typeof ApiJlptAudioRoute
+  '/api/jlpt-audio-manifest': typeof ApiJlptAudioManifestRoute
+  '/api/jlpt-image': typeof ApiJlptImageRoute
+  '/api/leaderboard': typeof ApiLeaderboardRoute
+  '/admin-eno-exam/$examId': typeof AuthenticatedAdminEnoExamExamIdRoute
+  '/dokkai-baca/$id': typeof AuthenticatedDokkaiBacaIdRoute
   '/dokkai/$id': typeof AuthenticatedDokkaiIdRoute
+  '/eno-exam/$examId': typeof AuthenticatedEnoExamExamIdRoute
+  '/guru-kelas/$classId': typeof AuthenticatedGuruKelasClassIdRouteWithChildren
   '/kanji/$id': typeof AuthenticatedKanjiIdRoute
+  '/kelas/$classId': typeof AuthenticatedKelasClassIdRouteWithChildren
+  '/listening/$id': typeof AuthenticatedListeningIdRoute
   '/quiz/$slug': typeof AuthenticatedQuizSlugRoute
+  '/sertifikat-simulasi/$level': typeof AuthenticatedSertifikatSimulasiLevelRoute
+  '/simulasi-hasil/$level': typeof AuthenticatedSimulasiHasilLevelRoute
+  '/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRoute
+  '/simulasi-review/$attemptId': typeof AuthenticatedSimulasiReviewAttemptIdRoute
+  '/simulasi/$level': typeof AuthenticatedSimulasiLevelRoute
+  '/api/bunpo/examples': typeof ApiBunpoExamplesRoute
+  '/api/cron/translation': typeof ApiCronTranslationRoute
+  '/api/duitku/create-invoice': typeof ApiDuitkuCreateInvoiceRoute
+  '/api/kotoba/examples': typeof ApiKotobaExamplesRoute
+  '/pembayaran/duitku/callback': typeof PembayaranDuitkuCallbackRoute
+  '/guru-kelas/$classId/konten': typeof AuthenticatedGuruKelasClassIdKontenRoute
+  '/guru-kelas/$classId/nilai': typeof AuthenticatedGuruKelasClassIdNilaiRoute
+  '/kelas/$classId/workspace': typeof AuthenticatedKelasClassIdWorkspaceRoute
+  '/pembayaran/duitku/selesai': typeof AuthenticatedPembayaranDuitkuSelesaiRoute
+  '/simulasi-bagian/$level/$section': typeof AuthenticatedSimulasiBagianLevelSectionRoute
+  '/guru-kelas/$classId/quiz/$quizId': typeof AuthenticatedGuruKelasClassIdQuizQuizIdRoute
+  '/kelas/$classId/quiz/$quizId': typeof AuthenticatedKelasClassIdQuizQuizIdRoute
+  '/kelas/$classId/tugas/$assignmentId': typeof AuthenticatedKelasClassIdTugasAssignmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/faq': typeof FaqRoute
+  '/paket': typeof PaketRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/tentang': typeof TentangRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/admin-analitik': typeof AuthenticatedAdminAnalitikRoute
+  '/admin-eno-exam': typeof AuthenticatedAdminEnoExamRouteWithChildren
+  '/admin-kelas': typeof AuthenticatedAdminKelasRoute
+  '/admin-konten': typeof AuthenticatedAdminKontenRoute
+  '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
+  '/admin-operasional': typeof AuthenticatedAdminOperasionalRoute
+  '/admin-pengguna': typeof AuthenticatedAdminPenggunaRoute
+  '/admin-sistem': typeof AuthenticatedAdminSistemRoute
+  '/admin-terjemahan': typeof AuthenticatedAdminTerjemahanRoute
   '/belajar': typeof AuthenticatedBelajarRoute
   '/bunpo': typeof AuthenticatedBunpoRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
+  '/choukai': typeof AuthenticatedChoukaiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/dokkai': typeof AuthenticatedDokkaiRouteWithChildren
+  '/edit-profil': typeof AuthenticatedEditProfilRoute
+  '/editor': typeof AuthenticatedEditorRoute
+  '/eno-exam': typeof AuthenticatedEnoExamRouteWithChildren
+  '/guru': typeof AuthenticatedGuruRoute
+  '/guru-kelas-baru': typeof AuthenticatedGuruKelasBaruRoute
+  '/hafalan': typeof AuthenticatedHafalanRoute
+  '/hafalan-riwayat': typeof AuthenticatedHafalanRiwayatRoute
+  '/jebakan-ingatan': typeof AuthenticatedJebakanIngatanRoute
+  '/kana': typeof AuthenticatedKanaRoute
   '/kanji': typeof AuthenticatedKanjiRouteWithChildren
+  '/kelas': typeof AuthenticatedKelasRouteWithChildren
+  '/kelas-saya': typeof AuthenticatedKelasSayaRoute
   '/kotoba': typeof AuthenticatedKotobaRoute
-  '/listening': typeof AuthenticatedListeningRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/listening': typeof AuthenticatedListeningRouteWithChildren
+  '/notifikasi': typeof AuthenticatedNotifikasiRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/pengaturan': typeof AuthenticatedPengaturanRoute
+  '/peta-kelemahan': typeof AuthenticatedPetaKelemahanRoute
   '/profil': typeof AuthenticatedProfilRoute
+  '/profil-foto': typeof AuthenticatedProfilFotoRoute
   '/progress': typeof AuthenticatedProgressRoute
   '/quiz': typeof AuthenticatedQuizRouteWithChildren
+  '/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/referral': typeof AuthenticatedReferralRoute
+  '/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
+  '/study-item': typeof AuthenticatedStudyItemRoute
+  '/target': typeof AuthenticatedTargetRoute
+  '/target-tertunda': typeof AuthenticatedTargetTertundaRoute
+  '/api/admin-translation': typeof ApiAdminTranslationRoute
+  '/api/jlpt-audio': typeof ApiJlptAudioRoute
+  '/api/jlpt-audio-manifest': typeof ApiJlptAudioManifestRoute
+  '/api/jlpt-image': typeof ApiJlptImageRoute
+  '/api/leaderboard': typeof ApiLeaderboardRoute
+  '/admin-eno-exam/$examId': typeof AuthenticatedAdminEnoExamExamIdRoute
+  '/dokkai-baca/$id': typeof AuthenticatedDokkaiBacaIdRoute
   '/dokkai/$id': typeof AuthenticatedDokkaiIdRoute
+  '/eno-exam/$examId': typeof AuthenticatedEnoExamExamIdRoute
+  '/guru-kelas/$classId': typeof AuthenticatedGuruKelasClassIdRouteWithChildren
   '/kanji/$id': typeof AuthenticatedKanjiIdRoute
+  '/kelas/$classId': typeof AuthenticatedKelasClassIdRouteWithChildren
+  '/listening/$id': typeof AuthenticatedListeningIdRoute
   '/quiz/$slug': typeof AuthenticatedQuizSlugRoute
+  '/sertifikat-simulasi/$level': typeof AuthenticatedSertifikatSimulasiLevelRoute
+  '/simulasi-hasil/$level': typeof AuthenticatedSimulasiHasilLevelRoute
+  '/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRoute
+  '/simulasi-review/$attemptId': typeof AuthenticatedSimulasiReviewAttemptIdRoute
+  '/simulasi/$level': typeof AuthenticatedSimulasiLevelRoute
+  '/api/bunpo/examples': typeof ApiBunpoExamplesRoute
+  '/api/cron/translation': typeof ApiCronTranslationRoute
+  '/api/duitku/create-invoice': typeof ApiDuitkuCreateInvoiceRoute
+  '/api/kotoba/examples': typeof ApiKotobaExamplesRoute
+  '/pembayaran/duitku/callback': typeof PembayaranDuitkuCallbackRoute
+  '/guru-kelas/$classId/konten': typeof AuthenticatedGuruKelasClassIdKontenRoute
+  '/guru-kelas/$classId/nilai': typeof AuthenticatedGuruKelasClassIdNilaiRoute
+  '/kelas/$classId/workspace': typeof AuthenticatedKelasClassIdWorkspaceRoute
+  '/pembayaran/duitku/selesai': typeof AuthenticatedPembayaranDuitkuSelesaiRoute
+  '/simulasi-bagian/$level/$section': typeof AuthenticatedSimulasiBagianLevelSectionRoute
+  '/guru-kelas/$classId/quiz/$quizId': typeof AuthenticatedGuruKelasClassIdQuizQuizIdRoute
+  '/kelas/$classId/quiz/$quizId': typeof AuthenticatedKelasClassIdQuizQuizIdRoute
+  '/kelas/$classId/tugas/$assignmentId': typeof AuthenticatedKelasClassIdTugasAssignmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/faq': typeof FaqRoute
+  '/paket': typeof PaketRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/tentang': typeof TentangRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin-analitik': typeof AuthenticatedAdminAnalitikRoute
+  '/_authenticated/admin-eno-exam': typeof AuthenticatedAdminEnoExamRouteWithChildren
+  '/_authenticated/admin-kelas': typeof AuthenticatedAdminKelasRoute
+  '/_authenticated/admin-konten': typeof AuthenticatedAdminKontenRoute
+  '/_authenticated/admin-langganan': typeof AuthenticatedAdminLanggananRoute
+  '/_authenticated/admin-operasional': typeof AuthenticatedAdminOperasionalRoute
+  '/_authenticated/admin-pengguna': typeof AuthenticatedAdminPenggunaRoute
+  '/_authenticated/admin-sistem': typeof AuthenticatedAdminSistemRoute
+  '/_authenticated/admin-terjemahan': typeof AuthenticatedAdminTerjemahanRoute
   '/_authenticated/belajar': typeof AuthenticatedBelajarRoute
   '/_authenticated/bunpo': typeof AuthenticatedBunpoRoute
+  '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
+  '/_authenticated/choukai': typeof AuthenticatedChoukaiRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/dokkai': typeof AuthenticatedDokkaiRouteWithChildren
+  '/_authenticated/edit-profil': typeof AuthenticatedEditProfilRoute
+  '/_authenticated/editor': typeof AuthenticatedEditorRoute
+  '/_authenticated/eno-exam': typeof AuthenticatedEnoExamRouteWithChildren
+  '/_authenticated/guru': typeof AuthenticatedGuruRoute
+  '/_authenticated/guru-kelas-baru': typeof AuthenticatedGuruKelasBaruRoute
+  '/_authenticated/hafalan': typeof AuthenticatedHafalanRoute
+  '/_authenticated/hafalan-riwayat': typeof AuthenticatedHafalanRiwayatRoute
+  '/_authenticated/jebakan-ingatan': typeof AuthenticatedJebakanIngatanRoute
+  '/_authenticated/kana': typeof AuthenticatedKanaRoute
   '/_authenticated/kanji': typeof AuthenticatedKanjiRouteWithChildren
+  '/_authenticated/kelas': typeof AuthenticatedKelasRouteWithChildren
+  '/_authenticated/kelas-saya': typeof AuthenticatedKelasSayaRoute
   '/_authenticated/kotoba': typeof AuthenticatedKotobaRoute
-  '/_authenticated/listening': typeof AuthenticatedListeningRoute
+  '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
+  '/_authenticated/listening': typeof AuthenticatedListeningRouteWithChildren
+  '/_authenticated/notifikasi': typeof AuthenticatedNotifikasiRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
+  '/_authenticated/peta-kelemahan': typeof AuthenticatedPetaKelemahanRoute
   '/_authenticated/profil': typeof AuthenticatedProfilRoute
+  '/_authenticated/profil-foto': typeof AuthenticatedProfilFotoRoute
   '/_authenticated/progress': typeof AuthenticatedProgressRoute
   '/_authenticated/quiz': typeof AuthenticatedQuizRouteWithChildren
+  '/_authenticated/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/_authenticated/referral': typeof AuthenticatedReferralRoute
+  '/_authenticated/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
+  '/_authenticated/study-item': typeof AuthenticatedStudyItemRoute
+  '/_authenticated/target': typeof AuthenticatedTargetRoute
+  '/_authenticated/target-tertunda': typeof AuthenticatedTargetTertundaRoute
+  '/api/admin-translation': typeof ApiAdminTranslationRoute
+  '/api/jlpt-audio': typeof ApiJlptAudioRoute
+  '/api/jlpt-audio-manifest': typeof ApiJlptAudioManifestRoute
+  '/api/jlpt-image': typeof ApiJlptImageRoute
+  '/api/leaderboard': typeof ApiLeaderboardRoute
+  '/_authenticated/admin-eno-exam/$examId': typeof AuthenticatedAdminEnoExamExamIdRoute
+  '/_authenticated/dokkai-baca/$id': typeof AuthenticatedDokkaiBacaIdRoute
   '/_authenticated/dokkai/$id': typeof AuthenticatedDokkaiIdRoute
+  '/_authenticated/eno-exam/$examId': typeof AuthenticatedEnoExamExamIdRoute
+  '/_authenticated/guru-kelas/$classId': typeof AuthenticatedGuruKelasClassIdRouteWithChildren
   '/_authenticated/kanji/$id': typeof AuthenticatedKanjiIdRoute
+  '/_authenticated/kelas/$classId': typeof AuthenticatedKelasClassIdRouteWithChildren
+  '/_authenticated/listening/$id': typeof AuthenticatedListeningIdRoute
   '/_authenticated/quiz/$slug': typeof AuthenticatedQuizSlugRoute
+  '/_authenticated/sertifikat-simulasi/$level': typeof AuthenticatedSertifikatSimulasiLevelRoute
+  '/_authenticated/simulasi-hasil/$level': typeof AuthenticatedSimulasiHasilLevelRoute
+  '/_authenticated/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRoute
+  '/_authenticated/simulasi-review/$attemptId': typeof AuthenticatedSimulasiReviewAttemptIdRoute
+  '/_authenticated/simulasi/$level': typeof AuthenticatedSimulasiLevelRoute
+  '/api/bunpo/examples': typeof ApiBunpoExamplesRoute
+  '/api/cron/translation': typeof ApiCronTranslationRoute
+  '/api/duitku/create-invoice': typeof ApiDuitkuCreateInvoiceRoute
+  '/api/kotoba/examples': typeof ApiKotobaExamplesRoute
+  '/pembayaran/duitku/callback': typeof PembayaranDuitkuCallbackRoute
+  '/_authenticated/guru-kelas/$classId/konten': typeof AuthenticatedGuruKelasClassIdKontenRoute
+  '/_authenticated/guru-kelas/$classId/nilai': typeof AuthenticatedGuruKelasClassIdNilaiRoute
+  '/_authenticated/kelas/$classId/workspace': typeof AuthenticatedKelasClassIdWorkspaceRoute
+  '/_authenticated/pembayaran/duitku/selesai': typeof AuthenticatedPembayaranDuitkuSelesaiRoute
+  '/_authenticated/simulasi-bagian/$level/$section': typeof AuthenticatedSimulasiBagianLevelSectionRoute
+  '/_authenticated/guru-kelas/$classId/quiz/$quizId': typeof AuthenticatedGuruKelasClassIdQuizQuizIdRoute
+  '/_authenticated/kelas/$classId/quiz/$quizId': typeof AuthenticatedKelasClassIdQuizQuizIdRoute
+  '/_authenticated/kelas/$classId/tugas/$assignmentId': typeof AuthenticatedKelasClassIdTugasAssignmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/faq'
+    | '/paket'
     | '/reset-password'
+    | '/tentang'
+    | '/admin'
+    | '/admin-analitik'
+    | '/admin-eno-exam'
+    | '/admin-kelas'
+    | '/admin-konten'
+    | '/admin-langganan'
+    | '/admin-operasional'
+    | '/admin-pengguna'
+    | '/admin-sistem'
+    | '/admin-terjemahan'
     | '/belajar'
     | '/bunpo'
+    | '/checkout'
+    | '/choukai'
     | '/dashboard'
     | '/dokkai'
+    | '/edit-profil'
+    | '/editor'
+    | '/eno-exam'
+    | '/guru'
+    | '/guru-kelas-baru'
+    | '/hafalan'
+    | '/hafalan-riwayat'
+    | '/jebakan-ingatan'
+    | '/kana'
     | '/kanji'
+    | '/kelas'
+    | '/kelas-saya'
     | '/kotoba'
+    | '/leaderboard'
     | '/listening'
+    | '/notifikasi'
+    | '/onboarding'
+    | '/pengaturan'
+    | '/peta-kelemahan'
     | '/profil'
+    | '/profil-foto'
     | '/progress'
     | '/quiz'
+    | '/rantai-ingatan'
     | '/referral'
+    | '/simulasi'
+    | '/study-item'
+    | '/target'
+    | '/target-tertunda'
+    | '/api/admin-translation'
+    | '/api/jlpt-audio'
+    | '/api/jlpt-audio-manifest'
+    | '/api/jlpt-image'
+    | '/api/leaderboard'
+    | '/admin-eno-exam/$examId'
+    | '/dokkai-baca/$id'
     | '/dokkai/$id'
+    | '/eno-exam/$examId'
+    | '/guru-kelas/$classId'
     | '/kanji/$id'
+    | '/kelas/$classId'
+    | '/listening/$id'
     | '/quiz/$slug'
+    | '/sertifikat-simulasi/$level'
+    | '/simulasi-hasil/$level'
+    | '/simulasi-penuh/$level'
+    | '/simulasi-review/$attemptId'
+    | '/simulasi/$level'
+    | '/api/bunpo/examples'
+    | '/api/cron/translation'
+    | '/api/duitku/create-invoice'
+    | '/api/kotoba/examples'
+    | '/pembayaran/duitku/callback'
+    | '/guru-kelas/$classId/konten'
+    | '/guru-kelas/$classId/nilai'
+    | '/kelas/$classId/workspace'
+    | '/pembayaran/duitku/selesai'
+    | '/simulasi-bagian/$level/$section'
+    | '/guru-kelas/$classId/quiz/$quizId'
+    | '/kelas/$classId/quiz/$quizId'
+    | '/kelas/$classId/tugas/$assignmentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/faq'
+    | '/paket'
     | '/reset-password'
+    | '/tentang'
+    | '/admin'
+    | '/admin-analitik'
+    | '/admin-eno-exam'
+    | '/admin-kelas'
+    | '/admin-konten'
+    | '/admin-langganan'
+    | '/admin-operasional'
+    | '/admin-pengguna'
+    | '/admin-sistem'
+    | '/admin-terjemahan'
     | '/belajar'
     | '/bunpo'
+    | '/checkout'
+    | '/choukai'
     | '/dashboard'
     | '/dokkai'
+    | '/edit-profil'
+    | '/editor'
+    | '/eno-exam'
+    | '/guru'
+    | '/guru-kelas-baru'
+    | '/hafalan'
+    | '/hafalan-riwayat'
+    | '/jebakan-ingatan'
+    | '/kana'
     | '/kanji'
+    | '/kelas'
+    | '/kelas-saya'
     | '/kotoba'
+    | '/leaderboard'
     | '/listening'
+    | '/notifikasi'
+    | '/onboarding'
+    | '/pengaturan'
+    | '/peta-kelemahan'
     | '/profil'
+    | '/profil-foto'
     | '/progress'
     | '/quiz'
+    | '/rantai-ingatan'
     | '/referral'
+    | '/simulasi'
+    | '/study-item'
+    | '/target'
+    | '/target-tertunda'
+    | '/api/admin-translation'
+    | '/api/jlpt-audio'
+    | '/api/jlpt-audio-manifest'
+    | '/api/jlpt-image'
+    | '/api/leaderboard'
+    | '/admin-eno-exam/$examId'
+    | '/dokkai-baca/$id'
     | '/dokkai/$id'
+    | '/eno-exam/$examId'
+    | '/guru-kelas/$classId'
     | '/kanji/$id'
+    | '/kelas/$classId'
+    | '/listening/$id'
     | '/quiz/$slug'
+    | '/sertifikat-simulasi/$level'
+    | '/simulasi-hasil/$level'
+    | '/simulasi-penuh/$level'
+    | '/simulasi-review/$attemptId'
+    | '/simulasi/$level'
+    | '/api/bunpo/examples'
+    | '/api/cron/translation'
+    | '/api/duitku/create-invoice'
+    | '/api/kotoba/examples'
+    | '/pembayaran/duitku/callback'
+    | '/guru-kelas/$classId/konten'
+    | '/guru-kelas/$classId/nilai'
+    | '/kelas/$classId/workspace'
+    | '/pembayaran/duitku/selesai'
+    | '/simulasi-bagian/$level/$section'
+    | '/guru-kelas/$classId/quiz/$quizId'
+    | '/kelas/$classId/quiz/$quizId'
+    | '/kelas/$classId/tugas/$assignmentId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/faq'
+    | '/paket'
     | '/reset-password'
+    | '/tentang'
+    | '/_authenticated/admin'
+    | '/_authenticated/admin-analitik'
+    | '/_authenticated/admin-eno-exam'
+    | '/_authenticated/admin-kelas'
+    | '/_authenticated/admin-konten'
+    | '/_authenticated/admin-langganan'
+    | '/_authenticated/admin-operasional'
+    | '/_authenticated/admin-pengguna'
+    | '/_authenticated/admin-sistem'
+    | '/_authenticated/admin-terjemahan'
     | '/_authenticated/belajar'
     | '/_authenticated/bunpo'
+    | '/_authenticated/checkout'
+    | '/_authenticated/choukai'
     | '/_authenticated/dashboard'
     | '/_authenticated/dokkai'
+    | '/_authenticated/edit-profil'
+    | '/_authenticated/editor'
+    | '/_authenticated/eno-exam'
+    | '/_authenticated/guru'
+    | '/_authenticated/guru-kelas-baru'
+    | '/_authenticated/hafalan'
+    | '/_authenticated/hafalan-riwayat'
+    | '/_authenticated/jebakan-ingatan'
+    | '/_authenticated/kana'
     | '/_authenticated/kanji'
+    | '/_authenticated/kelas'
+    | '/_authenticated/kelas-saya'
     | '/_authenticated/kotoba'
+    | '/_authenticated/leaderboard'
     | '/_authenticated/listening'
+    | '/_authenticated/notifikasi'
+    | '/_authenticated/onboarding'
+    | '/_authenticated/pengaturan'
+    | '/_authenticated/peta-kelemahan'
     | '/_authenticated/profil'
+    | '/_authenticated/profil-foto'
     | '/_authenticated/progress'
     | '/_authenticated/quiz'
+    | '/_authenticated/rantai-ingatan'
     | '/_authenticated/referral'
+    | '/_authenticated/simulasi'
+    | '/_authenticated/study-item'
+    | '/_authenticated/target'
+    | '/_authenticated/target-tertunda'
+    | '/api/admin-translation'
+    | '/api/jlpt-audio'
+    | '/api/jlpt-audio-manifest'
+    | '/api/jlpt-image'
+    | '/api/leaderboard'
+    | '/_authenticated/admin-eno-exam/$examId'
+    | '/_authenticated/dokkai-baca/$id'
     | '/_authenticated/dokkai/$id'
+    | '/_authenticated/eno-exam/$examId'
+    | '/_authenticated/guru-kelas/$classId'
     | '/_authenticated/kanji/$id'
+    | '/_authenticated/kelas/$classId'
+    | '/_authenticated/listening/$id'
     | '/_authenticated/quiz/$slug'
+    | '/_authenticated/sertifikat-simulasi/$level'
+    | '/_authenticated/simulasi-hasil/$level'
+    | '/_authenticated/simulasi-penuh/$level'
+    | '/_authenticated/simulasi-review/$attemptId'
+    | '/_authenticated/simulasi/$level'
+    | '/api/bunpo/examples'
+    | '/api/cron/translation'
+    | '/api/duitku/create-invoice'
+    | '/api/kotoba/examples'
+    | '/pembayaran/duitku/callback'
+    | '/_authenticated/guru-kelas/$classId/konten'
+    | '/_authenticated/guru-kelas/$classId/nilai'
+    | '/_authenticated/kelas/$classId/workspace'
+    | '/_authenticated/pembayaran/duitku/selesai'
+    | '/_authenticated/simulasi-bagian/$level/$section'
+    | '/_authenticated/guru-kelas/$classId/quiz/$quizId'
+    | '/_authenticated/kelas/$classId/quiz/$quizId'
+    | '/_authenticated/kelas/$classId/tugas/$assignmentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  FaqRoute: typeof FaqRoute
+  PaketRoute: typeof PaketRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TentangRoute: typeof TentangRoute
+  ApiAdminTranslationRoute: typeof ApiAdminTranslationRoute
+  ApiJlptAudioRoute: typeof ApiJlptAudioRoute
+  ApiJlptAudioManifestRoute: typeof ApiJlptAudioManifestRoute
+  ApiJlptImageRoute: typeof ApiJlptImageRoute
+  ApiLeaderboardRoute: typeof ApiLeaderboardRoute
+  ApiBunpoExamplesRoute: typeof ApiBunpoExamplesRoute
+  ApiCronTranslationRoute: typeof ApiCronTranslationRoute
+  ApiDuitkuCreateInvoiceRoute: typeof ApiDuitkuCreateInvoiceRoute
+  ApiKotobaExamplesRoute: typeof ApiKotobaExamplesRoute
+  PembayaranDuitkuCallbackRoute: typeof PembayaranDuitkuCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -268,12 +1108,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paket': {
+      id: '/paket'
+      path: '/paket'
+      fullPath: '/paket'
+      preLoaderRoute: typeof PaketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/tentang': {
+      id: '/tentang'
+      path: '/tentang'
+      fullPath: '/tentang'
+      preLoaderRoute: typeof TentangRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-analitik': {
+      id: '/_authenticated/admin-analitik'
+      path: '/admin-analitik'
+      fullPath: '/admin-analitik'
+      preLoaderRoute: typeof AuthenticatedAdminAnalitikRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-eno-exam': {
+      id: '/_authenticated/admin-eno-exam'
+      path: '/admin-eno-exam'
+      fullPath: '/admin-eno-exam'
+      preLoaderRoute: typeof AuthenticatedAdminEnoExamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-kelas': {
+      id: '/_authenticated/admin-kelas'
+      path: '/admin-kelas'
+      fullPath: '/admin-kelas'
+      preLoaderRoute: typeof AuthenticatedAdminKelasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-konten': {
+      id: '/_authenticated/admin-konten'
+      path: '/admin-konten'
+      fullPath: '/admin-konten'
+      preLoaderRoute: typeof AuthenticatedAdminKontenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-langganan': {
+      id: '/_authenticated/admin-langganan'
+      path: '/admin-langganan'
+      fullPath: '/admin-langganan'
+      preLoaderRoute: typeof AuthenticatedAdminLanggananRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-operasional': {
+      id: '/_authenticated/admin-operasional'
+      path: '/admin-operasional'
+      fullPath: '/admin-operasional'
+      preLoaderRoute: typeof AuthenticatedAdminOperasionalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-pengguna': {
+      id: '/_authenticated/admin-pengguna'
+      path: '/admin-pengguna'
+      fullPath: '/admin-pengguna'
+      preLoaderRoute: typeof AuthenticatedAdminPenggunaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-sistem': {
+      id: '/_authenticated/admin-sistem'
+      path: '/admin-sistem'
+      fullPath: '/admin-sistem'
+      preLoaderRoute: typeof AuthenticatedAdminSistemRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-terjemahan': {
+      id: '/_authenticated/admin-terjemahan'
+      path: '/admin-terjemahan'
+      fullPath: '/admin-terjemahan'
+      preLoaderRoute: typeof AuthenticatedAdminTerjemahanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/belajar': {
       id: '/_authenticated/belajar'
@@ -287,6 +1218,20 @@ declare module '@tanstack/react-router' {
       path: '/bunpo'
       fullPath: '/bunpo'
       preLoaderRoute: typeof AuthenticatedBunpoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checkout': {
+      id: '/_authenticated/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/choukai': {
+      id: '/_authenticated/choukai'
+      path: '/choukai'
+      fullPath: '/choukai'
+      preLoaderRoute: typeof AuthenticatedChoukaiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -303,11 +1248,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDokkaiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/edit-profil': {
+      id: '/_authenticated/edit-profil'
+      path: '/edit-profil'
+      fullPath: '/edit-profil'
+      preLoaderRoute: typeof AuthenticatedEditProfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/editor': {
+      id: '/_authenticated/editor'
+      path: '/editor'
+      fullPath: '/editor'
+      preLoaderRoute: typeof AuthenticatedEditorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/eno-exam': {
+      id: '/_authenticated/eno-exam'
+      path: '/eno-exam'
+      fullPath: '/eno-exam'
+      preLoaderRoute: typeof AuthenticatedEnoExamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/guru': {
+      id: '/_authenticated/guru'
+      path: '/guru'
+      fullPath: '/guru'
+      preLoaderRoute: typeof AuthenticatedGuruRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/guru-kelas-baru': {
+      id: '/_authenticated/guru-kelas-baru'
+      path: '/guru-kelas-baru'
+      fullPath: '/guru-kelas-baru'
+      preLoaderRoute: typeof AuthenticatedGuruKelasBaruRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hafalan': {
+      id: '/_authenticated/hafalan'
+      path: '/hafalan'
+      fullPath: '/hafalan'
+      preLoaderRoute: typeof AuthenticatedHafalanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hafalan-riwayat': {
+      id: '/_authenticated/hafalan-riwayat'
+      path: '/hafalan-riwayat'
+      fullPath: '/hafalan-riwayat'
+      preLoaderRoute: typeof AuthenticatedHafalanRiwayatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/jebakan-ingatan': {
+      id: '/_authenticated/jebakan-ingatan'
+      path: '/jebakan-ingatan'
+      fullPath: '/jebakan-ingatan'
+      preLoaderRoute: typeof AuthenticatedJebakanIngatanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kana': {
+      id: '/_authenticated/kana'
+      path: '/kana'
+      fullPath: '/kana'
+      preLoaderRoute: typeof AuthenticatedKanaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/kanji': {
       id: '/_authenticated/kanji'
       path: '/kanji'
       fullPath: '/kanji'
       preLoaderRoute: typeof AuthenticatedKanjiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kelas': {
+      id: '/_authenticated/kelas'
+      path: '/kelas'
+      fullPath: '/kelas'
+      preLoaderRoute: typeof AuthenticatedKelasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kelas-saya': {
+      id: '/_authenticated/kelas-saya'
+      path: '/kelas-saya'
+      fullPath: '/kelas-saya'
+      preLoaderRoute: typeof AuthenticatedKelasSayaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kotoba': {
@@ -317,6 +1339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKotobaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/leaderboard': {
+      id: '/_authenticated/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof AuthenticatedLeaderboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/listening': {
       id: '/_authenticated/listening'
       path: '/listening'
@@ -324,11 +1353,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListeningRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notifikasi': {
+      id: '/_authenticated/notifikasi'
+      path: '/notifikasi'
+      fullPath: '/notifikasi'
+      preLoaderRoute: typeof AuthenticatedNotifikasiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pengaturan': {
+      id: '/_authenticated/pengaturan'
+      path: '/pengaturan'
+      fullPath: '/pengaturan'
+      preLoaderRoute: typeof AuthenticatedPengaturanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/peta-kelemahan': {
+      id: '/_authenticated/peta-kelemahan'
+      path: '/peta-kelemahan'
+      fullPath: '/peta-kelemahan'
+      preLoaderRoute: typeof AuthenticatedPetaKelemahanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profil': {
       id: '/_authenticated/profil'
       path: '/profil'
       fullPath: '/profil'
       preLoaderRoute: typeof AuthenticatedProfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profil-foto': {
+      id: '/_authenticated/profil-foto'
+      path: '/profil-foto'
+      fullPath: '/profil-foto'
+      preLoaderRoute: typeof AuthenticatedProfilFotoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/progress': {
@@ -345,11 +1409,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuizRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rantai-ingatan': {
+      id: '/_authenticated/rantai-ingatan'
+      path: '/rantai-ingatan'
+      fullPath: '/rantai-ingatan'
+      preLoaderRoute: typeof AuthenticatedRantaiIngatanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/referral': {
       id: '/_authenticated/referral'
       path: '/referral'
       fullPath: '/referral'
       preLoaderRoute: typeof AuthenticatedReferralRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/simulasi': {
+      id: '/_authenticated/simulasi'
+      path: '/simulasi'
+      fullPath: '/simulasi'
+      preLoaderRoute: typeof AuthenticatedSimulasiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/study-item': {
+      id: '/_authenticated/study-item'
+      path: '/study-item'
+      fullPath: '/study-item'
+      preLoaderRoute: typeof AuthenticatedStudyItemRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/target': {
+      id: '/_authenticated/target'
+      path: '/target'
+      fullPath: '/target'
+      preLoaderRoute: typeof AuthenticatedTargetRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/target-tertunda': {
+      id: '/_authenticated/target-tertunda'
+      path: '/target-tertunda'
+      fullPath: '/target-tertunda'
+      preLoaderRoute: typeof AuthenticatedTargetTertundaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/admin-translation': {
+      id: '/api/admin-translation'
+      path: '/api/admin-translation'
+      fullPath: '/api/admin-translation'
+      preLoaderRoute: typeof ApiAdminTranslationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/jlpt-audio': {
+      id: '/api/jlpt-audio'
+      path: '/api/jlpt-audio'
+      fullPath: '/api/jlpt-audio'
+      preLoaderRoute: typeof ApiJlptAudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/jlpt-audio-manifest': {
+      id: '/api/jlpt-audio-manifest'
+      path: '/api/jlpt-audio-manifest'
+      fullPath: '/api/jlpt-audio-manifest'
+      preLoaderRoute: typeof ApiJlptAudioManifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/jlpt-image': {
+      id: '/api/jlpt-image'
+      path: '/api/jlpt-image'
+      fullPath: '/api/jlpt-image'
+      preLoaderRoute: typeof ApiJlptImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/leaderboard': {
+      id: '/api/leaderboard'
+      path: '/api/leaderboard'
+      fullPath: '/api/leaderboard'
+      preLoaderRoute: typeof ApiLeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin-eno-exam/$examId': {
+      id: '/_authenticated/admin-eno-exam/$examId'
+      path: '/$examId'
+      fullPath: '/admin-eno-exam/$examId'
+      preLoaderRoute: typeof AuthenticatedAdminEnoExamExamIdRouteImport
+      parentRoute: typeof AuthenticatedAdminEnoExamRoute
+    }
+    '/_authenticated/dokkai-baca/$id': {
+      id: '/_authenticated/dokkai-baca/$id'
+      path: '/dokkai-baca/$id'
+      fullPath: '/dokkai-baca/$id'
+      preLoaderRoute: typeof AuthenticatedDokkaiBacaIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dokkai/$id': {
@@ -359,12 +1507,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDokkaiIdRouteImport
       parentRoute: typeof AuthenticatedDokkaiRoute
     }
+    '/_authenticated/eno-exam/$examId': {
+      id: '/_authenticated/eno-exam/$examId'
+      path: '/$examId'
+      fullPath: '/eno-exam/$examId'
+      preLoaderRoute: typeof AuthenticatedEnoExamExamIdRouteImport
+      parentRoute: typeof AuthenticatedEnoExamRoute
+    }
+    '/_authenticated/guru-kelas/$classId': {
+      id: '/_authenticated/guru-kelas/$classId'
+      path: '/guru-kelas/$classId'
+      fullPath: '/guru-kelas/$classId'
+      preLoaderRoute: typeof AuthenticatedGuruKelasClassIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/kanji/$id': {
       id: '/_authenticated/kanji/$id'
       path: '/$id'
       fullPath: '/kanji/$id'
       preLoaderRoute: typeof AuthenticatedKanjiIdRouteImport
       parentRoute: typeof AuthenticatedKanjiRoute
+    }
+    '/_authenticated/kelas/$classId': {
+      id: '/_authenticated/kelas/$classId'
+      path: '/$classId'
+      fullPath: '/kelas/$classId'
+      preLoaderRoute: typeof AuthenticatedKelasClassIdRouteImport
+      parentRoute: typeof AuthenticatedKelasRoute
+    }
+    '/_authenticated/listening/$id': {
+      id: '/_authenticated/listening/$id'
+      path: '/$id'
+      fullPath: '/listening/$id'
+      preLoaderRoute: typeof AuthenticatedListeningIdRouteImport
+      parentRoute: typeof AuthenticatedListeningRoute
     }
     '/_authenticated/quiz/$slug': {
       id: '/_authenticated/quiz/$slug'
@@ -373,8 +1549,148 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuizSlugRouteImport
       parentRoute: typeof AuthenticatedQuizRoute
     }
+    '/_authenticated/sertifikat-simulasi/$level': {
+      id: '/_authenticated/sertifikat-simulasi/$level'
+      path: '/sertifikat-simulasi/$level'
+      fullPath: '/sertifikat-simulasi/$level'
+      preLoaderRoute: typeof AuthenticatedSertifikatSimulasiLevelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/simulasi-hasil/$level': {
+      id: '/_authenticated/simulasi-hasil/$level'
+      path: '/simulasi-hasil/$level'
+      fullPath: '/simulasi-hasil/$level'
+      preLoaderRoute: typeof AuthenticatedSimulasiHasilLevelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/simulasi-penuh/$level': {
+      id: '/_authenticated/simulasi-penuh/$level'
+      path: '/simulasi-penuh/$level'
+      fullPath: '/simulasi-penuh/$level'
+      preLoaderRoute: typeof AuthenticatedSimulasiPenuhLevelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/simulasi-review/$attemptId': {
+      id: '/_authenticated/simulasi-review/$attemptId'
+      path: '/simulasi-review/$attemptId'
+      fullPath: '/simulasi-review/$attemptId'
+      preLoaderRoute: typeof AuthenticatedSimulasiReviewAttemptIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/simulasi/$level': {
+      id: '/_authenticated/simulasi/$level'
+      path: '/$level'
+      fullPath: '/simulasi/$level'
+      preLoaderRoute: typeof AuthenticatedSimulasiLevelRouteImport
+      parentRoute: typeof AuthenticatedSimulasiRoute
+    }
+    '/api/bunpo/examples': {
+      id: '/api/bunpo/examples'
+      path: '/api/bunpo/examples'
+      fullPath: '/api/bunpo/examples'
+      preLoaderRoute: typeof ApiBunpoExamplesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/translation': {
+      id: '/api/cron/translation'
+      path: '/api/cron/translation'
+      fullPath: '/api/cron/translation'
+      preLoaderRoute: typeof ApiCronTranslationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/duitku/create-invoice': {
+      id: '/api/duitku/create-invoice'
+      path: '/api/duitku/create-invoice'
+      fullPath: '/api/duitku/create-invoice'
+      preLoaderRoute: typeof ApiDuitkuCreateInvoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/kotoba/examples': {
+      id: '/api/kotoba/examples'
+      path: '/api/kotoba/examples'
+      fullPath: '/api/kotoba/examples'
+      preLoaderRoute: typeof ApiKotobaExamplesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pembayaran/duitku/callback': {
+      id: '/pembayaran/duitku/callback'
+      path: '/pembayaran/duitku/callback'
+      fullPath: '/pembayaran/duitku/callback'
+      preLoaderRoute: typeof PembayaranDuitkuCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/guru-kelas/$classId/konten': {
+      id: '/_authenticated/guru-kelas/$classId/konten'
+      path: '/konten'
+      fullPath: '/guru-kelas/$classId/konten'
+      preLoaderRoute: typeof AuthenticatedGuruKelasClassIdKontenRouteImport
+      parentRoute: typeof AuthenticatedGuruKelasClassIdRoute
+    }
+    '/_authenticated/guru-kelas/$classId/nilai': {
+      id: '/_authenticated/guru-kelas/$classId/nilai'
+      path: '/nilai'
+      fullPath: '/guru-kelas/$classId/nilai'
+      preLoaderRoute: typeof AuthenticatedGuruKelasClassIdNilaiRouteImport
+      parentRoute: typeof AuthenticatedGuruKelasClassIdRoute
+    }
+    '/_authenticated/kelas/$classId/workspace': {
+      id: '/_authenticated/kelas/$classId/workspace'
+      path: '/workspace'
+      fullPath: '/kelas/$classId/workspace'
+      preLoaderRoute: typeof AuthenticatedKelasClassIdWorkspaceRouteImport
+      parentRoute: typeof AuthenticatedKelasClassIdRoute
+    }
+    '/_authenticated/pembayaran/duitku/selesai': {
+      id: '/_authenticated/pembayaran/duitku/selesai'
+      path: '/pembayaran/duitku/selesai'
+      fullPath: '/pembayaran/duitku/selesai'
+      preLoaderRoute: typeof AuthenticatedPembayaranDuitkuSelesaiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/simulasi-bagian/$level/$section': {
+      id: '/_authenticated/simulasi-bagian/$level/$section'
+      path: '/simulasi-bagian/$level/$section'
+      fullPath: '/simulasi-bagian/$level/$section'
+      preLoaderRoute: typeof AuthenticatedSimulasiBagianLevelSectionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/guru-kelas/$classId/quiz/$quizId': {
+      id: '/_authenticated/guru-kelas/$classId/quiz/$quizId'
+      path: '/quiz/$quizId'
+      fullPath: '/guru-kelas/$classId/quiz/$quizId'
+      preLoaderRoute: typeof AuthenticatedGuruKelasClassIdQuizQuizIdRouteImport
+      parentRoute: typeof AuthenticatedGuruKelasClassIdRoute
+    }
+    '/_authenticated/kelas/$classId/quiz/$quizId': {
+      id: '/_authenticated/kelas/$classId/quiz/$quizId'
+      path: '/quiz/$quizId'
+      fullPath: '/kelas/$classId/quiz/$quizId'
+      preLoaderRoute: typeof AuthenticatedKelasClassIdQuizQuizIdRouteImport
+      parentRoute: typeof AuthenticatedKelasClassIdRoute
+    }
+    '/_authenticated/kelas/$classId/tugas/$assignmentId': {
+      id: '/_authenticated/kelas/$classId/tugas/$assignmentId'
+      path: '/tugas/$assignmentId'
+      fullPath: '/kelas/$classId/tugas/$assignmentId'
+      preLoaderRoute: typeof AuthenticatedKelasClassIdTugasAssignmentIdRouteImport
+      parentRoute: typeof AuthenticatedKelasClassIdRoute
+    }
   }
 }
+
+interface AuthenticatedAdminEnoExamRouteChildren {
+  AuthenticatedAdminEnoExamExamIdRoute: typeof AuthenticatedAdminEnoExamExamIdRoute
+}
+
+const AuthenticatedAdminEnoExamRouteChildren: AuthenticatedAdminEnoExamRouteChildren =
+  {
+    AuthenticatedAdminEnoExamExamIdRoute: AuthenticatedAdminEnoExamExamIdRoute,
+  }
+
+const AuthenticatedAdminEnoExamRouteWithChildren =
+  AuthenticatedAdminEnoExamRoute._addFileChildren(
+    AuthenticatedAdminEnoExamRouteChildren,
+  )
 
 interface AuthenticatedDokkaiRouteChildren {
   AuthenticatedDokkaiIdRoute: typeof AuthenticatedDokkaiIdRoute
@@ -387,6 +1703,17 @@ const AuthenticatedDokkaiRouteChildren: AuthenticatedDokkaiRouteChildren = {
 const AuthenticatedDokkaiRouteWithChildren =
   AuthenticatedDokkaiRoute._addFileChildren(AuthenticatedDokkaiRouteChildren)
 
+interface AuthenticatedEnoExamRouteChildren {
+  AuthenticatedEnoExamExamIdRoute: typeof AuthenticatedEnoExamExamIdRoute
+}
+
+const AuthenticatedEnoExamRouteChildren: AuthenticatedEnoExamRouteChildren = {
+  AuthenticatedEnoExamExamIdRoute: AuthenticatedEnoExamExamIdRoute,
+}
+
+const AuthenticatedEnoExamRouteWithChildren =
+  AuthenticatedEnoExamRoute._addFileChildren(AuthenticatedEnoExamRouteChildren)
+
 interface AuthenticatedKanjiRouteChildren {
   AuthenticatedKanjiIdRoute: typeof AuthenticatedKanjiIdRoute
 }
@@ -397,6 +1724,52 @@ const AuthenticatedKanjiRouteChildren: AuthenticatedKanjiRouteChildren = {
 
 const AuthenticatedKanjiRouteWithChildren =
   AuthenticatedKanjiRoute._addFileChildren(AuthenticatedKanjiRouteChildren)
+
+interface AuthenticatedKelasClassIdRouteChildren {
+  AuthenticatedKelasClassIdWorkspaceRoute: typeof AuthenticatedKelasClassIdWorkspaceRoute
+  AuthenticatedKelasClassIdQuizQuizIdRoute: typeof AuthenticatedKelasClassIdQuizQuizIdRoute
+  AuthenticatedKelasClassIdTugasAssignmentIdRoute: typeof AuthenticatedKelasClassIdTugasAssignmentIdRoute
+}
+
+const AuthenticatedKelasClassIdRouteChildren: AuthenticatedKelasClassIdRouteChildren =
+  {
+    AuthenticatedKelasClassIdWorkspaceRoute:
+      AuthenticatedKelasClassIdWorkspaceRoute,
+    AuthenticatedKelasClassIdQuizQuizIdRoute:
+      AuthenticatedKelasClassIdQuizQuizIdRoute,
+    AuthenticatedKelasClassIdTugasAssignmentIdRoute:
+      AuthenticatedKelasClassIdTugasAssignmentIdRoute,
+  }
+
+const AuthenticatedKelasClassIdRouteWithChildren =
+  AuthenticatedKelasClassIdRoute._addFileChildren(
+    AuthenticatedKelasClassIdRouteChildren,
+  )
+
+interface AuthenticatedKelasRouteChildren {
+  AuthenticatedKelasClassIdRoute: typeof AuthenticatedKelasClassIdRouteWithChildren
+}
+
+const AuthenticatedKelasRouteChildren: AuthenticatedKelasRouteChildren = {
+  AuthenticatedKelasClassIdRoute: AuthenticatedKelasClassIdRouteWithChildren,
+}
+
+const AuthenticatedKelasRouteWithChildren =
+  AuthenticatedKelasRoute._addFileChildren(AuthenticatedKelasRouteChildren)
+
+interface AuthenticatedListeningRouteChildren {
+  AuthenticatedListeningIdRoute: typeof AuthenticatedListeningIdRoute
+}
+
+const AuthenticatedListeningRouteChildren: AuthenticatedListeningRouteChildren =
+  {
+    AuthenticatedListeningIdRoute: AuthenticatedListeningIdRoute,
+  }
+
+const AuthenticatedListeningRouteWithChildren =
+  AuthenticatedListeningRoute._addFileChildren(
+    AuthenticatedListeningRouteChildren,
+  )
 
 interface AuthenticatedQuizRouteChildren {
   AuthenticatedQuizSlugRoute: typeof AuthenticatedQuizSlugRoute
@@ -409,32 +1782,155 @@ const AuthenticatedQuizRouteChildren: AuthenticatedQuizRouteChildren = {
 const AuthenticatedQuizRouteWithChildren =
   AuthenticatedQuizRoute._addFileChildren(AuthenticatedQuizRouteChildren)
 
+interface AuthenticatedSimulasiRouteChildren {
+  AuthenticatedSimulasiLevelRoute: typeof AuthenticatedSimulasiLevelRoute
+}
+
+const AuthenticatedSimulasiRouteChildren: AuthenticatedSimulasiRouteChildren = {
+  AuthenticatedSimulasiLevelRoute: AuthenticatedSimulasiLevelRoute,
+}
+
+const AuthenticatedSimulasiRouteWithChildren =
+  AuthenticatedSimulasiRoute._addFileChildren(
+    AuthenticatedSimulasiRouteChildren,
+  )
+
+interface AuthenticatedGuruKelasClassIdRouteChildren {
+  AuthenticatedGuruKelasClassIdKontenRoute: typeof AuthenticatedGuruKelasClassIdKontenRoute
+  AuthenticatedGuruKelasClassIdNilaiRoute: typeof AuthenticatedGuruKelasClassIdNilaiRoute
+  AuthenticatedGuruKelasClassIdQuizQuizIdRoute: typeof AuthenticatedGuruKelasClassIdQuizQuizIdRoute
+}
+
+const AuthenticatedGuruKelasClassIdRouteChildren: AuthenticatedGuruKelasClassIdRouteChildren =
+  {
+    AuthenticatedGuruKelasClassIdKontenRoute:
+      AuthenticatedGuruKelasClassIdKontenRoute,
+    AuthenticatedGuruKelasClassIdNilaiRoute:
+      AuthenticatedGuruKelasClassIdNilaiRoute,
+    AuthenticatedGuruKelasClassIdQuizQuizIdRoute:
+      AuthenticatedGuruKelasClassIdQuizQuizIdRoute,
+  }
+
+const AuthenticatedGuruKelasClassIdRouteWithChildren =
+  AuthenticatedGuruKelasClassIdRoute._addFileChildren(
+    AuthenticatedGuruKelasClassIdRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminAnalitikRoute: typeof AuthenticatedAdminAnalitikRoute
+  AuthenticatedAdminEnoExamRoute: typeof AuthenticatedAdminEnoExamRouteWithChildren
+  AuthenticatedAdminKelasRoute: typeof AuthenticatedAdminKelasRoute
+  AuthenticatedAdminKontenRoute: typeof AuthenticatedAdminKontenRoute
+  AuthenticatedAdminLanggananRoute: typeof AuthenticatedAdminLanggananRoute
+  AuthenticatedAdminOperasionalRoute: typeof AuthenticatedAdminOperasionalRoute
+  AuthenticatedAdminPenggunaRoute: typeof AuthenticatedAdminPenggunaRoute
+  AuthenticatedAdminSistemRoute: typeof AuthenticatedAdminSistemRoute
+  AuthenticatedAdminTerjemahanRoute: typeof AuthenticatedAdminTerjemahanRoute
   AuthenticatedBelajarRoute: typeof AuthenticatedBelajarRoute
   AuthenticatedBunpoRoute: typeof AuthenticatedBunpoRoute
+  AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
+  AuthenticatedChoukaiRoute: typeof AuthenticatedChoukaiRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDokkaiRoute: typeof AuthenticatedDokkaiRouteWithChildren
+  AuthenticatedEditProfilRoute: typeof AuthenticatedEditProfilRoute
+  AuthenticatedEditorRoute: typeof AuthenticatedEditorRoute
+  AuthenticatedEnoExamRoute: typeof AuthenticatedEnoExamRouteWithChildren
+  AuthenticatedGuruRoute: typeof AuthenticatedGuruRoute
+  AuthenticatedGuruKelasBaruRoute: typeof AuthenticatedGuruKelasBaruRoute
+  AuthenticatedHafalanRoute: typeof AuthenticatedHafalanRoute
+  AuthenticatedHafalanRiwayatRoute: typeof AuthenticatedHafalanRiwayatRoute
+  AuthenticatedJebakanIngatanRoute: typeof AuthenticatedJebakanIngatanRoute
+  AuthenticatedKanaRoute: typeof AuthenticatedKanaRoute
   AuthenticatedKanjiRoute: typeof AuthenticatedKanjiRouteWithChildren
+  AuthenticatedKelasRoute: typeof AuthenticatedKelasRouteWithChildren
+  AuthenticatedKelasSayaRoute: typeof AuthenticatedKelasSayaRoute
   AuthenticatedKotobaRoute: typeof AuthenticatedKotobaRoute
-  AuthenticatedListeningRoute: typeof AuthenticatedListeningRoute
+  AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
+  AuthenticatedListeningRoute: typeof AuthenticatedListeningRouteWithChildren
+  AuthenticatedNotifikasiRoute: typeof AuthenticatedNotifikasiRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPengaturanRoute: typeof AuthenticatedPengaturanRoute
+  AuthenticatedPetaKelemahanRoute: typeof AuthenticatedPetaKelemahanRoute
   AuthenticatedProfilRoute: typeof AuthenticatedProfilRoute
+  AuthenticatedProfilFotoRoute: typeof AuthenticatedProfilFotoRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
   AuthenticatedQuizRoute: typeof AuthenticatedQuizRouteWithChildren
+  AuthenticatedRantaiIngatanRoute: typeof AuthenticatedRantaiIngatanRoute
   AuthenticatedReferralRoute: typeof AuthenticatedReferralRoute
+  AuthenticatedSimulasiRoute: typeof AuthenticatedSimulasiRouteWithChildren
+  AuthenticatedStudyItemRoute: typeof AuthenticatedStudyItemRoute
+  AuthenticatedTargetRoute: typeof AuthenticatedTargetRoute
+  AuthenticatedTargetTertundaRoute: typeof AuthenticatedTargetTertundaRoute
+  AuthenticatedDokkaiBacaIdRoute: typeof AuthenticatedDokkaiBacaIdRoute
+  AuthenticatedGuruKelasClassIdRoute: typeof AuthenticatedGuruKelasClassIdRouteWithChildren
+  AuthenticatedSertifikatSimulasiLevelRoute: typeof AuthenticatedSertifikatSimulasiLevelRoute
+  AuthenticatedSimulasiHasilLevelRoute: typeof AuthenticatedSimulasiHasilLevelRoute
+  AuthenticatedSimulasiPenuhLevelRoute: typeof AuthenticatedSimulasiPenuhLevelRoute
+  AuthenticatedSimulasiReviewAttemptIdRoute: typeof AuthenticatedSimulasiReviewAttemptIdRoute
+  AuthenticatedPembayaranDuitkuSelesaiRoute: typeof AuthenticatedPembayaranDuitkuSelesaiRoute
+  AuthenticatedSimulasiBagianLevelSectionRoute: typeof AuthenticatedSimulasiBagianLevelSectionRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminAnalitikRoute: AuthenticatedAdminAnalitikRoute,
+  AuthenticatedAdminEnoExamRoute: AuthenticatedAdminEnoExamRouteWithChildren,
+  AuthenticatedAdminKelasRoute: AuthenticatedAdminKelasRoute,
+  AuthenticatedAdminKontenRoute: AuthenticatedAdminKontenRoute,
+  AuthenticatedAdminLanggananRoute: AuthenticatedAdminLanggananRoute,
+  AuthenticatedAdminOperasionalRoute: AuthenticatedAdminOperasionalRoute,
+  AuthenticatedAdminPenggunaRoute: AuthenticatedAdminPenggunaRoute,
+  AuthenticatedAdminSistemRoute: AuthenticatedAdminSistemRoute,
+  AuthenticatedAdminTerjemahanRoute: AuthenticatedAdminTerjemahanRoute,
   AuthenticatedBelajarRoute: AuthenticatedBelajarRoute,
   AuthenticatedBunpoRoute: AuthenticatedBunpoRoute,
+  AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
+  AuthenticatedChoukaiRoute: AuthenticatedChoukaiRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDokkaiRoute: AuthenticatedDokkaiRouteWithChildren,
+  AuthenticatedEditProfilRoute: AuthenticatedEditProfilRoute,
+  AuthenticatedEditorRoute: AuthenticatedEditorRoute,
+  AuthenticatedEnoExamRoute: AuthenticatedEnoExamRouteWithChildren,
+  AuthenticatedGuruRoute: AuthenticatedGuruRoute,
+  AuthenticatedGuruKelasBaruRoute: AuthenticatedGuruKelasBaruRoute,
+  AuthenticatedHafalanRoute: AuthenticatedHafalanRoute,
+  AuthenticatedHafalanRiwayatRoute: AuthenticatedHafalanRiwayatRoute,
+  AuthenticatedJebakanIngatanRoute: AuthenticatedJebakanIngatanRoute,
+  AuthenticatedKanaRoute: AuthenticatedKanaRoute,
   AuthenticatedKanjiRoute: AuthenticatedKanjiRouteWithChildren,
+  AuthenticatedKelasRoute: AuthenticatedKelasRouteWithChildren,
+  AuthenticatedKelasSayaRoute: AuthenticatedKelasSayaRoute,
   AuthenticatedKotobaRoute: AuthenticatedKotobaRoute,
-  AuthenticatedListeningRoute: AuthenticatedListeningRoute,
+  AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
+  AuthenticatedListeningRoute: AuthenticatedListeningRouteWithChildren,
+  AuthenticatedNotifikasiRoute: AuthenticatedNotifikasiRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPengaturanRoute: AuthenticatedPengaturanRoute,
+  AuthenticatedPetaKelemahanRoute: AuthenticatedPetaKelemahanRoute,
   AuthenticatedProfilRoute: AuthenticatedProfilRoute,
+  AuthenticatedProfilFotoRoute: AuthenticatedProfilFotoRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedQuizRoute: AuthenticatedQuizRouteWithChildren,
+  AuthenticatedRantaiIngatanRoute: AuthenticatedRantaiIngatanRoute,
   AuthenticatedReferralRoute: AuthenticatedReferralRoute,
+  AuthenticatedSimulasiRoute: AuthenticatedSimulasiRouteWithChildren,
+  AuthenticatedStudyItemRoute: AuthenticatedStudyItemRoute,
+  AuthenticatedTargetRoute: AuthenticatedTargetRoute,
+  AuthenticatedTargetTertundaRoute: AuthenticatedTargetTertundaRoute,
+  AuthenticatedDokkaiBacaIdRoute: AuthenticatedDokkaiBacaIdRoute,
+  AuthenticatedGuruKelasClassIdRoute:
+    AuthenticatedGuruKelasClassIdRouteWithChildren,
+  AuthenticatedSertifikatSimulasiLevelRoute:
+    AuthenticatedSertifikatSimulasiLevelRoute,
+  AuthenticatedSimulasiHasilLevelRoute: AuthenticatedSimulasiHasilLevelRoute,
+  AuthenticatedSimulasiPenuhLevelRoute: AuthenticatedSimulasiPenuhLevelRoute,
+  AuthenticatedSimulasiReviewAttemptIdRoute:
+    AuthenticatedSimulasiReviewAttemptIdRoute,
+  AuthenticatedPembayaranDuitkuSelesaiRoute:
+    AuthenticatedPembayaranDuitkuSelesaiRoute,
+  AuthenticatedSimulasiBagianLevelSectionRoute:
+    AuthenticatedSimulasiBagianLevelSectionRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -444,7 +1940,20 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  FaqRoute: FaqRoute,
+  PaketRoute: PaketRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TentangRoute: TentangRoute,
+  ApiAdminTranslationRoute: ApiAdminTranslationRoute,
+  ApiJlptAudioRoute: ApiJlptAudioRoute,
+  ApiJlptAudioManifestRoute: ApiJlptAudioManifestRoute,
+  ApiJlptImageRoute: ApiJlptImageRoute,
+  ApiLeaderboardRoute: ApiLeaderboardRoute,
+  ApiBunpoExamplesRoute: ApiBunpoExamplesRoute,
+  ApiCronTranslationRoute: ApiCronTranslationRoute,
+  ApiDuitkuCreateInvoiceRoute: ApiDuitkuCreateInvoiceRoute,
+  ApiKotobaExamplesRoute: ApiKotobaExamplesRoute,
+  PembayaranDuitkuCallbackRoute: PembayaranDuitkuCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
