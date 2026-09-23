@@ -11,6 +11,18 @@ export async function fetchVocabCount(level:Level):Promise<number>{
  return Number(res.data??0);
 }
 
+export async function fetchVocabLessonCounts(level:Level){
+ const res:any=await withTimeout((supabase as any).rpc("get_vocabulary_lesson_counts",{p_level:level}));
+ if(res.error)throw new Error(res.error.message);
+ return res.data??[];
+}
+
+export async function fetchVocabLessonPage(level:Level,lesson:number,offset=0,limit=VOCAB_PAGE_SIZE){
+ const res:any=await withTimeout((supabase as any).rpc("get_vocabulary_page_by_lesson",{p_level:level,p_lesson:lesson,p_offset:offset,p_limit:limit}));
+ if(res.error)throw new Error(res.error.message);
+ return (res.data??[]).map((row:any)=>({...row,senses:[],curriculum:[],profile_level:level}));
+}
+
 export async function fetchVocabPage(level:Level,offset=0,limit=VOCAB_PAGE_SIZE){
  const res:any=await withTimeout((supabase as any).rpc("get_vocabulary_page_by_level",{p_level:level,p_offset:offset,p_limit:limit}));
  if(res.error)throw new Error(res.error.message);
