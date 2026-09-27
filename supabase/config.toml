@@ -1,7 +1,7 @@
 project_id = "upxtqsvgppvqpbrjoitz"
 
 [auth]
-site_url = "https://enonihongo.vercel.app"
+site_url = "https://www.enonihongo.com"
 additional_redirect_urls = [
-  "https://enonihongo.vercel.app/**"
+  "https://www.enonihongo.com/**"
 ]
