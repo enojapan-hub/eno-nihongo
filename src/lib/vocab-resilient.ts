@@ -35,6 +35,35 @@ export async function fetchVocabSenses(vocabularyId:string){
  return res.data??[];
 }
 
+// Pola usage yang diketahui buruk (template/generik). Harus sama dengan aturan di scripts/sql/vocab_audit_final.sql.
+const BAD_USAGE_PATTERNS=[
+ /^Kata [A-Za-z -]+ (yang )?digunakan untuk menyatakan “/,
+ /Dapat (menjadi|dipakai sebagai) (topik|subjek)/,
+ /^Penggunaan pada materi N[1-5]:/,
+ /^(Penggunaan sesuai arti|Digunakan sebagai kata kerja sesuai maknanya|Dipakai sebagai kata kerja sesuai maknanya)/,
+ /#NAME\?/,
+ /\{\{|\[\[/,
+ /^(used |this word|a word|the word|to )/i,
+ /[一-鿿ぁ-ゟ゠-ヿ]{25,}/,
+];
+export function isUsableUsageNote(value:unknown):value is string{
+ if(typeof value!=="string")return false;
+ const text=value.trim();
+ return text.length>=15&&!BAD_USAGE_PATTERNS.some(p=>p.test(text));
+}
+
+// Sumber utama: vocabulary.usage_note_id. Fallback transisi ke senses: abaikan usage kosong/buruk,
+// lalu pilih secara deterministik (arti sama dengan kosakata, bukan canonical-merge, lalu urutan teks)
+// agar tidak bergantung pada urutan baris dari PostgreSQL.
+export function pickUsageNote(item:{usage_note_id?:string|null;meaning_id?:string|null},senses:any[]):string|undefined{
+ const own=item.usage_note_id?.trim();
+ if(own)return own;
+ const meaning=(item.meaning_id??"").trim().toLowerCase();
+ const rank=(s:any)=>({meaning:String(s.meaning_id??"").trim().toLowerCase()===meaning?0:1,merge:String(s.source_book??"").startsWith("canonical-merge")?1:0});
+ const candidates=senses.filter(s=>isUsableUsageNote(s?.usage_note_id)).sort((a,b)=>{const ra=rank(a),rb=rank(b);if(ra.meaning!==rb.meaning)return ra.meaning-rb.meaning;if(ra.merge!==rb.merge)return ra.merge-rb.merge;const ta=a.usage_note_id.trim(),tb=b.usage_note_id.trim();return ta<tb?-1:ta>tb?1:0;});
+ return candidates[0]?.usage_note_id.trim();
+}
+
 // Kompatibilitas untuk pemanggil lama: memuat bertahap agar tidak mengirim ribuan ID dalam satu query.
 export async function fetchVocabListResilient(level:Level){
  const total=await fetchVocabCount(level),rows:any[]=[];
