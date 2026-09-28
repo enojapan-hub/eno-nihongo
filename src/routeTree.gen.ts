@@ -90,6 +90,7 @@ import { Route as AuthenticatedGuruKelasClassIdNilaiRouteImport } from './routes
 import { Route as AuthenticatedKelasClassIdWorkspaceRouteImport } from './routes/_authenticated/kelas.$classId.workspace'
 import { Route as AuthenticatedPembayaranDuitkuSelesaiRouteImport } from './routes/_authenticated/pembayaran/duitku/selesai'
 import { Route as AuthenticatedSimulasiBagianLevelSectionRouteImport } from './routes/_authenticated/simulasi-bagian.$level.$section'
+import { Route as AuthenticatedSimulasiPenuhLevelSessionRouteImport } from './routes/_authenticated/simulasi-penuh.$level.$session'
 import { Route as AuthenticatedGuruKelasClassIdQuizQuizIdRouteImport } from './routes/_authenticated/guru-kelas.$classId.quiz.$quizId'
 import { Route as AuthenticatedKelasClassIdQuizQuizIdRouteImport } from './routes/_authenticated/kelas.$classId.quiz.$quizId'
 import { Route as AuthenticatedKelasClassIdTugasAssignmentIdRouteImport } from './routes/_authenticated/kelas.$classId.tugas.$assignmentId'
@@ -530,6 +531,12 @@ const AuthenticatedSimulasiBagianLevelSectionRoute =
     path: '/simulasi-bagian/$level/$section',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSimulasiPenuhLevelSessionRoute =
+  AuthenticatedSimulasiPenuhLevelSessionRouteImport.update({
+    id: '/$session',
+    path: '/$session',
+    getParentRoute: () => AuthenticatedSimulasiPenuhLevelRoute,
+  } as any)
 const AuthenticatedGuruKelasClassIdQuizQuizIdRoute =
   AuthenticatedGuruKelasClassIdQuizQuizIdRouteImport.update({
     id: '/quiz/$quizId',
@@ -617,7 +624,7 @@ export interface FileRoutesByFullPath {
   '/quiz/$slug': typeof AuthenticatedQuizSlugRoute
   '/sertifikat-simulasi/$level': typeof AuthenticatedSertifikatSimulasiLevelRoute
   '/simulasi-hasil/$level': typeof AuthenticatedSimulasiHasilLevelRoute
-  '/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRoute
+  '/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRouteWithChildren
   '/simulasi-review/$attemptId': typeof AuthenticatedSimulasiReviewAttemptIdRoute
   '/simulasi/$level': typeof AuthenticatedSimulasiLevelRoute
   '/api/bunpo/examples': typeof ApiBunpoExamplesRoute
@@ -630,6 +637,7 @@ export interface FileRoutesByFullPath {
   '/kelas/$classId/workspace': typeof AuthenticatedKelasClassIdWorkspaceRoute
   '/pembayaran/duitku/selesai': typeof AuthenticatedPembayaranDuitkuSelesaiRoute
   '/simulasi-bagian/$level/$section': typeof AuthenticatedSimulasiBagianLevelSectionRoute
+  '/simulasi-penuh/$level/$session': typeof AuthenticatedSimulasiPenuhLevelSessionRoute
   '/guru-kelas/$classId/quiz/$quizId': typeof AuthenticatedGuruKelasClassIdQuizQuizIdRoute
   '/kelas/$classId/quiz/$quizId': typeof AuthenticatedKelasClassIdQuizQuizIdRoute
   '/kelas/$classId/tugas/$assignmentId': typeof AuthenticatedKelasClassIdTugasAssignmentIdRoute
@@ -702,7 +710,7 @@ export interface FileRoutesByTo {
   '/quiz/$slug': typeof AuthenticatedQuizSlugRoute
   '/sertifikat-simulasi/$level': typeof AuthenticatedSertifikatSimulasiLevelRoute
   '/simulasi-hasil/$level': typeof AuthenticatedSimulasiHasilLevelRoute
-  '/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRoute
+  '/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRouteWithChildren
   '/simulasi-review/$attemptId': typeof AuthenticatedSimulasiReviewAttemptIdRoute
   '/simulasi/$level': typeof AuthenticatedSimulasiLevelRoute
   '/api/bunpo/examples': typeof ApiBunpoExamplesRoute
@@ -715,6 +723,7 @@ export interface FileRoutesByTo {
   '/kelas/$classId/workspace': typeof AuthenticatedKelasClassIdWorkspaceRoute
   '/pembayaran/duitku/selesai': typeof AuthenticatedPembayaranDuitkuSelesaiRoute
   '/simulasi-bagian/$level/$section': typeof AuthenticatedSimulasiBagianLevelSectionRoute
+  '/simulasi-penuh/$level/$session': typeof AuthenticatedSimulasiPenuhLevelSessionRoute
   '/guru-kelas/$classId/quiz/$quizId': typeof AuthenticatedGuruKelasClassIdQuizQuizIdRoute
   '/kelas/$classId/quiz/$quizId': typeof AuthenticatedKelasClassIdQuizQuizIdRoute
   '/kelas/$classId/tugas/$assignmentId': typeof AuthenticatedKelasClassIdTugasAssignmentIdRoute
@@ -789,7 +798,7 @@ export interface FileRoutesById {
   '/_authenticated/quiz/$slug': typeof AuthenticatedQuizSlugRoute
   '/_authenticated/sertifikat-simulasi/$level': typeof AuthenticatedSertifikatSimulasiLevelRoute
   '/_authenticated/simulasi-hasil/$level': typeof AuthenticatedSimulasiHasilLevelRoute
-  '/_authenticated/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRoute
+  '/_authenticated/simulasi-penuh/$level': typeof AuthenticatedSimulasiPenuhLevelRouteWithChildren
   '/_authenticated/simulasi-review/$attemptId': typeof AuthenticatedSimulasiReviewAttemptIdRoute
   '/_authenticated/simulasi/$level': typeof AuthenticatedSimulasiLevelRoute
   '/api/bunpo/examples': typeof ApiBunpoExamplesRoute
@@ -802,6 +811,7 @@ export interface FileRoutesById {
   '/_authenticated/kelas/$classId/workspace': typeof AuthenticatedKelasClassIdWorkspaceRoute
   '/_authenticated/pembayaran/duitku/selesai': typeof AuthenticatedPembayaranDuitkuSelesaiRoute
   '/_authenticated/simulasi-bagian/$level/$section': typeof AuthenticatedSimulasiBagianLevelSectionRoute
+  '/_authenticated/simulasi-penuh/$level/$session': typeof AuthenticatedSimulasiPenuhLevelSessionRoute
   '/_authenticated/guru-kelas/$classId/quiz/$quizId': typeof AuthenticatedGuruKelasClassIdQuizQuizIdRoute
   '/_authenticated/kelas/$classId/quiz/$quizId': typeof AuthenticatedKelasClassIdQuizQuizIdRoute
   '/_authenticated/kelas/$classId/tugas/$assignmentId': typeof AuthenticatedKelasClassIdTugasAssignmentIdRoute
@@ -889,6 +899,7 @@ export interface FileRouteTypes {
     | '/kelas/$classId/workspace'
     | '/pembayaran/duitku/selesai'
     | '/simulasi-bagian/$level/$section'
+    | '/simulasi-penuh/$level/$session'
     | '/guru-kelas/$classId/quiz/$quizId'
     | '/kelas/$classId/quiz/$quizId'
     | '/kelas/$classId/tugas/$assignmentId'
@@ -974,6 +985,7 @@ export interface FileRouteTypes {
     | '/kelas/$classId/workspace'
     | '/pembayaran/duitku/selesai'
     | '/simulasi-bagian/$level/$section'
+    | '/simulasi-penuh/$level/$session'
     | '/guru-kelas/$classId/quiz/$quizId'
     | '/kelas/$classId/quiz/$quizId'
     | '/kelas/$classId/tugas/$assignmentId'
@@ -1060,6 +1072,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kelas/$classId/workspace'
     | '/_authenticated/pembayaran/duitku/selesai'
     | '/_authenticated/simulasi-bagian/$level/$section'
+    | '/_authenticated/simulasi-penuh/$level/$session'
     | '/_authenticated/guru-kelas/$classId/quiz/$quizId'
     | '/_authenticated/kelas/$classId/quiz/$quizId'
     | '/_authenticated/kelas/$classId/tugas/$assignmentId'
@@ -1654,6 +1667,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSimulasiBagianLevelSectionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/simulasi-penuh/$level/$session': {
+      id: '/_authenticated/simulasi-penuh/$level/$session'
+      path: '/$session'
+      fullPath: '/simulasi-penuh/$level/$session'
+      preLoaderRoute: typeof AuthenticatedSimulasiPenuhLevelSessionRouteImport
+      parentRoute: typeof AuthenticatedSimulasiPenuhLevelRoute
+    }
     '/_authenticated/guru-kelas/$classId/quiz/$quizId': {
       id: '/_authenticated/guru-kelas/$classId/quiz/$quizId'
       path: '/quiz/$quizId'
@@ -1816,6 +1836,21 @@ const AuthenticatedGuruKelasClassIdRouteWithChildren =
     AuthenticatedGuruKelasClassIdRouteChildren,
   )
 
+interface AuthenticatedSimulasiPenuhLevelRouteChildren {
+  AuthenticatedSimulasiPenuhLevelSessionRoute: typeof AuthenticatedSimulasiPenuhLevelSessionRoute
+}
+
+const AuthenticatedSimulasiPenuhLevelRouteChildren: AuthenticatedSimulasiPenuhLevelRouteChildren =
+  {
+    AuthenticatedSimulasiPenuhLevelSessionRoute:
+      AuthenticatedSimulasiPenuhLevelSessionRoute,
+  }
+
+const AuthenticatedSimulasiPenuhLevelRouteWithChildren =
+  AuthenticatedSimulasiPenuhLevelRoute._addFileChildren(
+    AuthenticatedSimulasiPenuhLevelRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdminAnalitikRoute: typeof AuthenticatedAdminAnalitikRoute
@@ -1866,7 +1901,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGuruKelasClassIdRoute: typeof AuthenticatedGuruKelasClassIdRouteWithChildren
   AuthenticatedSertifikatSimulasiLevelRoute: typeof AuthenticatedSertifikatSimulasiLevelRoute
   AuthenticatedSimulasiHasilLevelRoute: typeof AuthenticatedSimulasiHasilLevelRoute
-  AuthenticatedSimulasiPenuhLevelRoute: typeof AuthenticatedSimulasiPenuhLevelRoute
+  AuthenticatedSimulasiPenuhLevelRoute: typeof AuthenticatedSimulasiPenuhLevelRouteWithChildren
   AuthenticatedSimulasiReviewAttemptIdRoute: typeof AuthenticatedSimulasiReviewAttemptIdRoute
   AuthenticatedPembayaranDuitkuSelesaiRoute: typeof AuthenticatedPembayaranDuitkuSelesaiRoute
   AuthenticatedSimulasiBagianLevelSectionRoute: typeof AuthenticatedSimulasiBagianLevelSectionRoute
@@ -1924,7 +1959,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSertifikatSimulasiLevelRoute:
     AuthenticatedSertifikatSimulasiLevelRoute,
   AuthenticatedSimulasiHasilLevelRoute: AuthenticatedSimulasiHasilLevelRoute,
-  AuthenticatedSimulasiPenuhLevelRoute: AuthenticatedSimulasiPenuhLevelRoute,
+  AuthenticatedSimulasiPenuhLevelRoute:
+    AuthenticatedSimulasiPenuhLevelRouteWithChildren,
   AuthenticatedSimulasiReviewAttemptIdRoute:
     AuthenticatedSimulasiReviewAttemptIdRoute,
   AuthenticatedPembayaranDuitkuSelesaiRoute:
