@@ -33,7 +33,9 @@ urf as (
     coalesce(u ~ '^Kata [A-Za-z -]+ (yang )?digunakan untuk menyatakan “', false) tpl_en,
     coalesce(u ~ 'Dapat (menjadi|dipakai sebagai) (topik|subjek)'
       or u ~ '^Penggunaan pada materi N[1-5]:'
-      or u ~ '^(Penggunaan sesuai arti|Digunakan sebagai kata kerja sesuai maknanya|Dipakai sebagai kata kerja sesuai maknanya)', false) tpl_generic,
+      or u ~ '^(Penggunaan sesuai arti|Digunakan sebagai kata kerja sesuai maknanya|Dipakai sebagai kata kerja sesuai maknanya)'
+      -- U1: legacy "…yang digunakan dengan makna “…”. Pemilihan partikel dan bentuk konjugasi mengikuti…" template
+      or (u ~ '^Kata [A-Za-z -]+ yang digunakan dengan makna “' and u ~ 'Pemilihan partikel dan bentuk konjugasi mengikuti'), false) tpl_generic,
     coalesce(char_length(btrim(u))<15 or position('{{' in u)>0 or position('[[' in u)>0
       or u ~ '[一-鿿ぁ-ゟ゠-ヿ]{25,}' or u ~* '^(used |this word|a word|the word|to )'
       or position('#NAME?' in u)>0, false) other_bad,
