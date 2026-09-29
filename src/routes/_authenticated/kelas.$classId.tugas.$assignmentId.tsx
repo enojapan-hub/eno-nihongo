@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/kelas/$classId/tugas/$assi
 function Page() {
   const { classId, assignmentId } = Route.useParams();
   const qc = useQueryClient();
+  const [notice, setNotice] = useState("");
   const q = useQuery({
     queryKey: ["student-assignment", classId, assignmentId],
     queryFn: async () => {
@@ -58,13 +59,22 @@ function Page() {
             {q.error.message}
           </p>
         )}
+        {notice && (
+          <p role="status" className="rounded-xl bg-primary/10 p-3 text-sm">
+            {notice}
+          </p>
+        )}
         {q.data && (
           <Editor
             key={assignmentId + ":" + (q.data.submission?.submitted_at || "new")}
             {...q.data}
-            refresh={() =>
-              qc.invalidateQueries({ queryKey: ["student-assignment", classId, assignmentId] })
-            }
+            refresh={async () => {
+              setNotice("Tugas berhasil dikumpulkan. Guru dapat melihat jawaban Anda.");
+              await Promise.all([
+                qc.invalidateQueries({ queryKey: ["student-assignment", classId, assignmentId] }),
+                qc.invalidateQueries({ queryKey: ["class-workspace", classId] }),
+              ]);
+            }}
           />
         )}
       </div>
@@ -166,7 +176,6 @@ function Editor({
         setDraftAvailable(false);
       }
       await refresh();
-      setMessage("Tugas berhasil dikumpulkan.");
     } catch (e: any) {
       setMessage(e.message);
     } finally {
