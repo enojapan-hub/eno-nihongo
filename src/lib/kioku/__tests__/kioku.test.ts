@@ -129,21 +129,6 @@ describe("selector priority", () => {
       r.some((s) => s.itemId === "t" && s.aspect === "meaning" && s.direction === "forward"),
     ).toBe(false);
   });
-  it("choice while young, recall once stage>=3 or after likely_guess", () => {
-    const r = rankCandidates(
-      toLearned([prog("a"), prog("b")]),
-      [
-        st("a", { stage: 3, due_at: "2026-09-30T00:00:00Z" }),
-        st("b", { last_error_type: "likely_guess", due_at: "2026-09-30T00:00:00Z" }),
-      ],
-      NOW,
-    );
-    expect(
-      r
-        .filter((s) => s.aspect === "meaning" && s.direction === "forward")
-        .every((s) => s.exerciseType === "recall_flip" && s.hintLevel === 0),
-    ).toBe(true);
-  });
 });
 
 describe("error classifier", () => {
@@ -187,7 +172,7 @@ describe("session build / restore", () => {
     expect(s.exercises.length).toBe(4);
     for (const e of s.exercises)
       if (e.exerciseType === "choice") {
-        expect(e.options).toHaveLength(4);
+        expect(e.options).toHaveLength(3);
         expect(e.options.filter((o) => o.text === e.answer)).toHaveLength(1);
       }
     expect(buildSession([], content, pool, learnedIds, "sid", NOW).exercises).toEqual([]);

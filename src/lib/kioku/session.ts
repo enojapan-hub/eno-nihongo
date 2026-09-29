@@ -39,6 +39,14 @@ export function isConfusable(a: Content, b: Content): boolean {
   return ra.length >= 2 && rb.length >= 2 && ra.slice(0, 2) === rb.slice(0, 2);
 }
 
+/** Deterministic masked hint: first character kept, the rest hidden (word gaps and punctuation preserved). */
+export function makeHint(answer: string): string {
+  const chars = [...answer.trim()];
+  const sep = (ch: string | undefined) => !ch || /[\s;,、/／・.]/.test(ch);
+  const out = chars.map((ch, i) => (sep(ch) || sep(chars[i - 1]) ? ch : "○"));
+  return out.length > 16 ? out.slice(0, 16).join("") + "…" : out.join("");
+}
+
 /** Text shown for `c` when it is a question (prompt side) or an option/answer for the given aspect+direction. */
 export function promptOf(c: Content, aspect: KiokuAspect, direction: KiokuDirection): string {
   return direction === "reverse" ? c.meaning : c.surface;
@@ -70,7 +78,7 @@ export function buildExercise(
   const answer = answerOf(c, sel.aspect, sel.direction);
   const id = `${sessionId}:${index}`;
   let options: Exercise["options"] = [];
-  if (sel.exerciseType === "choice") {
+  {
     const seen = new Set([norm(answer)]);
     const cands = pool
       .filter((p) => p.type === c.type && p.id !== c.id && usable(p, sel.aspect, sel.direction))
@@ -94,10 +102,14 @@ export function buildExercise(
       picked.push({ id: x.p.id, text, confusable: x.confusable });
       if (picked.length === 3) break;
     }
-    if (picked.length < 3) return null; // not enough distractors: fall back to another candidate
-    options = [{ id: c.id, text: answer, confusable: false }, ...picked].sort(
-      (a, b) => fnv(`${id}|${a.id}`) - fnv(`${id}|${b.id}`),
-    );
+    const need = Math.max(2, (sel.optionCount || 4) - 1);
+    // not enough distractors for a choice question: fall back to another candidate
+    if (picked.length < need && sel.exerciseType === "choice") return null;
+    // recall exercises keep options as a fallback for the easier repeat after a mistake
+    if (picked.length >= 2)
+      options = [{ id: c.id, text: answer, confusable: false }, ...picked.slice(0, need)].sort(
+        (a, b) => fnv(`${id}|${a.id}`) - fnv(`${id}|${b.id}`),
+      );
   }
   return {
     id,
@@ -110,6 +122,7 @@ export function buildExercise(
     stage: sel.stage,
     hintLevel: sel.hintLevel,
     reason: sel.reason,
+    hintText: makeHint(answer),
     prompt: promptOf(c, sel.aspect, sel.direction),
     promptSub:
       sel.direction === "forward" && sel.aspect !== "reading" && c.type !== "kanji"
@@ -151,7 +164,15 @@ export function buildSession(
 export function queueRepeat(s: KiokuSession, ex: Exercise): KiokuSession {
   if (ex.isRepeat) return s;
   if (s.exercises.some((e) => e.isRepeat && e.id === `${ex.id}~r`)) return s;
-  const copy: Exercise = { ...ex, id: `${ex.id}~r`, isRepeat: true, reason: "repeat_after_error" };
+  // A weak item never comes back harder: a missed recall repeats as an easy choice question when options exist.
+  const easier = ex.exerciseType === "recall_flip" && ex.options.length >= 3;
+  const copy: Exercise = {
+    ...ex,
+    id: `${ex.id}~r`,
+    isRepeat: true,
+    reason: "repeat_after_error",
+    ...(easier ? { exerciseType: "choice" as const, hintLevel: 3 } : {}),
+  };
   const at = Math.min(s.exercises.length, s.index + 1 + REPEAT_GAP);
   return { ...s, exercises: [...s.exercises.slice(0, at), copy, ...s.exercises.slice(at)] };
 }

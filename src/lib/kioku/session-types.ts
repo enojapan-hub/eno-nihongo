@@ -11,6 +11,7 @@ export type Exercise = {
   stage: number;
   hintLevel: number;
   reason: string;
+  hintText: string;
   prompt: string;
   promptSub: string;
   answer: string;

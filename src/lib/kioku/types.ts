@@ -48,6 +48,7 @@ export type Selection = {
   exerciseType: ExerciseType;
   stage: number;
   hintLevel: number;
+  optionCount: number;
   reason: string;
   score: number;
 };
