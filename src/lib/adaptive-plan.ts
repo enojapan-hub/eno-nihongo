@@ -7,7 +7,8 @@ export type AdaptiveTask = { id:string; task_type:AdaptiveTaskType; target_count
 export type AdaptivePlan = { active:boolean; planId?:string|null; studyDaysPerWeek?:number|null; startDate?:string|null; targetLevel:string|null; targetDate:string|null; daysLeft:number|null; tasks:AdaptiveTask[]; target:number; completed:number };
 const emptyPlan:AdaptivePlan={active:false,targetLevel:null,targetDate:null,daysLeft:null,tasks:[],target:0,completed:0};
 type ProgressRow={item_type:string;item_id:string;status:string;due_at:string|null;ease_factor?:number|null};
-type ReviewRow=PlannerReview;
+type ReviewRow=PlannerReview&{meta?:Record<string,unknown>|null};
+type KiokuStateRow={item_type:string;item_id:string;stage:number;stability:number;due_at:string|null;lapses:number;failure_count:number;overconfident_wrong:number;last_error_type:string|null};
 const aspectLabel:Record<string,string>={meaning:"Arti",reading:"Bacaan",usage:"Penggunaan",function:"Fungsi",context:"Konteks",confusion:"Membedakan materi mirip",meaning_reading:"Arti & Bacaan",meaning_usage:"Arti & Penggunaan",function_context:"Fungsi & Konteks"};
 const materialLabel:Record<string,string>={kanji:"Kanji",vocabulary:"Kotoba",grammar:"Bunpou"};
 
@@ -21,11 +22,15 @@ async function itemSuggestion(client:any,r:{item_type:string;item_id:string},wea
 
 async function enrichTasksWithSuggestions(userId:string,level:string,tasks:AdaptiveTask[]):Promise<AdaptiveTask[]>{
   const client=supabase as any;
-  const[{data:progress},{data:reviewData}]=await Promise.all([
+  const[{data:progress},{data:reviewData},{data:kiokuState}]=await Promise.all([
     client.from("user_item_progress").select("item_type,item_id,status,due_at,ease_factor").eq("user_id",userId).eq("level",level),
-    client.from("flashcard_reviews").select("item_type,item_id,rating,used_hint,response_ms,direction,aspect,created_at").eq("user_id",userId).eq("level",level).order("created_at",{ascending:false}).limit(500)
+    client.from("flashcard_reviews").select("item_type,item_id,rating,used_hint,response_ms,direction,aspect,created_at,meta").eq("user_id",userId).eq("level",level).order("created_at",{ascending:false}).limit(500),
+    client.from("memory_state").select("item_type,item_id,stage,stability,due_at,lapses,failure_count,overconfident_wrong,last_error_type").eq("user_id",userId)
   ]);
-  const rows=(progress??[]) as ProgressRow[],reviews=(reviewData??[]) as ReviewRow[],w=analyzePlannerWeakness(reviews),weakest=w.weakest;
+  const rows=(progress??[]) as ProgressRow[],reviews=(reviewData??[]) as ReviewRow[],memory=(kiokuState??[]) as KiokuStateRow[],w=analyzePlannerWeakness(reviews),weakest=w.weakest;
+  const levelIds=new Set(rows.map(r=>`${r.item_type}:${r.item_id}`));
+  const kiokuRows=memory.filter(r=>levelIds.has(`${r.item_type}:${r.item_id}`));
+  const kiokuEventCount=reviews.filter(r=>(r.meta as any)?.source==="kioku").length;
   const weakLabel=weakest?`${materialLabel[weakest.itemType]||weakest.itemType} · ${aspectLabel[weakest.aspect]||weakest.aspect}`:null;
   const nowIso=new Date().toISOString();
   const mastered=(type:string)=>new Set(rows.filter(r=>r.item_type===type&&r.status==="mastered").map(r=>r.item_id));
@@ -36,11 +41,14 @@ async function enrichTasksWithSuggestions(userId:string,level:string,tasks:Adapt
     const wanted=Math.max(1,Math.min(12,Number(task.target_count||1)));
     try{
       if(task.task_type==="review"){
-        const due=rows.filter(r=>r.due_at&&r.due_at<=nowIso).map(r=>({...r,score:3+(w.item.get(`${r.item_type}:${r.item_id}`)??0)+(aspectItems.get(`${r.item_type}:${r.item_id}`)??0)}));
-        const weakNotDue=rows.filter(r=>!(r.due_at&&r.due_at<=nowIso)).map(r=>({...r,score:(w.item.get(`${r.item_type}:${r.item_id}`)??0)+(aspectItems.get(`${r.item_type}:${r.item_id}`)??0)})).filter(r=>r.score>=.28);
-        const queue=[...due.sort((a,b)=>b.score-a.score),...weakNotDue.sort((a,b)=>b.score-a.score)].slice(0,wanted);
+        const due=rows.filter(r=>r.due_at&&r.due_at<=nowIso).map(r=>({...r,score:3+(w.item.get(`${r.item_type}:${r.item_id}`)??0)+(aspectItems.get(`${r.item_type}:${r.item_id}`)??0),source:"hafalan" as const}));
+        const weakNotDue=rows.filter(r=>!(r.due_at&&r.due_at<=nowIso)).map(r=>({...r,score:(w.item.get(`${r.item_type}:${r.item_id}`)??0)+(aspectItems.get(`${r.item_type}:${r.item_id}`)??0),source:"hafalan" as const})).filter(r=>r.score>=.28);
+        const kioku=kiokuRows.map(r=>({...r,status:"learning",score:(r.due_at&&r.due_at<=nowIso?4:0)+Math.min(2,r.failure_count*.35+r.lapses*.5+r.overconfident_wrong*.7)+(r.stage<3?.25:0),source:"kioku" as const})).filter(r=>r.score>=.5);
+        const merged=[...due,...weakNotDue,...kioku].sort((a,b)=>b.score-a.score);
+        const seen=new Set<string>();const queue=merged.filter(r=>{const k=`${r.item_type}:${r.item_id}`;if(seen.has(k))return false;seen.add(k);return true}).slice(0,wanted);
+        const kiokuRecommended=queue.some(r=>r.source==="kioku");
         const suggestions=(await Promise.all(queue.map(r=>itemSuggestion(client,r,r.score<3,weakLabel??undefined)))).filter(Boolean) as AdaptiveSuggestion[];
-        return{...task,priority:queue.length?120:task.priority,target_count:Math.max(task.target_count,Math.min(12,queue.length)),reason:queue.length?`Review jatuh tempo diprioritaskan, lalu kelemahan ${weakLabel??"recall"}, sebelum materi baru.`:task.reason,suggestions,metadata:{...(task.metadata??{}),smartReview:true,weakCount:weakNotDue.length,dueCount:due.length,weakestItemType:weakest?.itemType??null,weakestAspect:weakest?.aspect??null,weakestAspectLabel:weakLabel,weakestAspectScore:weakest?Math.round(weakest.weaknessScore*100):null}};
+        return{...task,priority:queue.length?120:task.priority,target_count:Math.max(task.target_count,Math.min(12,queue.length)),reason:queue.length?(kiokuRecommended?`ENO Kioku memprioritaskan retensi jatuh tempo dan pola lupa, lalu kelemahan ${weakLabel??"recall"}.`:`Review jatuh tempo diprioritaskan, lalu kelemahan ${weakLabel??"recall"}, sebelum materi baru.`):task.reason,suggestions,metadata:{...(task.metadata??{}),smartReview:true,kiokuRecommended,kiokuSignalCount:kioku.length,kiokuEventCount,weakCount:weakNotDue.length,dueCount:due.length,weakestItemType:weakest?.itemType??null,weakestAspect:weakest?.aspect??null,weakestAspectLabel:weakLabel,weakestAspectScore:weakest?Math.round(weakest.weaknessScore*100):null}};
       }
       const weaknessScore=weakest?.weaknessScore??0,newPenalty=weakest&&weaknessScore>=.35?25:0;
       const adjusted={...task,priority:Math.max(1,task.priority-newPenalty),metadata:{...(task.metadata??{}),weaknessGuard:newPenalty>0,weakestItemType:weakest?.itemType??null,weakestAspect:weakest?.aspect??null}};
