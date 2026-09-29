@@ -1,3 +1,4 @@
+import { comboKey, partnerFor, remedyFor, type Signals } from "./signals";
 import type {
   ExerciseType,
   KiokuAspect,
@@ -5,6 +6,7 @@ import type {
   KiokuItemType,
   LearnedItem,
   MemoryStateRow,
+  Remedy,
   Selection,
 } from "./types";
 
@@ -24,6 +26,7 @@ export const COMBOS: Record<KiokuItemType, Combo[]> = {
     { aspect: "meaning", direction: "forward" },
     { aspect: "reading", direction: "forward" },
     { aspect: "meaning", direction: "reverse" },
+    { aspect: "usage", direction: "forward" },
   ],
   grammar: [
     { aspect: "function_context", direction: "forward" },
@@ -111,13 +114,21 @@ function score(
  *   3 Produksi : blind recall, hint on request    (hint_level 1)
  *   4 Kuasai   : blind recall, no hint            (hint_level 0)
  */
-export function planExercise(st: MemoryStateRow | undefined): {
+export function planExercise(
+  st: MemoryStateRow | undefined,
+  remedy?: Remedy,
+): {
   exerciseType: ExerciseType;
   hintLevel: number;
   stage: number;
   optionCount: number;
 } {
   const stage = st?.stage ?? 0;
+  // Remediation of slow recall / guessing: less help, but never a hard question for a weak item.
+  if (remedy?.kind === "slow" && stage >= 2)
+    return { exerciseType: "recall_flip", hintLevel: 1, stage, optionCount: 0 };
+  if (remedy?.kind === "guess" && stage >= 1)
+    return { exerciseType: "recall_flip", hintLevel: stage >= 4 ? 0 : 1, stage, optionCount: 0 };
   if (stage >= 4) return { exerciseType: "recall_flip", hintLevel: 0, stage, optionCount: 0 };
   if (stage === 3) return { exerciseType: "recall_flip", hintLevel: 1, stage, optionCount: 0 };
   if (stage === 2) return { exerciseType: "recall_flip", hintLevel: 2, stage, optionCount: 0 };
@@ -125,7 +136,8 @@ export function planExercise(st: MemoryStateRow | undefined): {
     exerciseType: "choice",
     hintLevel: 3,
     stage,
-    optionCount: stage === 0 && st?.last_error_type !== "likely_guess" ? 3 : 4,
+    optionCount:
+      stage === 0 && st?.last_error_type !== "likely_guess" && remedy?.kind !== "guess" ? 3 : 4,
   };
 }
 
@@ -134,6 +146,7 @@ export function rankCandidates(
   learned: LearnedItem[],
   states: MemoryStateRow[],
   now: number,
+  signals?: Signals,
 ): Selection[] {
   const byKey = new Map(
     states.map((s) => [stateKey(s.item_type, s.item_id, s.aspect, s.direction), s]),
@@ -148,17 +161,38 @@ export function rankCandidates(
         const fwd = byKey.get(stateKey(item.itemType, item.itemId, c.aspect, "forward"));
         if (!fwd || fwd.stage < 1) return;
       }
-      const s = score(item, st, i === 0, now);
+      // Usage (cloze) only after the meaning was recognised at least once.
+      if (c.aspect === "usage" && !st) {
+        const m = byKey.get(stateKey(item.itemType, item.itemId, "meaning", "forward"));
+        if (!m || m.stage < 1) return;
+      }
+      let s = score(item, st, i === 0, now);
       if (!s) return;
+      // Error Engine: deterministic remediation from the latest unresolved error of this exact combo.
+      const err = signals?.unresolved.get(
+        comboKey(item.itemType, item.itemId, c.aspect, c.direction),
+      );
+      const partner = signals ? partnerFor(item.itemType, item.itemId, signals) : null;
+      const remedy = remedyFor(err, { itemType: item.itemType, partner, hasWrongExamples: true });
+      if (remedy) {
+        const tier =
+          700 + Math.min(remedy.count, 3) * 20 + (partner && partner.count >= 2 ? 40 : 0);
+        const tag = `remediate_${remedy.kind}${remedy.source ? `:${remedy.source}` : ""}`;
+        s =
+          tier > s.score
+            ? { score: tier, reason: tag }
+            : { score: s.score, reason: `${s.reason}+${tag}` };
+      }
       out.push({
         itemType: item.itemType,
         itemId: item.itemId,
         level: item.level,
         aspect: c.aspect,
         direction: c.direction,
-        ...planExercise(st),
+        ...planExercise(st, remedy ?? undefined),
         reason: s.reason,
         score: s.score,
+        ...(remedy ? { remedy } : {}),
       });
     });
   }

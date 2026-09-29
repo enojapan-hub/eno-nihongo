@@ -12,6 +12,12 @@ export type Exercise = {
   hintLevel: number;
   reason: string;
   hintText: string;
+  /** exercise variant for analytics/UI: jebakan | contrast | cloze | wrong_example */
+  variant?: string | undefined;
+  /** short chip label (Jebakan / Bedakan / Penggunaan) */
+  label?: string | undefined;
+  /** short, data-backed explanation shown after answering */
+  feedback?: string | undefined;
   prompt: string;
   promptSub: string;
   answer: string;

@@ -1,7 +1,7 @@
 export type KiokuItemType = "kanji" | "vocabulary" | "grammar";
-export type KiokuAspect = "meaning" | "reading" | "function_context";
+export type KiokuAspect = "meaning" | "reading" | "usage" | "function_context";
 export type KiokuDirection = "forward" | "reverse";
-export type ExerciseType = "choice" | "recall_flip";
+export type ExerciseType = "choice" | "recall_flip" | "contrast" | "usage";
 export type Confidence = "yakin" | "ragu";
 export type ErrorType =
   | "meaning"
@@ -39,6 +39,17 @@ export type MemoryStateRow = {
   last_error_type: string | null;
 };
 
+export type RemedyKind =
+  "meaning" | "reading" | "jebakan" | "contrast" | "usage" | "slow" | "guess";
+export type PairSource = "error" | "relation" | "wrong_example" | "heuristic";
+export type Remedy = {
+  kind: RemedyKind;
+  partnerId?: string | undefined;
+  source?: PairSource | undefined;
+  /** consecutive unresolved errors on this combo */
+  count: number;
+};
+
 export type Selection = {
   itemType: KiokuItemType;
   itemId: string;
@@ -51,6 +62,7 @@ export type Selection = {
   optionCount: number;
   reason: string;
   score: number;
+  remedy?: Remedy;
 };
 
 /** Payload of one event sent to `kioku_record_events`. */
@@ -65,6 +77,9 @@ export type KiokuEvent = {
   exercise_type: ExerciseType;
   correct: boolean;
   selected_answer: string | null;
+  /** item id of the chosen option when it is a real item (null for sentence options) */
+  selected_item_id: string | null;
+  variant: string | null;
   confidence: Confidence | null;
   hint_level: number;
   used_hint: boolean;
