@@ -115,10 +115,7 @@ describe("Ingatan Balik", () => {
   ];
   const content = new Map(pool.map((x) => [`kanji:${x.id}`, x]));
   it("JP->ID and ID->JP questions have the right prompt/answer", () => {
-    const ranked = selectExercises(
-      rankCandidates(toLearned([prog("a")]), [row("a", { stage: 1 })], AT),
-      10,
-    );
+    const ranked = rankCandidates(toLearned([prog("a")]), [row("a", { stage: 1 })], AT); // the per-item cap is applied while building
     const s = buildSession(ranked, content, pool, new Set(["kanji:a"]), "sid", AT);
     const f = s.exercises.find((e) => e.direction === "forward" && e.aspect === "meaning")!;
     const r = s.exercises.find((e) => e.direction === "reverse")!;
@@ -127,10 +124,7 @@ describe("Ingatan Balik", () => {
     expect(r.options.map((o) => o.text)).toContain("一");
   });
   it("a missed recall repeats as an easier choice question", () => {
-    const ranked = selectExercises(
-      rankCandidates(toLearned([prog("a")]), [row("a", { stage: 3 })], AT),
-      10,
-    );
+    const ranked = rankCandidates(toLearned([prog("a")]), [row("a", { stage: 3 })], AT); // the per-item cap is applied while building
     let s = buildSession(ranked, content, pool, new Set(["kanji:a"]), "sid", AT);
     const rec = s.exercises[0]!;
     expect(rec.exerciseType).toBe("recall_flip");

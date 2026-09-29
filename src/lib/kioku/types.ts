@@ -63,6 +63,8 @@ export type Selection = {
   reason: string;
   score: number;
   remedy?: Remedy;
+  /** mastered item that is due for a natural re-test */
+  retention?: "retest" | undefined;
 };
 
 /** Payload of one event sent to `kioku_record_events`. */
@@ -80,6 +82,10 @@ export type KiokuEvent = {
   /** item id of the chosen option when it is a real item (null for sentence options) */
   selected_item_id: string | null;
   variant: string | null;
+  /** immediate (normal) | delayed (verified after a gap in the session) | retest (mastered item re-tested) */
+  retention: "immediate" | "delayed" | "retest";
+  /** short hash of the example sentence used, so the next session can vary the context */
+  context_ref: string | null;
   confidence: Confidence | null;
   hint_level: number;
   used_hint: boolean;

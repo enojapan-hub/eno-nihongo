@@ -21,6 +21,7 @@ export const COMBOS: Record<KiokuItemType, Combo[]> = {
     { aspect: "meaning", direction: "forward" },
     { aspect: "reading", direction: "forward" },
     { aspect: "meaning", direction: "reverse" },
+    { aspect: "usage", direction: "forward" },
   ],
   vocabulary: [
     { aspect: "meaning", direction: "forward" },
@@ -31,6 +32,7 @@ export const COMBOS: Record<KiokuItemType, Combo[]> = {
   grammar: [
     { aspect: "function_context", direction: "forward" },
     { aspect: "function_context", direction: "reverse" },
+    { aspect: "usage", direction: "forward" },
   ],
 };
 
@@ -68,6 +70,7 @@ function score(
   st: MemoryStateRow | undefined,
   primary: boolean,
   now: number,
+  context = false,
 ): { score: number; reason: string } | null {
   if (st) {
     const due = ms(st.due_at);
@@ -88,9 +91,14 @@ function score(
       return { score: 400, reason: "confusion_reinforcement" };
     if (st.stage >= 4 && !(now - tested < RETEST_MASTERED_MS))
       return { score: 300, reason: "retest_mastered" };
+    // Tes Kejutan: a mastered item that is neither due nor old enough is left alone (never used as filler).
+    if (st.stage >= 4) return null;
     if (Number.isFinite(tested) && now - tested < RECENT_MS) return null; // just tested and not due yet
     const idle = Number.isFinite(tested) ? Math.min((now - tested) / DAY, 30) : 0;
-    return { score: (primary ? 100 : 80) + idle * 0.5, reason: "general_reinforcement" };
+    return {
+      score: (primary ? 100 : context ? 90 : 80) + idle * 0.5,
+      reason: context ? "context_ladder" : "general_reinforcement",
+    };
   }
   const pDue = ms(item.dueAt);
   if (Number.isFinite(pDue) && pDue <= now)
@@ -102,8 +110,11 @@ function score(
     const last = ms(item.lastReviewedAt);
     if (!Number.isFinite(last) || now - last >= RETEST_MASTERED_MS)
       return { score: 300, reason: "retest_mastered" };
+    return null; // mastered and recently reviewed: not a candidate
   }
-  return { score: primary ? 100 : 80, reason: "general_reinforcement" };
+  return context
+    ? { score: 90, reason: "context_ladder" }
+    : { score: primary ? 100 : 80, reason: "general_reinforcement" };
 }
 
 /**
@@ -117,6 +128,7 @@ function score(
 export function planExercise(
   st: MemoryStateRow | undefined,
   remedy?: Remedy,
+  retest = false,
 ): {
   exerciseType: ExerciseType;
   hintLevel: number;
@@ -124,6 +136,9 @@ export function planExercise(
   optionCount: number;
 } {
   const stage = st?.stage ?? 0;
+  // Natural re-test of a mastered item: recall with the least help (hint on request when there is no Kioku history yet).
+  if (retest)
+    return { exerciseType: "recall_flip", hintLevel: stage >= 4 ? 0 : 1, stage, optionCount: 0 };
   // Remediation of slow recall / guessing: less help, but never a hard question for a weak item.
   if (remedy?.kind === "slow" && stage >= 2)
     return { exerciseType: "recall_flip", hintLevel: 1, stage, optionCount: 0 };
@@ -163,10 +178,11 @@ export function rankCandidates(
       }
       // Usage (cloze) only after the meaning was recognised at least once.
       if (c.aspect === "usage" && !st) {
-        const m = byKey.get(stateKey(item.itemType, item.itemId, "meaning", "forward"));
+        const base = item.itemType === "grammar" ? "function_context" : "meaning";
+        const m = byKey.get(stateKey(item.itemType, item.itemId, base, "forward"));
         if (!m || m.stage < 1) return;
       }
-      let s = score(item, st, i === 0, now);
+      let s = score(item, st, i === 0, now, c.aspect === "usage");
       if (!s) return;
       // Error Engine: deterministic remediation from the latest unresolved error of this exact combo.
       const err = signals?.unresolved.get(
@@ -183,13 +199,20 @@ export function rankCandidates(
             ? { score: tier, reason: tag }
             : { score: s.score, reason: `${s.reason}+${tag}` };
       }
+      // Tes Kejutan: only mastered items that are due / retest-eligible (never random mastered items).
+      const retest =
+        (s.reason.startsWith("retest_mastered") ||
+          s.reason.startsWith("due_memory_state_mastered")) &&
+        ((st?.stage ?? 0) >= 4 || (!st && item.status === "mastered")) &&
+        c.aspect !== "usage";
       out.push({
         itemType: item.itemType,
         itemId: item.itemId,
         level: item.level,
         aspect: c.aspect,
         direction: c.direction,
-        ...planExercise(st, remedy ?? undefined),
+        ...planExercise(st, remedy ?? undefined, retest),
+        ...(retest ? { retention: "retest" as const } : {}),
         reason: s.reason,
         score: s.score,
         ...(remedy ? { remedy } : {}),

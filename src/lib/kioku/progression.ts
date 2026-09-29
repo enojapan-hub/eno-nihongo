@@ -23,6 +23,8 @@ export type ProgressionEvent = {
   responseMs: number;
   hintLevel: number | null;
   at: number;
+  /** delayed / retest answers verify retention (stronger signal); default immediate */
+  retention?: "immediate" | "delayed" | "retest";
 };
 export const STAGE_NAMES = ["Kenali", "Ingat", "Gunakan", "Produksi", "Kuasai"] as const;
 const DAY = 86400000;
@@ -48,11 +50,14 @@ export function applyEvent(prev: MemLite | undefined, ev: ProgressionEvent): Mem
   const next: MemLite = { ...s, lastErrorType: ev.errorType ?? s.lastErrorType };
   if (ev.correct) {
     const independent = !ev.usedHint && ev.responseMs <= SLOW_MS && ev.confidence !== "ragu";
+    const verified = ev.retention === "delayed" || ev.retention === "retest";
     const factor = ev.usedHint
       ? 1.2
       : ev.confidence === "ragu" || ev.responseMs > SLOW_MS
         ? 1.3
-        : 2.2;
+        : verified
+          ? 3.0
+          : 2.2;
     next.stability = Math.min(365, Math.max(s.stability, 0.5) * factor);
     let stage = s.stage;
     if (independent && s.stage < stageCap(ev.hintLevel)) stage = s.stage + 1;
@@ -66,16 +71,17 @@ export function applyEvent(prev: MemLite | undefined, ev: ProgressionEvent): Mem
     next.successCount = s.successCount + 1;
     next.dueAt = ev.at + next.stability * DAY;
   } else {
+    const verified = ev.retention === "delayed" || ev.retention === "retest";
     if (ev.confidence === "yakin") {
       next.stage = Math.max(0, s.stage - 2);
-      next.stability = Math.max(0.25, s.stability * 0.3);
+      next.stability = Math.max(0.25, s.stability * (verified ? 0.2 : 0.3));
       next.overconfidentWrong = s.overconfidentWrong + 1;
     } else {
       next.stage = Math.max(0, s.stage - 1);
-      next.stability = Math.max(0.25, s.stability * 0.4);
+      next.stability = Math.max(0.25, s.stability * (verified ? 0.25 : 0.4));
     }
     next.failureCount = s.failureCount + 1;
-    if (s.successCount > 0) next.lapses = s.lapses + 1;
+    if (s.successCount > 0 || verified) next.lapses = s.lapses + 1;
     next.dueAt = ev.at + 10 * 60000;
   }
   return next;
