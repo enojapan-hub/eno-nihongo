@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/kioku")({
   component: KiokuPage,
 });
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FLUSH_EVERY = 5;
 const FLUSH_INTERVAL_MS = 15000;
 const AUTO_ADVANCE_MS = 700;
@@ -99,7 +100,7 @@ function KiokuPage() {
     session && !session.finished ? session.exercises[session.index] : undefined;
   const total = session?.exercises.length ?? 0;
   const answered = ex ? ex.id in (session?.results ?? {}) : false;
-  const isChoice = ex?.exerciseType === "choice";
+  const isChoice = !!ex && ex.exerciseType !== "recall_flip";
   const showHint = !!ex && !isChoice && ex.hintLevel >= 1 && (hintOpen || ex.hintLevel === 2);
 
   const resetExerciseUi = () => {
@@ -144,6 +145,8 @@ function KiokuPage() {
         exercise_type: exercise.exerciseType,
         correct: a.correct,
         selected_answer: chosen?.text ?? null,
+        selected_item_id: chosen && UUID.test(chosen.id) ? chosen.id : null,
+        variant: exercise.isRepeat ? "repeat" : (exercise.variant ?? null),
         confidence: a.confidence,
         hint_level: exercise.hintLevel,
         used_hint: a.usedHint,
@@ -193,6 +196,13 @@ function KiokuPage() {
     const t = window.setTimeout(() => advanceRef.current(), AUTO_ADVANCE_MS);
     return () => window.clearTimeout(t);
   }, [ex?.id, isChoice, lastCorrect]);
+
+  // After a wrong answer keep "Lanjut" reachable on short screens (the fixed bottom nav would otherwise cover it).
+  const nextRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (answered && lastCorrect === false)
+      nextRef.current?.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+  }, [answered, lastCorrect, ex?.id]);
 
   const summary = useMemo(() => {
     if (!session) return { right: 0, wrong: 0 };
@@ -298,13 +308,20 @@ function KiokuPage() {
             </div>
             <section className="min-h-[170px] rounded-[28px] border bg-card p-6 text-center">
               <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
-                {ex.direction === "reverse"
-                  ? "Indonesia → Jepang"
-                  : ex.aspect === "reading"
-                    ? "Bacaan"
-                    : "Arti"}
+                {ex.label
+                  ? ex.label
+                  : ex.direction === "reverse"
+                    ? "Indonesia → Jepang"
+                    : ex.aspect === "reading"
+                      ? "Bacaan"
+                      : "Arti"}
               </p>
-              <p className="mt-5 font-jp text-[30px] font-bold leading-relaxed">{ex.prompt}</p>
+              <p
+                data-testid="prompt"
+                className={`mt-5 font-jp font-bold leading-relaxed ${ex.prompt.length > 12 ? "text-[19px]" : "text-[30px]"}`}
+              >
+                {ex.prompt}
+              </p>
               {ex.promptSub && (
                 <p className="mt-1 font-jp text-[11px] text-muted-foreground">{ex.promptSub}</p>
               )}
@@ -324,6 +341,14 @@ function KiokuPage() {
                   className={`mt-4 text-[11px] font-bold ${lastCorrect ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}
                 >
                   {lastCorrect ? "Benar" : `Jawaban: ${ex.answer}`}
+                </p>
+              )}
+              {isChoice && answered && ex.feedback && (
+                <p
+                  data-testid="feedback"
+                  className="mt-1 font-jp text-[11px] text-muted-foreground"
+                >
+                  {ex.feedback}
                 </p>
               )}
             </section>
@@ -371,6 +396,7 @@ function KiokuPage() {
                 })}
                 {answered && (
                   <button
+                    ref={nextRef}
                     onClick={() => advance()}
                     className="mt-1 w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground"
                   >
