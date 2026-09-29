@@ -138,8 +138,10 @@ function KelasPage() {
                             ? "Gratis"
                             : c.currency === "IDR"
                               ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(c.price))
-                              : c.currency === "JPY" && rate.data
-                                ? "≈ " + new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(c.price) * rate.data)
+                              : c.currency === "JPY"
+                                ? rate.data
+                                  ? "≈ " + new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(c.price) * rate.data)
+                                  : "Kurs rupiah belum tersedia"
                                 : c.currency + " " + Number(c.price).toLocaleString("id-ID")}
                         </strong>
                         <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-primary sm:text-xs">
