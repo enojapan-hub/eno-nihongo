@@ -42,7 +42,7 @@ function KelasPage() {
       ]);
       if (error) throw error;
       if (countError) throw countError;
-      const byClass = new Map((counts ?? []).map((row: any) => [row.class_id, Number(row.participant_count)]));
+      const byClass = new Map((counts ?? []).map((row: any) => [row.class_id, Number(row.participant_count)] as const));
       return (data ?? []).map((row: any) => ({ ...row, participant_count: byClass.get(row.id) ?? 0 }));
     },
   });
