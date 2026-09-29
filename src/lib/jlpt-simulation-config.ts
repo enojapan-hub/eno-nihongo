@@ -45,3 +45,21 @@ export const sectionLabels: Record<SimulationSection, string> = {
   reading: "読解",
   listening: "聴解",
 };
+
+/** Full simulations per level (exam_no in jlpt_simulation_questions). */
+export const EXAM_NUMBERS = [1, 2, 3, 4, 5] as const;
+
+export function parseExamNo(value: unknown): number {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 && n <= 5 ? n : 1;
+}
+
+/** localStorage key for one full simulation; exam 1 keeps the original key. */
+export function fullStorageKey(level: string, examNo: number): string {
+  return examNo === 1 ? `eno-jlpt-full-${level}` : `eno-jlpt-full-${level}-exam${examNo}`;
+}
+
+/** `?exam=N` suffix for window.location navigation; empty for exam 1. */
+export function examQuery(examNo: number): string {
+  return examNo === 1 ? "" : `?exam=${examNo}`;
+}

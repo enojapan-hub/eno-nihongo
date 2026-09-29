@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, BookOpenText, Check, Clock3, Headphones, Pause, 
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { QuestionPrompt } from "@/components/simulation/QuestionPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { jlptSessions } from "@/lib/jlpt-simulation-config";
 import type { Level } from "@/lib/learn-queries";
@@ -40,6 +41,8 @@ type Row = {
   audio_url: string | null;
   image_url: string | null;
   transcript_jp: string | null;
+  target_text?: string | null;
+  target_occurrence?: number | null;
 };
 
 type Result = { total_questions: number; correct_count: number; score_percent: number };
@@ -115,7 +118,7 @@ function ChoiceList({ current, selected, onSelect }: { current: Row; selected: n
 function QuestionBody({ current, selected, onSelect }: { current: Row; selected: number | undefined; onSelect: (i: number) => void }) {
   const star = current.question_type === "sentence_composition";
   const shownQuestionNo = current.display_question_no ?? current.question_no;
-  return <Card className="rounded-2xl"><CardContent className="p-4"><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-semibold text-muted-foreground">問 {shownQuestionNo}</span>{star && <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">★ 文の組み立て</span>}</div>{star && <p className="mb-3 text-[11px] text-muted-foreground">文全体が正しくなるように並べたとき、★に入るものを選んでください。</p>}<h1 className={`font-jp font-semibold leading-8 ${star ? "rounded-xl bg-muted/40 p-4 text-center text-base tracking-wide" : "text-[15px]"}`}>{current.prompt_jp}</h1><ChoiceList current={current} selected={selected} onSelect={onSelect} /></CardContent></Card>;
+  return <Card className="rounded-2xl"><CardContent className="p-4"><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-semibold text-muted-foreground">問 {shownQuestionNo}</span>{star && <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">★ 文の組み立て</span>}</div>{star && <p className="mb-3 text-[11px] text-muted-foreground">文全体が正しくなるように並べたとき、★に入るものを選んでください。</p>}<h1 className={`font-jp font-semibold leading-8 ${star ? "rounded-xl bg-muted/40 p-4 text-center text-base tracking-wide" : "text-[15px]"}`}><QuestionPrompt text={current.prompt_jp} target={current.target_text} occurrence={current.target_occurrence} /></h1><ChoiceList current={current} selected={selected} onSelect={onSelect} /></CardContent></Card>;
 }
 
 function SectionRunner() {
