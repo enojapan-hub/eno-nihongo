@@ -20,7 +20,7 @@ function ContinueCard({level,loading,item}:{level:Level;loading:boolean;item:Con
 }
 
 function KiokuCard(){
-  return <section className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-4 text-white"><div className="flex items-start justify-between gap-3"><div><p className="flex items-center gap-1.5 text-[15px] font-black"><Sparkles className="size-4"/>ENO Kioku</p><p className="mt-0.5 text-[11px] text-white">Latihan ingatan adaptif</p><p className="mt-2 text-[9px] text-emerald-50">Kotoba · Kanji · Bunpou</p></div><a href="/rantai-ingatan" className="shrink-0 rounded-xl bg-[#f0fdf4] px-3.5 py-2 text-[11px] font-bold text-[#065f46]">Mulai Kioku</a></div><p className="mt-3 text-[9px] leading-relaxed text-emerald-50">Tahap awal: dimulai dari latihan Rantai Ingatan. Pemilihan jenis latihan otomatis oleh mesin adaptif menyusul.</p></section>;
+  return <section className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-4 text-white"><div className="flex items-start justify-between gap-3"><div><p className="flex items-center gap-1.5 text-[15px] font-black"><Sparkles className="size-4"/>ENO Kioku</p><p className="mt-0.5 text-[11px] text-white">Latihan ingatan adaptif</p><p className="mt-2 text-[9px] text-emerald-50">Kotoba · Kanji · Bunpou</p></div><a href="/kioku" className="shrink-0 rounded-xl bg-[#f0fdf4] px-3.5 py-2 text-[11px] font-bold text-[#065f46]">Mulai Kioku</a></div><p className="mt-3 text-[9px] leading-relaxed text-emerald-50">Mesin adaptif memilih latihan berdasarkan retensi, kesalahan, konteks, dan tahap ingatanmu.</p></section>;
 }
 
 function FlashcardCard({loading,due}:{loading:boolean;due:number|undefined}){
