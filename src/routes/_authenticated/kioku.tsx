@@ -255,11 +255,11 @@ function KiokuPage() {
           <ArrowLeft className="size-4" /> Kembali ke Materi
         </a>
         {!session && (
-          <section className="rounded-3xl border bg-card p-6 text-center">
+          <section className="overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.08] to-card p-6 text-center shadow-[0_18px_50px_-34px_rgba(0,0,0,.55)]">
             <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10">
               <BrainCircuit className="size-6 text-primary" />
             </span>
-            <h1 className="mt-3 text-[18px] font-bold">Kioku</h1>
+            <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">ENO NIHONGO</p><h1 className="mt-1 text-[22px] font-black">ENO Kioku</h1>
             <p className="mt-1 text-[10px] text-muted-foreground">
               Latihan ingatan adaptif dari materi yang sudah kamu pelajari.
             </p>
@@ -311,14 +311,14 @@ function KiokuPage() {
                 Benar {summary.right} · Salah {summary.wrong}
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-muted">
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-primary"
                 style={{ width: `${(session!.index / Math.max(1, total)) * 100}%` }}
               />
             </div>
-            <section className="min-h-[170px] rounded-[28px] border bg-card p-6 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
+            <section className="relative min-h-[210px] overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.055] to-card p-6 text-center shadow-[0_18px_50px_-32px_rgba(0,0,0,.5)]">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary/70" /><p className="text-[9px] font-bold uppercase tracking-widest text-primary">
                 {ex.label
                   ? ex.label
                   : ex.direction === "reverse"
