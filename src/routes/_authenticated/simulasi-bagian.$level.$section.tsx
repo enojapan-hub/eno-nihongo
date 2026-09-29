@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, BookOpenText, Check, Clock3, Headphones, Pause, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpenText, Check, Headphones, Pause, Play, RotateCcw } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { QuestionPrompt } from "@/components/simulation/QuestionPrompt";
+import { PassagePanel, QuestionCard, passagePosition } from "@/components/simulation/QuestionView";
+import { ExamExitDialog, ExamHeader, ExamPausedScreen, useExamLeaveGuard } from "@/components/simulation/ExamFocus";
 import { supabase } from "@/integrations/supabase/client";
 import { jlptSessions } from "@/lib/jlpt-simulation-config";
 import type { Level } from "@/lib/learn-queries";
@@ -110,15 +111,8 @@ function SimulationAudio({ audioUrl, groupedLabel }: { audioUrl: string | null; 
   );
 }
 
-function ChoiceList({ current, selected, onSelect }: { current: Row; selected: number | undefined; onSelect: (i: number) => void }) {
-  const star = current.question_type === "sentence_composition";
-  return <div className={star ? "mt-4 grid grid-cols-2 gap-2" : "mt-4 space-y-2"}>{current.choices.map((choice, i) => <button key={i} onClick={() => onSelect(i)} className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left font-jp text-[12px] ${selected === i ? "border-primary bg-primary/5 ring-1 ring-primary/30" : ""}`}><span className="grid size-6 shrink-0 place-items-center rounded-full border font-bold">{i + 1}</span><span>{choice}</span></button>)}</div>;
-}
-
 function QuestionBody({ current, selected, onSelect }: { current: Row; selected: number | undefined; onSelect: (i: number) => void }) {
-  const star = current.question_type === "sentence_composition";
-  const shownQuestionNo = current.display_question_no ?? current.question_no;
-  return <Card className="rounded-2xl"><CardContent className="p-4"><div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-semibold text-muted-foreground">問 {shownQuestionNo}</span>{star && <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">★ 文の組み立て</span>}</div>{star && <p className="mb-3 text-[11px] text-muted-foreground">文全体が正しくなるように並べたとき、★に入るものを選んでください。</p>}<h1 className={`font-jp font-semibold leading-8 ${star ? "rounded-xl bg-muted/40 p-4 text-center text-base tracking-wide" : "text-[15px]"}`}><QuestionPrompt text={current.prompt_jp} target={current.target_text} occurrence={current.target_occurrence} /></h1><ChoiceList current={current} selected={selected} onSelect={onSelect} /></CardContent></Card>;
+  return <QuestionCard q={current} number={current.display_question_no ?? current.question_no} selected={selected} onSelect={onSelect} />;
 }
 
 function SectionRunner() {
@@ -143,6 +137,10 @@ function SectionRunner() {
   const deadline = useRef(Date.now() + totalSeconds * 1000);
   const answersRef = useRef<Record<string, number>>({});
   const finishingRef = useRef(false);
+  const allowLeave = useRef(false);
+  const pausedAtRef = useRef<number | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
   const current = questions[index];
   const mondai = useMemo(() => Array.from(new Set(questions.map((x) => x.mondai_no))), [questions]);
   const answered = Object.keys(answers).length;
@@ -209,12 +207,18 @@ function SectionRunner() {
   }, [level, section, totalSeconds, advanceFullExam]);
 
   useEffect(() => {
-    if (finished || q.isLoading || !questions.length) return;
+    if (finished || q.isLoading || !questions.length || paused) return;
     const tick = () => { const left = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)); setRemaining(left); if (left === 0) void finish(); };
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [finished, q.isLoading, questions.length, finish]);
+  }, [finished, q.isLoading, questions.length, finish, paused]);
+
+  const pauseExam = () => { pausedAtRef.current = Date.now(); setPaused(true); setExitOpen(false); };
+  const resumeExam = () => { if (pausedAtRef.current) { deadline.current += Math.max(0, Date.now() - pausedAtRef.current); pausedAtRef.current = null; } setPaused(false); };
+  const leaveGuard = useExamLeaveGuard(!finished && !q.isLoading && questions.length > 0, allowLeave);
+  const blocked = leaveGuard.status === "blocked";
+  const closeExit = () => { setExitOpen(false); if (leaveGuard.status === "blocked") leaveGuard.reset(); };
 
   const continueFull = () => {
     try {
@@ -236,5 +240,5 @@ function SectionRunner() {
   }
 
   const shownQuestionNo = current.display_question_no ?? current.question_no;
-  return <AppShell title={`${level} · ${labels[section]}`} compact><div className="mx-auto max-w-2xl space-y-3"><div className="sticky top-0 z-20 rounded-xl border bg-background/95 p-2 backdrop-blur"><div className="flex items-center justify-between px-1"><Link to="/simulasi" className="inline-flex items-center gap-1 text-[10px] text-muted-foreground"><ArrowLeft className="size-3"/>Simulasi</Link><span className="text-[10px] font-semibold">日本語能力試験 · {answered}/{questions.length} 解答</span><span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ${remaining <= 300 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}><Clock3 className="size-3"/>{fmt(remaining)}</span></div><div className="mt-2 flex gap-1 overflow-x-auto pb-1">{mondai.map((m) => { const first = questions.findIndex((x) => x.mondai_no === m); const active = current.mondai_no === m; const qs = questions.filter((x) => x.mondai_no === m); const done = qs.filter((x) => answers[x.id] !== undefined).length; return <button key={m} onClick={() => setIndex(first)} className={`shrink-0 rounded-lg border px-3 py-1.5 text-[10px] font-semibold ${active ? "border-primary bg-primary text-primary-foreground" : "bg-background"}`}>問題 {m} <span className={active ? "opacity-80" : "text-muted-foreground"}>{done}/{qs.length}</span></button>; })}</div></div><Card className="rounded-2xl"><CardContent className="p-4"><strong className="text-sm">問題 {current.mondai_no}</strong><p className="mt-2 font-jp text-[12px] leading-6">{current.instruction_jp}</p></CardContent></Card>{section !== "listening" && current.passage_jp && <Card className="rounded-2xl"><CardContent className="max-h-[44vh] overflow-y-auto p-4"><div className="mb-2 flex items-center gap-2 text-primary"><BookOpenText className="size-4"/><span className="text-xs font-semibold">{current.passage_title || "文章"}</span></div><p className="whitespace-pre-wrap font-jp text-sm leading-7">{current.passage_jp}</p></CardContent></Card>}{section === "listening" && <Card className="rounded-2xl"><CardContent className="space-y-3 p-4">{current.image_url && <img src={current.image_url} alt={`問題 ${current.mondai_no} 問 ${shownQuestionNo}`} className="mx-auto w-full max-w-lg rounded-xl border bg-white object-contain" loading="eager"/>}<SimulationAudio audioUrl={activeAudioUrl} groupedLabel={activeAudioLabel}/></CardContent></Card>}<QuestionBody current={current} selected={answers[current.id]} onSelect={(i) => setAnswers((v) => ({ ...v, [current.id]: i }))}/>{submitError && <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{submitError}</p>}<div className="flex justify-between gap-2"><Button variant="outline" disabled={index === 0 || saving} onClick={() => setIndex((v) => v - 1)}><ArrowLeft className="mr-1 size-4"/>前へ</Button>{index === questions.length - 1 ? <Button disabled={saving} onClick={() => void finish()}><Check className="mr-1 size-4"/>{saving ? "送信中…" : "終了"}</Button> : <Button disabled={saving} onClick={() => setIndex((v) => v + 1)}>次へ<ArrowRight className="ml-1 size-4"/></Button>}</div></div></AppShell>;
+  return <AppShell title={`${level} · ${labels[section]}`} focus><ExamHeader title={`日本語能力試験 ${level} · ${labels[section]} · ${answered}/${questions.length} 解答`} remaining={remaining} onExit={() => setExitOpen(true)}><div className="flex gap-1 overflow-x-auto">{mondai.map((m) => { const first = questions.findIndex((x) => x.mondai_no === m); const active = current.mondai_no === m; const qs = questions.filter((x) => x.mondai_no === m); const done = qs.filter((x) => answers[x.id] !== undefined).length; return <button key={m} onClick={() => setIndex(first)} className={`shrink-0 rounded-lg border px-3 py-1.5 text-[10px] font-semibold ${active ? "border-primary bg-primary text-primary-foreground" : "bg-background"}`}>問題 {m} <span className={active ? "opacity-80" : "text-muted-foreground"}>{done}/{qs.length}</span></button>; })}</div></ExamHeader><div className="mx-auto max-w-2xl space-y-3 pt-3">{paused ? <ExamPausedScreen remaining={remaining} onResume={resumeExam} onExit={() => setExitOpen(true)} /> : <><Card className="rounded-2xl"><CardContent className="p-4"><strong className="text-sm">問題 {current.mondai_no}</strong><p className="mt-2 font-jp text-[12px] leading-6">{current.instruction_jp}</p></CardContent></Card>{section !== "listening" && current.passage_jp && <PassagePanel title={current.passage_title} text={current.passage_jp} position={passagePosition(questions, current!)} />}{section === "listening" && <Card className="rounded-2xl"><CardContent className="space-y-3 p-4">{current.image_url && <img src={current.image_url} alt={`問題 ${current.mondai_no} 問 ${shownQuestionNo}`} className="mx-auto w-full max-w-lg rounded-xl border bg-white object-contain" loading="eager"/>}<SimulationAudio audioUrl={activeAudioUrl} groupedLabel={activeAudioLabel}/></CardContent></Card>}<QuestionBody current={current} selected={answers[current.id]} onSelect={(i) => setAnswers((v) => ({ ...v, [current.id]: i }))}/>{submitError && <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{submitError}</p>}<div className="flex justify-between gap-2"><Button variant="outline" disabled={index === 0 || saving} onClick={() => setIndex((v) => v - 1)}><ArrowLeft className="mr-1 size-4"/>前へ</Button>{index === questions.length - 1 ? <Button disabled={saving} onClick={() => void finish()}><Check className="mr-1 size-4"/>{saving ? "送信中…" : "終了"}</Button> : <Button disabled={saving} onClick={() => setIndex((v) => v + 1)}>次へ<ArrowRight className="ml-1 size-4"/></Button>}</div></>}</div><ExamExitDialog open={exitOpen || blocked} finishing={saving} finishHint="Akhiri Ujian akan mengirim dan menilai bagian ini." onContinue={closeExit} onFinish={() => { setExitOpen(false); void finish(); if (leaveGuard.status === "blocked") leaveGuard.reset(); }} onPause={paused ? undefined : pauseExam} /></AppShell>;
 }
