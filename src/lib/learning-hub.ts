@@ -125,6 +125,7 @@ export async function fetchWeeklyPlan(planId: string | null | undefined, studyDa
   const sums = new Map<string, WeeklyRow>();
   for (const r of (data ?? []) as Array<{ study_date: string; task_type: string; target_count: number; completed_count: number }>) {
     if (!(quotaTaskTypes as readonly string[]).includes(r.task_type)) continue;
+    if (!days.find((x) => x.date === r.study_date)?.active) continue; // only the current study days count toward the weekly plan
     const target = Number(r.target_count || 0), done = Math.min(Number(r.completed_count || 0), target);
     const row = sums.get(r.task_type) ?? { taskType: r.task_type, target: 0, done: 0 };
     row.target += target; row.done += done; sums.set(r.task_type, row);
