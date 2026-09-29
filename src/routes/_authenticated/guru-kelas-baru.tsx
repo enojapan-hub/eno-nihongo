@@ -91,7 +91,7 @@ function Page() {
       <Field label="Banner kelas">{f.banner_url ? <div className="space-y-2"><img src={f.banner_url} alt="Preview banner kelas" className="aspect-[16/7] w-full rounded-2xl border object-cover" /><Button type="button" size="sm" variant="outline" onClick={() => set("banner_url", "")}>Ganti banner</Button></div> : <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed p-7 text-center hover:bg-muted/40"><input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploading} onChange={(e) => upload(e.target.files?.[0])} />{uploading ? <Loader2 className="size-6 animate-spin text-primary" /> : <ImagePlus className="size-6 text-primary" />}<span className="mt-2 text-xs font-bold">{uploading ? "Mengunggah…" : "Upload banner"}</span><span className="text-[10px] text-muted-foreground">JPG, PNG, WebP · maksimal 5 MB</span></label>}</Field>
       <div className="rounded-2xl border p-3">
         <h2 className="text-sm font-black">Jadwal pertemuan</h2>
-        <p className="mb-3 text-[10px] text-muted-foreground">Pertemuan dibuat setiap minggu pada hari dan jam yang dipilih (WIB sesuai waktu perangkat).</p>
+        <p className="mb-3 text-[10px] text-muted-foreground">Pertemuan dibuat setiap minggu pada hari dan jam yang dipilih (mengikuti zona waktu perangkat).</p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Pertemuan pertama"><Input type="date" value={f.first_date} onChange={(e) => set("first_date", e.target.value)} /></Field>
           <Field label="Jumlah pertemuan"><Input type="number" min="1" max="60" value={f.meeting_count} onChange={(e) => set("meeting_count", e.target.value)} /></Field>
