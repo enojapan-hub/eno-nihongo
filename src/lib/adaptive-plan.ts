@@ -4,7 +4,7 @@ import { analyzePlannerWeakness, reviewMatchesWeakness, type PlannerReview } fro
 export type AdaptiveTaskType = "new_kanji" | "new_vocabulary" | "new_grammar" | "review" | "quiz" | "reading" | "listening";
 export type AdaptiveSuggestion = { id: string; label: string; subtitle?: string | null };
 export type AdaptiveTask = { id:string; task_type:AdaptiveTaskType; target_count:number; completed_count:number; priority:number; reason:string|null; metadata:Record<string,unknown>|null; suggestions?:AdaptiveSuggestion[] };
-export type AdaptivePlan = { active:boolean; planId?:string|null; targetLevel:string|null; targetDate:string|null; daysLeft:number|null; tasks:AdaptiveTask[]; target:number; completed:number };
+export type AdaptivePlan = { active:boolean; planId?:string|null; studyDaysPerWeek?:number|null; startDate?:string|null; targetLevel:string|null; targetDate:string|null; daysLeft:number|null; tasks:AdaptiveTask[]; target:number; completed:number };
 const emptyPlan:AdaptivePlan={active:false,targetLevel:null,targetDate:null,daysLeft:null,tasks:[],target:0,completed:0};
 type ProgressRow={item_type:string;item_id:string;status:string;due_at:string|null;ease_factor?:number|null};
 type ReviewRow=PlannerReview;
@@ -56,13 +56,14 @@ async function enrichTasksWithSuggestions(userId:string,level:string,tasks:Adapt
 
 export async function fetchAdaptivePlan():Promise<AdaptivePlan>{
   const{data:auth,error:authError}=await supabase.auth.getUser();if(authError||!auth.user)return emptyPlan;
-  const client=supabase as any;await client.rpc("ensure_active_study_plan",{});await client.rpc("generate_daily_study_tasks",{});await client.rpc("sync_daily_study_task_progress",{});
+  const client=supabase as any;
   const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-  const[{data:plans},{data:tasks}]=await Promise.all([client.from("study_plans").select("id,target_level,target_date,status").eq("user_id",auth.user.id).eq("status","active").order("created_at",{ascending:false}).limit(1),client.from("daily_study_tasks").select("id,plan_id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id",auth.user.id).eq("study_date",today).order("priority",{ascending:false})]);
+  await client.rpc("ensure_active_study_plan",{});await client.rpc("generate_weekly_study_plan",{p_date:today});await client.rpc("sync_daily_study_task_progress",{p_study_date:today});
+  const[{data:plans},{data:tasks}]=await Promise.all([client.from("study_plans").select("id,target_level,target_date,status,start_date,study_days_per_week").eq("user_id",auth.user.id).eq("status","active").order("created_at",{ascending:false}).limit(1),client.from("daily_study_tasks").select("id,plan_id,task_type,target_count,completed_count,priority,reason,metadata").eq("user_id",auth.user.id).eq("study_date",today).order("priority",{ascending:false})]);
   const plan=plans?.[0];if(!plan)return emptyPlan;
   const taskRows=[...(await enrichTasksWithSuggestions(auth.user.id,String(plan.target_level??"N5"),(tasks??[]).filter((task:any)=>task.plan_id===plan.id) as AdaptiveTask[]))].sort((a,b)=>b.priority-a.priority);
   const target=taskRows.reduce((s,t)=>s+Number(t.target_count||0),0),completed=taskRows.reduce((s,t)=>s+Math.min(Number(t.completed_count||0),Number(t.target_count||0)),0),targetMs=new Date(`${plan.target_date}T00:00:00+09:00`).getTime(),todayMs=new Date(`${today}T00:00:00+09:00`).getTime(),daysLeft=Math.max(0,Math.ceil((targetMs-todayMs)/86400000));
-  return{active:true,planId:String(plan.id),targetLevel:plan.target_level??null,targetDate:plan.target_date??null,daysLeft,tasks:taskRows,target,completed};
+  return{active:true,planId:String(plan.id),studyDaysPerWeek:Number(plan.study_days_per_week??7),startDate:plan.start_date??null,targetLevel:plan.target_level??null,targetDate:plan.target_date??null,daysLeft,tasks:taskRows,target,completed};
 }
 
 export const adaptiveTaskLabels:Record<AdaptiveTaskType,string>={new_kanji:"Kanji baru",new_vocabulary:"Kotoba baru",new_grammar:"Bunpō baru",review:"Review",quiz:"Kuis",reading:"Dokkai",listening:"Listening"};

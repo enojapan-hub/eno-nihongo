@@ -83,6 +83,8 @@ export async function fetchLatestSimulation(level: Level): Promise<SimulationSum
 }
 
 export type WeeklyRow = { taskType: string; target: number; done: number };
+export type WeekDay = { date: string; label: string; active: boolean; isToday: boolean; isPast: boolean; target: number; done: number };
+export type WeeklyPlan = { rows: WeeklyRow[]; days: WeekDay[]; studyDays: number };
 
 const jstDate = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 
@@ -95,19 +97,39 @@ export function weekStartJst(now = new Date()) {
   return new Date(noon - Math.max(0, back) * 86400000).toISOString().slice(0, 10);
 }
 
-/** Sums the planner's own generated daily tasks for this week. Days without generated tasks (future days) are not counted. */
-export async function fetchWeeklyTotals(planId: string | null | undefined): Promise<WeeklyRow[]> {
+/** Weekday offsets (0 = Monday) of the study days; mirrors public.study_active_offsets(). */
+export function studyActiveOffsets(days: number) {
+  const n = Math.max(1, Math.min(7, Math.round(days) || 7));
+  return Array.from(new Set(Array.from({ length: n }, (_, i) => Math.floor((i * 7) / n))));
+}
+
+const dayLabels = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+export const quotaTaskTypes = ["new_vocabulary", "new_kanji", "new_grammar", "quiz"] as const;
+
+/** This week's real plan: the planner generates a row per quota task for every active study day (Mon..Sun, JST). */
+export async function fetchWeeklyPlan(planId: string | null | undefined, studyDays: number): Promise<WeeklyPlan> {
+  const start = weekStartJst();
+  const today = jstDate(new Date());
+  const offsets = studyActiveOffsets(studyDays);
+  const days: WeekDay[] = dayLabels.map((label, i) => {
+    const date = new Date(new Date(`${start}T12:00:00Z`).getTime() + i * 86400000).toISOString().slice(0, 10);
+    return { date, label, active: offsets.includes(i), isToday: date === today, isPast: date < today, target: 0, done: 0 };
+  });
+  const empty: WeeklyPlan = { rows: [], days, studyDays: offsets.length };
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth.user?.id;
-  if (!userId || !planId) return [];
-  const { data, error } = await (supabase as any).from("daily_study_tasks").select("task_type,target_count,completed_count").eq("user_id", userId).eq("plan_id", planId).gte("study_date", weekStartJst());
+  if (!userId || !planId) return empty;
+  const end = days[6]?.date ?? start;
+  const { data, error } = await (supabase as any).from("daily_study_tasks").select("study_date,task_type,target_count,completed_count").eq("user_id", userId).eq("plan_id", planId).gte("study_date", start).lte("study_date", end);
   if (error) throw error;
   const sums = new Map<string, WeeklyRow>();
-  for (const r of (data ?? []) as Array<{ task_type: string; target_count: number; completed_count: number }>) {
+  for (const r of (data ?? []) as Array<{ study_date: string; task_type: string; target_count: number; completed_count: number }>) {
+    if (!(quotaTaskTypes as readonly string[]).includes(r.task_type)) continue;
+    const target = Number(r.target_count || 0), done = Math.min(Number(r.completed_count || 0), target);
     const row = sums.get(r.task_type) ?? { taskType: r.task_type, target: 0, done: 0 };
-    row.target += Number(r.target_count || 0);
-    row.done += Math.min(Number(r.completed_count || 0), Number(r.target_count || 0));
-    sums.set(r.task_type, row);
+    row.target += target; row.done += done; sums.set(r.task_type, row);
+    const day = days.find((x) => x.date === r.study_date);
+    if (day) { day.target += target; day.done += done; }
   }
-  return [...sums.values()];
+  return { rows: [...sums.values()], days, studyDays: offsets.length };
 }
