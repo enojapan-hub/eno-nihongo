@@ -18,6 +18,7 @@ export const COMBOS: Record<KiokuItemType, Combo[]> = {
   kanji: [
     { aspect: "meaning", direction: "forward" },
     { aspect: "reading", direction: "forward" },
+    { aspect: "meaning", direction: "reverse" },
   ],
   vocabulary: [
     { aspect: "meaning", direction: "forward" },
@@ -102,16 +103,30 @@ function score(
   return { score: primary ? 100 : 80, reason: "general_reinforcement" };
 }
 
-/** Choice while the item is young, free recall once stage >= 3; guesses on choice questions force recall. */
+/**
+ * Fading help by stage (Petunjuk Memudar). Weak items always start with the most help:
+ *   0 Kenali   : 3 choices                       (hint_level 3)
+ *   1 Ingat    : 4 choices                       (hint_level 3)
+ *   2 Gunakan  : blind recall, hint shown upfront (hint_level 2)
+ *   3 Produksi : blind recall, hint on request    (hint_level 1)
+ *   4 Kuasai   : blind recall, no hint            (hint_level 0)
+ */
 export function planExercise(st: MemoryStateRow | undefined): {
   exerciseType: ExerciseType;
   hintLevel: number;
   stage: number;
+  optionCount: number;
 } {
   const stage = st?.stage ?? 0;
-  if (stage >= 3 || st?.last_error_type === "likely_guess")
-    return { exerciseType: "recall_flip", hintLevel: 0, stage };
-  return { exerciseType: "choice", hintLevel: 3, stage };
+  if (stage >= 4) return { exerciseType: "recall_flip", hintLevel: 0, stage, optionCount: 0 };
+  if (stage === 3) return { exerciseType: "recall_flip", hintLevel: 1, stage, optionCount: 0 };
+  if (stage === 2) return { exerciseType: "recall_flip", hintLevel: 2, stage, optionCount: 0 };
+  return {
+    exerciseType: "choice",
+    hintLevel: 3,
+    stage,
+    optionCount: stage === 0 && st?.last_error_type !== "likely_guess" ? 3 : 4,
+  };
 }
 
 /** Full deterministic ranking of candidates (highest priority first). */
@@ -128,6 +143,11 @@ export function rankCandidates(
     if (!KIOKU_TYPES.has(item.itemType)) continue;
     COMBOS[item.itemType].forEach((c, i) => {
       const st = byKey.get(stateKey(item.itemType, item.itemId, c.aspect, c.direction));
+      // Ingatan Balik (ID -> JP) only after the forward direction has been recognised at least once.
+      if (c.direction === "reverse" && !st) {
+        const fwd = byKey.get(stateKey(item.itemType, item.itemId, c.aspect, "forward"));
+        if (!fwd || fwd.stage < 1) return;
+      }
       const s = score(item, st, i === 0, now);
       if (!s) return;
       out.push({

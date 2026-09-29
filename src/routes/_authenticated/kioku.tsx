@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BrainCircuit, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, BrainCircuit, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { classifyError } from "@/lib/kioku/classify";
@@ -9,6 +9,7 @@ import { prefetchSession, sendEvents } from "@/lib/kioku/prefetch";
 import { queueRepeat } from "@/lib/kioku/session";
 import type { Exercise, KiokuSession } from "@/lib/kioku/session-types";
 import { clearSession, loadSession, saveSession } from "@/lib/kioku/session-store";
+import type { Confidence } from "@/lib/kioku/types";
 
 export const Route = createFileRoute("/_authenticated/kioku")({
   head: () => ({ meta: [{ title: "Kioku — ENO NIHONGO" }] }),
@@ -17,6 +18,15 @@ export const Route = createFileRoute("/_authenticated/kioku")({
 
 const FLUSH_EVERY = 5;
 const FLUSH_INTERVAL_MS = 15000;
+const AUTO_ADVANCE_MS = 700;
+
+type Answer = {
+  correct: boolean;
+  selectedId: string | null;
+  confidence: Confidence | null;
+  usedHint: boolean;
+  responseMs: number;
+};
 
 function KiokuPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -26,6 +36,10 @@ function KiokuPage() {
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [confidence, setConfidence] = useState<Confidence | null>(null);
+  const [hintOpen, setHintOpen] = useState(false);
+  const [usedHint, setUsedHint] = useState(false);
+  const revealMs = useRef(0);
   const shownAt = useRef(Date.now());
   const outbox = useRef<ReturnType<typeof createOutbox> | null>(null);
   const sinceFlush = useRef(0);
@@ -84,30 +98,40 @@ function KiokuPage() {
   const ex: Exercise | undefined =
     session && !session.finished ? session.exercises[session.index] : undefined;
   const total = session?.exercises.length ?? 0;
+  const answered = ex ? ex.id in (session?.results ?? {}) : false;
+  const isChoice = ex?.exerciseType === "choice";
+  const showHint = !!ex && !isChoice && ex.hintLevel >= 1 && (hintOpen || ex.hintLevel === 2);
+
+  const resetExerciseUi = () => {
+    setPicked(null);
+    setRevealed(false);
+    setConfidence(null);
+    setHintOpen(false);
+    setUsedHint(false);
+    revealMs.current = 0;
+    shownAt.current = Date.now();
+  };
 
   const start = useCallback(() => {
     if (!ready || !userId) return;
     saveSession(window.localStorage, userId, ready);
     setSession(ready);
     setReady(null);
-    setPicked(null);
-    setRevealed(false);
-    shownAt.current = Date.now();
+    resetExerciseUi();
   }, [ready, userId]);
 
   // Local-first: state + outbox (sync localStorage write) only; the network flush is fire-and-forget.
   const record = useCallback(
-    (exercise: Exercise, correct: boolean, selectedId: string | null): KiokuSession | null => {
+    (exercise: Exercise, a: Answer): KiokuSession | null => {
       if (!session || !userId) return null;
-      const responseMs = Math.max(0, Date.now() - shownAt.current);
-      const chosen = selectedId ? exercise.options.find((o) => o.id === selectedId) : undefined;
+      const chosen = a.selectedId ? exercise.options.find((o) => o.id === a.selectedId) : undefined;
       const errorType = classifyError({
-        correct,
+        correct: a.correct,
         aspect: exercise.aspect,
         exerciseType: exercise.exerciseType,
-        responseMs,
-        usedHint: false,
-        selectedWasConfusable: !correct && !!chosen?.confusable,
+        responseMs: a.responseMs,
+        usedHint: a.usedHint,
+        selectedWasConfusable: !a.correct && !!chosen?.confusable,
       });
       outbox.current?.push({
         client_event_id: crypto.randomUUID(),
@@ -118,12 +142,12 @@ function KiokuPage() {
         aspect: exercise.aspect,
         direction: exercise.direction,
         exercise_type: exercise.exerciseType,
-        correct,
+        correct: a.correct,
         selected_answer: chosen?.text ?? null,
-        confidence: null,
+        confidence: a.confidence,
         hint_level: exercise.hintLevel,
-        used_hint: false,
-        response_ms: responseMs,
+        used_hint: a.usedHint,
+        response_ms: a.responseMs,
         error_type: errorType,
         occurred_at: new Date().toISOString(),
       });
@@ -133,9 +157,9 @@ function KiokuPage() {
       }
       let next: KiokuSession = {
         ...session,
-        results: { ...session.results, [exercise.id]: correct },
+        results: { ...session.results, [exercise.id]: a.correct },
       };
-      if (!correct) next = queueRepeat(next, exercise);
+      if (!a.correct) next = queueRepeat(next, exercise);
       setSession(next);
       saveSession(window.localStorage, userId, next);
       return next;
@@ -151,9 +175,7 @@ function KiokuPage() {
       const finished = idx >= cur.exercises.length;
       const next = { ...cur, index: idx, finished };
       setSession(next);
-      setPicked(null);
-      setRevealed(false);
-      shownAt.current = Date.now();
+      resetExerciseUi();
       if (finished) {
         clearSession(window.localStorage, userId);
         void outbox.current?.flush();
@@ -162,13 +184,45 @@ function KiokuPage() {
     [session, userId],
   );
 
+  // A correct choice answer moves on by itself; a wrong one waits so the right answer can be read.
+  const advanceRef = useRef(advance);
+  advanceRef.current = advance;
+  const lastCorrect = ex ? session?.results[ex.id] : undefined;
+  useEffect(() => {
+    if (!ex || !isChoice || lastCorrect !== true) return;
+    const t = window.setTimeout(() => advanceRef.current(), AUTO_ADVANCE_MS);
+    return () => window.clearTimeout(t);
+  }, [ex?.id, isChoice, lastCorrect]);
+
   const summary = useMemo(() => {
     if (!session) return { right: 0, wrong: 0 };
     const v = Object.values(session.results);
     return { right: v.filter(Boolean).length, wrong: v.filter((x) => !x).length };
   }, [session]);
 
-  const answered = ex ? ex.id in (session?.results ?? {}) : false;
+  const pill = (value: Confidence, label: string) => (
+    <button
+      type="button"
+      aria-pressed={confidence === value}
+      disabled={answered}
+      onClick={() => setConfidence(confidence === value ? null : value)}
+      className={`min-h-9 flex-1 rounded-xl border px-3 text-[11px] font-bold ${confidence === value ? "border-primary bg-primary text-primary-foreground" : "bg-card"}`}
+    >
+      {label}
+    </button>
+  );
+
+  const reveal = (c: Confidence) => {
+    revealMs.current = Math.max(0, Date.now() - shownAt.current);
+    setConfidence(c);
+    setRevealed(true);
+  };
+  const grade = (correct: boolean) => {
+    if (!ex) return;
+    advance(
+      record(ex, { correct, selectedId: null, confidence, usedHint, responseMs: revealMs.current }),
+    );
+  };
 
   return (
     <AppShell compact title="Kioku">
@@ -242,7 +296,7 @@ function KiokuPage() {
                 style={{ width: `${(session!.index / Math.max(1, total)) * 100}%` }}
               />
             </div>
-            <section className="min-h-[190px] rounded-[28px] border bg-card p-6 text-center">
+            <section className="min-h-[170px] rounded-[28px] border bg-card p-6 text-center">
               <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
                 {ex.direction === "reverse"
                   ? "Indonesia → Jepang"
@@ -250,19 +304,40 @@ function KiokuPage() {
                     ? "Bacaan"
                     : "Arti"}
               </p>
-              <p className="mt-6 font-jp text-[30px] font-bold leading-relaxed">{ex.prompt}</p>
+              <p className="mt-5 font-jp text-[30px] font-bold leading-relaxed">{ex.prompt}</p>
               {ex.promptSub && (
                 <p className="mt-1 font-jp text-[11px] text-muted-foreground">{ex.promptSub}</p>
               )}
-              {ex.exerciseType === "recall_flip" && revealed && (
+              {showHint && !revealed && (
+                <p
+                  data-testid="hint"
+                  className="mt-4 rounded-xl bg-amber-50 px-3 py-2 font-jp text-[13px] font-semibold tracking-widest text-amber-900 dark:bg-amber-500/15 dark:text-amber-200"
+                >
+                  {ex.hintText}
+                </p>
+              )}
+              {!isChoice && revealed && (
                 <p className="mt-5 border-t pt-4 font-jp text-[16px] font-semibold">{ex.answer}</p>
               )}
+              {isChoice && answered && (
+                <p
+                  className={`mt-4 text-[11px] font-bold ${lastCorrect ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}
+                >
+                  {lastCorrect ? "Benar" : `Jawaban: ${ex.answer}`}
+                </p>
+              )}
             </section>
-            {ex.exerciseType === "choice" ? (
+            {isChoice ? (
               <div className="grid gap-2">
+                {!answered && (
+                  <div className="flex items-center gap-2" role="group" aria-label="Keyakinan">
+                    {pill("ragu", "Ragu")}
+                    {pill("yakin", "Yakin")}
+                  </div>
+                )}
                 {ex.options.map((o) => {
-                  const isAnswer = o.text === ex.answer,
-                    chosen = picked === o.id;
+                  const isAnswer = o.text === ex.answer;
+                  const chosen = picked === o.id;
                   const tone = !answered
                     ? "bg-card"
                     : isAnswer
@@ -276,9 +351,15 @@ function KiokuPage() {
                       disabled={answered}
                       onClick={() => {
                         setPicked(o.id);
-                        record(ex, isAnswer, o.id);
+                        record(ex, {
+                          correct: isAnswer,
+                          selectedId: o.id,
+                          confidence,
+                          usedHint: false,
+                          responseMs: Math.max(0, Date.now() - shownAt.current),
+                        });
                       }}
-                      className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold ${tone}`}
+                      className={`flex min-h-12 items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold ${tone}`}
                     >
                       <span>{o.text}</span>
                       {answered && isAnswer && <CheckCircle2 className="size-4 text-emerald-600" />}
@@ -298,34 +379,47 @@ function KiokuPage() {
                 )}
               </div>
             ) : !revealed ? (
-              <button
-                onClick={() => setRevealed(true)}
-                className="w-full rounded-2xl border bg-card py-3 text-[11px] font-bold"
-              >
-                Buka Jawaban
-              </button>
-            ) : answered ? (
-              <button
-                onClick={() => advance()}
-                className="w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground"
-              >
-                Lanjut
-              </button>
+              <div className="grid gap-2">
+                {ex.hintLevel === 1 && !hintOpen && (
+                  <button
+                    onClick={() => {
+                      setHintOpen(true);
+                      setUsedHint(true);
+                    }}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border bg-card text-[11px] font-bold"
+                  >
+                    <Lightbulb className="size-4" /> Petunjuk
+                  </button>
+                )}
+                <p className="text-center text-[10px] text-muted-foreground">
+                  Coba ingat dulu, lalu buka jawaban.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => reveal("ragu")}
+                    className="min-h-12 rounded-2xl border bg-card text-[11px] font-bold"
+                  >
+                    Ragu · lihat jawaban
+                  </button>
+                  <button
+                    onClick={() => reveal("yakin")}
+                    className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground"
+                  >
+                    Yakin · lihat jawaban
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => {
-                    advance(record(ex, false, null));
-                  }}
-                  className="rounded-2xl border border-red-200 bg-red-50 py-3 text-[11px] font-bold text-red-700 dark:border-red-500/35 dark:bg-red-500/[.12] dark:text-red-200"
+                  onClick={() => grade(false)}
+                  className="min-h-12 rounded-2xl border border-red-200 bg-red-50 text-[11px] font-bold text-red-700 dark:border-red-500/35 dark:bg-red-500/[.12] dark:text-red-200"
                 >
                   Belum ingat
                 </button>
                 <button
-                  onClick={() => {
-                    advance(record(ex, true, null));
-                  }}
-                  className="rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground"
+                  onClick={() => grade(true)}
+                  className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground"
                 >
                   Masih ingat
                 </button>
