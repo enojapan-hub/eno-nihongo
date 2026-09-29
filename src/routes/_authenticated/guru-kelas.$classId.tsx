@@ -1,1 +1,416 @@
-import {createFileRoute,Link}from'@tanstack/react-router';import{useQuery}from'@tanstack/react-query';import{UserRound,BookOpen,Award,ClipboardCheck}from'lucide-react';import{AppShell}from'@/components/layout/AppShell';import{Card,CardContent}from'@/components/ui/card';import{Button}from'@/components/ui/button';import{supabase}from'@/integrations/supabase/client';export const Route=createFileRoute('/_authenticated/guru-kelas/$classId')({component:Page});function Page(){const{classId}=Route.useParams();const q=useQuery({queryKey:['teacher-class-participants',classId],queryFn:async()=>{const{data,error}=await(supabase as any).rpc('get_teacher_class_participants',{p_class_id:classId});if(error)throw error;return data??[]}});const attempts=useQuery({queryKey:['teacher-class-quiz-attempts',classId],queryFn:async()=>{const{data,error}=await(supabase as any).rpc('get_teacher_class_quiz_attempts',{p_class_id:classId});if(error)throw error;return data??[]}});const insights=useQuery({queryKey:['teacher-class-question-insights',classId],queryFn:async()=>{const{data,error}=await(supabase as any).rpc('get_teacher_class_question_insights',{p_class_id:classId});if(error)throw error;return data??[]}});return <AppShell title="Kelola Kelas" backTo="/guru"><div className="mx-auto max-w-2xl space-y-4"><div><h1 className="text-xl font-black">Peserta Kelas</h1><p className="text-xs text-muted-foreground">Kelola peserta, konten, quiz, dan penilaian kelas.</p></div><div className="flex flex-wrap gap-2"><Button size="sm" asChild><Link to="/guru-kelas/$classId/konten" params={{classId}}><BookOpen className="mr-1 size-4"/>Kelola Konten</Link></Button><Button size="sm" variant="outline" asChild><Link to="/guru-kelas/$classId/nilai" params={{classId}}><Award className="mr-1 size-4"/>Nilai Tugas</Link></Button></div><Card><CardContent className="p-4">{q.isLoading&&<p className="text-xs">Memuat peserta…</p>}{q.isError&&<p className="text-xs text-destructive">Anda tidak memiliki akses ke daftar peserta kelas ini.</p>}{(q.data??[]).map((p:any)=><div key={p.user_id} className="flex items-center justify-between border-b py-3 last:border-0"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-primary/10"><UserRound className="size-4 text-primary"/></span><div><p className="text-xs font-bold">{p.display_name}</p><p className="text-[10px] text-muted-foreground">Bergabung {new Date(p.joined_at).toLocaleDateString('id-ID')}</p></div></div><span className="rounded-full bg-primary/10 px-2 py-1 text-[9px] font-bold text-primary">{p.status}</span></div>)}{!q.isLoading&&!q.isError&&(q.data??[]).length===0&&<p className="text-xs text-muted-foreground">Belum ada peserta.</p>}</CardContent></Card><div><h2 className="mb-2 flex items-center gap-2 text-sm font-black"><ClipboardCheck className="size-4"/>Hasil Quiz</h2><Card><CardContent className="p-4">{attempts.isLoading&&<p className="text-xs">Memuat hasil quiz…</p>}{attempts.isError&&<p className="text-xs text-destructive">Hasil quiz tidak dapat dimuat.</p>}{(attempts.data??[]).map((a:any)=><div key={a.attempt_id} className="flex items-center justify-between border-b py-3 last:border-0"><div><p className="text-xs font-bold">{a.display_name}</p><p className="text-[10px] text-muted-foreground">{a.quiz_title} · {a.correct_count}/{a.total_questions} benar · {new Date(a.submitted_at).toLocaleString('id-ID')}</p></div><span className="rounded-xl bg-primary/10 px-3 py-2 text-sm font-black text-primary">{Number(a.score)}</span></div>)}{!attempts.isLoading&&!attempts.isError&&(attempts.data??[]).length===0&&<p className="text-xs text-muted-foreground">Belum ada hasil quiz.</p>}</CardContent></Card></div><div><h2 className="mb-2 text-sm font-black">Peta kemampuan peserta</h2><p className="mb-2 text-[10px] text-muted-foreground">Soal yang sering salah membantu menentukan materi pengulangan sebelum kelas live.</p><Card><CardContent className="space-y-3 p-4">{insights.isLoading&&<p className="text-xs">Menghitung hasil…</p>}{insights.isError&&<p className="text-xs text-destructive">Statistik belum dapat dimuat.</p>}{[...new Map((insights.data??[]).map((item:any)=>[item.user_id,item.display_name])).entries()].map(([userId,name]:any)=><div key={userId} className="border-b pb-3 last:border-0 last:pb-0"><p className="text-xs font-bold">{name}</p><div className="mt-1 space-y-1">{(insights.data??[]).filter((x:any)=>x.user_id===userId).slice(0,3).map((x:any)=><p key={x.question_id} className="text-[10px] text-muted-foreground">{x.quiz_title}: {x.question} · {Number(x.accuracy)}% benar ({x.correct_count}/{x.attempts_count})</p>)}</div></div>)}{!insights.isLoading&&!insights.isError&&(insights.data??[]).length===0&&<p className="text-xs text-muted-foreground">Belum ada data kuis untuk dianalisis.</p>}</CardContent></Card></div></div></AppShell>}
+import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AppShell } from "@/components/layout/AppShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { classroom, result, localDateTime, isoDate } from "@/lib/classroom";
+export const Route = createFileRoute("/_authenticated/guru-kelas/$classId")({ component: Page });
+function Page() {
+  const { classId } = Route.useParams();
+  const qc = useQueryClient();
+  const nav = useNavigate();
+  const [tab, setTab] = useState("ringkasan");
+  const q = useQuery({
+    queryKey: ["teacher-workspace", classId],
+    queryFn: async () => {
+      if (!(await result(classroom.rpc("can_manage_class", { p_class_id: classId }))))
+        throw new Error("Anda tidak memiliki akses mengelola kelas ini.");
+      const [kelas, meeting, participants, assignments, submissions, grades, insights, attempts] =
+        await Promise.all([
+          result(classroom.from("classes").select("*").eq("id", classId).single()),
+          result(
+            classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle(),
+          ),
+          result(classroom.rpc("get_teacher_class_participants", { p_class_id: classId })),
+          result(classroom.from("class_assignments").select("*").eq("class_id", classId)),
+          result(classroom.rpc("get_teacher_class_submissions", { p_class_id: classId })),
+          result(classroom.from("class_grades").select("*").eq("class_id", classId)),
+          result(classroom.rpc("get_teacher_class_topic_insights", { p_class_id: classId })),
+          result(classroom.rpc("get_teacher_class_quiz_attempts", { p_class_id: classId })),
+        ]);
+      return { kelas, meeting, participants, assignments, submissions, grades, insights, attempts };
+    },
+  });
+  const d = q.data;
+  const refresh = () => qc.invalidateQueries({ queryKey: ["teacher-workspace", classId] });
+  return (
+    <AppShell title="Kelola Kelas" backTo="/guru">
+      <div className="mx-auto max-w-3xl space-y-4">
+        {q.isPending && <p>Memuat kelas…</p>}
+        {q.isError && (
+          <p role="alert" className="text-sm text-destructive">
+            {q.error.message}
+          </p>
+        )}
+        {d && (
+          <>
+            <div>
+              <p className="text-xs text-primary">
+                {d.kelas.level} · {d.kelas.status}
+              </p>
+              <h1 className="text-xl font-black">{d.kelas.title}</h1>
+            </div>
+            <nav className="flex flex-wrap gap-2" aria-label="Kelola kelas">
+              {[
+                ["ringkasan", "Ringkasan"],
+                ["peserta", "Peserta & Nilai"],
+                ["pengaturan", "Pengaturan Kelas"],
+              ].map(([id, label]) => (
+                <Button
+                  key={id}
+                  size="sm"
+                  variant={tab === id ? "default" : "outline"}
+                  onClick={() => setTab(id!)}
+                >
+                  {label}
+                </Button>
+              ))}
+              <Button size="sm" variant="outline" asChild>
+                <Link to="/guru-kelas/$classId/konten" params={{ classId }}>
+                  Materi, Tugas & Jadwal
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link to="/guru-kelas/$classId/nilai" params={{ classId }}>
+                  Nilai Tugas
+                </Link>
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <Link to="/kelas/$classId/workspace" params={{ classId }}>
+                  Pratinjau Konten Terbit
+                </Link>
+              </Button>
+            </nav>
+            {tab === "ringkasan" && (
+              <>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    [
+                      "Peserta aktif",
+                      d.participants.filter((p: any) => p.status === "active").length,
+                    ],
+                    ["Tugas terbit", d.assignments.filter((a: any) => a.is_published).length],
+                    [
+                      "Perlu dinilai",
+                      d.submissions.filter((s: any) => s.current_score == null).length,
+                    ],
+                  ].map(([label, value]) => (
+                    <Card key={label}>
+                      <CardContent className="p-3">
+                        <p className="text-[10px] text-muted-foreground">{label}</p>
+                        <strong className="text-xl">{value}</strong>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <Card>
+                  <CardContent className="space-y-2 p-4">
+                    <h2 className="font-bold">Persiapan mengajar</h2>
+                    <p className="text-xs text-muted-foreground">
+                      Buka Peserta & Nilai untuk melihat tugas yang tertinggal, koreksi guru, dan
+                      topik yang perlu diulang. Statistik kuis menggunakan percobaan terbaru setiap
+                      kuis.
+                    </p>
+                    <Button size="sm" onClick={() => setTab("peserta")}>
+                      Lihat perkembangan peserta
+                    </Button>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+            {tab === "peserta" && (
+              <div className="space-y-3">
+                {d.participants.length === 0 && (
+                  <p className="rounded-xl bg-muted p-4 text-sm">Belum ada peserta.</p>
+                )}
+                {d.participants.map((p: any) => {
+                  const submitted = d.submissions.filter((s: any) => s.user_id === p.user_id);
+                  const published = d.assignments.filter((a: any) => a.is_published);
+                  const missing = published.filter(
+                    (a: any) => !submitted.some((s: any) => s.assignment_id === a.id),
+                  );
+                  const scored = submitted.filter((s: any) => s.current_score != null);
+                  const average = scored.length
+                    ? Math.round(
+                        scored.reduce(
+                          (n: number, s: any) =>
+                            n + (Number(s.current_score) / Number(s.max_score || 100)) * 100,
+                          0,
+                        ) / scored.length,
+                      )
+                    : null;
+                  const topics = d.insights.filter((i: any) => i.user_id === p.user_id);
+                  const attempts = d.attempts.filter((a: any) => a.user_id === p.user_id);
+                  return (
+                    <details key={p.user_id} className="rounded-xl border p-4">
+                      <summary className="cursor-pointer">
+                        <strong className="text-sm">{p.display_name}</strong>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Rata-rata tugas: {average == null ? "Belum dinilai" : average + "/100"} ·{" "}
+                          {missing.length} belum dikumpulkan · {p.status}
+                        </p>
+                      </summary>
+                      <div className="mt-4 space-y-3 text-xs">
+                        <h3 className="font-bold">Nilai tugas dan koreksi</h3>
+                        {submitted.map((s: any) => {
+                          const grade = d.grades.find(
+                            (g: any) =>
+                              g.assignment_id === s.assignment_id && g.user_id === p.user_id,
+                          );
+                          return (
+                            <div key={s.id} className="rounded-lg bg-muted p-3">
+                              <b>{s.assignment_title}</b>
+                              <p>
+                                {s.current_score == null
+                                  ? "Menunggu penilaian"
+                                  : s.current_score + " / " + s.max_score}
+                              </p>
+                              {s.current_feedback && <p>Koreksi: {s.current_feedback}</p>}
+                              {grade?.weakness_note && <p>Perlu dilatih: {grade.weakness_note}</p>}
+                            </div>
+                          );
+                        })}
+                        {missing.length > 0 && (
+                          <p>Belum dikumpulkan: {missing.map((a: any) => a.title).join(", ")}</p>
+                        )}
+                        <h3 className="font-bold">Kemampuan per topik</h3>
+                        {topics.length === 0 ? (
+                          <p className="text-muted-foreground">
+                            Belum ada jawaban kuis untuk dianalisis.
+                          </p>
+                        ) : (
+                          topics.map((i: any) => (
+                            <div key={i.category + ":" + i.topic} className="space-y-1">
+                              <p>
+                                {i.category} / {i.topic}: {Number(i.accuracy)}% ({i.correct_count}/
+                                {i.total_questions} benar)
+                                {Number(i.accuracy) < 70 ? " · Perlu pengulangan" : ""}
+                              </p>
+                              <progress
+                                className="h-2 w-full accent-green-600"
+                                max="100"
+                                value={Number(i.accuracy)}
+                              />
+                            </div>
+                          ))
+                        )}
+                        {topics.length > 0 && (
+                          <p className="text-muted-foreground">
+                            Berdasarkan soal yang sudah dikerjakan; jumlah soal kecil belum cukup
+                            untuk menyimpulkan kemampuan keseluruhan.
+                          </p>
+                        )}
+                        <h3 className="font-bold">Riwayat kuis</h3>
+                        {attempts.map((a: any) => (
+                          <p key={a.attempt_id}>
+                            {a.quiz_title} · {a.score}/100 ·{" "}
+                            {new Date(a.submitted_at).toLocaleString("id-ID")}
+                          </p>
+                        ))}
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            )}
+            {tab === "pengaturan" && (
+              <Settings
+                key={d.kelas.updated_at}
+                kelas={d.kelas}
+                meeting={d.meeting}
+                refresh={refresh}
+                leave={() => nav({ to: "/guru" })}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </AppShell>
+  );
+}
+function Settings({
+  kelas,
+  meeting,
+  refresh,
+  leave,
+}: {
+  kelas: any;
+  meeting: any;
+  refresh: () => Promise<any>;
+  leave: () => Promise<any>;
+}) {
+  const [f, setF] = useState({
+    title: kelas.title,
+    description: kelas.description || "",
+    level: kelas.level,
+    capacity: String(kelas.capacity || 20),
+    price: String(kelas.price || 0),
+    meeting_url: meeting?.meeting_url || "",
+    meeting_id: meeting?.meeting_id || "",
+    passcode: meeting?.passcode || "",
+    reveal_from: localDateTime(meeting?.reveal_from),
+    reveal_until: localDateTime(meeting?.reveal_until),
+  });
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const set = (k: string, v: string) => setF((x) => ({ ...x, [k]: v }));
+  async function run(action: string) {
+    if (
+      action === "delete" &&
+      !window.confirm(
+        "Hapus draft kelas ini beserta kontennya? Tindakan ini tidak dapat dibatalkan.",
+      )
+    )
+      return;
+    if (
+      action === "archive" &&
+      !window.confirm("Arsipkan kelas? Pendaftaran ditutup dan riwayat peserta tetap tersimpan.")
+    )
+      return;
+    setBusy(true);
+    setMessage("");
+    try {
+      await result(
+        classroom.rpc("teacher_manage_class", {
+          p_class_id: kelas.id,
+          p_action: action,
+          p_data: {
+            ...f,
+            reveal_from: isoDate(f.reveal_from),
+            reveal_until: isoDate(f.reveal_until),
+          },
+        }),
+      );
+      if (action === "delete") {
+        await leave();
+        return;
+      }
+      await refresh();
+      setMessage("Perubahan tersimpan.");
+    } catch (e: any) {
+      setMessage(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Card>
+      <CardContent className="space-y-4 p-4">
+        <h2 className="font-black">Informasi Kelas</h2>
+        <Field label="Nama kelas">
+          <Input value={f.title} onChange={(e) => set("title", e.target.value)} />
+        </Field>
+        <Field label="Deskripsi">
+          <Textarea value={f.description} onChange={(e) => set("description", e.target.value)} />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Level">
+            <select
+              className="h-10 w-full rounded border bg-background p-2"
+              value={f.level}
+              onChange={(e) => set("level", e.target.value)}
+            >
+              {["N5", "N4", "N3", "N2", "N1"].map((l) => (
+                <option key={l}>{l}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Kapasitas">
+            <Input
+              type="number"
+              min="1"
+              value={f.capacity}
+              onChange={(e) => set("capacity", e.target.value)}
+            />
+          </Field>
+        </div>
+        <Field label={"Harga (" + kelas.currency + ")"}>
+          <Input
+            type="number"
+            min="0"
+            value={f.price}
+            onChange={(e) => set("price", e.target.value)}
+          />
+        </Field>
+        <h2 className="font-black">Google Meet / Zoom</h2>
+        <p className="text-xs text-muted-foreground">
+          Akses umum kelas. Jadwal sesi dapat memakai link dan kode tersendiri.
+        </p>
+        <Field label="Link HTTPS">
+          <Input
+            type="url"
+            value={f.meeting_url}
+            onChange={(e) => set("meeting_url", e.target.value)}
+            placeholder="https://meet.google.com/... atau https://...zoom.us/..."
+          />
+        </Field>
+        <Field label="Meeting ID / Kode room">
+          <Input value={f.meeting_id} onChange={(e) => set("meeting_id", e.target.value)} />
+        </Field>
+        <Field label="Passcode">
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={f.passcode}
+            onChange={(e) => set("passcode", e.target.value)}
+          />
+        </Field>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Akses dibuka (opsional, waktu lokal)">
+            <Input
+              type="datetime-local"
+              value={f.reveal_from}
+              onChange={(e) => set("reveal_from", e.target.value)}
+            />
+          </Field>
+          <Field label="Akses ditutup (opsional, waktu lokal)">
+            <Input
+              type="datetime-local"
+              value={f.reveal_until}
+              onChange={(e) => set("reveal_until", e.target.value)}
+            />
+          </Field>
+        </div>
+        <Button disabled={busy || !f.title.trim()} onClick={() => run("save")}>
+          {busy ? "Menyimpan…" : "Simpan Perubahan"}
+        </Button>
+        <div className="flex flex-wrap gap-2 border-t pt-4">
+          {["draft", "rejected"].includes(kelas.status) && (
+            <Button disabled={busy} variant="outline" onClick={() => run("review")}>
+              Ajukan ke Admin
+            </Button>
+          )}
+          {kelas.status !== "closed" && (
+            <Button disabled={busy} variant="outline" onClick={() => run("archive")}>
+              Arsipkan Kelas
+            </Button>
+          )}
+          {kelas.status === "draft" && (
+            <Button disabled={busy} variant="destructive" onClick={() => run("delete")}>
+              Hapus Draft
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Kelas yang memiliki peserta atau hasil belajar hanya dapat diarsipkan.
+        </p>
+        {message && (
+          <p role="status" className="text-sm">
+            {message}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+function Field({ label, children }: { label: string; children: any }) {
+  return (
+    <label className="block space-y-1">
+      <span className="text-xs font-bold">{label}</span>
+      {children}
+    </label>
+  );
+}
