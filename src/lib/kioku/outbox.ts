@@ -46,7 +46,7 @@ export function createOutbox(
     },
     flush(): Promise<{ sent: number; remaining: number; ok: boolean }> {
       if (inflight) return inflight;
-      inflight = (async () => {
+      const run = async () => {
         let sent = 0;
         try {
           while (memory.length) {
@@ -61,11 +61,15 @@ export function createOutbox(
           return { sent, remaining: 0, ok: true };
         } catch {
           return { sent, remaining: memory.length, ok: false };
-        } finally {
-          inflight = null;
         }
-      })();
-      return inflight;
+      };
+      // `inflight` must be set before the async body can finish (an empty outbox resolves synchronously).
+      const p = run();
+      inflight = p;
+      void p.then(() => {
+        if (inflight === p) inflight = null;
+      });
+      return p;
     },
   };
   return api;

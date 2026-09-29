@@ -255,4 +255,17 @@ describe("outbox", () => {
     expect(ob.pending()).toBeGreaterThanOrEqual(1);
     void p;
   });
+  it("an empty flush (page mount) does not block later flushes", async () => {
+    const storage = mem();
+    const sent: string[] = [];
+    const ob = createOutbox(
+      "u",
+      storage,
+      async (b) => void sent.push(...b.map((e) => e.client_event_id)),
+    );
+    await ob.flush();
+    ob.push(ev(1));
+    await ob.flush();
+    expect(sent).toEqual(["e1"]);
+  });
 });
