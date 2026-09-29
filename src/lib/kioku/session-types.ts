@@ -14,6 +14,13 @@ export type Exercise = {
   hintText: string;
   /** exercise variant for analytics/UI: jebakan | contrast | cloze | wrong_example */
   variant?: string | undefined;
+  /** Context Ladder level actually used (2 phrase, 3 sentence, 4 real context); undefined for plain recognition */
+  ladder?: number | undefined;
+  /** short hash of the example sentence used (context variation across sessions) */
+  contextRef?: string | undefined;
+  /** delayed = scheduled retention check inside the session, retest = natural re-test of a mastered item */
+  retention?: "delayed" | "retest" | undefined;
+  isDelayed?: boolean | undefined;
   /** short chip label (Jebakan / Bedakan / Penggunaan) */
   label?: string | undefined;
   /** short, data-backed explanation shown after answering */

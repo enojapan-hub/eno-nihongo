@@ -3,10 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BrainCircuit, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { classifyError } from "@/lib/kioku/classify";
+import { classifyError, SLOW_MS } from "@/lib/kioku/classify";
 import { createOutbox } from "@/lib/kioku/outbox";
 import { prefetchSession, sendEvents } from "@/lib/kioku/prefetch";
-import { queueRepeat } from "@/lib/kioku/session";
+import { queueRepeat, scheduleDelayed } from "@/lib/kioku/session";
 import type { Exercise, KiokuSession } from "@/lib/kioku/session-types";
 import { clearSession, loadSession, saveSession } from "@/lib/kioku/session-store";
 import type { Confidence } from "@/lib/kioku/types";
@@ -147,6 +147,12 @@ function KiokuPage() {
         selected_answer: chosen?.text ?? null,
         selected_item_id: chosen && UUID.test(chosen.id) ? chosen.id : null,
         variant: exercise.isRepeat ? "repeat" : (exercise.variant ?? null),
+        retention: exercise.isDelayed
+          ? "delayed"
+          : exercise.retention === "retest"
+            ? "retest"
+            : "immediate",
+        context_ref: exercise.contextRef ?? null,
         confidence: a.confidence,
         hint_level: exercise.hintLevel,
         used_hint: a.usedHint,
@@ -163,6 +169,11 @@ function KiokuPage() {
         results: { ...session.results, [exercise.id]: a.correct },
       };
       if (!a.correct) next = queueRepeat(next, exercise);
+      else {
+        // Ingatan Tertunda: schedule the retention check locally (position gap in the session, no timer, no request).
+        const independent = !a.usedHint && a.confidence !== "ragu" && a.responseMs <= SLOW_MS;
+        next = scheduleDelayed(next, exercise, independent);
+      }
       setSession(next);
       saveSession(window.localStorage, userId, next);
       return next;

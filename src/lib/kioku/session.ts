@@ -1,4 +1,5 @@
 import type { Exercise, KiokuSession } from "./session-types";
+import { MAX_PER_ITEM } from "./selector";
 import type { KiokuAspect, KiokuDirection, KiokuItemType, Selection } from "./types";
 
 export const SESSION_SIZE = 20;
@@ -12,6 +13,10 @@ export type Content = {
   reading: string;
   meaning: string;
   examples?: Array<{ ja: string; id: string }>;
+  /** vocabulary_senses (only senses that have example sentences) */
+  senses?: Array<{ meaning: string; examples: Array<{ ja: string; id: string }> }>;
+  /** kanji: vocabulary compounds that contain the kanji (kanji_vocabulary_examples) */
+  compounds?: Content[];
   wrong?: Array<{ wrong: string; correct: string; reason: string }>;
 };
 
@@ -73,7 +78,14 @@ export function stemOf(surface: string): string {
   const stem = surface.replace(/[\u3040-\u309f]+$/u, "");
   return stem && stem !== surface && HAN_ONLY.test(stem) ? stem : surface;
 }
-type Cloze = { blanked: string; translation: string; stem: boolean };
+type Cloze = {
+  blanked: string;
+  translation: string;
+  stem: boolean;
+  ref: string;
+  ja: string;
+  needle: string;
+};
 const isHan = (ch: string | undefined) => !!ch && HAN_ONLY.test(ch);
 const isHira = (ch: string | undefined) => !!ch && /[\u3040-\u309f]/u.test(ch);
 const indexesOf = (text: string, needle: string) => {
@@ -98,20 +110,90 @@ export function blankOut(ja: string, needle: string, stem: boolean): string | nu
   const out = ja.split(needle).join(SENTENCE_BLANK);
   return out.includes(needle) ? null : out;
 }
-/** Sentence example of `c` that can be blanked safely: exact surface first, otherwise the kanji stem of an inflected form. */
-function clozeExample(c: Content): Cloze | null {
-  const list = c.examples ?? [];
-  for (const e of list) {
-    const blanked = e.ja && c.surface ? blankOut(e.ja, c.surface, false) : null;
-    if (blanked) return { blanked, translation: e.id, stem: false };
-  }
+export const refOf = (text: string) => fnv(text).toString(36);
+type Ctx = { ja: string; id: string };
+/** All real example sentences of an item: its own examples plus the ones attached to its senses (de-duplicated). */
+export function contextsOf(c: Content): Ctx[] {
+  const out: Ctx[] = [];
+  const seen = new Set<string>();
+  const add = (e: Ctx) => {
+    if (e.ja && !seen.has(e.ja)) {
+      seen.add(e.ja);
+      out.push(e);
+    }
+  };
+  (c.examples ?? []).forEach(add);
+  (c.senses ?? []).forEach((sn) => sn.examples.forEach(add));
+  return out;
+}
+/** Deterministic context variation: prefer contexts not shown before, then pick by seed (same seed => same pick). */
+export function pickContext<T>(
+  list: T[],
+  refFn: (t: T) => string,
+  seen: Set<string> | undefined,
+  seed: string,
+): T | null {
+  if (!list.length) return null;
+  const fresh = seen ? list.filter((t) => !seen.has(refFn(t))) : list;
+  const from = fresh.length ? fresh : list;
+  return from[fnv(seed) % from.length]!;
+}
+/** Every example of `c` that can be blanked safely; exact surface forms are preferred over inflected (stem) forms. */
+function blankables(c: Content): Cloze[] {
   const stem = stemOf(c.surface);
-  if (stem === c.surface) return null;
-  for (const e of list) {
-    const blanked = e.ja ? blankOut(e.ja, stem, true) : null;
-    if (blanked) return { blanked, translation: e.id, stem: true };
+  const exact: Cloze[] = [];
+  const inflected: Cloze[] = [];
+  for (const e of contextsOf(c)) {
+    const b = c.surface ? blankOut(e.ja, c.surface, false) : null;
+    if (b) {
+      exact.push({
+        blanked: b,
+        translation: e.id,
+        stem: false,
+        ref: refOf(e.ja),
+        ja: e.ja,
+        needle: c.surface,
+      });
+      continue;
+    }
+    const sb = stem !== c.surface ? blankOut(e.ja, stem, true) : null;
+    if (sb)
+      inflected.push({
+        blanked: sb,
+        translation: e.id,
+        stem: true,
+        ref: refOf(e.ja),
+        ja: e.ja,
+        needle: stem,
+      });
   }
-  return null;
+  return exact.length ? exact : inflected;
+}
+function clozeExample(c: Content, seed = c.id, seen?: Set<string>): Cloze | null {
+  return pickContext(blankables(c), (x) => x.ref, seen, `${seed}|${c.id}|cloze`);
+}
+/**
+ * Phrase level of the Context Ladder: a real contiguous chunk of the example sentence around the target
+ * (previous particle phrase + the target + its trailing kana). Spaced text uses a token window. Never invented.
+ */
+export function phraseAround(ja: string, needle: string): string | null {
+  const at = ja.indexOf(needle);
+  if (at < 0) return null;
+  if (/\s/.test(ja)) {
+    const toks = ja.split(/\s+/).filter(Boolean);
+    const i = toks.findIndex((t) => t.includes(needle));
+    if (i < 0) return null;
+    const ph = toks.slice(Math.max(0, i - 2), Math.min(toks.length, i + 2)).join(" ");
+    return ph.length < ja.replace(/\s+/g, " ").length ? ph : null;
+  }
+  const B = /[はがをにでとものへ、。「」]/;
+  let start = at;
+  if (start > 0 && B.test(ja[start - 1]!)) start--;
+  while (start > 0 && !B.test(ja[start - 1]!)) start--;
+  let end = at + needle.length;
+  for (let n = 0; end < ja.length && n < 4 && isHira(ja[end]) && !B.test(ja[end]!); n++) end++;
+  const ph = ja.slice(start, end);
+  return ph.length >= 2 && ph.length < ja.length ? ph : null;
 }
 /** Grammar particles (は・が・に・で ...): blank the particle itself when the example has exactly one; otherwise the pattern is identified in the sentence. */
 const simpleParticle = (pattern: string) => {
@@ -187,6 +269,260 @@ function pickDistractors(
   return picked;
 }
 
+type Part = Pick<
+  Exercise,
+  "prompt" | "promptSub" | "answer" | "options" | "variant" | "label" | "feedback"
+> &
+  Partial<Pick<Exercise, "aspect" | "direction" | "ladder" | "contextRef">>;
+type Shuffle = (o: Opt[]) => Opt[];
+const meaningLine = (c: Content) =>
+  `${c.surface}${c.reading && c.reading !== c.surface ? ` (${c.reading})` : ""} = ${c.meaning}`;
+
+/** Vocabulary: L2 phrase -> L3 sentence -> L4 real context (sense in a sentence, or another sentence). */
+function vocabUsage(
+  c: Content,
+  sel: Selection,
+  level: number,
+  seed: string,
+  used: Set<string> | undefined,
+  pool: Content[],
+  learnedIds: Set<string>,
+  shuffle: Shuffle,
+): Part | null {
+  const usageAspect = { aspect: "usage" as const, direction: "forward" as const };
+  if (level >= 4) {
+    const senses = (c.senses ?? []).filter((x) => x.examples.length && norm(x.meaning));
+    const target = new Set([c.surface, stemOf(c.surface)]);
+    const owned = senses
+      .flatMap((sn) => sn.examples.map((e) => ({ e, sn })))
+      .filter(
+        (x) =>
+          senses.filter((t) => t.examples.some((y) => y.ja === x.e.ja)).length === 1 &&
+          [...target].some((t) => x.e.ja.includes(t)),
+      );
+    // Senses must be genuinely different in the data ("Sisa" vs "sisa; yang tersisa ..." is one meaning, not two).
+    const lower = (m: string) => norm(m).toLowerCase();
+    const meanings: string[] = [];
+    for (const x of senses) {
+      const m = lower(x.meaning);
+      if (!meanings.some((k) => lower(k).includes(m) || m.includes(lower(k))))
+        meanings.push(x.meaning);
+    }
+    const keep = new Set(meanings.map(lower));
+    const usable4 = owned.filter((x) => keep.has(lower(x.sn.meaning)));
+    const pick =
+      meanings.length >= 2
+        ? pickContext(usable4, (x) => refOf(x.e.ja), used, `${seed}|sense`)
+        : null;
+    if (pick) {
+      const others = meanings.filter((m) => lower(m) !== lower(pick.sn.meaning));
+      const extra = pickDistractors(
+        c,
+        pool,
+        learnedIds,
+        new Set(),
+        (x) => x.meaning,
+        (x) => !!norm(x.meaning),
+        3,
+        new Set([norm(pick.sn.meaning), ...others.map(norm)]),
+      ).map((o) => o.text);
+      const texts = [...others, ...extra].slice(0, 3);
+      if (texts.length >= 2) {
+        const opts = shuffle([
+          { id: `s:${norm(pick.sn.meaning)}`, text: pick.sn.meaning, confusable: false },
+          ...texts.map((t) => ({ id: `s:${norm(t)}`, text: t, confusable: false })),
+        ]);
+        return {
+          ...usageAspect,
+          prompt: pick.e.ja,
+          promptSub: `Arti “${c.surface}” pada kalimat ini?`,
+          answer: pick.sn.meaning,
+          options: opts,
+          variant: "sense_context",
+          label: "Konteks",
+          feedback: `${meaningLine(c)} · ${clip(pick.e.id, 90)}`,
+          ladder: 4,
+          contextRef: refOf(pick.e.ja),
+        };
+      }
+    }
+  }
+  const cz = clozeExample(c, seed, used);
+  if (!cz) return null;
+  let prompt = cz.blanked;
+  let ladder = level >= 3 ? 3 : 2;
+  if (level <= 2) {
+    const ph = phraseAround(cz.ja, cz.needle);
+    const pb = ph ? blankOut(ph, cz.needle, cz.stem) : null;
+    if (pb) prompt = pb;
+    else ladder = 3;
+  }
+  const picked = pickDistractors(
+    c,
+    pool,
+    learnedIds,
+    new Set(sel.remedy?.partnerId ? [sel.remedy.partnerId] : []),
+    (x) => formOf(x, cz.stem),
+    (x) => !!norm(x.surface),
+    3,
+    new Set([norm(formOf(c, cz.stem))]),
+  );
+  if (picked.length < 2) return null;
+  const opts = shuffle([{ id: c.id, text: formOf(c, cz.stem), confusable: false }, ...picked]);
+  return {
+    ...usageAspect,
+    prompt,
+    promptSub: cz.translation,
+    answer: formOf(c, cz.stem),
+    options: opts,
+    variant: sel.aspect === "usage" ? "context" : "cloze",
+    label: sel.aspect === "usage" ? "Konteks" : "Penggunaan",
+    feedback: meaningLine(c),
+    ladder,
+    contextRef: cz.ref,
+  };
+}
+
+/** Kanji: L2 compound with the kanji blanked -> L3 sentence with the compound blanked (compounds from kanji_vocabulary_examples). */
+function kanjiUsage(
+  c: Content,
+  level: number,
+  seed: string,
+  used: Set<string> | undefined,
+  pool: Content[],
+  learnedIds: Set<string>,
+  shuffle: Shuffle,
+): Part | null {
+  const comps = (c.compounds ?? []).filter(
+    (x) => x.surface !== c.surface && x.surface.split(c.surface).length === 2 && norm(x.meaning),
+  );
+  if (!comps.length) return null;
+  const fb = (x: Content) => `${c.surface} ${c.meaning} · ${meaningLine(x)}`;
+  const usageAspect = { aspect: "usage" as const, direction: "forward" as const };
+  if (level >= 3) {
+    const cands = comps
+      .flatMap((x) =>
+        (x.examples ?? []).map((e) => ({ x, e, b: blankOut(e.ja, x.surface, false) })),
+      )
+      .filter((y) => !!y.b);
+    const pick = pickContext(cands, (y) => refOf(y.e.ja), used, `${seed}|kanji`);
+    if (pick) {
+      const dist = pool.filter(
+        (p) => p.type === "vocabulary" && p.surface !== pick.x.surface && !!norm(p.surface),
+      );
+      const ranked = dist
+        .map((p) => ({
+          p,
+          k: p.surface.includes(c.surface) ? 0 : 1,
+          l: learnedIds.has(`vocabulary:${p.id}`) ? 0 : 1,
+          h: fnv(`${p.id}|${c.id}`),
+        }))
+        .sort((a, b) => a.k - b.k || a.l - b.l || a.h - b.h);
+      const seenT = new Set([norm(pick.x.surface)]);
+      const texts: Opt[] = [];
+      for (const r of ranked) {
+        if (seenT.has(norm(r.p.surface))) continue;
+        seenT.add(norm(r.p.surface));
+        texts.push({ id: r.p.id, text: r.p.surface, confusable: r.k === 0 });
+        if (texts.length === 3) break;
+      }
+      if (texts.length >= 2)
+        return {
+          ...usageAspect,
+          prompt: pick.b!,
+          promptSub: pick.e.id,
+          answer: pick.x.surface,
+          options: shuffle([{ id: pick.x.id, text: pick.x.surface, confusable: false }, ...texts]),
+          variant: "context",
+          label: "Konteks",
+          feedback: fb(pick.x),
+          ladder: 3,
+          contextRef: refOf(pick.e.ja),
+        };
+    }
+  }
+  const comp = pickContext(comps, (x) => refOf(x.id), used, `${seed}|kanji2`)!;
+  const picked = pickDistractors(
+    c,
+    pool,
+    learnedIds,
+    new Set(),
+    (x) => x.surface,
+    (x) => !!norm(x.surface),
+    3,
+    new Set([norm(c.surface)]),
+  );
+  if (picked.length < 2) return null;
+  return {
+    ...usageAspect,
+    prompt: comp.surface.replace(c.surface, "＿"),
+    promptSub: `${comp.reading} · ${comp.meaning}`,
+    answer: c.surface,
+    options: shuffle([{ id: c.id, text: c.surface, confusable: false }, ...picked]),
+    variant: "context",
+    label: "Konteks",
+    feedback: fb(comp),
+    ladder: 2,
+    contextRef: refOf(comp.id),
+  };
+}
+
+/** Grammar: L3 which pattern is used in a real example -> L4 correct vs wrong sentence (real wrong_examples with reason). */
+function grammarUsage(
+  c: Content,
+  level: number,
+  seed: string,
+  used: Set<string> | undefined,
+  pool: Content[],
+  learnedIds: Set<string>,
+  shuffle: Shuffle,
+): Part | null {
+  if (level >= 4) {
+    const list = c.wrong ?? [];
+    const w = list.length ? list[fnv(`${seed}|wx`) % list.length] : undefined;
+    if (w && norm(w.correct) && norm(w.wrong) && w.correct !== w.wrong)
+      return {
+        prompt: c.surface,
+        promptSub: "Pilih kalimat yang benar.",
+        answer: w.correct,
+        options: shuffle([
+          { id: "wx:correct", text: w.correct, confusable: false },
+          { id: "wx:wrong", text: w.wrong, confusable: false },
+        ]),
+        variant: "wrong_example",
+        label: "Penggunaan",
+        feedback: clip(w.reason || ""),
+        ladder: 4,
+      };
+  }
+  const ex = pickContext(contextsOf(c), (e) => refOf(e.ja), used, `${seed}|gram`);
+  if (!ex) return null;
+  const picked = pickDistractors(
+    c,
+    pool,
+    learnedIds,
+    new Set(),
+    (x) => x.surface,
+    (x) => !!norm(x.surface),
+    3,
+    new Set([norm(c.surface)]),
+  );
+  if (picked.length < 2) return null;
+  return {
+    aspect: "usage",
+    direction: "forward",
+    prompt: ex.ja,
+    promptSub: ex.id,
+    answer: c.surface,
+    options: shuffle([{ id: c.id, text: c.surface, confusable: false }, ...picked]),
+    variant: "context",
+    label: "Konteks",
+    feedback: `${c.surface}: ${c.meaning}`,
+    ladder: 3,
+    contextRef: refOf(ex.ja),
+  };
+}
+
 /**
  * Builds one exercise from prefetched content. Returns null when content is missing
  * (the caller then moves on to the next ranked candidate). Pure and deterministic.
@@ -199,6 +535,7 @@ export function buildExercise(
   learnedIds: Set<string>,
   sessionId: string,
   index: number,
+  seen?: Map<string, Set<string>>,
 ): Exercise | null {
   const c = content.get(`${sel.itemType}:${sel.itemId}`);
   if (!c) return null;
@@ -218,66 +555,35 @@ export function buildExercise(
     [...opts].sort((a, b) => fnv(`${id}|${a.id}`) - fnv(`${id}|${b.id}`));
   const kind = sel.remedy?.kind;
 
-  // ---- Usage: vocabulary cloze (aspect "usage") or grammar correct-vs-wrong sentence (real wrong_examples)
+  // ---- Usage: Context Ladder (aspect "usage") and usage remediation (real sentences only; no data => fallback)
   if (sel.aspect === "usage" || kind === "usage") {
-    if (c.type === "grammar") {
-      const list = c.wrong ?? [];
-      const w = list.length ? list[fnv(`${sessionId}|${c.id}`) % list.length] : undefined;
-      if (w && norm(w.correct) && norm(w.wrong) && w.correct !== w.wrong) {
-        const opts = shuffle([
-          { id: "wx:correct", text: w.correct, confusable: false },
-          { id: "wx:wrong", text: w.wrong, confusable: false },
-        ]);
-        return {
-          ...base,
-          exerciseType: "usage",
-          hintLevel: 3,
-          prompt: c.surface,
-          promptSub: "Pilih kalimat yang benar.",
-          hintText: "",
-          answer: w.correct,
-          options: opts,
-          variant: "wrong_example",
-          label: "Penggunaan",
-          feedback: clip(w.reason || ""),
-        };
-      }
-    } else {
-      const cz = clozeExample(c);
-      const partner = sel.remedy?.partnerId
-        ? content.get(`${c.type}:${sel.remedy.partnerId}`)
-        : undefined;
-      const prefer = new Set(partner ? [partner.id] : []);
-      const stem = cz?.stem ?? false;
-      const picked = pickDistractors(
-        c,
-        pool,
-        learnedIds,
-        prefer,
-        (x) => formOf(x, stem),
-        (x) => !!norm(x.surface),
-        3,
-        new Set([norm(formOf(c, stem))]),
-      );
-      if (cz && picked.length >= 2) {
-        const opts = shuffle([{ id: c.id, text: formOf(c, stem), confusable: false }, ...picked]);
-        return {
-          ...base,
-          aspect: "usage",
-          direction: "forward",
-          exerciseType: "usage",
-          hintLevel: 3,
-          prompt: cz.blanked,
-          promptSub: cz.translation,
-          hintText: "",
-          answer: formOf(c, stem),
-          options: opts,
-          variant: "cloze",
-          label: "Penggunaan",
-          feedback: `${c.surface}${c.reading && c.reading !== c.surface ? ` (${c.reading})` : ""} = ${c.meaning}`,
-        };
-      }
-    }
+    const used = seen?.get(`${c.type}:${c.id}`);
+    const seed = `${sessionId}|${c.id}`;
+    const level =
+      sel.aspect === "usage"
+        ? sel.stage <= 0
+          ? 2
+          : sel.stage === 1
+            ? 3
+            : 4
+        : c.type === "grammar"
+          ? 4
+          : 3;
+    const part =
+      c.type === "vocabulary"
+        ? vocabUsage(c, sel, level, seed, used, pool, learnedIds, shuffle)
+        : c.type === "kanji"
+          ? kanjiUsage(c, level, seed, used, pool, learnedIds, shuffle)
+          : grammarUsage(
+              c,
+              sel.aspect === "usage" ? (sel.stage >= 1 ? 4 : 3) : 4,
+              seed,
+              used,
+              pool,
+              learnedIds,
+              shuffle,
+            );
+    if (part) return { ...base, hintLevel: 3, exerciseType: "usage", hintText: "", ...part };
     if (sel.aspect === "usage") return null; // a usage-only combo without data is simply skipped
   }
 
@@ -301,7 +607,14 @@ export function buildExercise(
           c.type === "vocabulary"
             ? clozeExample(c)
             : gctx
-              ? { blanked: gctx.prompt, translation: gctx.sub, stem: false }
+              ? {
+                  blanked: gctx.prompt,
+                  translation: gctx.sub,
+                  stem: false,
+                  ref: "",
+                  ja: "",
+                  needle: "",
+                }
               : null;
         if (
           ctxA &&
@@ -402,6 +715,8 @@ export function buildExercise(
 }
 
 export const REMEDY_SHARE = 0.4;
+export const RETEST_SHARE = 0.2;
+export const CONTEXT_SHARE = 0.3;
 const itemKey = (e: { itemType: string; itemId: string }) => `${e.itemType}:${e.itemId}`;
 
 /** Same item never appears again within `gap` slots when another exercise can go in between. */
@@ -428,14 +743,25 @@ export function buildSession(
   sessionId: string,
   now: number,
   size = SESSION_SIZE,
+  seen?: Map<string, Set<string>>,
 ): KiokuSession {
   const exercises: Exercise[] = [];
   const remedyCap = Math.max(1, Math.ceil(size * REMEDY_SHARE));
+  const retestCap = Math.max(1, Math.ceil(size * RETEST_SHARE));
+  const contextCap = Math.max(1, Math.ceil(size * CONTEXT_SHARE));
   let remedies = 0;
+  let retests = 0;
+  let contexts = 0;
   const pairsUsed = new Set<string>();
+  const perItem = new Map<string, number>();
   for (const sel0 of ranked) {
     if (exercises.length >= size) break;
     let sel = sel0;
+    // At most MAX_PER_ITEM planned exercises per item, counted on what was actually built (an unbuildable combo frees its slot).
+    if ((perItem.get(`${sel.itemType}:${sel.itemId}`) ?? 0) >= MAX_PER_ITEM) continue;
+    // No mechanism may dominate a session: mastered re-tests and context exercises are capped too.
+    if (sel.retention === "retest" && retests >= retestCap) continue;
+    if (sel.aspect === "usage" && contexts >= contextCap) continue;
     const r = sel.remedy;
     if (r) {
       const pk = r.partnerId ? [sel.itemId, r.partnerId].sort().join("|") : null;
@@ -447,14 +773,32 @@ export function buildSession(
         sel = { ...rest, reason: `${sel.reason}+remedy_limited` };
       }
     }
-    const ex = buildExercise(sel, content, pool, learnedIds, sessionId, exercises.length);
+    const ex = buildExercise(sel, content, pool, learnedIds, sessionId, exercises.length, seen);
     if (!ex) continue;
     if (sel.remedy) {
       remedies++;
       if (sel.remedy.partnerId) pairsUsed.add([sel.itemId, sel.remedy.partnerId].sort().join("|"));
     }
+    if (sel.retention === "retest") {
+      retests++;
+      ex.retention = "retest";
+    }
+    if (ex.aspect === "usage") contexts++;
+    perItem.set(
+      `${sel.itemType}:${sel.itemId}`,
+      (perItem.get(`${sel.itemType}:${sel.itemId}`) ?? 0) + 1,
+    );
     exercises.push(ex);
   }
+  // Composition guard on the FINAL size: no mechanism may take more than its share of the session (lowest ranked go first).
+  const trimShare = (test: (e: Exercise) => boolean, share: number) => {
+    while (exercises.filter(test).length > Math.max(1, Math.ceil(exercises.length * share))) {
+      const at = exercises.map(test).lastIndexOf(true);
+      exercises.splice(at, 1);
+    }
+  };
+  trimShare((e) => e.aspect === "usage", CONTEXT_SHARE);
+  trimShare((e) => e.retention === "retest", RETEST_SHARE);
   const spaced = spaceOut(exercises);
   return {
     sessionId,
@@ -463,6 +807,71 @@ export function buildSession(
     index: 0,
     results: {},
     finished: spaced.length === 0,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Ingatan Tertunda: a correct answer that still needs retention verification comes back after a POSITION gap in the
+// session (other exercises in between, no timer). The delayed copy lives in the session state, so it survives reload.
+export const DELAYED_SHARE = 0.3;
+export const DELAY_MIN = 5;
+export const DELAY_MAX = 15;
+export const DELAY_MIN_SEPARATION = 3;
+const comboOf = (e: Pick<Exercise, "itemType" | "itemId" | "aspect" | "direction">) =>
+  `${e.itemType}:${e.itemId}:${e.aspect}:${e.direction}`;
+
+/** Desired number of other exercises between the answer and its delayed check (5-15, scaled to the session length). */
+export const delayGap = (base: number) =>
+  Math.min(DELAY_MAX, Math.max(DELAY_MIN, Math.round(base * 0.35)));
+
+/** Strong items (recall at Produksi+) are verified by due/re-test instead; delayed copies are never delayed again. */
+export function needsRetentionCheck(ex: Exercise): boolean {
+  if (ex.isDelayed || ex.retention === "retest") return false;
+  if (ex.exerciseType === "recall_flip" && ex.stage >= 3) return false;
+  return true;
+}
+
+function delayedCopy(ex: Exercise): Exercise {
+  const id = `${ex.id}~d`;
+  // Delayed recall asks with less help than the first time (never for a brand-new, stage 0 item).
+  const recall =
+    ex.exerciseType === "choice" && !ex.variant && ex.options.length >= 3 && ex.stage >= 1;
+  const form = recall
+    ? { exerciseType: "recall_flip" as const, hintLevel: 1 }
+    : ex.exerciseType === "recall_flip"
+      ? { hintLevel: Math.min(ex.hintLevel, 1) }
+      : {};
+  return {
+    ...ex,
+    ...form,
+    id,
+    isDelayed: true,
+    isRepeat: false,
+    retention: "delayed",
+    reason: "delayed_recall",
+    options: [...ex.options].sort((a, b) => fnv(`${id}|${a.id}`) - fnv(`${id}|${b.id}`)),
+  };
+}
+
+export function scheduleDelayed(s: KiokuSession, ex: Exercise, independent: boolean): KiokuSession {
+  if (!independent || !needsRetentionCheck(ex)) return s;
+  const key = comboOf(ex);
+  if (s.exercises.some((e) => e.isDelayed && comboOf(e) === key)) return s;
+  if (
+    s.exercises.filter((e) => e.itemId === ex.itemId && e.itemType === ex.itemType).length >=
+    MAX_APPEARANCES
+  )
+    return s;
+  const base = s.exercises.filter((e) => !e.isRepeat && !e.isDelayed).length;
+  if (s.exercises.filter((e) => e.isDelayed).length >= Math.max(1, Math.ceil(base * DELAYED_SHARE)))
+    return s;
+  const remaining = s.exercises.length - (s.index + 1);
+  const gap = Math.min(delayGap(base), remaining);
+  if (gap < DELAY_MIN_SEPARATION) return s; // not enough other exercises to separate: never re-ask right away
+  const at = s.index + 1 + gap;
+  return {
+    ...s,
+    exercises: [...s.exercises.slice(0, at), delayedCopy(ex), ...s.exercises.slice(at)],
   };
 }
 
@@ -483,6 +892,8 @@ export function queueRepeat(s: KiokuSession, ex: Exercise): KiokuSession {
     id: `${ex.id}~r`,
     isRepeat: true,
     reason: "repeat_after_error",
+    isDelayed: false,
+    retention: undefined,
     ...(easier ? { exerciseType: "choice" as const, hintLevel: 3 } : {}),
   };
   const at = Math.min(s.exercises.length, s.index + 1 + REPEAT_GAP);

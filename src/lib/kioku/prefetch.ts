@@ -1,8 +1,8 @@
-import { buildSignals, partnerFor, toReviewEvents, type Signals } from "./signals";
+import { buildSignals, partnerFor, seenContexts, toReviewEvents, type Signals } from "./signals";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSession, type Content, SESSION_SIZE } from "./session";
 import type { KiokuSession } from "./session-types";
-import { rankCandidates, selectExercises, toLearned } from "./selector";
+import { rankCandidates, toLearned } from "./selector";
 import type { KiokuEvent, KiokuItemType, MemoryStateRow } from "./types";
 
 const db = supabase as any;
@@ -155,7 +155,8 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
   // Error Engine input: recent Kioku events -> unresolved errors + A<->B pairs; relation tables for those items only.
   const base = buildSignals(evs.error ? [] : toReviewEvents(evs.data ?? []), [], now);
   const signals: Signals = { ...base, relations: await fetchRelations(base) };
-  const ranked = selectExercises(rankCandidates(learned, states, now, signals), SESSION_SIZE * 2);
+  const seen = seenContexts(evs.error ? [] : toReviewEvents(evs.data ?? []));
+  const ranked = rankCandidates(learned, states, now, signals).slice(0, SESSION_SIZE * 3); // per-item cap is applied while building
   const ids: Record<KiokuItemType, string[]> = { kanji: [], vocabulary: [], grammar: [] };
   for (const s of ranked) {
     if (!ids[s.itemType].includes(s.itemId)) ids[s.itemType].push(s.itemId);
@@ -195,7 +196,68 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
       ];
     }),
   );
-  return buildSession(ranked, content, pool, learnedIds, sessionId, now);
+  await attachContext(content, ids);
+  return buildSession(ranked, content, pool, learnedIds, sessionId, now, SESSION_SIZE, seen);
+}
+
+/**
+ * Context Ladder data (still the single prefetch phase): vocabulary senses with example sentences and, for kanji,
+ * the vocabulary compounds that contain them (kanji_vocabulary_examples). Missing data simply means no ladder.
+ */
+async function attachContext(content: Map<string, Content>, ids: Record<KiokuItemType, string[]>) {
+  const ok = async <T>(p: PromiseLike<{ data: T[] | null }>): Promise<T[]> => {
+    try {
+      return (await p).data ?? [];
+    } catch {
+      return [];
+    }
+  };
+  const [senses, links] = await Promise.all([
+    ids.vocabulary.length
+      ? ok<any>(
+          db
+            .from("vocabulary_senses")
+            .select("vocabulary_id,meaning_id,examples")
+            .in("vocabulary_id", ids.vocabulary),
+        )
+      : [],
+    ids.kanji.length
+      ? ok<any>(
+          db
+            .from("kanji_vocabulary_examples")
+            .select("kanji_id,vocabulary_id,sort_order")
+            .in("kanji_id", ids.kanji)
+            .order("sort_order", { ascending: true })
+            .limit(400),
+        )
+      : [],
+  ]);
+  for (const row of senses) {
+    const c = content.get(`vocabulary:${row.vocabulary_id}`);
+    const ex = exList(row.examples);
+    if (c && ex.length && row.meaning_id)
+      (c.senses ??= []).push({ meaning: String(row.meaning_id), examples: ex });
+  }
+  const perKanji = new Map<string, string[]>();
+  for (const l of links) {
+    const list = perKanji.get(l.kanji_id) ?? [];
+    if (list.length < 3) perKanji.set(l.kanji_id, [...list, l.vocabulary_id]);
+  }
+  const vids = [...new Set([...perKanji.values()].flat())];
+  if (!vids.length) return;
+  const { table, cols, extra, map } = TABLE.vocabulary;
+  const vocab = await ok<any>(
+    db
+      .from(table)
+      .select(cols + (extra ?? ""))
+      .in("id", vids)
+      .eq("is_published", true),
+  );
+  const byId = new Map(vocab.map((r: any) => [r.id, map(r)]));
+  for (const [kid, list] of perKanji) {
+    const c = content.get(`kanji:${kid}`);
+    if (c) c.compounds = list.map((v) => byId.get(v)).filter(Boolean) as Content[];
+  }
 }
 
 /** Batch persistence path used by the outbox. */

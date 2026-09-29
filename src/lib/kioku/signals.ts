@@ -10,6 +10,7 @@ export type ReviewEvent = {
   error_type: string | null;
   selected_item_id: string | null;
   variant?: string | null;
+  context_ref?: string | null;
   created_at: string;
 };
 export type ErrSignal = { type: ErrorType; count: number };
@@ -64,6 +65,7 @@ export function toReviewEvents(
       error_type: (r.meta?.["error_type"] as string | undefined) ?? null,
       selected_item_id: (r.meta?.["selected_item_id"] as string | undefined) ?? null,
       variant: (r.meta?.["variant"] as string | undefined) ?? null,
+      context_ref: (r.meta?.["context_ref"] as string | undefined) ?? null,
       created_at: r.created_at,
     }));
 }
@@ -186,4 +188,15 @@ export function remedyFor(
     default:
       return null; // general -> normal reinforcement
   }
+}
+
+/** Example sentences already used per item (from persisted events), so the next session can pick a different one. */
+export function seenContexts(events: ReviewEvent[]): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>();
+  for (const e of events) {
+    if (!e.context_ref) continue;
+    const k = `${e.item_type}:${e.item_id}`;
+    (out.get(k) ?? out.set(k, new Set()).get(k)!).add(e.context_ref);
+  }
+  return out;
 }
