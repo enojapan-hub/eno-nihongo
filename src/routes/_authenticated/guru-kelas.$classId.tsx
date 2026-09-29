@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { classroom, result, localDateTime, isoDate } from "@/lib/classroom";
-export const Route = createFileRoute("/_authenticated/guru-kelas/$classId")({ component: Page });
+export const Route = createFileRoute("/_authenticated/guru-kelas/$classId")({
+  component: TeacherClassRoute,
+});
+function TeacherClassRoute() {
+  const { classId } = Route.useParams();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return pathname.replace(/\/$/, "") === `/guru-kelas/${classId}` ? <Page /> : <Outlet />;
+}
 function Page() {
   const { classId } = Route.useParams();
   const qc = useQueryClient();

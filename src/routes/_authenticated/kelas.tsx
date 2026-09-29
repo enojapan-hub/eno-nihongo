@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, GraduationCap, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -6,7 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/kelas")({ component: KelasPage });
+export const Route = createFileRoute("/_authenticated/kelas")({ component: KelasRoute });
+
+function KelasRoute() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return pathname.replace(/\/$/, "") === "/kelas" ? <KelasPage /> : <Outlet />;
+}
 
 function KelasPage() {
   const banners = useQuery({
@@ -42,8 +47,13 @@ function KelasPage() {
       ]);
       if (error) throw error;
       if (countError) throw countError;
-      const byClass = new Map((counts ?? []).map((row: any) => [row.class_id, Number(row.participant_count)] as const));
-      return (data ?? []).map((row: any) => ({ ...row, participant_count: byClass.get(row.id) ?? 0 }));
+      const byClass = new Map(
+        (counts ?? []).map((row: any) => [row.class_id, Number(row.participant_count)] as const),
+      );
+      return (data ?? []).map((row: any) => ({
+        ...row,
+        participant_count: byClass.get(row.id) ?? 0,
+      }));
     },
   });
 
@@ -70,7 +80,10 @@ function KelasPage() {
               <h2 className="text-xl font-black">{banner.title}</h2>
               {banner.subtitle && <p className="mt-1 text-xs opacity-90">{banner.subtitle}</p>}
               {banner.cta_url && (
-                <a href={banner.cta_url} className="mt-3 w-fit rounded-xl bg-white px-3 py-2 text-xs font-bold text-black">
+                <a
+                  href={banner.cta_url}
+                  className="mt-3 w-fit rounded-xl bg-white px-3 py-2 text-xs font-bold text-black"
+                >
                   {banner.cta_label || "Lihat kelas"}
                 </a>
               )}
@@ -109,7 +122,9 @@ function KelasPage() {
                           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary">
                             {c.level}
                           </span>
-                          <span className="truncate text-[9px] text-muted-foreground">{c.class_mode}</span>
+                          <span className="truncate text-[9px] text-muted-foreground">
+                            {c.class_mode}
+                          </span>
                         </div>
                         <h3 className="line-clamp-1 text-sm font-black sm:text-base">{c.title}</h3>
                         {c.description && (
@@ -133,14 +148,26 @@ function KelasPage() {
                       </div>
 
                       <div className="flex items-center justify-between gap-2">
-                        <strong className="text-xs sm:text-sm" title={c.currency === "JPY" ? "Estimasi kurs harian" : undefined}>
+                        <strong
+                          className="text-xs sm:text-sm"
+                          title={c.currency === "JPY" ? "Estimasi kurs harian" : undefined}
+                        >
                           {Number(c.price) <= 0
                             ? "Gratis"
                             : c.currency === "IDR"
-                              ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(c.price))
+                              ? new Intl.NumberFormat("id-ID", {
+                                  style: "currency",
+                                  currency: "IDR",
+                                  maximumFractionDigits: 0,
+                                }).format(Number(c.price))
                               : c.currency === "JPY"
                                 ? rate.data
-                                  ? "≈ " + new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(c.price) * rate.data)
+                                  ? "≈ " +
+                                    new Intl.NumberFormat("id-ID", {
+                                      style: "currency",
+                                      currency: "IDR",
+                                      maximumFractionDigits: 0,
+                                    }).format(Number(c.price) * rate.data)
                                   : "Kurs rupiah belum tersedia"
                                 : c.currency + " " + Number(c.price).toLocaleString("id-ID")}
                         </strong>
