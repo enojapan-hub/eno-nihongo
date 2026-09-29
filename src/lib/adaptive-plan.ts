@@ -4,7 +4,7 @@ import { analyzePlannerWeakness, reviewMatchesWeakness, type PlannerReview } fro
 export type AdaptiveTaskType = "new_kanji" | "new_vocabulary" | "new_grammar" | "review" | "quiz" | "reading" | "listening";
 export type AdaptiveSuggestion = { id: string; label: string; subtitle?: string | null };
 export type AdaptiveTask = { id:string; task_type:AdaptiveTaskType; target_count:number; completed_count:number; priority:number; reason:string|null; metadata:Record<string,unknown>|null; suggestions?:AdaptiveSuggestion[] };
-export type AdaptivePlan = { active:boolean; targetLevel:string|null; targetDate:string|null; daysLeft:number|null; tasks:AdaptiveTask[]; target:number; completed:number };
+export type AdaptivePlan = { active:boolean; planId?:string|null; targetLevel:string|null; targetDate:string|null; daysLeft:number|null; tasks:AdaptiveTask[]; target:number; completed:number };
 const emptyPlan:AdaptivePlan={active:false,targetLevel:null,targetDate:null,daysLeft:null,tasks:[],target:0,completed:0};
 type ProgressRow={item_type:string;item_id:string;status:string;due_at:string|null;ease_factor?:number|null};
 type ReviewRow=PlannerReview;
@@ -62,7 +62,7 @@ export async function fetchAdaptivePlan():Promise<AdaptivePlan>{
   const plan=plans?.[0];if(!plan)return emptyPlan;
   const taskRows=[...(await enrichTasksWithSuggestions(auth.user.id,String(plan.target_level??"N5"),(tasks??[]).filter((task:any)=>task.plan_id===plan.id) as AdaptiveTask[]))].sort((a,b)=>b.priority-a.priority);
   const target=taskRows.reduce((s,t)=>s+Number(t.target_count||0),0),completed=taskRows.reduce((s,t)=>s+Math.min(Number(t.completed_count||0),Number(t.target_count||0)),0),targetMs=new Date(`${plan.target_date}T00:00:00+09:00`).getTime(),todayMs=new Date(`${today}T00:00:00+09:00`).getTime(),daysLeft=Math.max(0,Math.ceil((targetMs-todayMs)/86400000));
-  return{active:true,targetLevel:plan.target_level??null,targetDate:plan.target_date??null,daysLeft,tasks:taskRows,target,completed};
+  return{active:true,planId:String(plan.id),targetLevel:plan.target_level??null,targetDate:plan.target_date??null,daysLeft,tasks:taskRows,target,completed};
 }
 
 export const adaptiveTaskLabels:Record<AdaptiveTaskType,string>={new_kanji:"Kanji baru",new_vocabulary:"Kotoba baru",new_grammar:"Bunpō baru",review:"Review",quiz:"Kuis",reading:"Dokkai",listening:"Listening"};
