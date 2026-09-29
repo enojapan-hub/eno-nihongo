@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { classifyError } from "../classify";
 import { rankCandidates, selectExercises, toLearned } from "../selector";
-import { buildSession, buildExercise, queueRepeat, spaceOut, type Content } from "../session";
+import {
+  buildSession,
+  buildExercise,
+  queueRepeat,
+  spaceOut,
+  type Content,
+  blankOut,
+} from "../session";
 import {
   buildSignals,
   HOLD_AFTER,
@@ -9,6 +16,7 @@ import {
   remedyFor,
   toReviewEvents,
   type ReviewEvent,
+  MAX_ERROR_AGE_MS,
 } from "../signals";
 import type { MemoryStateRow, Selection } from "../types";
 
@@ -552,7 +560,7 @@ describe("Jebakan / Contrast / Usage exercises", () => {
     )!;
     expect(ex).toMatchObject({
       exerciseType: "contrast",
-      prompt: "私は学生です。",
+      prompt: "私＿＿学生です。",
       answer: "は",
       feedback: "は: topik · が: subjek",
     });
@@ -620,5 +628,354 @@ describe("repeat after error does not resolve the error", () => {
     expect(buildSignals(newestFirst(repeatOk, wrong)).unresolved.size).toBe(1);
     const later = ev({ correct: true, error_type: null, variant: null });
     expect(buildSignals(newestFirst(later, repeatOk, wrong)).unresolved.size).toBe(0);
+  });
+});
+
+describe("confusion persistence (symmetry, replay, age)", () => {
+  it("A->B and B->A are one pair and add up", () => {
+    const sig = buildSignals(
+      newestFirst(
+        ev({ item_id: "A", selected_item_id: "B", error_type: "confusion" }),
+        ev({ item_id: "B", selected_item_id: "A", error_type: "confusion" }),
+      ),
+    );
+    expect(sig.pairs.size).toBe(1);
+    expect([...sig.pairs.values()][0]).toMatchObject({ count: 2, confused: 2 });
+    expect(partnerFor("vocabulary", "A", sig)).toMatchObject({ id: "B", confirmed: true });
+    expect(partnerFor("vocabulary", "B", sig)).toMatchObject({ id: "A", confirmed: true });
+  });
+  it("signals are derived from persisted rows only, so a replayed (deduplicated) event adds nothing", () => {
+    const rows = [
+      {
+        item_type: "vocabulary",
+        item_id: "A",
+        aspect: "meaning",
+        direction: "forward",
+        rating: 0,
+        created_at: "2026-09-30T00:00:00Z",
+        meta: { source: "kioku", correct: false, error_type: "confusion", selected_item_id: "B" },
+      },
+    ];
+    expect([...buildSignals(toReviewEvents(rows)).pairs.values()][0]!.count).toBe(1);
+  });
+  it("an old error stops steering remediation", () => {
+    const old = ev({
+      selected_item_id: "B",
+      error_type: "confusion",
+      created_at: new Date(NOW - MAX_ERROR_AGE_MS - 86400000).toISOString(),
+    });
+    expect(buildSignals(newestFirst(old), [], NOW).unresolved.size).toBe(0);
+    expect(buildSignals(newestFirst(old)).unresolved.size).toBe(1); // without a clock the age rule is off
+  });
+});
+
+describe("remediation lifecycle (always-wrong learner cannot be trapped)", () => {
+  it("escalation stops after HOLD_AFTER consecutive errors and never exceeds session caps", () => {
+    let events: ReviewEvent[] = [];
+    let last = -1;
+    for (let round = 1; round <= 8; round++) {
+      events = [ev({ selected_item_id: "B", error_type: "confusion" }), ...events]; // newest first
+      const sig = buildSignals(events);
+      const r = rankCandidates(
+        learned("A"),
+        [st("A", { due_at: "2026-10-09T00:00:00Z" })],
+        NOW,
+        sig,
+      ).find((s) => s.aspect === "meaning" && s.direction === "forward")!;
+      if (round < HOLD_AFTER) expect(r.remedy).toBeTruthy();
+      else expect(r.remedy).toBeUndefined();
+      last = r.score;
+    }
+    expect(last).toBeLessThan(700); // back to ordinary priority
+  });
+  it("after the hold a clean correct answer resolves everything", () => {
+    const events = [
+      ev({ correct: true, error_type: null, variant: null }),
+      ...Array.from({ length: 6 }, () => ev({ selected_item_id: "B", error_type: "confusion" })),
+    ];
+    expect(buildSignals(events).unresolved.size).toBe(0);
+  });
+});
+
+describe("relation fallback order: real confusion -> relation -> heuristic", () => {
+  const V = (id: string, surface: string, reading: string, meaning: string): Content => ({
+    id,
+    type: "vocabulary",
+    level: "N5",
+    surface,
+    reading,
+    meaning,
+  });
+  const A = V("A", "会う", "あう", "bertemu");
+  const REAL = V("REAL", "遭う", "ろう", "mengalami");
+  const REL = V("REL", "合う", "ごう", "cocok");
+  const HEUR = V("HEUR", "会議", "かいぎ", "rapat"); // shares 会 with A
+  const content = new Map([A, REAL, REL].map((x) => [`vocabulary:${x.id}`, x]));
+  const sel = (partnerId?: string, source?: "error" | "relation"): Selection => ({
+    itemType: "vocabulary",
+    itemId: "A",
+    level: "N5",
+    aspect: "meaning",
+    direction: "forward",
+    exerciseType: "choice",
+    stage: 1,
+    hintLevel: 3,
+    optionCount: 4,
+    reason: "r",
+    score: 1,
+    remedy: { kind: "jebakan", count: 1, ...(partnerId ? { partnerId, source } : {}) },
+  });
+  it("partnerFor prefers the real error pair over the relation table", () => {
+    const rel = [{ type: "vocabulary" as const, a: "A", b: "REL" }];
+    expect(
+      partnerFor(
+        "vocabulary",
+        "A",
+        buildSignals(newestFirst(ev({ selected_item_id: "REAL", error_type: "confusion" })), rel),
+      ),
+    ).toMatchObject({ id: "REAL", source: "error" });
+    expect(partnerFor("vocabulary", "A", buildSignals([], rel))).toMatchObject({
+      id: "REL",
+      source: "relation",
+    });
+    expect(partnerFor("vocabulary", "A", buildSignals([], []))).toBeNull(); // empty production tables are safe
+  });
+  it("builder: given partner wins; heuristic only when no partner exists", () => {
+    const pool = [A, REAL, REL, HEUR];
+    expect(
+      buildExercise(sel("REAL", "error"), content, pool, new Set(), "s", 0)!.options.some(
+        (o) => o.id === "REAL" && o.confusable,
+      ),
+    ).toBe(true);
+    expect(
+      buildExercise(sel("REL", "relation"), content, pool, new Set(), "s", 0)!.options.some(
+        (o) => o.id === "REL" && o.confusable,
+      ),
+    ).toBe(true);
+    const h = buildExercise(sel(), content, pool, new Set(), "s", 0)!;
+    expect(h.variant).toBe("jebakan");
+    expect(h.options.some((o) => o.id === "HEUR" && o.confusable)).toBe(true);
+    const none = buildExercise(sel(), content, [A], new Set(), "s", 0);
+    expect(none === null || none.variant === undefined).toBe(true); // nothing relevant -> no fake Jebakan
+  });
+});
+
+describe("contrast correctness (Japanese kept intact, answer not leaked)", () => {
+  it("blankOut restores the original sentence and never leaves the target", () => {
+    for (const [ja, needle, stem] of [
+      ["電車 は 便利 です。", "便利", false],
+      ["便利な駅で便利です。", "便利", false],
+      ["日曜日に友達に会います。", "会", true],
+      ["これ 以外 に 方法 は ありません。", "以外", false],
+    ] as const) {
+      const out = blankOut(ja, needle, stem)!;
+      expect(out).toBeTruthy();
+      expect(out).not.toContain(needle);
+      expect(out.split("＿＿").join(needle)).toBe(ja);
+    }
+  });
+  it("does not corrupt other words: 会 inside 会社 is rejected, multiple stem hits are rejected", () => {
+    expect(blankOut("会社で友達に会います。", "会", true)).toBeNull();
+    expect(blankOut("友達に会って、また会います。", "会", true)).toBeNull();
+    expect(blankOut("不便利な町", "便利", false)).toBeNull(); // glued to another kanji
+  });
+  const V = (
+    id: string,
+    surface: string,
+    meaning: string,
+    ex: Content["examples"] = [],
+  ): Content => ({
+    id,
+    type: "vocabulary",
+    level: "N5",
+    surface,
+    reading: `r${id}`,
+    meaning,
+    examples: ex,
+  });
+  it("Kotoba: prompt has no answer form, feedback = both meanings from data", () => {
+    const A = V("A", "意外", "tak terduga", [
+      { ja: "これは意外に安かった。", id: "Ini ternyata lebih murah." },
+    ]);
+    const B = V("B", "以外", "selain");
+    const s: Selection = {
+      itemType: "vocabulary",
+      itemId: "A",
+      level: "N5",
+      aspect: "meaning",
+      direction: "forward",
+      exerciseType: "choice",
+      stage: 1,
+      hintLevel: 3,
+      optionCount: 4,
+      reason: "r",
+      score: 1,
+      remedy: { kind: "contrast", partnerId: "B", source: "error", count: 2 },
+    };
+    const ex = buildExercise(
+      s,
+      new Map([
+        ["vocabulary:A", A],
+        ["vocabulary:B", B],
+      ]),
+      [A, B],
+      new Set(),
+      "s",
+      0,
+    )!;
+    expect(ex).toMatchObject({
+      exerciseType: "contrast",
+      prompt: "これは＿＿に安かった。",
+      answer: "意外",
+      feedback: "意外 tak terduga · 以外 selain",
+    });
+    expect(ex.prompt).not.toContain("意外");
+    expect(ex.options.map((o) => o.text).sort()).toEqual(["意外", "以外"].sort());
+  });
+  it("Kanji: contrast falls back to Jebakan with data feedback (no invented sentences)", () => {
+    const K = (id: string, ch: string, m: string): Content => ({
+      id,
+      type: "kanji",
+      level: "N5",
+      surface: ch,
+      reading: `r${id}`,
+      meaning: m,
+    });
+    const A = K("A", "未", "belum"),
+      B = K("B", "末", "akhir");
+    const s: Selection = {
+      itemType: "kanji",
+      itemId: "A",
+      level: "N5",
+      aspect: "meaning",
+      direction: "forward",
+      exerciseType: "choice",
+      stage: 1,
+      hintLevel: 3,
+      optionCount: 4,
+      reason: "r",
+      score: 1,
+      remedy: { kind: "contrast", partnerId: "B", source: "error", count: 2 },
+    };
+    const ex = buildExercise(
+      s,
+      new Map([
+        ["kanji:A", A],
+        ["kanji:B", B],
+      ]),
+      [A, B, K("C", "本", "buku"), K("D", "木", "pohon")],
+      new Set(),
+      "s",
+      0,
+    )!;
+    expect(ex.variant).toBe("jebakan");
+    expect(ex.feedback).toBe("未 belum · 末 akhir");
+  });
+  it("Bunpou: particle contrast blanks the particle; long patterns are identified in the sentence (not blanked)", () => {
+    const G = (
+      id: string,
+      pattern: string,
+      meaning: string,
+      ex: Content["examples"] = [],
+    ): Content => ({
+      id,
+      type: "grammar",
+      level: "N5",
+      surface: pattern,
+      reading: "",
+      meaning,
+      examples: ex,
+    });
+    const ni = G("N", "〜に", "tujuan/waktu", [
+      { ja: "学校に行きます。", id: "Pergi ke sekolah." },
+    ]);
+    const de = G("D", "〜で", "tempat kegiatan");
+    const s = (id: string, partner: string): Selection => ({
+      itemType: "grammar",
+      itemId: id,
+      level: "N5",
+      aspect: "function_context",
+      direction: "forward",
+      exerciseType: "choice",
+      stage: 1,
+      hintLevel: 3,
+      optionCount: 4,
+      reason: "r",
+      score: 1,
+      remedy: { kind: "contrast", partnerId: partner, source: "error", count: 2 },
+    });
+    const ex = buildExercise(
+      s("N", "D"),
+      new Map([
+        ["grammar:N", ni],
+        ["grammar:D", de],
+      ]),
+      [ni, de],
+      new Set(),
+      "s",
+      0,
+    )!;
+    expect(ex).toMatchObject({
+      prompt: "学校＿＿行きます。",
+      answer: "に",
+      feedback: "〜に: tujuan/waktu · 〜で: tempat kegiatan",
+    });
+    expect(ex.options.map((o) => o.text).sort()).toEqual(["で", "に"].sort());
+    const long = G("L", "KB + が + 好きです", "menyukai", [
+      { ja: "私は猫が好きです。", id: "Saya suka kucing." },
+    ]);
+    const other = G("O", "KB + を + 食べます", "memakan");
+    const ex2 = buildExercise(
+      s("L", "O"),
+      new Map([
+        ["grammar:L", long],
+        ["grammar:O", other],
+      ]),
+      [long, other],
+      new Set(),
+      "s",
+      0,
+    )!;
+    expect(ex2.prompt).toBe("私は猫が好きです。"); // sentence intact, pattern is identified
+    expect(ex2.answer).toBe("KB + が + 好きです");
+  });
+});
+
+describe("distractor isolation in a built session", () => {
+  it("partner/distractors are options only: never primary, never learned", () => {
+    const V = (id: string, s: string, m: string): Content => ({
+      id,
+      type: "vocabulary",
+      level: "N5",
+      surface: s,
+      reading: `r${id}`,
+      meaning: m,
+      examples: [],
+    });
+    const A = V("A", "会う", "bertemu"),
+      B = V("B", "合う", "cocok"),
+      C = V("C", "語C", "c"),
+      D = V("D", "語D", "d");
+    const learnedSet = new Set(["vocabulary:A"]);
+    const ranked = selectExercises(
+      rankCandidates(
+        learned("A"),
+        [st("A")],
+        NOW,
+        buildSignals(newestFirst(ev({ selected_item_id: "B", error_type: "confusion" }))),
+      ),
+      10,
+    );
+    const s = buildSession(
+      ranked,
+      new Map([A, B].map((x) => [`vocabulary:${x.id}`, x])),
+      [A, B, C, D],
+      learnedSet,
+      "sid",
+      NOW,
+    );
+    expect(s.exercises.every((e) => e.itemId === "A")).toBe(true);
+    expect(s.exercises.some((e) => e.options.some((o) => o.id === "B"))).toBe(true);
+    expect(learnedSet.has("vocabulary:B")).toBe(false);
   });
 });

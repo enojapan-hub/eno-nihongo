@@ -74,25 +74,71 @@ export function stemOf(surface: string): string {
   return stem && stem !== surface && HAN_ONLY.test(stem) ? stem : surface;
 }
 type Cloze = { blanked: string; translation: string; stem: boolean };
+const isHan = (ch: string | undefined) => !!ch && HAN_ONLY.test(ch);
+const isHira = (ch: string | undefined) => !!ch && /[\u3040-\u309f]/u.test(ch);
+const indexesOf = (text: string, needle: string) => {
+  const out: number[] = [];
+  for (let i = text.indexOf(needle); i >= 0; i = text.indexOf(needle, i + needle.length))
+    out.push(i);
+  return out;
+};
+/**
+ * Blanks `needle` in `ja` without touching other words: every occurrence must stand alone (not glued to another
+ * kanji, e.g. 会 inside 会社), otherwise the sentence is rejected. `stem` mode needs exactly one occurrence followed by kana.
+ * The result never contains the needle and un-blanking restores the original Japanese exactly.
+ */
+export function blankOut(ja: string, needle: string, stem: boolean): string | null {
+  const at = indexesOf(ja, needle);
+  if (!at.length) return null;
+  const glued = (i: number) =>
+    (isHan(needle[0]) && isHan(ja[i - 1])) ||
+    (isHan(needle[needle.length - 1]) && isHan(ja[i + needle.length]));
+  if (at.some(glued)) return null;
+  if (stem && (at.length !== 1 || !isHira(ja[at[0]! + needle.length]))) return null;
+  const out = ja.split(needle).join(SENTENCE_BLANK);
+  return out.includes(needle) ? null : out;
+}
 /** Sentence example of `c` that can be blanked safely: exact surface first, otherwise the kanji stem of an inflected form. */
 function clozeExample(c: Content): Cloze | null {
   const list = c.examples ?? [];
-  const exact = list.find((e) => e.ja && c.surface && e.ja.includes(c.surface));
-  if (exact)
-    return {
-      blanked: exact.ja.split(c.surface).join(SENTENCE_BLANK),
-      translation: exact.id,
-      stem: false,
-    };
+  for (const e of list) {
+    const blanked = e.ja && c.surface ? blankOut(e.ja, c.surface, false) : null;
+    if (blanked) return { blanked, translation: e.id, stem: false };
+  }
   const stem = stemOf(c.surface);
-  const inflected = stem !== c.surface ? list.find((e) => e.ja && e.ja.includes(stem)) : undefined;
-  return inflected
-    ? {
-        blanked: inflected.ja.split(stem).join(SENTENCE_BLANK),
-        translation: inflected.id,
-        stem: true,
-      }
-    : null;
+  if (stem === c.surface) return null;
+  for (const e of list) {
+    const blanked = e.ja ? blankOut(e.ja, stem, true) : null;
+    if (blanked) return { blanked, translation: e.id, stem: true };
+  }
+  return null;
+}
+/** Grammar particles (は・が・に・で ...): blank the particle itself when the example has exactly one; otherwise the pattern is identified in the sentence. */
+const simpleParticle = (pattern: string) => {
+  const clean = pattern.replace(/[〜~\s（）()＋+]/g, "");
+  return /^[\u3040-\u309f]{1,2}$/u.test(clean) ? clean : null;
+};
+function grammarContext(
+  c: Content,
+  partner: Content,
+): { prompt: string; sub: string; a: string; b: string } | null {
+  const ex = (c.examples ?? []).find((e) => e.ja);
+  if (!ex) return null;
+  const pa = simpleParticle(c.surface),
+    pb = simpleParticle(partner.surface);
+  if (pa && pb && pa !== pb) {
+    for (const e of c.examples ?? []) {
+      const at = indexesOf(e.ja, pa);
+      if (at.length === 1)
+        return {
+          prompt: `${e.ja.slice(0, at[0]!)}${SENTENCE_BLANK}${e.ja.slice(at[0]! + pa.length)}`,
+          sub: e.id,
+          a: pa,
+          b: pb,
+        };
+    }
+  }
+  return { prompt: ex.ja, sub: ex.id, a: c.surface, b: partner.surface };
 }
 const formOf = (c: Content, stem: boolean) => (stem ? stemOf(c.surface) : c.surface);
 
@@ -250,20 +296,21 @@ export function buildExercise(
     ) {
       const fb = pairFeedback(c, partner, sel.aspect);
       if (kind === "contrast" && c.type !== "kanji") {
+        const gctx = c.type === "grammar" ? grammarContext(c, partner) : null;
         const ctxA: Cloze | null =
           c.type === "vocabulary"
             ? clozeExample(c)
-            : (c.examples ?? [])[0]
-              ? {
-                  blanked: (c.examples ?? [])[0]!.ja,
-                  translation: (c.examples ?? [])[0]!.id,
-                  stem: false,
-                }
+            : gctx
+              ? { blanked: gctx.prompt, translation: gctx.sub, stem: false }
               : null;
-        if (ctxA && norm(formOf(c, ctxA.stem)) !== norm(formOf(partner, ctxA.stem))) {
+        if (
+          ctxA &&
+          norm(gctx ? gctx.a : formOf(c, ctxA.stem)) !==
+            norm(gctx ? gctx.b : formOf(partner, ctxA.stem))
+        ) {
           const opts = shuffle([
-            { id: c.id, text: formOf(c, ctxA.stem), confusable: false },
-            { id: partner.id, text: formOf(partner, ctxA.stem), confusable: true },
+            { id: c.id, text: gctx ? gctx.a : formOf(c, ctxA.stem), confusable: false },
+            { id: partner.id, text: gctx ? gctx.b : formOf(partner, ctxA.stem), confusable: true },
           ]);
           return {
             ...base,
@@ -272,7 +319,7 @@ export function buildExercise(
             prompt: ctxA.blanked,
             promptSub: ctxA.translation,
             hintText: "",
-            answer: formOf(c, ctxA.stem),
+            answer: gctx ? gctx.a : formOf(c, ctxA.stem),
             options: opts,
             variant: "contrast",
             label: "Bedakan",

@@ -153,7 +153,7 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
     };
 
   // Error Engine input: recent Kioku events -> unresolved errors + A<->B pairs; relation tables for those items only.
-  const base = buildSignals(evs.error ? [] : toReviewEvents(evs.data ?? []));
+  const base = buildSignals(evs.error ? [] : toReviewEvents(evs.data ?? []), [], now);
   const signals: Signals = { ...base, relations: await fetchRelations(base) };
   const ranked = selectExercises(rankCandidates(learned, states, now, signals), SESSION_SIZE * 2);
   const ids: Record<KiokuItemType, string[]> = { kanji: [], vocabulary: [], grammar: [] };

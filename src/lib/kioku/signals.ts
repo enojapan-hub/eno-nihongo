@@ -75,15 +75,19 @@ const isError = (e: ReviewEvent) => !e.correct || e.error_type === "slow_recall"
  * correct answer resolves it (so remediation never repeats forever). Wrong choices that picked a real item
  * are recorded as A<->B pairs; only a `confusion`-labelled pick or a repeated pick makes a pair relevant.
  */
+export const MAX_ERROR_AGE_MS = 30 * 86400000; // an old, never re-tested error stops steering remediation
+
 export function buildSignals(
   eventsNewestFirst: ReviewEvent[],
   relations: Signals["relations"] = [],
+  now?: number,
 ): Signals {
   const state = new Map<string, { sig?: ErrSignal; closed: boolean }>();
   const pairs = new Map<string, PairInfo>();
   for (const e of eventsNewestFirst) {
     // The immediate repeat after a mistake is short-term memory: a correct repeat must not "resolve" the error.
     if (e.variant === "repeat" && e.correct) continue;
+    if (now !== undefined && now - new Date(e.created_at).getTime() > MAX_ERROR_AGE_MS) continue;
     const k = comboKey(e.item_type, e.item_id, e.aspect, e.direction);
     const cur = state.get(k);
     if (!cur) {
