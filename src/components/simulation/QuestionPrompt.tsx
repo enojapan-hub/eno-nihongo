@@ -9,7 +9,9 @@ type Props = {
   occurrence?: number | null | undefined;
 };
 
-const tokenPattern = /[『「][^』」]+[』」]|[（(]\s*[）)]|[_＿]{2,}|★/g;
+// Only structural markers (blank, ordering slots, star) are highlighted automatically.
+// Quoted text (「…」 dialogue or quotations) is never highlighted: use `target` for the tested part.
+const tokenPattern = /[（(]\s*[）)]|[_＿]{2,}|★/g;
 
 function Target({ children }: { children: ReactNode }) {
   return <span className="font-bold text-primary underline decoration-2 decoration-primary underline-offset-[6px]">{children}</span>;
@@ -21,11 +23,10 @@ function renderTokens(text: string, keyPrefix: string) {
 
   return parts.map((part, index) => {
     const token = tokens[index];
-    const quoted = token?.match(/^([『「])(.+)[』」]$/);
 
     return <Fragment key={`${keyPrefix}-${part}-${index}`}>
       {part}
-      {token && (quoted ? <><span>{quoted[1]}</span><Target>{quoted[2]}</Target><span>{token[token.length - 1]}</span></> : <Target>{token}</Target>)}
+      {token && <Target>{token}</Target>}
     </Fragment>;
   });
 }
