@@ -19,6 +19,29 @@ function isTargetRoute(pathname: string) {
   return TARGET_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
+type CharClass = "kanji" | "kana" | "katakana" | "alnum" | "other";
+
+function charClass(ch: string): CharClass {
+  if (/[㐀-鿿々〆]/.test(ch)) return "kanji";
+  if (/[゠-ヿヵヶー]/.test(ch)) return "katakana";
+  if (/[぀-ゟ]/.test(ch)) return "kana";
+  if (/[0-9０-９a-zA-Zａ-ｚＡ-Ｚ]/.test(ch)) return "alnum";
+  return "other";
+}
+
+// The ICU word segmenter splits inside one word (閉|ま|って, 日本|語). A space is only added where a new
+// bunsetsu starts: a kanji/katakana/latin segment that follows a different script. Hiragana segments
+// (okurigana, inflection, particles) always stay attached to the word before them.
+function startsNewBunsetsu(previous: string, current: string) {
+  const first = charClass(current.charAt(0));
+  const last = charClass(previous.charAt(previous.length - 1));
+  if (first === "kana" || first === "other") return false;
+  if (first === last) return false;
+  if ((first === "kanji" && last === "alnum") || (first === "alnum" && last === "kanji")) return false;
+  if (first === "kanji" && /^[おご御]$/.test(previous)) return false;
+  return true;
+}
+
 function normalizeJapaneseSpacing(text: string) {
   if (!JAPANESE_RE.test(text) || typeof Intl === "undefined" || !("Segmenter" in Intl)) return text;
   const Segmenter = Intl.Segmenter as typeof Intl.Segmenter;
@@ -32,7 +55,7 @@ function normalizeJapaneseSpacing(text: string) {
     const previous = i > 0 ? segments[i - 1].segment : "";
     const currentIsWord = Boolean(segments[i].isWordLike);
     const previousIsWord = i > 0 && Boolean(segments[i - 1].isWordLike);
-    const needsSpace = currentIsWord && previousIsWord && !/\s$/.test(previous) && !/^\s/.test(current);
+    const needsSpace = currentIsWord && previousIsWord && !/\s$/.test(previous) && !/^\s/.test(current) && startsNewBunsetsu(previous, current);
     if (needsSpace && output && !output.endsWith(" ")) output += " ";
     output += current;
   }
