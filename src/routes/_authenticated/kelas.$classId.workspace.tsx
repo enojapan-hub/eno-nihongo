@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")
 function Page() {
   const { classId } = Route.useParams();
   const [tab, setTab] = useState("beranda");
+  const [taskFilter, setTaskFilter] = useState("semua");
   const q = useQuery({
     queryKey: ["class-workspace", classId],
     queryFn: async () => {
@@ -20,7 +21,7 @@ function Page() {
       } = await supabase.auth.getUser();
       if (!user || !(await result(classroom.rpc("is_class_member", { p_class_id: classId }))))
         throw new Error("Anda belum terdaftar di kelas ini.");
-      const [materials, assignments, quizzes, schedule, announcements, grades, meeting] =
+      const [materials, assignments, quizzes, schedule, announcements, grades, meeting, myClasses] =
         await Promise.all([
           result(
             classroom
@@ -67,6 +68,7 @@ function Page() {
           result(
             classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle(),
           ),
+          result(classroom.rpc("get_my_classes")),
         ]);
       const submissions = assignments.length
         ? await result(
@@ -97,6 +99,7 @@ function Page() {
         result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
       ]);
       return {
+        kelas: myClasses.find((c: any) => c.id === classId),
         attempts,
         topics,
         materials,
@@ -118,6 +121,20 @@ function Page() {
   const outstanding = d?.assignments.filter(
     (a: any) => !d.submissions.some((s: any) => s.assignment_id === a.id),
   );
+  const taskStatus = (a: any) =>
+    d?.grades.some((g: any) => g.assignment_id === a.id)
+      ? "dinilai"
+      : d?.submissions.some((s: any) => s.assignment_id === a.id)
+        ? "menunggu"
+        : a.due_at && new Date(a.due_at).getTime() < Date.now() && !a.allow_late
+          ? "lewat"
+          : "belum";
+  const statusLabel: Record<string, string> = {
+    dinilai: "Sudah dinilai",
+    menunggu: "Menunggu penilaian",
+    lewat: "Batas waktu berakhir",
+    belum: "Belum dikumpulkan",
+  };
   const task = (a: any) => (
     <Card key={a.id}>
       <CardContent className="space-y-2 p-4">
@@ -127,14 +144,8 @@ function Page() {
           {a.topic ? " / " + a.topic : ""}
         </p>
         <p className="whitespace-pre-wrap text-sm">{a.description}</p>
-        {a.due_at && <p className="text-xs">Batas: {new Date(a.due_at).toLocaleString("id-ID")}</p>}
-        <p className="text-xs font-bold">
-          {d?.grades.some((g: any) => g.assignment_id === a.id)
-            ? "Sudah dinilai"
-            : d?.submissions.some((s: any) => s.assignment_id === a.id)
-              ? "Menunggu penilaian"
-              : "Belum dikumpulkan"}
-        </p>
+        {a.due_at && <p className="text-xs">Batas: {sessionTime(a.due_at)}</p>}
+        <p className="text-xs font-bold">{statusLabel[taskStatus(a)]}</p>
         <Button size="sm" asChild>
           <Link to="/kelas/$classId/tugas/$assignmentId" params={{ classId, assignmentId: a.id }}>
             Buka Tugas
@@ -157,7 +168,18 @@ function Page() {
   return (
     <AppShell title="Ruang Kelas" backTo="/kelas-saya">
       <div className="mx-auto max-w-3xl space-y-4">
-        <nav className="flex gap-2 overflow-x-auto">
+        {d?.kelas && (
+          <header>
+            <h1 className="text-xl font-black">{d.kelas.title}</h1>
+            <p className="text-xs text-primary">
+              {d.kelas.level}
+              {d.kelas.status === "closed"
+                ? " · Kelas diarsipkan — materi dan hasil belajar tetap tersedia"
+                : ""}
+            </p>
+          </header>
+        )}
+        <nav className="flex gap-2 overflow-x-auto" aria-label="Bagian ruang kelas">
           {[
             ["beranda", "Beranda"],
             ["materi", "Materi"],
@@ -171,6 +193,7 @@ function Page() {
               size="sm"
               key={id}
               variant={tab === id ? "default" : "outline"}
+              aria-pressed={tab === id}
               onClick={() => setTab(id!)}
             >
               {label}
@@ -191,7 +214,12 @@ function Page() {
                 {next ? (
                   <Card>
                     <CardContent className="space-y-2 p-4">
-                      <h2 className="font-bold">Sesi berikutnya: {next.title}</h2>
+                      <h2 className="font-bold">
+                        {new Date(next.starts_at).getTime() <= Date.now()
+                          ? "Sesi berlangsung"
+                          : "Sesi berikutnya"}
+                        : {next.title}
+                      </h2>
                       <p className="text-xs">{sessionTime(next.starts_at, next.ends_at)}</p>
                       <Live meeting={next.meeting_url ? next : d.meeting} />
                     </CardContent>
@@ -201,6 +229,11 @@ function Page() {
                 )}
                 <h2 className="font-bold">Tugas belum selesai ({outstanding?.length ?? 0})</h2>
                 {outstanding?.slice(0, 3).map(task)}
+                {(outstanding?.length ?? 0) > 3 && (
+                  <Button variant="outline" size="sm" onClick={() => setTab("tugas")}>
+                    Lihat Semua Tugas
+                  </Button>
+                )}
                 {!outstanding?.length && (
                   <p className="text-sm text-muted-foreground">
                     Tidak ada tugas yang perlu dikumpulkan.
@@ -208,6 +241,9 @@ function Page() {
                 )}
                 <h2 className="font-bold">Pengumuman terbaru</h2>
                 {d.announcements.slice(0, 2).map(notice)}
+                {!d.announcements.length && (
+                  <p className="text-sm text-muted-foreground">Belum ada pengumuman.</p>
+                )}
               </>
             )}
             {tab === "materi" && (
@@ -235,7 +271,41 @@ function Page() {
             )}
             {tab === "tugas" && (
               <>
-                {d.assignments.map(task)}
+                <div className="flex flex-wrap gap-2" aria-label="Filter tugas">
+                  {[
+                    ["semua", "Semua"],
+                    ["belum", "Belum dikumpulkan"],
+                    ["menunggu", "Menunggu nilai"],
+                    ["dinilai", "Sudah dinilai"],
+                    ["lewat", "Lewat tenggat"],
+                  ].map(([id, label]) => (
+                    <Button
+                      key={id}
+                      size="sm"
+                      variant={taskFilter === id ? "default" : "outline"}
+                      aria-pressed={taskFilter === id}
+                      onClick={() => setTaskFilter(id!)}
+                    >
+                      {label} (
+                      {
+                        d.assignments.filter((a: any) => id === "semua" || taskStatus(a) === id)
+                          .length
+                      }
+                      )
+                    </Button>
+                  ))}
+                </div>
+                {d.assignments
+                  .filter((a: any) => taskFilter === "semua" || taskStatus(a) === taskFilter)
+                  .map(task)}
+                {!!d.assignments.length &&
+                  !d.assignments.some(
+                    (a: any) => taskFilter === "semua" || taskStatus(a) === taskFilter,
+                  ) && (
+                    <p className="text-sm text-muted-foreground">
+                      Tidak ada tugas pada status ini.
+                    </p>
+                  )}
                 {!d.assignments.length && <Empty />}
               </>
             )}
@@ -246,11 +316,14 @@ function Page() {
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{k.title}</h2>
                       <p className="text-sm">{k.description}</p>
-                      {k.due_at && (
-                        <p className="text-xs">
-                          Batas: {new Date(k.due_at).toLocaleString("id-ID")}
-                        </p>
-                      )}
+                      {k.due_at && <p className="text-xs">Batas: {sessionTime(k.due_at)}</p>}
+                      <p className="text-xs font-bold">
+                        {d.attempts.some((a: any) => a.quiz_id === k.id)
+                          ? "Sudah dikerjakan"
+                          : k.due_at && new Date(k.due_at).getTime() < Date.now()
+                            ? "Batas waktu berakhir"
+                            : "Belum dikerjakan"}
+                      </p>
                       <Button size="sm" asChild>
                         <Link to="/kelas/$classId/quiz/$quizId" params={{ classId, quizId: k.id }}>
                           Buka Kuis
@@ -304,11 +377,23 @@ function Page() {
                 {!d.grades.length && <p className="text-sm">Belum ada tugas yang dinilai guru.</p>}
                 <h2 className="font-bold">Nilai Kuis</h2>
                 {d.attempts.map((a: any) => (
-                  <p key={a.id} className="text-sm">
-                    {d.quizzes.find((q: any) => q.id === a.quiz_id)?.title}: {a.score}/100 ·{" "}
-                    {new Date(a.submitted_at).toLocaleString("id-ID")}
-                  </p>
+                  <Link
+                    key={a.id}
+                    to="/kelas/$classId/quiz/$quizId"
+                    params={{ classId, quizId: a.quiz_id }}
+                    search={{ attempt: a.id }}
+                    className="block rounded-xl border p-3 text-sm hover:border-primary"
+                  >
+                    <strong>
+                      {d.quizzes.find((q: any) => q.id === a.quiz_id)?.title}: {a.score}/100
+                    </strong>
+                    <p className="text-xs text-muted-foreground">{sessionTime(a.submitted_at)}</p>
+                    <span className="text-xs text-primary">Lihat Pembahasan</span>
+                  </Link>
                 ))}
+                {!d.attempts.length && (
+                  <p className="text-sm text-muted-foreground">Belum ada kuis yang dikerjakan.</p>
+                )}
                 <h2 className="font-bold">Latihan per Topik</h2>
                 {d.topics.map((t: any) => (
                   <div key={t.category + ":" + t.topic} className="space-y-1">
