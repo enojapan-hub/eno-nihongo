@@ -49,7 +49,8 @@ function Page() {
     const [year, month, date] = f.first_date.split("-").map(Number);
     const first = new Date(year, month - 1, date);
     const targetDay = Number(f.weekday);
-    first.setDate(first.getDate() + (targetDay - first.getDay() + 7) % 7);
+    if (first.getDay() !== targetDay) throw new Error("Tanggal pertemuan pertama harus sesuai dengan hari yang dipilih.");
+
     const startParts = f.start_time.split(":").map(Number);
     const endParts = f.end_time.split(":").map(Number);
     if (endParts[0] * 60 + endParts[1] <= startParts[0] * 60 + startParts[1]) throw new Error("Jam selesai harus setelah jam mulai.");
@@ -91,7 +92,7 @@ function Page() {
       <Field label="Banner kelas">{f.banner_url ? <div className="space-y-2"><img src={f.banner_url} alt="Preview banner kelas" className="aspect-[16/7] w-full rounded-2xl border object-cover" /><Button type="button" size="sm" variant="outline" onClick={() => set("banner_url", "")}>Ganti banner</Button></div> : <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed p-7 text-center hover:bg-muted/40"><input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploading} onChange={(e) => upload(e.target.files?.[0])} />{uploading ? <Loader2 className="size-6 animate-spin text-primary" /> : <ImagePlus className="size-6 text-primary" />}<span className="mt-2 text-xs font-bold">{uploading ? "Mengunggah…" : "Upload banner"}</span><span className="text-[10px] text-muted-foreground">JPG, PNG, WebP · maksimal 5 MB</span></label>}</Field>
       <div className="rounded-2xl border p-3">
         <h2 className="text-sm font-black">Jadwal pertemuan</h2>
-        <p className="mb-3 text-[10px] text-muted-foreground">Pertemuan dibuat setiap minggu pada hari dan jam yang dipilih (mengikuti zona waktu perangkat).</p>
+        <p className="mb-3 text-[10px] text-muted-foreground">Pertemuan berulang tiap minggu pada hari dan jam yang dipilih. Tanggal pertama harus sesuai dengan hari tersebut.</p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Pertemuan pertama"><Input type="date" value={f.first_date} onChange={(e) => set("first_date", e.target.value)} /></Field>
           <Field label="Jumlah pertemuan"><Input type="number" min="1" max="60" value={f.meeting_count} onChange={(e) => set("meeting_count", e.target.value)} /></Field>
