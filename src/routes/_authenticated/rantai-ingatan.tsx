@@ -238,6 +238,12 @@ function MemoryChainPage() {
           </div>
         </section>
         <a
+          href="/kioku"
+          className="flex items-center justify-center rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground"
+        >
+          Mulai Kioku
+        </a>
+        <a
           href="/jebakan-ingatan"
           className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-500/35 dark:bg-amber-500/[.10]"
         >
@@ -245,7 +251,9 @@ function MemoryChainPage() {
             <TriangleAlert className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-amber-900 dark:text-amber-200">Jebakan Ingatan</p>
+            <p className="text-[10px] font-bold text-amber-900 dark:text-amber-200">
+              Jebakan Ingatan
+            </p>
             <p className="text-[8px] text-amber-800/70 dark:text-amber-100/70">
               Pasangan membingungkan + deteksi “merasa hafal”
             </p>

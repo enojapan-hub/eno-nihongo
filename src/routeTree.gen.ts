@@ -44,6 +44,7 @@ import { Route as AuthenticatedKanaRouteImport } from './routes/_authenticated/k
 import { Route as AuthenticatedKanjiRouteImport } from './routes/_authenticated/kanji'
 import { Route as AuthenticatedKelasRouteImport } from './routes/_authenticated/kelas'
 import { Route as AuthenticatedKelasSayaRouteImport } from './routes/_authenticated/kelas-saya'
+import { Route as AuthenticatedKiokuRouteImport } from './routes/_authenticated/kioku'
 import { Route as AuthenticatedKotobaRouteImport } from './routes/_authenticated/kotoba'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedListeningRouteImport } from './routes/_authenticated/listening'
@@ -278,6 +279,11 @@ const AuthenticatedKelasRoute = AuthenticatedKelasRouteImport.update({
 const AuthenticatedKelasSayaRoute = AuthenticatedKelasSayaRouteImport.update({
   id: '/kelas-saya',
   path: '/kelas-saya',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedKiokuRoute = AuthenticatedKiokuRouteImport.update({
+  id: '/kioku',
+  path: '/kioku',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedKotobaRoute = AuthenticatedKotobaRouteImport.update({
@@ -591,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/kanji': typeof AuthenticatedKanjiRouteWithChildren
   '/kelas': typeof AuthenticatedKelasRouteWithChildren
   '/kelas-saya': typeof AuthenticatedKelasSayaRoute
+  '/kioku': typeof AuthenticatedKiokuRoute
   '/kotoba': typeof AuthenticatedKotobaRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/listening': typeof AuthenticatedListeningRouteWithChildren
@@ -677,6 +684,7 @@ export interface FileRoutesByTo {
   '/kanji': typeof AuthenticatedKanjiRouteWithChildren
   '/kelas': typeof AuthenticatedKelasRouteWithChildren
   '/kelas-saya': typeof AuthenticatedKelasSayaRoute
+  '/kioku': typeof AuthenticatedKiokuRoute
   '/kotoba': typeof AuthenticatedKotobaRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/listening': typeof AuthenticatedListeningRouteWithChildren
@@ -765,6 +773,7 @@ export interface FileRoutesById {
   '/_authenticated/kanji': typeof AuthenticatedKanjiRouteWithChildren
   '/_authenticated/kelas': typeof AuthenticatedKelasRouteWithChildren
   '/_authenticated/kelas-saya': typeof AuthenticatedKelasSayaRoute
+  '/_authenticated/kioku': typeof AuthenticatedKiokuRoute
   '/_authenticated/kotoba': typeof AuthenticatedKotobaRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/listening': typeof AuthenticatedListeningRouteWithChildren
@@ -853,6 +862,7 @@ export interface FileRouteTypes {
     | '/kanji'
     | '/kelas'
     | '/kelas-saya'
+    | '/kioku'
     | '/kotoba'
     | '/leaderboard'
     | '/listening'
@@ -939,6 +949,7 @@ export interface FileRouteTypes {
     | '/kanji'
     | '/kelas'
     | '/kelas-saya'
+    | '/kioku'
     | '/kotoba'
     | '/leaderboard'
     | '/listening'
@@ -1026,6 +1037,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kanji'
     | '/_authenticated/kelas'
     | '/_authenticated/kelas-saya'
+    | '/_authenticated/kioku'
     | '/_authenticated/kotoba'
     | '/_authenticated/leaderboard'
     | '/_authenticated/listening'
@@ -1343,6 +1355,13 @@ declare module '@tanstack/react-router' {
       path: '/kelas-saya'
       fullPath: '/kelas-saya'
       preLoaderRoute: typeof AuthenticatedKelasSayaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kioku': {
+      id: '/_authenticated/kioku'
+      path: '/kioku'
+      fullPath: '/kioku'
+      preLoaderRoute: typeof AuthenticatedKiokuRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kotoba': {
@@ -1880,6 +1899,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKanjiRoute: typeof AuthenticatedKanjiRouteWithChildren
   AuthenticatedKelasRoute: typeof AuthenticatedKelasRouteWithChildren
   AuthenticatedKelasSayaRoute: typeof AuthenticatedKelasSayaRoute
+  AuthenticatedKiokuRoute: typeof AuthenticatedKiokuRoute
   AuthenticatedKotobaRoute: typeof AuthenticatedKotobaRoute
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedListeningRoute: typeof AuthenticatedListeningRouteWithChildren
@@ -1936,6 +1956,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKanjiRoute: AuthenticatedKanjiRouteWithChildren,
   AuthenticatedKelasRoute: AuthenticatedKelasRouteWithChildren,
   AuthenticatedKelasSayaRoute: AuthenticatedKelasSayaRoute,
+  AuthenticatedKiokuRoute: AuthenticatedKiokuRoute,
   AuthenticatedKotobaRoute: AuthenticatedKotobaRoute,
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedListeningRoute: AuthenticatedListeningRouteWithChildren,
