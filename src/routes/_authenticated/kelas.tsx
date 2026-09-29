@@ -22,12 +22,28 @@ function KelasPage() {
     },
   });
 
+  const rate = useQuery({
+    queryKey: ["jpy-idr-rate"],
+    queryFn: async () => {
+      const response = await fetch("https://api.frankfurter.dev/v2/rate/jpy/idr");
+      if (!response.ok) throw new Error("Kurs rupiah belum tersedia");
+      const result = await response.json();
+      return Number(result.rate);
+    },
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
   const classes = useQuery({
     queryKey: ["published-classes"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_public_classes");
+      const [{ data, error }, { data: counts, error: countError }] = await Promise.all([
+        (supabase as any).rpc("get_public_classes"),
+        (supabase as any).rpc("get_public_class_enrollment_counts"),
+      ]);
       if (error) throw error;
-      return data ?? [];
+      if (countError) throw countError;
+      const byClass = new Map((counts ?? []).map((row: any) => [row.class_id, Number(row.participant_count)]));
+      return (data ?? []).map((row: any) => ({ ...row, participant_count: byClass.get(row.id) ?? 0 }));
     },
   });
 
@@ -109,20 +125,22 @@ function KelasPage() {
                               {new Date(c.starts_at).toLocaleDateString("id-ID")}
                             </span>
                           )}
-                          {c.capacity && (
-                            <span className="flex items-center gap-1">
-                              <Users className="size-3 shrink-0" />
-                              {c.capacity} siswa
-                            </span>
-                          )}
+                          <span className="flex items-center gap-1">
+                            <Users className="size-3 shrink-0" />
+                            {c.participant_count} ikut{c.capacity ? " · maks. " + c.capacity : ""}
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between gap-2">
-                        <strong className="text-xs sm:text-sm">
-                          {Number(c.price) > 0
-                            ? `${c.currency} ${Number(c.price).toLocaleString("id-ID")}`
-                            : "Gratis"}
+                        <strong className="text-xs sm:text-sm" title={c.currency === "JPY" ? "Estimasi kurs harian" : undefined}>
+                          {Number(c.price) <= 0
+                            ? "Gratis"
+                            : c.currency === "IDR"
+                              ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(c.price))
+                              : c.currency === "JPY" && rate.data
+                                ? "≈ " + new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(c.price) * rate.data)
+                                : c.currency + " " + Number(c.price).toLocaleString("id-ID")}
                         </strong>
                         <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-primary sm:text-xs">
                           Lihat detail <ArrowRight className="size-3" />
