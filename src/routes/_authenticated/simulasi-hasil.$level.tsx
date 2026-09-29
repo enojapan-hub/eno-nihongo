@@ -7,8 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPracticeResult, type FullProgress } from "@/lib/jlpt-simulation-result";
 import type { Level } from "@/lib/learn-queries";
+import { fullStorageKey, parseExamNo } from "@/lib/jlpt-simulation-config";
 
-export const Route=createFileRoute("/_authenticated/simulasi-hasil/$level")({component:ResultPage});
+export const Route=createFileRoute("/_authenticated/simulasi-hasil/$level")({validateSearch:(search:Record<string,unknown>):{exam?:number|undefined}=>({exam:search["exam"]===undefined?undefined:parseExamNo(search["exam"])}),component:ResultPage});
 
 type ReviewItem={attempt_id?:string;session_index?:number;question_id:string;section:string;mondai_no:number;question_no:number;display_question_no:number|null;question_type:string;instruction_jp:string;prompt_jp:string;choices:string[];selected_index:number|null;correct_index:number;is_correct:boolean;answered:boolean;passage_title:string|null;passage_jp:string|null;transcript_jp:string|null;image_url:string|null;explanation_indonesian:string|null};
 type Filter="all"|"wrong"|"unanswered"|"correct";
@@ -42,7 +43,7 @@ function ReviewCard({item}:{item:ReviewItem}){
 }
 
 function ResultPage(){
- const{level:raw}=Route.useParams();const level=raw.toUpperCase() as Level;const storageKey=`eno-jlpt-full-${level}`;
+ const{level:raw}=Route.useParams();const level=raw.toUpperCase() as Level;const examNo=parseExamNo(Route.useSearch().exam);const storageKey=fullStorageKey(level,examNo);
  const[progress,setProgress]=useState<FullProgress|null>(null);const[review,setReview]=useState<ReviewItem[]>([]);const[reviewLoading,setReviewLoading]=useState(true);const[reviewError,setReviewError]=useState<string|null>(null);const[filter,setFilter]=useState<Filter>("all");
  useEffect(()=>{try{const v=localStorage.getItem(storageKey);if(v)setProgress(JSON.parse(v))}catch(error){console.warn("Gagal membaca hasil simulasi dari penyimpanan lokal",error)}},[storageKey]);
  useEffect(()=>{let active=true;(async()=>{try{const fullId=localStorage.getItem(`${storageKey}-server-id`);if(!fullId){if(active)setReviewError("Data pembahasan untuk simulasi ini tidak ditemukan.");return}const{data,error}=await(supabase as any).rpc("get_jlpt_simulation_full_review",{p_full_session_id:fullId});if(error)throw error;if(active)setReview(Array.isArray(data)?data:[])}catch(error){console.error(error);if(active)setReviewError("Pembahasan belum berhasil dimuat.")}finally{if(active)setReviewLoading(false)}})();return()=>{active=false}},[storageKey]);
