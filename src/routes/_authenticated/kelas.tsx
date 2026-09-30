@@ -46,33 +46,33 @@ function KelasPage() {
   return (
     <AppShell title="Kursus" focus>
       <div className="-mx-3 -mt-3 min-h-[100dvh] bg-[#f7f8f7] text-[#394247] dark:bg-background dark:text-foreground">
-        <header className="relative flex h-20 items-center justify-center border-b border-black/5 bg-white px-4 dark:border-border dark:bg-background">
+        <header className="relative flex h-16 items-center justify-center border-b border-black/5 bg-white px-4 dark:border-border dark:bg-background">
           <Link
             to="/dashboard"
             aria-label="Kembali ke beranda"
-            className="absolute left-4 rounded-full p-2 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-primary dark:hover:bg-white/10"
+            className="absolute left-3 rounded-full p-2 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-primary dark:hover:bg-white/10"
           >
-            <ChevronLeft className="size-8 stroke-[2.5]" />
+            <ChevronLeft className="size-6 stroke-[2.5]" />
           </Link>
-          <h1 className="text-[25px] font-black tracking-tight">Kursus</h1>
+          <h1 className="text-[22px] font-black tracking-tight">Kursus</h1>
           <Button
             size="sm"
             variant="ghost"
             asChild
-            className="absolute right-3 text-xs font-bold text-primary"
+            className="absolute right-2 text-[11px] font-bold text-primary"
           >
             <Link to="/kelas-saya">
-              <GraduationCap className="mr-1 size-4" />
+              <GraduationCap className="mr-1 size-3.5" />
               Kelas Saya
             </Link>
           </Button>
         </header>
-        <div className="space-y-5 px-4 py-7">
+        <div className="space-y-5 px-4 py-5">
           <section aria-labelledby="available-courses">
-            <h2 id="available-courses" className="mb-4 text-lg font-black">
+            <h2 id="available-courses" className="mb-3 text-[16px] font-black">
               Kursus tersedia
             </h2>
-            <div className="space-y-5">
+            <div className="space-y-3">
               {(classes.data ?? []).map((c: any) => (
                 <Link
                   key={c.id}
@@ -81,40 +81,40 @@ function KelasPage() {
                   aria-label={`Lihat detail kelas ${c.title}`}
                   className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  <article className="flex min-h-[136px] overflow-hidden rounded-2xl bg-white shadow-[0_4px_16px_rgba(56,74,72,0.08)] transition-transform group-hover:-translate-y-0.5 dark:bg-card">
+                  <article className="flex h-[128px] overflow-hidden rounded-[18px] bg-white shadow-[0_3px_12px_rgba(56,74,72,0.08)] transition-transform group-hover:-translate-y-0.5 dark:bg-card">
                     {c.banner_url ? (
                       <img
                         src={c.banner_url}
                         alt=""
                         loading="lazy"
-                        className="h-auto w-[43%] shrink-0 object-cover"
+                        className="h-full w-[42%] shrink-0 object-cover"
                       />
                     ) : (
-                      <div className="grid w-[43%] shrink-0 place-items-center bg-primary/10">
-                        <GraduationCap className="size-9 text-primary" />
+                      <div className="grid h-full w-[42%] shrink-0 place-items-center bg-primary/10">
+                        <GraduationCap className="size-7 text-primary" />
                       </div>
                     )}
-                    <div className="flex min-w-0 flex-1 flex-col justify-between p-3.5">
+                    <div className="flex min-w-0 flex-1 flex-col justify-between p-3">
                       <div>
-                        <h3 className="line-clamp-2 text-[17px] font-black leading-tight">
+                        <h3 className="line-clamp-2 text-[14px] font-black leading-[1.15]">
                           {c.title}
                         </h3>
-                        <p className="mt-2 text-sm text-[#697578] dark:text-muted-foreground">
+                        <p className="mt-1.5 text-[12px] text-[#697578] dark:text-muted-foreground">
                           JLPT {c.level}
                         </p>
                       </div>
-                      <div className="mt-3 flex items-end justify-between gap-2">
+                      <div className="mt-1 flex items-end justify-between gap-1">
                         <div>
-                          <p className="flex items-center gap-1 text-[10px] text-[#7b8586] dark:text-muted-foreground">
-                            <Users className="size-3 shrink-0" />
+                          <p className="flex items-center gap-1 text-[9px] text-[#7b8586] dark:text-muted-foreground">
+                            <Users className="size-2.5 shrink-0" />
                             {c.participant_count} peserta
                           </p>
-                          <strong className="mt-1 block text-[16px] font-black leading-none text-[#48bdb2]">
+                          <strong className="mt-1 block whitespace-nowrap text-[14px] font-black leading-none text-[#48bdb2]">
                             {formatPrice(c, rate.data)}
                           </strong>
                         </div>
-                        <span className="flex shrink-0 items-center gap-0.5 text-[13px] font-black text-[#48bdb2]">
-                          Detail <ArrowRight className="size-3.5" />
+                        <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] font-black text-[#48bdb2]">
+                          Detail <ArrowRight className="size-3" />
                         </span>
                       </div>
                     </div>
