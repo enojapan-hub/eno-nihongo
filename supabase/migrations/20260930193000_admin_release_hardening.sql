@@ -97,3 +97,14 @@ begin
 end$$;
 revoke all on function public.admin_delete_media(uuid) from public,anon;
 grant execute on function public.admin_delete_media(uuid) to authenticated;
+
+-- Dedicated managed media bucket. Public because lesson/simulation media must be consumable by learners.
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+values('admin-media','admin-media',true,52428800,array['image/jpeg','image/png','image/webp','audio/mpeg','audio/mp3','audio/wav','audio/webm'])
+on conflict(id) do nothing;
+drop policy if exists "admin_media_staff_insert" on storage.objects;
+drop policy if exists "admin_media_staff_update" on storage.objects;
+drop policy if exists "admin_media_staff_delete" on storage.objects;
+create policy "admin_media_staff_insert" on storage.objects for insert to authenticated with check(bucket_id='admin-media' and public.has_permission('operations.manage'));
+create policy "admin_media_staff_update" on storage.objects for update to authenticated using(bucket_id='admin-media' and public.has_permission('operations.manage')) with check(bucket_id='admin-media' and public.has_permission('operations.manage'));
+create policy "admin_media_staff_delete" on storage.objects for delete to authenticated using(bucket_id='admin-media' and public.has_permission('operations.manage'));
