@@ -56,7 +56,7 @@ const sections = [
       ["Kontrol Operasional", ClipboardCheck, "Review, laporan, pengumuman dan media", "/admin-operasional"],
       ["Import / Export", FileUp, "Import aman, validasi dan ekspor data", "/admin-import-export"],
       ["Sistem & Audit", CloudCog, "Kesehatan sistem dan audit log", "/admin-sistem"],
-      ["Role & Permission", Settings, "Kontrol role dan hak akses pengguna", "/admin-pengguna?view=roles"],
+      ["Role & Permission", Settings, "Role dinamis, permission dan anggota", "/admin-role-permission"],
     ],
   },
 ] as const;
