@@ -7,7 +7,6 @@ import {
   BookOpenText,
   ClipboardCheck,
   ClipboardList,
-  Eye,
   GraduationCap,
   LayoutDashboard,
   Megaphone,
@@ -145,14 +144,13 @@ function Page() {
                 </Link>
               </Button>
               <Button
+                type="button"
                 className="h-auto min-h-[4.5rem] flex-col gap-1.5 rounded-2xl px-2 text-[11px]"
-                variant="outline"
-                asChild
+                variant={tab === "peserta" ? "default" : "outline"}
+                onClick={() => setTab("peserta")}
               >
-                <Link to="/kelas/$classId/workspace" params={{ classId }} search={{ preview: "guru" }}>
-                  <Eye className="size-[18px] text-primary" />
-                  Pratinjau siswa
-                </Link>
+                <BarChart3 className="size-[18px]" />
+                Statistik peserta
               </Button>
             </nav>
             {tab === "ringkasan" && (
