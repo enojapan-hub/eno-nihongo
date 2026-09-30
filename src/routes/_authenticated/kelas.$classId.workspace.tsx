@@ -42,7 +42,7 @@ function Page() {
       const canManage = await result(classroom.rpc("can_manage_class", { p_class_id: classId }));
       if (teacherPreview ? !canManage : !(await result(classroom.rpc("is_class_member", { p_class_id: classId }))))
         throw new Error(teacherPreview ? "Akses guru diperlukan." : "Anda belum terdaftar di kelas ini.");
-      const [materials, assignments, quizzes, schedule, announcements, grades, meeting, myClasses] =
+      const [materials, assignments, quizzes, schedule, announcements, grades, meeting, myClasses, managedClass] =
         await Promise.all([
           result(
             classroom
@@ -90,6 +90,9 @@ function Page() {
             classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle(),
           ),
           teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_classes")),
+          teacherPreview
+            ? result(classroom.from("classes").select("*").eq("id", classId).single())
+            : Promise.resolve(null),
         ]);
       const submissions = teacherPreview ? [] : assignments.length
         ? await result(
@@ -121,8 +124,8 @@ function Page() {
       ]);
       return {
         kelas: teacherPreview
-          ? await result(classroom.from("classes").select("*").eq("id", classId).single())
-          : myClasses.find((c: any) => c.id === classId),
+          ? managedClass
+          : myClasses.find((c: any) => c.id === classId) ?? null,
         attempts,
         topics,
         materials,
@@ -312,7 +315,7 @@ function Page() {
                         <span className="text-xs font-bold">{completedAssignments + completedQuizzes}/{totalActivities} aktivitas</span>
                       </div>
                       <progress className="h-2 w-full accent-green-600" max="100" value={progressPercent} />
-                      {d.kelas.ends_at && <p className="text-xs text-muted-foreground">Kelas berakhir {sessionTime(d.kelas.ends_at)}</p>}
+                      {d.kelas?.ends_at && <p className="text-xs text-muted-foreground">Kelas berakhir {sessionTime(d.kelas.ends_at)}</p>}
                     </CardContent>
                   </Card>
                 )}
