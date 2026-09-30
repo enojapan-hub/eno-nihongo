@@ -70,3 +70,16 @@ export async function fetchVocabListResilient(level:Level){
  for(let offset=0;offset<total;offset+=200)rows.push(...await fetchVocabPage(level,offset,200));
  return rows;
 }
+
+
+export async function fetchVocabCategoryCount(level:Level,category:string):Promise<number>{
+ const res:any=await withTimeout((supabase as any).rpc("get_vocabulary_count_by_category",{p_level:level,p_category_slug:category}));
+ if(res.error)throw new Error(res.error.message);
+ return Number(res.data??0);
+}
+
+export async function fetchVocabCategoryPage(level:Level,category:string,offset=0,limit=VOCAB_PAGE_SIZE){
+ const res:any=await withTimeout((supabase as any).rpc("get_vocabulary_page_by_category",{p_level:level,p_category_slug:category,p_offset:offset,p_limit:limit}));
+ if(res.error)throw new Error(res.error.message);
+ return (res.data??[]).map((row:any)=>({...row,senses:[],curriculum:[],profile_level:level}));
+}
