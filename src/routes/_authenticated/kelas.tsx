@@ -1,8 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, GraduationCap, Users } from "lucide-react";
+import { ArrowRight, ChevronLeft, GraduationCap, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,19 +13,6 @@ function KelasRoute() {
 }
 
 function KelasPage() {
-  const banners = useQuery({
-    queryKey: ["class-banners"],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("class_banners")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
   const rate = useQuery({
     queryKey: ["jpy-idr-rate"],
     queryFn: async () => {
@@ -58,135 +44,113 @@ function KelasPage() {
   });
 
   return (
-    <AppShell title="Kelas" description="Belajar bersama guru ENO NIHONGO.">
-      <div className="space-y-5">
-        <div className="flex justify-end">
-          <Button size="sm" variant="outline" asChild>
+    <AppShell title="Kursus" focus>
+      <div className="-mx-3 -mt-3 min-h-[100dvh] bg-[#f7f8f7] text-[#394247] dark:bg-background dark:text-foreground">
+        <header className="relative flex h-20 items-center justify-center border-b border-black/5 bg-white px-4 dark:border-border dark:bg-background">
+          <Link
+            to="/dashboard"
+            aria-label="Kembali ke beranda"
+            className="absolute left-4 rounded-full p-2 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-primary dark:hover:bg-white/10"
+          >
+            <ChevronLeft className="size-8 stroke-[2.5]" />
+          </Link>
+          <h1 className="text-[25px] font-black tracking-tight">Kursus</h1>
+          <Button
+            size="sm"
+            variant="ghost"
+            asChild
+            className="absolute right-3 text-xs font-bold text-primary"
+          >
             <Link to="/kelas-saya">
               <GraduationCap className="mr-1 size-4" />
               Kelas Saya
             </Link>
           </Button>
-        </div>
-
-        {(banners.data ?? []).map((banner: any) => (
-          <div key={banner.id} className="relative min-h-40 overflow-hidden rounded-3xl bg-muted">
-            <img
-              src={banner.image_url}
-              alt={banner.title || "Banner kelas"}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="relative flex min-h-40 flex-col justify-end bg-gradient-to-t from-black/75 to-transparent p-5 text-white">
-              <h2 className="text-xl font-black">{banner.title}</h2>
-              {banner.subtitle && <p className="mt-1 text-xs opacity-90">{banner.subtitle}</p>}
-              {banner.cta_url && (
-                <a
-                  href={banner.cta_url}
-                  className="mt-3 w-fit rounded-xl bg-white px-3 py-2 text-xs font-bold text-black"
+        </header>
+        <div className="space-y-5 px-4 py-7">
+          <section aria-labelledby="available-courses">
+            <h2 id="available-courses" className="mb-4 text-lg font-black">
+              Kursus tersedia
+            </h2>
+            <div className="space-y-5">
+              {(classes.data ?? []).map((c: any) => (
+                <Link
+                  key={c.id}
+                  to="/kelas/$classId"
+                  params={{ classId: c.id }}
+                  aria-label={`Lihat detail kelas ${c.title}`}
+                  className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  {banner.cta_label || "Lihat kelas"}
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
-
-        <div>
-          <h2 className="mb-3 flex items-center gap-2 text-base font-black">
-            <GraduationCap className="size-5" />
-            Kelas tersedia
-          </h2>
-
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {(classes.data ?? []).map((c: any) => (
-              <Link
-                key={c.id}
-                to="/kelas/$classId"
-                params={{ classId: c.id }}
-                aria-label={`Lihat detail kelas ${c.title}`}
-                className="block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              >
-                <Card className="h-full overflow-hidden transition-colors hover:border-primary/50">
-                  <div className="flex min-h-28 sm:block">
-                    {c.banner_url && (
+                  <article className="flex min-h-[136px] overflow-hidden rounded-2xl bg-white shadow-[0_4px_16px_rgba(56,74,72,0.08)] transition-transform group-hover:-translate-y-0.5 dark:bg-card">
+                    {c.banner_url ? (
                       <img
                         src={c.banner_url}
                         alt=""
-                        className="h-28 w-24 shrink-0 object-cover sm:aspect-[16/7] sm:h-auto sm:w-full"
+                        loading="lazy"
+                        className="h-auto w-[43%] shrink-0 object-cover"
                       />
-                    )}
-
-                    <CardContent className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-3 sm:p-4">
-                      <div className="min-w-0">
-                        <div className="mb-1 flex items-center gap-2">
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold text-primary">
-                            {c.level}
-                          </span>
-                          <span className="truncate text-[9px] text-muted-foreground">
-                            {c.class_mode}
-                          </span>
-                        </div>
-                        <h3 className="line-clamp-1 text-sm font-black sm:text-base">{c.title}</h3>
-                        {c.description && (
-                          <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground sm:text-xs">
-                            {c.description}
-                          </p>
-                        )}
-
-                        <div className="mt-1.5 flex flex-wrap gap-x-3 text-[9px] text-muted-foreground">
-                          {c.starts_at && (
-                            <span className="flex items-center gap-1">
-                              <CalendarDays className="size-3 shrink-0" />
-                              {new Date(c.starts_at).toLocaleDateString("id-ID")}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Users className="size-3 shrink-0" />
-                            {c.participant_count} ikut{c.capacity ? " · maks. " + c.capacity : ""}
-                          </span>
-                        </div>
+                    ) : (
+                      <div className="grid w-[43%] shrink-0 place-items-center bg-primary/10">
+                        <GraduationCap className="size-9 text-primary" />
                       </div>
-
-                      <div className="flex items-center justify-between gap-2">
-                        <strong
-                          className="text-xs sm:text-sm"
-                          title={c.currency === "JPY" ? "Estimasi kurs harian" : undefined}
-                        >
-                          {Number(c.price) <= 0
-                            ? "Gratis"
-                            : c.currency === "IDR"
-                              ? new Intl.NumberFormat("id-ID", {
-                                  style: "currency",
-                                  currency: "IDR",
-                                  maximumFractionDigits: 0,
-                                }).format(Number(c.price))
-                              : c.currency === "JPY"
-                                ? rate.data
-                                  ? "≈ " +
-                                    new Intl.NumberFormat("id-ID", {
-                                      style: "currency",
-                                      currency: "IDR",
-                                      maximumFractionDigits: 0,
-                                    }).format(Number(c.price) * rate.data)
-                                  : "Kurs rupiah belum tersedia"
-                                : c.currency + " " + Number(c.price).toLocaleString("id-ID")}
-                        </strong>
-                        <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-primary sm:text-xs">
-                          Lihat detail <ArrowRight className="size-3" />
+                    )}
+                    <div className="flex min-w-0 flex-1 flex-col justify-between p-3.5">
+                      <div>
+                        <h3 className="line-clamp-2 text-[17px] font-black leading-tight">
+                          {c.title}
+                        </h3>
+                        <p className="mt-2 text-sm text-[#697578] dark:text-muted-foreground">
+                          JLPT {c.level}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex items-end justify-between gap-2">
+                        <div>
+                          <p className="flex items-center gap-1 text-[10px] text-[#7b8586] dark:text-muted-foreground">
+                            <Users className="size-3 shrink-0" />
+                            {c.participant_count} peserta
+                          </p>
+                          <strong className="mt-1 block text-[16px] font-black leading-none text-[#48bdb2]">
+                            {formatPrice(c, rate.data)}
+                          </strong>
+                        </div>
+                        <span className="flex shrink-0 items-center gap-0.5 text-[13px] font-black text-[#48bdb2]">
+                          Detail <ArrowRight className="size-3.5" />
                         </span>
                       </div>
-                    </CardContent>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                    </div>
+                  </article>
+                </Link>
+              ))}
 
-            {!classes.isLoading && (classes.data ?? []).length === 0 && (
-              <p className="text-xs text-muted-foreground">Belum ada kelas yang dipublikasikan.</p>
-            )}
-          </div>
+              {!classes.isLoading && (classes.data ?? []).length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Belum ada kelas yang dipublikasikan.
+                </p>
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </AppShell>
   );
+}
+
+function formatPrice(c: any, rate?: number) {
+  if (Number(c.price) <= 0) return "Gratis";
+  if (c.currency === "JPY")
+    return rate
+      ? "≈ " +
+          new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            maximumFractionDigits: 0,
+          }).format(Number(c.price) * rate)
+      : "Kurs belum tersedia";
+  if (c.currency === "IDR")
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(Number(c.price));
+  return c.currency + " " + Number(c.price).toLocaleString("id-ID");
 }
