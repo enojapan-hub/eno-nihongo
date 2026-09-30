@@ -53,10 +53,7 @@ const sections = [
   {
     title: "Operasional",
     items: [
-      ["Review Konten", ClipboardCheck, "Status pemeriksaan dan kualitas materi", "/admin-operasional?tab=review"],
-      ["Pengumuman", Megaphone, "Informasi dan notifikasi pengguna", "/admin-operasional?tab=pengumuman"],
-      ["Laporan", MessageSquareWarning, "Kesalahan konten dan laporan pengguna", "/admin-operasional?tab=laporan"],
-      ["Media", Image, "Gambar, audio, banner dan file", "/admin-operasional?tab=media"],
+      ["Kontrol Operasional", ClipboardCheck, "Review, laporan, pengumuman dan media", "/admin-operasional"],
       ["Import / Export", FileUp, "Pekerjaan batch dan ekspor data", "/admin-terjemahan"],
       ["Sistem & Audit", CloudCog, "Kesehatan sistem dan audit log", "/admin-sistem"],
       ["Role & Permission", Settings, "Kontrol role dan hak akses pengguna", "/admin-pengguna?view=roles"],
