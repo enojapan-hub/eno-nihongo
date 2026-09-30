@@ -1,10 +1,19 @@
 import { useState } from "react";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ExternalLink, UserPlus, Users } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpenText,
+  ChevronLeft,
+  Clock3,
+  ExternalLink,
+  Headphones,
+  UserPlus,
+  UsersRound,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/kelas/$classId")({ component: ClassRoute });
 function ClassRoute() {
@@ -83,96 +92,190 @@ function Detail() {
     );
   const member = Boolean(accessQuery.data?.enrolled);
   const meetingUrl = accessQuery.data?.meeting_url;
+  const duration =
+    c.starts_at && c.ends_at
+      ? Math.max(
+          0,
+          Math.round((new Date(c.ends_at).getTime() - new Date(c.starts_at).getTime()) / 60000),
+        )
+      : null;
+  const durationLabel = duration ? `${duration} menit` : "Jadwal sesi akan diinformasikan guru";
   return (
-    <AppShell title={c.title} backTo="/kelas">
-      <div className="mx-auto max-w-3xl space-y-4">
-        {c.banner_url && (
-          <img
-            src={c.banner_url}
-            alt={c.title}
-            className="aspect-video w-full rounded-3xl object-cover"
-          />
-        )}
-        <div>
-          <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">
-            {c.level}
-          </span>
-          <h1 className="mt-2 text-2xl font-black">{c.title}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{c.description}</p>
-        </div>
-        <Card>
-          <CardContent className="grid gap-3 p-4 text-xs sm:grid-cols-3">
-            <span className="flex items-center gap-2">
-              <CalendarDays className="size-4" />
-              {c.starts_at ? new Date(c.starts_at).toLocaleString("id-ID") : "Jadwal menyusul"}
-            </span>
-            <span className="flex items-center gap-2">
-              <Users className="size-4" />
-              {countQuery.data ?? 0} ikut{c.capacity ? " · maks. " + c.capacity : ""}
-            </span>
-            <strong title={c.currency === "JPY" ? "Estimasi kurs harian" : undefined}>
-              {Number(c.price) <= 0
-                ? "Gratis"
-                : c.currency === "IDR"
-                  ? new Intl.NumberFormat("id-ID", {
-                      style: "currency",
-                      currency: "IDR",
-                      maximumFractionDigits: 0,
-                    }).format(Number(c.price))
-                  : c.currency === "JPY"
-                    ? rateQuery.data
-                      ? "≈ " +
-                        new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          maximumFractionDigits: 0,
-                        }).format(Number(c.price) * rateQuery.data)
-                      : "Kurs rupiah belum tersedia"
-                    : c.currency + " " + Number(c.price).toLocaleString("id-ID")}
-            </strong>
-          </CardContent>
-        </Card>
-        {member ? (
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-xs font-black">Anda sudah terdaftar</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link to="/kelas/$classId/workspace" params={{ classId }}>
-                    Masuk Ruang Kelas
-                  </Link>
-                </Button>
-                {meetingUrl && (
-                  <Button variant="outline" asChild>
-                    <a href={meetingUrl} target="_blank" rel="noreferrer">
-                      <ExternalLink className="mr-2 size-4" />
-                      Kelas Live
-                    </a>
+    <AppShell title="Kursus" focus>
+      <div className="-mx-3 -mt-3 min-h-[100dvh] bg-[#f7f8f7] text-[#394247] dark:bg-background dark:text-foreground">
+        <header className="relative flex h-20 items-center justify-center border-b border-black/5 bg-white px-4 dark:border-border dark:bg-background">
+          <Link
+            to="/kelas"
+            aria-label="Kembali ke daftar kursus"
+            className="absolute left-4 rounded-full p-2 hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-primary dark:hover:bg-white/10"
+          >
+            <ChevronLeft className="size-8 stroke-[2.5]" />
+          </Link>
+          <h1 className="text-[25px] font-black tracking-tight">Kursus</h1>
+        </header>
+        <div className="space-y-7 px-4 py-6 pb-32">
+          {c.banner_url && (
+            <img
+              src={c.banner_url}
+              alt={c.title}
+              className="aspect-[1.5] w-full rounded-[28px] object-cover shadow-[0_5px_18px_rgba(56,74,72,0.08)]"
+            />
+          )}
+          <div>
+            <p className="text-sm font-bold text-[#48bdb2]">JLPT {c.level}</p>
+            <h2 className="mt-1 text-[27px] font-black leading-tight">{c.title}</h2>
+            <p className="mt-3 text-sm leading-6 text-[#697578] dark:text-muted-foreground">
+              {c.description || "Belajar terarah bersama guru ENO NIHONGO."}
+            </p>
+            <div className="mt-5 flex flex-wrap items-end gap-x-4 gap-y-1">
+              <p className="flex items-center gap-2 text-sm text-[#697578] dark:text-muted-foreground">
+                <UsersRound className="size-5" />
+                {countQuery.data ?? 0} peserta
+              </p>
+              <strong className="text-[25px] font-black text-[#48bdb2]">
+                {formatPrice(c, rateQuery.data)}
+              </strong>
+            </div>
+          </div>
+          <section aria-labelledby="course-for">
+            <h2 id="course-for" className="text-[23px] font-black">
+              Kursus ini untuk
+            </h2>
+            <div className="mt-4 space-y-1 rounded-[25px] bg-white p-5 shadow-[0_4px_16px_rgba(56,74,72,0.07)] dark:bg-card">
+              <Feature
+                icon={UsersRound}
+                color="orange"
+                text={`Mode pembelajaran: ${c.class_mode || "Kelas online bersama guru"}`}
+              />
+              <Feature icon={Clock3} color="pink" text={`Durasi sesi: ${durationLabel}`} />
+              <Feature
+                icon={BookOpenText}
+                color="violet"
+                text="Paket kursus: Jadwal pertemuan tersedia di ruang kelas."
+              />
+            </div>
+          </section>
+          <section aria-labelledby="course-list">
+            <h2 id="course-list" className="text-[23px] font-black">
+              Daftar kursus
+            </h2>
+            <div className="mt-3 rounded-2xl bg-white p-4 text-sm text-[#697578] shadow-sm dark:bg-card dark:text-muted-foreground">
+              Setelah mendaftar, Anda dapat melihat jadwal lengkap, materi, tugas, kuis, dan nilai
+              di ruang kelas.
+            </div>
+          </section>
+          {member ? (
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-xs font-black">Anda sudah terdaftar</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button asChild>
+                    <Link to="/kelas/$classId/workspace" params={{ classId }}>
+                      Masuk Ruang Kelas
+                    </Link>
                   </Button>
+                  {meetingUrl && (
+                    <Button variant="outline" asChild>
+                      <a href={meetingUrl} target="_blank" rel="noreferrer">
+                        <ExternalLink className="mr-2 size-4" />
+                        Kelas Live
+                      </a>
+                    </Button>
+                  )}
+                </div>
+                {!meetingUrl && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Link live belum tersedia atau belum memasuki waktu akses.
+                  </p>
                 )}
-              </div>
-              {!meetingUrl && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Link live belum tersedia atau belum memasuki waktu akses.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ) : Number(c.price) > 0 ? (
-          <p className="rounded-xl bg-muted p-3 text-xs">
-            Pendaftaran kelas berbayar akan dibuka setelah sistem pembayaran aktif.
-          </p>
-        ) : (
-          <Button disabled={busy} onClick={enroll}>
-            <UserPlus className="mr-2 size-4" />
-            {busy ? "Mendaftarkan…" : "Gabung Kelas Gratis"}
-          </Button>
-        )}
-        {message && <p className="text-xs text-muted-foreground">{message}</p>}
-        <p className="text-[11px] text-muted-foreground">
-          Link kelas live hanya dapat diakses peserta yang sudah terdaftar.
-        </p>
+              </CardContent>
+            </Card>
+          ) : Number(c.price) > 0 ? (
+            <p className="rounded-xl bg-muted p-3 text-xs">
+              Pendaftaran kelas berbayar akan dibuka setelah sistem pembayaran aktif.
+            </p>
+          ) : (
+            <Button disabled={busy} onClick={enroll}>
+              <UserPlus className="mr-2 size-4" />
+              {busy ? "Mendaftarkan…" : "Gabung Kelas Gratis"}
+            </Button>
+          )}
+          {message && <p className="text-xs text-muted-foreground">{message}</p>}
+        </div>
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/5 bg-[#f7f8f7]/95 px-4 py-3 backdrop-blur dark:border-border dark:bg-background/95">
+          <div className="mx-auto flex max-w-2xl gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="size-14 shrink-0 rounded-full"
+              aria-label="Hubungi admin"
+              onClick={() => setMessage("Hubungi admin untuk informasi pendaftaran.")}
+            >
+              <Headphones className="size-6" />
+            </Button>
+            {member ? (
+              <Button size="lg" className="flex-1 rounded-full" asChild>
+                <Link to="/kelas/$classId/workspace" params={{ classId }}>
+                  Masuk Ruang Kelas <ArrowRight className="ml-2 size-5" />
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="flex-1 rounded-full bg-[#48bdb2] text-white hover:bg-[#3da99f]"
+                disabled={busy}
+                onClick={enroll}
+              >
+                {busy ? "Mendaftarkan…" : Number(c.price) > 0 ? "Daftar" : "Gabung Gratis"}
+                <ArrowRight className="ml-2 size-5" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </AppShell>
   );
+}
+
+function Feature({
+  icon: Icon,
+  color,
+  text,
+}: {
+  icon: any;
+  color: "orange" | "pink" | "violet";
+  text: string;
+}) {
+  const colors = { orange: "bg-orange-400", pink: "bg-fuchsia-500", violet: "bg-violet-500" };
+  return (
+    <div className="flex items-center gap-5 py-2">
+      <span
+        className={`grid size-16 shrink-0 place-items-center rounded-2xl ${colors[color]} text-white`}
+      >
+        <Icon className="size-8" />
+      </span>
+      <p className="text-[18px] leading-7 text-[#697578] dark:text-foreground">{text}</p>
+    </div>
+  );
+}
+
+function formatPrice(c: any, rate?: number) {
+  if (Number(c.price) <= 0) return "Gratis";
+  if (c.currency === "JPY")
+    return rate
+      ? "≈ " +
+          new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            maximumFractionDigits: 0,
+          }).format(Number(c.price) * rate)
+      : "Kurs belum tersedia";
+  if (c.currency === "IDR")
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(Number(c.price));
+  return c.currency + " " + Number(c.price).toLocaleString("id-ID");
 }
