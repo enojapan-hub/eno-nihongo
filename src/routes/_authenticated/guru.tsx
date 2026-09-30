@@ -11,6 +11,7 @@ import {
   Languages,
   Eye,
   EyeOff,
+  WalletCards,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,7 +28,7 @@ const kinds: [Kind, string, any][] = [
 ];
 function Page() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"kelas" | "materi">("kelas");
+  const [tab, setTab] = useState<"kelas" | "materi" | "saldo">("kelas");
   const [kind, setKind] = useState<Kind>("kanji");
   const [busyId, setBusyId] = useState<any>(null);
   const access = useQuery({
@@ -114,8 +115,13 @@ function Page() {
           >
             Materi
           </Button>
+          <Button variant={tab === "saldo" ? "default" : "outline"} onClick={() => setTab("saldo")}>
+            <WalletCards className="mr-1 size-4" /> Saldo
+          </Button>
         </div>
-        {tab === "kelas" ? (
+        {tab === "saldo" ? (
+          <TeacherWalletDraft />
+        ) : tab === "kelas" ? (
           <>
             <div className="grid grid-cols-3 gap-2">
               {[
@@ -232,5 +238,39 @@ function Page() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+function TeacherWalletDraft() {
+  return (
+    <div className="space-y-4">
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.08] to-card">
+        <CardContent className="space-y-3 p-5">
+          <div className="flex items-center gap-2">
+            <WalletCards className="size-5 text-primary" />
+            <h2 className="font-black">Saldo Guru</h2>
+            <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-700">Segera tersedia</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Komisi kelas berbayar akan aktif setelah sistem pembayaran dan pencairan resmi tersedia.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl border bg-background/70 p-3"><p className="text-[10px] text-muted-foreground">Saldo tersedia</p><b>Rp0</b></div>
+            <div className="rounded-xl border bg-background/70 p-3"><p className="text-[10px] text-muted-foreground">Saldo tertahan</p><b>Rp0</b></div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card><CardContent className="space-y-2 p-4">
+        <h3 className="font-bold">Pembagian pendapatan</h3>
+        <div className="flex justify-between text-sm"><span>Komisi guru</span><b>80%</b></div>
+        <div className="flex justify-between text-sm"><span>Biaya admin ENO NIHONGO</span><b>20%</b></div>
+        <p className="text-xs text-muted-foreground">Komisi guru tetap tertahan sampai kelas berakhir.</p>
+      </CardContent></Card>
+      <Card><CardContent className="space-y-2 p-4">
+        <h3 className="font-bold">Rekening & penarikan</h3>
+        <p className="text-xs text-muted-foreground">Rekening pencairan, riwayat pendapatan, dan tarik saldo akan diaktifkan bersama backend pembayaran.</p>
+        <Button disabled className="w-full">Tarik Saldo · Segera tersedia</Button>
+      </CardContent></Card>
+    </div>
   );
 }
