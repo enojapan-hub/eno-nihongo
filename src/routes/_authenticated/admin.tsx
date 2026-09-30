@@ -57,6 +57,7 @@ const sections = [
       ["Import / Export", FileUp, "Import aman, validasi dan ekspor data", "/admin-import-export"],
       ["Sistem & Audit", CloudCog, "Kesehatan sistem dan audit log", "/admin-sistem"],
       ["Role & Permission", Settings, "Role dinamis, permission dan anggota", "/admin-role-permission"],
+      ["Pengaturan Platform", Settings, "Konfigurasi global aplikasi", "/admin-pengaturan"],
     ],
   },
 ] as const;
@@ -66,6 +67,7 @@ function formatNumber(value: unknown) {
 }
 
 function Page() {
+  const actions = useQuery({queryKey:["admin-action-queue"],queryFn:async()=>{const {data,error}=await (supabase as any).rpc("get_admin_action_queue");if(error)throw error;return (data||[]) as any[]},retry:false});
   const q = useQuery({
     queryKey: ["admin-overview"],
     queryFn: async () => {
@@ -169,6 +171,8 @@ function Page() {
             <ChevronRight className="size-5 text-muted-foreground" />
           </Link>
         )}
+
+        {actions.isSuccess && actions.data.some((x:any)=>Number(x.count)>0) && <section><div className="mb-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Action Queue</p><h2 className="text-lg font-black">Perlu tindakan</h2></div><div className="grid gap-2 sm:grid-cols-2">{actions.data.filter((x:any)=>Number(x.count)>0).map((x:any)=><Link key={x.key} to={x.href as any} className="flex items-center gap-3 rounded-2xl border p-3 transition hover:border-primary/30"><span className={x.severity==="critical"?"grid size-9 place-items-center rounded-xl bg-destructive/10 font-black text-destructive":"grid size-9 place-items-center rounded-xl bg-amber-500/10 font-black text-amber-700"}>{x.count}</span><div className="flex-1"><p className="text-xs font-black">{x.label}</p><p className="text-[10px] text-muted-foreground">Buka untuk ditangani</p></div><ChevronRight className="size-4 text-muted-foreground"/></Link>)}</div></section>}
 
         <section>
           <div className="mb-3 flex items-end justify-between">
