@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Clock3, FileQuestion, Lightbulb } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,10 +41,11 @@ function Page() {
         title: string;
         description: string | null;
         due_at: string | null;
+        duration_minutes: number | null;
       }>(
         classroom
           .from("class_quizzes")
-          .select("id,title,description,due_at")
+          .select("id,title,description,due_at,duration_minutes")
           .eq("id", quizId)
           .eq("class_id", classId)
           .eq("is_published", true)
@@ -95,7 +97,13 @@ function Quiz({
   classId,
   initialAttempt,
 }: {
-  quiz: { id: string; title: string; description: string | null; due_at: string | null };
+  quiz: {
+    id: string;
+    title: string;
+    description: string | null;
+    due_at: string | null;
+    duration_minutes: number | null;
+  };
   questions: Question[];
   attempts: Attempt[];
   userId: string;
@@ -183,10 +191,22 @@ function Quiz({
   }
   return (
     <>
-      <div>
-        <h1 className="text-xl font-black">{quiz.title}</h1>
-        <p className="whitespace-pre-wrap text-sm text-muted-foreground">{quiz.description}</p>
-        {quiz.due_at && <p className="mt-2 text-xs">Batas: {sessionTime(quiz.due_at)}</p>}
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+          <FileQuestion className="size-5" />
+        </span>
+        <div>
+          <h1 className="text-xl font-black">{quiz.title}</h1>
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{quiz.description}</p>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+            {quiz.duration_minutes && (
+              <span className="inline-flex items-center gap-1">
+                <Clock3 className="size-3.5" /> Estimasi {quiz.duration_minutes} menit
+              </span>
+            )}
+            {quiz.due_at && <span>Batas: {sessionTime(quiz.due_at)}</span>}
+          </div>
+        </div>
       </div>
       {selected ? (
         <>
@@ -262,7 +282,7 @@ function Quiz({
             </p>
           ) : (
             <>
-              <div className="space-y-2 rounded-xl bg-muted p-3">
+              <div className="space-y-2 rounded-2xl border border-primary/15 bg-primary/[0.05] p-4">
                 <p className="text-sm font-bold">
                   {Object.keys(answers).length} dari {questions.length} soal dijawab
                 </p>
@@ -276,6 +296,10 @@ function Quiz({
                   {draftAvailable
                     ? "Draft tersimpan di perangkat ini. Nilai baru dikirim ke guru setelah Anda menekan Kirim Jawaban."
                     : "Draft tidak dapat disimpan di perangkat. Jangan tutup halaman sebelum mengirim jawaban."}
+                </p>
+                <p className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <Lightbulb className="size-3.5 text-primary" /> Jawaban dinilai otomatis setelah
+                  dikirim.
                 </p>
               </div>
               {questions.map((q, i) => (
