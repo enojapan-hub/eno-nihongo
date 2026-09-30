@@ -77,6 +77,10 @@ function Page() {
   const [f, setF] = useState({ ...initial });
   const [preview, setPreview] = useState(false);
   const [message, setMessage] = useState("");
+  const [quizQuestion, setQuizQuestion] = useState("");
+  const [quizChoices, setQuizChoices] = useState(["", "", "", ""]);
+  const [quizCorrect, setQuizCorrect] = useState(-1);
+  const [quizExplanation, setQuizExplanation] = useState("");
   const set = (key: string, value: any) => setF((x) => ({ ...x, [key]: value }));
   const access = useQuery({
     queryKey: ["class-manage-access", classId],
@@ -99,6 +103,10 @@ function Page() {
     setF({ ...initial });
     setPreview(false);
     setMessage("");
+    setQuizQuestion("");
+    setQuizChoices(["", "", "", ""]);
+    setQuizCorrect(-1);
+    setQuizExplanation("");
   };
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: ["guru-class-content", classId] });
@@ -115,6 +123,12 @@ function Page() {
         (Number(f.duration_minutes) < 1 || Number(f.duration_minutes) > 480)
       )
         throw new Error("Durasi kuis harus 1–480 menit.");
+      if (tab === "quiz" && !id) {
+        if (!quizQuestion.trim()) throw new Error("Pertanyaan pertama wajib diisi.");
+        if (quizChoices.some((choice) => !choice.trim()))
+          throw new Error("Isi semua pilihan jawaban.");
+        if (quizCorrect < 0) throw new Error("Tandai satu pilihan sebagai jawaban benar.");
+      }
       const row: any = { class_id: classId, title: f.title.trim() };
       if (tab === "materi")
         Object.assign(row, {
@@ -157,10 +171,28 @@ function Page() {
         });
       }
       if (tab === "quiz" && !id) {
-        const created = await result(
-          classroom.from("class_quizzes").insert(row).select("id").single(),
-        );
-        return created.id as string;
+        return (await result(
+          classroom.rpc("teacher_create_class_quiz_with_questions", {
+            p_class_id: classId,
+            p_data: {
+              title: f.title.trim(),
+              description: f.text,
+              due_at: isoDate(f.date),
+              duration_minutes: f.duration_minutes ? Number(f.duration_minutes) : null,
+              is_published: false,
+            },
+            p_questions: [
+              {
+                question: quizQuestion.trim(),
+                choices: quizChoices.map((choice) => choice.trim()),
+                correct_index: quizCorrect,
+                explanation: quizExplanation,
+                category: f.category,
+                topic: f.topic,
+              },
+            ],
+          }),
+        )) as string;
       }
       await result(
         id
@@ -387,6 +419,89 @@ function Page() {
                     </label>
                   </>
                 )}
+                {tab === "quiz" && !id && (
+                  <div className="space-y-4 rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+                    <div>
+                      <p className="text-sm font-bold">Soal 1 · Pilihan ganda</p>
+                      <p className="text-xs text-muted-foreground">
+                        Isi pertanyaan, pilihan jawaban, lalu tandai kunci yang benar. Nilai peserta dikoreksi otomatis.
+                      </p>
+                    </div>
+                    <Field label="Pertanyaan">
+                      <Textarea
+                        rows={3}
+                        value={quizQuestion}
+                        onChange={(e) => setQuizQuestion(e.target.value)}
+                        placeholder="Contoh: Pilih kalimat yang paling tepat…"
+                      />
+                    </Field>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold">Pilihan jawaban</span>
+                        <span className="text-[10px] text-muted-foreground">Pilih satu kunci benar</span>
+                      </div>
+                      {quizChoices.map((choice, index) => (
+                        <label
+                          key={index}
+                          className={
+                            "flex items-center gap-2 rounded-xl border p-2 " +
+                            (quizCorrect === index ? "border-primary bg-primary/[0.06]" : "border-border/70")
+                          }
+                        >
+                          <input
+                            type="radio"
+                            name="quiz-correct"
+                            checked={quizCorrect === index}
+                            onChange={() => setQuizCorrect(index)}
+                            aria-label={"Kunci jawaban " + String.fromCharCode(65 + index)}
+                            className="size-4 accent-primary"
+                          />
+                          <span className="w-5 text-center text-xs font-black">
+                            {String.fromCharCode(65 + index)}
+                          </span>
+                          <Input
+                            value={choice}
+                            onChange={(e) =>
+                              setQuizChoices((current) =>
+                                current.map((value, i) => (i === index ? e.target.value : value)),
+                              )
+                            }
+                            placeholder={"Pilihan " + String.fromCharCode(65 + index)}
+                            className="border-0 bg-transparent shadow-none focus-visible:ring-0"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <Field label="Pembahasan (opsional)">
+                      <Textarea
+                        rows={2}
+                        value={quizExplanation}
+                        onChange={(e) => setQuizExplanation(e.target.value)}
+                        placeholder="Jelaskan alasan jawaban benar."
+                      />
+                    </Field>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Kategori soal">
+                        <select
+                          className="h-10 w-full rounded border bg-background p-2 text-sm"
+                          value={f.category}
+                          onChange={(e) => set("category", e.target.value)}
+                        >
+                          {categories.map((category) => (
+                            <option key={category}>{category}</option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Topik">
+                        <Input
+                          value={f.topic}
+                          onChange={(e) => set("topic", e.target.value)}
+                          placeholder="Contoh: Bentuk て"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                )}
                 {(tab === "tugas" || tab === "quiz") && (
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Batas pengumpulan (waktu lokal, opsional)">
@@ -465,7 +580,7 @@ function Page() {
                 )}
                 {tab === "quiz" && !id && (
                   <p className="text-xs text-muted-foreground">
-                    Kuis baru disimpan sebagai draft. Tambahkan soal dan kunci sebelum menerbitkan.
+                    Kuis dan soal pertama disimpan sebagai draft. Setelah itu Anda bisa langsung menambah soal berikutnya.
                   </p>
                 )}
                 {tab === "pengumuman" && f.is_published && (
