@@ -8,13 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/admin-pengguna")({ component: Page });
+export const Route = createFileRoute("/_authenticated/admin-pengguna")({validateSearch:(s:Record<string,unknown>)=>({view:String(s.view||"users")}), component: Page });
 const PAGE=20;
 const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat("id-ID",{dateStyle:"medium",timeZone:"Asia/Tokyo"}).format(new Date(v)):"—";
 const daysLeft=(v?:string|null)=>v?Math.max(0,Math.ceil((new Date(v).getTime()-Date.now())/86400000)):null;
 
 function Page(){
- const qc=useQueryClient();
+ const qc=useQueryClient(); const routeSearch=Route.useSearch();
  const [search,setSearch]=useState(""),[plan,setPlan]=useState("all"),[roleFilter,setRoleFilter]=useState("all"),[level,setLevel]=useState("all"),[status,setStatus]=useState("all");
  const [page,setPage]=useState(1),[msg,setMsg]=useState(""),[busy,setBusy]=useState<string|null>(null),[detail,setDetail]=useState<any|null>(null);
  const [premiumId,setPremiumId]=useState<string|null>(null),[days,setDays]=useState("30"),[showInvite,setShowInvite]=useState(false);
@@ -40,7 +40,7 @@ function Page(){
  async function sendInvite(){const d=Number(invite.days);setBusy("invite");const {error}=await (supabase as any).rpc("admin_invite_user",{p_email:invite.email,p_role:invite.role,p_plan:invite.plan,p_duration_days:invite.plan==="premium"?d:null});setBusy(null);setMsg(error?error.message:"Undangan disimpan. Akses otomatis aktif saat email tersebut login dengan Google.");if(!error){setShowInvite(false);setInvite({email:"",role:"student",plan:"free",days:"30"});}}
 
  return <AppShell title="Pengguna" backTo="/admin"><div className="mx-auto max-w-5xl space-y-4">
-  <div className="flex items-center justify-between gap-3"><div><h1 className="flex items-center gap-2 text-xl font-black"><Users className="size-5"/>Pengguna & Akses</h1><p className="text-xs text-muted-foreground">{q.data?.length??0} akun terdaftar</p></div><Button size="sm" onClick={()=>setShowInvite(!showInvite)}><MailPlus className="mr-1 size-4"/>Tambah</Button></div>
+  <div className="flex items-center justify-between gap-3"><div><h1 className="flex items-center gap-2 text-xl font-black">{routeSearch.view==="roles"?<ShieldCheck className="size-5"/>:<Users className="size-5"/>}{routeSearch.view==="roles"?"Role & Permission":"Pengguna & Akses"}</h1><p className="text-xs text-muted-foreground">{routeSearch.view==="roles"?"Kelola role dan hak akses akun terdaftar":`${q.data?.length??0} akun terdaftar`}</p></div><Button size="sm" onClick={()=>setShowInvite(!showInvite)}><MailPlus className="mr-1 size-4"/>Tambah</Button></div>
   {showInvite&&<Card><CardContent className="grid gap-3 p-4 sm:grid-cols-2">
    <div className="sm:col-span-2"><label className="text-xs font-bold">Email Google</label><Input type="email" value={invite.email} onChange={e=>setInvite({...invite,email:e.target.value})} placeholder="nama@gmail.com"/></div>
    <select className="rounded-lg border bg-background p-2 text-sm" value={invite.role} onChange={e=>setInvite({...invite,role:e.target.value})}><option value="student">Student</option><option value="teacher">Guru</option><option value="editor">Editor</option><option value="admin">Admin</option></select>
