@@ -86,6 +86,12 @@ function Page() {
                     Kelola perjalanan belajar peserta, publikasikan aktivitas, dan siapkan sesi
                     berikutnya.
                   </p>
+                  {d.kelas.starts_at && (
+                    <p className="text-xs text-muted-foreground">
+                      Jadwal kelas: {new Date(d.kelas.starts_at).toLocaleString("id-ID")}
+                      {d.kelas.ends_at ? " – " + new Date(d.kelas.ends_at).toLocaleString("id-ID") : ""}
+                    </p>
+                  )}
                 </div>
                 <span className="hidden size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary sm:grid">
                   <GraduationCap className="size-6" />
@@ -143,7 +149,7 @@ function Page() {
                 variant="outline"
                 asChild
               >
-                <Link to="/kelas/$classId/workspace" params={{ classId }}>
+                <Link to="/kelas/$classId/workspace" params={{ classId }} search={{ preview: "guru" }}>
                   <Eye className="size-[18px] text-primary" />
                   Pratinjau siswa
                 </Link>
@@ -205,8 +211,8 @@ function Page() {
                         <h2 className="font-black">Persiapan mengajar</h2>
                         <p className="text-xs text-muted-foreground">
                           Buka Peserta & Nilai untuk melihat tugas yang tertinggal, koreksi guru,
-                          dan topik yang perlu diulang. Statistik kuis menggunakan percobaan terbaru
-                          setiap kuis.
+                          dan topik yang perlu diulang. Kuis hanya dapat dikumpulkan satu kali oleh setiap
+                          peserta.
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" onClick={() => setTab("peserta")}>
@@ -253,6 +259,10 @@ function Page() {
                     : null;
                   const topics = d.insights.filter((i: any) => i.user_id === p.user_id);
                   const attempts = d.attempts.filter((a: any) => a.user_id === p.user_id);
+                  const quizAverage = attempts.length
+                    ? Math.round(attempts.reduce((n: number, a: any) => n + Number(a.score), 0) / attempts.length)
+                    : null;
+                  const needsAttention = missing.length > 0 || (average != null && average < 70) || (quizAverage != null && quizAverage < 70);
                   return (
                     <details
                       key={p.user_id}
@@ -272,6 +282,11 @@ function Page() {
                               <span className="rounded-full bg-muted px-2 py-1">
                                 {missing.length} belum dikumpulkan
                               </span>
+                              {needsAttention && (
+                                <span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700">
+                                  Perlu perhatian
+                                </span>
+                              )}
                             </div>
                           </div>
                           <span className="rounded-full bg-muted px-2 py-1 text-xs font-bold">
