@@ -29,7 +29,7 @@ export function StudyFlashcard({index,total,level,title,reading,romaji,meaning,s
    return null;
  },[kanjiMode,relatedWords,kunyomi,onyomi,title]);
  const activeQuestion=kanjiMode?kanjiQuiz:question;
- useEffect(()=>{setShowDetails(true);setQuizChoice(null);setFavorite(false);window.speechSynthesis?.cancel()},[index,title]);
+ useEffect(()=>{setShowDetails(false);setQuizChoice(null);setFavorite(false);window.speechSynthesis?.cancel()},[index,title]);
  const speak=(text:string)=>{if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="ja-JP";u.rate=.85;window.speechSynthesis.speak(u)};
  const answered=quizChoice!==null;
  return <div className="mx-auto w-full max-w-md">
