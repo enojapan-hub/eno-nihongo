@@ -130,3 +130,27 @@ begin
 end$$;
 revoke all on function public.get_admin_import_backups() from public,anon;
 grant execute on function public.get_admin_import_backups() to authenticated;
+
+-- Begin migration of legacy hardcoded role gates to central permissions.
+drop policy if exists "announcements_staff_all" on public.admin_announcements;
+create policy "announcements_staff_all" on public.admin_announcements for all to authenticated
+using(public.has_permission('operations.manage')) with check(public.has_permission('operations.manage'));
+drop policy if exists "reports_staff_all" on public.content_reports;
+create policy "reports_staff_all" on public.content_reports for all to authenticated
+using(public.has_permission('operations.manage')) with check(public.has_permission('operations.manage'));
+
+create or replace function public.get_operations_console()
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare d bigint;
+begin
+ if not public.has_permission('operations.view') then raise exception 'forbidden'; end if;
+ select (select count(*) from public.kanji where not is_published)+(select count(*) from public.vocabulary where not is_published)+(select count(*) from public.grammar_points where not is_published)+(select count(*) from public.reading_passages where not is_published)+(select count(*) from public.listening_items where not is_published)+(select count(*) from public.jlpt_simulation_questions where not is_published) into d;
+ return jsonb_build_object('reports_open',(select count(*) from public.content_reports where status in('open','reviewing')),'announcements',(select count(*) from public.admin_announcements where status='published'),'media',(select count(*) from public.media_library),'draft_content',d);
+end$$;
+
+create or replace function public.get_role_permission_console()
+returns jsonb language plpgsql security definer set search_path='' as $$
+begin
+ if not (public.has_permission('roles.view') or public.has_permission('roles.manage')) then raise exception 'forbidden'; end if;
+ return jsonb_build_object('roles',(select coalesce(jsonb_agg(jsonb_build_object('id',r.id,'key',r.key,'name',r.name,'description',r.description,'system_role',r.system_role,'is_active',r.is_active,'members',(select count(*) from public.profiles p where p.app_role_id=r.id),'permissions',(select coalesce(jsonb_agg(jsonb_build_object('key',rp.permission_key,'scope',rp.scope)),'[]'::jsonb) from public.role_permissions rp where rp.role_id=r.id)) order by r.system_role desc,r.name),'[]'::jsonb) from public.app_roles r),'permissions',(select coalesce(jsonb_agg(to_jsonb(x) order by x.module,x.name),'[]'::jsonb) from(select key,module,name,description,risk from public.permission_registry)x),'can_manage',public.has_permission('roles.manage'));
+end$$;
