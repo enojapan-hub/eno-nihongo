@@ -4,19 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    // Use the locally persisted Supabase session here. After a successful PKCE
-    // exchange, getSession resolves immediately and avoids another /user request
-    // during route entry, which could leave the client route in a pending state.
     const { data, error } = await supabase.auth.getSession();
 
     if (!error && data.session?.user) {
+      const { data: profile } = await supabase.from("profiles").select("suspended_at").eq("id", data.session.user.id).maybeSingle();
+      if ((profile as any)?.suspended_at) {
+        await supabase.auth.signOut({ scope: "local" });
+        throw redirect({ to: "/auth", search: { error: "Akun Anda sedang dinonaktifkan. Hubungi Admin." } as any });
+      }
       return { user: data.session.user };
     }
 
-    if (error) {
-      await supabase.auth.signOut({ scope: "local" });
-    }
-
+    if (error) await supabase.auth.signOut({ scope: "local" });
     throw redirect({ to: "/auth" });
   },
   component: () => <Outlet />,
