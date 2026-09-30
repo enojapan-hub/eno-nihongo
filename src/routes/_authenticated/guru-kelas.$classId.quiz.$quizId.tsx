@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle2,
+  CircleHelp,
+  FileQuestion,
+  Lightbulb,
+  LockKeyhole,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +27,7 @@ function Page() {
   const [id, setId] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
   const [choices, setChoices] = useState(["", "", "", ""]);
-  const [correct, setCorrect] = useState(0);
+  const [correct, setCorrect] = useState(-1);
   const [explanation, setExplanation] = useState("");
   const [category, setCategory] = useState("Umum");
   const [topic, setTopic] = useState("");
@@ -27,10 +38,10 @@ function Page() {
     queryFn: async () => {
       if (!(await result(classroom.rpc("can_manage_class", { p_class_id: classId }))))
         throw new Error("Akses guru diperlukan.");
-      await result(
+      const quiz = await result(
         classroom
           .from("class_quizzes")
-          .select("id")
+          .select("id,title,is_published")
           .eq("class_id", classId)
           .eq("id", quizId)
           .single(),
@@ -45,19 +56,20 @@ function Page() {
         ),
         result(classroom.from("class_quiz_attempts").select("id").eq("quiz_id", quizId).limit(1)),
       ]);
-      return { questions, locked: attempts.length > 0 };
+      return { quiz, questions, locked: attempts.length > 0 };
     },
   });
   function reset() {
     setId(null);
     setQuestion("");
     setChoices(["", "", "", ""]);
-    setCorrect(0);
+    setCorrect(-1);
     setExplanation("");
     setCategory("Umum");
     setTopic("");
   }
   async function save() {
+    if (!question.trim() || choices.some((choice) => !choice.trim()) || correct < 0) return;
     setBusy(true);
     setMessage("");
     try {
@@ -91,6 +103,29 @@ function Page() {
       setBusy(false);
     }
   }
+  async function publish() {
+    setBusy(true);
+    setMessage("");
+    try {
+      await result(
+        classroom
+          .from("class_quizzes")
+          .update({ is_published: true })
+          .eq("id", quizId)
+          .eq("class_id", classId),
+      );
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["teacher-quiz-editor", quizId] }),
+        qc.invalidateQueries({ queryKey: ["guru-class-content", classId] }),
+        qc.invalidateQueries({ queryKey: ["class-workspace", classId] }),
+      ]);
+      setMessage("Kuis terbit. Peserta dapat mengerjakan dan nilai akan tersimpan otomatis.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Kuis gagal diterbitkan.");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function remove(row: any) {
     if (!window.confirm("Hapus soal ini?")) return;
     setBusy(true);
@@ -110,54 +145,130 @@ function Page() {
   return (
     <AppShell title="Soal Kuis" backTo={"/guru-kelas/" + classId + "/konten"}>
       <div className="mx-auto max-w-3xl space-y-4">
+        {q.data && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-primary/5 p-4">
+            <div>
+              <h1 className="flex items-center gap-2 text-base font-bold">
+                <FileQuestion className="size-4 text-primary" />
+                {q.data.quiz.title}
+              </h1>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {q.data.questions.length} soal · {q.data.quiz.is_published ? "Terbit" : "Draft"} ·
+                Nilai otomatis / 100
+              </p>
+            </div>
+            {!q.data.quiz.is_published && (
+              <Button
+                disabled={busy || !q.data.questions.length || !!question.trim()}
+                onClick={publish}
+              >
+                Terbitkan kuis
+              </Button>
+            )}
+          </div>
+        )}
         {q.isPending && <p>Memuat soal…</p>}
         {q.isError && <p role="alert">{q.error.message}</p>}
         {q.data?.locked && (
-          <p className="rounded-xl bg-muted p-4 text-sm">
-            Kuis sudah dikerjakan peserta. Soal dan kunci dikunci agar nilai tetap akurat. Buat kuis
-            baru untuk latihan berikutnya.
-          </p>
+          <div className="flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/[0.08] p-4 text-sm">
+            <LockKeyhole className="mt-0.5 size-5 shrink-0 text-amber-600" />
+            <p>
+              Kuis sudah dikerjakan peserta. Soal dan kunci dikunci agar nilai tetap akurat. Buat
+              kuis baru untuk latihan berikutnya.
+            </p>
+          </div>
         )}
         {q.isSuccess && !q.data.locked && (
-          <Card>
-            <CardContent className="space-y-3 p-4">
-              <h1 className="font-black">{id ? "Edit Soal" : "Tambah Soal"}</h1>
-              <label className="block text-xs font-bold">
-                Pertanyaan
-                <Textarea value={question} onChange={(e) => setQuestion(e.target.value)} />
+          <Card className="border-border/70 shadow-sm">
+            <CardContent className="space-y-5 p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  {id ? <Pencil className="size-5" /> : <Plus className="size-5" />}
+                </span>
+                <div>
+                  <h1 className="font-black">{id ? "Edit soal" : "Tambah soal"}</h1>
+                  <p className="text-xs text-muted-foreground">
+                    Peserta akan mendapat nilai otomatis setelah mengirim jawaban.
+                  </p>
+                </div>
+              </div>
+              <label className="block space-y-1.5 text-xs font-bold">
+                <span className="flex items-center gap-1.5">
+                  <CircleHelp className="size-4 text-primary" /> Pertanyaan
+                </span>
+                <Textarea
+                  rows={4}
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Contoh: Pilih kalimat yang paling tepat…"
+                />
               </label>
-              {choices.map((value, index) => (
-                <label key={index} className="flex items-center gap-2">
-                  <input
-                    aria-label={"Kunci jawaban pilihan " + (index + 1)}
-                    type="radio"
-                    name="correct"
-                    checked={correct === index}
-                    onChange={() => setCorrect(index)}
-                  />
-                  <Input
-                    aria-label={"Pilihan " + (index + 1)}
-                    value={value}
-                    onChange={(e) =>
-                      setChoices((current) =>
-                        current.map((x, j) => (j === index ? e.target.value : x)),
-                      )
-                    }
-                  />
-                </label>
-              ))}
-              <p className="text-xs text-muted-foreground">
-                Pilih bulatan di samping jawaban yang benar.
-              </p>
-              <label className="block text-xs font-bold">
-                Pembahasan
-                <Textarea value={explanation} onChange={(e) => setExplanation(e.target.value)} />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-xs font-bold">
+                    <CheckCircle2 className="size-4 text-primary" /> Pilihan jawaban
+                  </p>
+                  <span className="text-[10px] text-muted-foreground">Tandai jawaban benar</span>
+                </div>
+                <div className="grid gap-2">
+                  {choices.map((value, index) => (
+                    <label
+                      key={index}
+                      className={
+                        "flex items-center gap-3 rounded-xl border p-2.5 transition " +
+                        (correct === index
+                          ? "border-primary bg-primary/[0.06]"
+                          : "border-border/70")
+                      }
+                    >
+                      <input
+                        aria-label={"Kunci jawaban pilihan " + (index + 1)}
+                        type="radio"
+                        name="correct"
+                        checked={correct === index}
+                        onChange={() => setCorrect(index)}
+                        className="size-4 accent-primary"
+                      />
+                      <span
+                        className={
+                          "grid size-7 shrink-0 place-items-center rounded-lg text-xs font-black " +
+                          (correct === index
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground")
+                        }
+                      >
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <Input
+                        aria-label={"Pilihan " + (index + 1)}
+                        value={value}
+                        placeholder={"Tulis pilihan " + String.fromCharCode(65 + index)}
+                        onChange={(e) =>
+                          setChoices((current) =>
+                            current.map((x, j) => (j === index ? e.target.value : x)),
+                          )
+                        }
+                        className="border-0 bg-transparent shadow-none focus-visible:ring-0"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <label className="block space-y-1.5 text-xs font-bold">
+                <span className="flex items-center gap-1.5">
+                  <Lightbulb className="size-4 text-primary" /> Pembahasan (opsional)
+                </span>
+                <Textarea
+                  value={explanation}
+                  onChange={(e) => setExplanation(e.target.value)}
+                  placeholder="Jelaskan mengapa jawaban ini benar agar peserta bisa belajar dari hasilnya."
+                />
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-bold">
-                  Kategori
+                <label className="space-y-1.5 text-xs font-bold">
+                  <span>Kategori</span>
                   <select
-                    className="mt-1 h-10 w-full rounded border bg-background p-2"
+                    className="h-10 w-full rounded border bg-background p-2"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                   >
@@ -166,8 +277,8 @@ function Page() {
                     ))}
                   </select>
                 </label>
-                <label className="text-xs font-bold">
-                  Topik
+                <label className="space-y-1.5 text-xs font-bold">
+                  <span>Topik untuk statistik</span>
                   <Input
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
@@ -175,12 +286,14 @@ function Page() {
                   />
                 </label>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
-                  disabled={busy || !question.trim() || choices.some((x) => !x.trim())}
+                  disabled={
+                    busy || !question.trim() || correct < 0 || choices.some((x) => !x.trim())
+                  }
                   onClick={save}
                 >
-                  {busy ? "Menyimpan…" : "Simpan Soal"}
+                  <Save className="size-4" /> {busy ? "Menyimpan…" : "Simpan soal"}
                 </Button>
                 {id && (
                   <Button variant="outline" onClick={reset}>
@@ -197,23 +310,40 @@ function Page() {
           </p>
         )}
         {q.data?.questions.map((row: any, index: number) => (
-          <Card key={row.id}>
-            <CardContent className="space-y-2 p-4">
-              <h2 className="text-sm font-bold">
-                {index + 1}. {row.question}
-              </h2>
-              <p className="text-xs text-primary">
-                {row.category} / {row.topic || "Belum diberi topik"}
-              </p>
-              {row.choices.map((c: string, i: number) => (
-                <p
-                  key={i}
-                  className={"text-sm " + (i === row.correct_index ? "font-bold text-primary" : "")}
-                >
-                  {i + 1}. {c}
+          <Card key={row.id} className="border-border/70 shadow-sm">
+            <CardContent className="space-y-3 p-4">
+              <div className="flex items-start gap-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-sm font-black text-primary">
+                  {index + 1}
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-bold">{row.question}</h2>
+                  <p className="mt-1 text-[10px] font-medium text-primary">
+                    {row.category} · {row.topic || "Belum diberi topik"}
+                  </p>
+                </div>
+              </div>
+              <div className="grid gap-1.5">
+                {row.choices.map((c: string, i: number) => (
+                  <p
+                    key={i}
+                    className={
+                      "rounded-lg border px-3 py-2 text-sm " +
+                      (i === row.correct_index
+                        ? "border-primary/30 bg-primary/[0.06] font-bold text-primary"
+                        : "border-border/60 text-muted-foreground")
+                    }
+                  >
+                    <span className="mr-2 font-black">{String.fromCharCode(65 + i)}.</span>
+                    {c}
+                  </p>
+                ))}
+              </div>
+              {row.explanation && (
+                <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                  Pembahasan: {row.explanation}
                 </p>
-              ))}
-              {row.explanation && <p className="text-xs">{row.explanation}</p>}
+              )}
               {!q.data.locked && (
                 <div className="flex gap-2">
                   <Button
@@ -230,9 +360,11 @@ function Page() {
                       setTopic(row.topic || "");
                     }}
                   >
+                    <Pencil className="size-3.5" />
                     Edit
                   </Button>
                   <Button size="sm" variant="ghost" disabled={busy} onClick={() => remove(row)}>
+                    <Trash2 className="size-3.5" />
                     Hapus
                   </Button>
                 </div>

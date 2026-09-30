@@ -1,6 +1,20 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  BookOpenText,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  Copy,
+  Eye,
+  FileQuestion,
+  Megaphone,
+  Pencil,
+  Plus,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +30,10 @@ import {
   secureUrl,
 } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/guru-kelas/$classId/konten")({
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
+    const value = search["tab"];
+    return typeof value === "string" && Object.hasOwn(tables, value) ? { tab: value as Tab } : {};
+  },
   component: Page,
 });
 type Tab = "materi" | "tugas" | "quiz" | "jadwal" | "pengumuman";
@@ -26,6 +44,13 @@ const tables = {
   jadwal: "class_schedule",
   pengumuman: "class_announcements",
 };
+const contentTabs = [
+  { id: "materi", label: "Materi", helper: "Bagikan bahan belajar", icon: BookOpenText },
+  { id: "tugas", label: "Tugas", helper: "Kumpulkan pekerjaan", icon: ClipboardList },
+  { id: "quiz", label: "Kuis otomatis", helper: "Nilai langsung masuk", icon: FileQuestion },
+  { id: "jadwal", label: "Jadwal", helper: "Atur sesi live", icon: CalendarDays },
+  { id: "pengumuman", label: "Pengumuman", helper: "Kirim ke peserta", icon: Megaphone },
+] as const;
 const initial = {
   title: "",
   text: "",
@@ -35,6 +60,7 @@ const initial = {
   category: "Umum",
   topic: "",
   max_score: "100",
+  duration_minutes: "30",
   submission_type: "text",
   allow_late: false,
   is_published: false,
@@ -43,8 +69,10 @@ const initial = {
 };
 function Page() {
   const { classId } = Route.useParams();
+  const search = Route.useSearch();
+  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Tab>("materi");
+  const [tab, setTab] = useState<Tab>(search.tab ?? "materi");
   const [id, setId] = useState<string | null>(null);
   const [f, setF] = useState({ ...initial });
   const [preview, setPreview] = useState(false);
@@ -81,6 +109,12 @@ function Page() {
     mutationFn: async () => {
       if (!f.title.trim()) throw new Error("Judul wajib diisi.");
       if (f.url && !secureUrl(f.url)) throw new Error("Gunakan tautan HTTPS yang valid.");
+      if (
+        tab === "quiz" &&
+        f.duration_minutes &&
+        (Number(f.duration_minutes) < 1 || Number(f.duration_minutes) > 480)
+      )
+        throw new Error("Durasi kuis harus 1–480 menit.");
       const row: any = { class_id: classId, title: f.title.trim() };
       if (tab === "materi")
         Object.assign(row, {
@@ -103,6 +137,7 @@ function Page() {
         Object.assign(row, {
           description: f.text,
           due_at: isoDate(f.date),
+          duration_minutes: f.duration_minutes ? Number(f.duration_minutes) : null,
           is_published: id ? f.is_published : false,
         });
       if (tab === "pengumuman") {
@@ -121,15 +156,28 @@ function Page() {
           passcode: f.passcode || null,
         });
       }
+      if (tab === "quiz" && !id) {
+        const created = await result(
+          classroom.from("class_quizzes").insert(row).select("id").single(),
+        );
+        return created.id as string;
+      }
       await result(
         id
           ? classroom.from(tables[tab]).update(row).eq("id", id).eq("class_id", classId)
           : classroom.from(tables[tab]).insert(row),
       );
     },
-    onSuccess: async () => {
+    onSuccess: async (createdQuizId) => {
       reset();
       await refresh();
+      if (createdQuizId) {
+        await navigate({
+          to: "/guru-kelas/$classId/quiz/$quizId",
+          params: { classId, quizId: createdQuizId },
+        });
+        return;
+      }
       setMessage(
         tab === "quiz"
           ? "Kuis tersimpan. Isi soal terlebih dahulu, lalu terbitkan."
@@ -162,6 +210,7 @@ function Page() {
       category: row.category || "Umum",
       topic: row.topic || "",
       max_score: String(row.max_score ?? 100),
+      duration_minutes: String(row.duration_minutes ?? 30),
       submission_type: row.submission_type || "text",
       allow_late: !!row.allow_late,
       is_published: duplicate ? false : !!row.is_published,
@@ -172,37 +221,75 @@ function Page() {
   const busy = save.isPending || remove.isPending;
   return (
     <AppShell title="Materi & Aktivitas Kelas" backTo={"/guru-kelas/" + classId}>
-      <div className="mx-auto max-w-3xl space-y-4">
+      <div className="mx-auto max-w-4xl space-y-5">
         {access.isPending && <p>Memeriksa akses…</p>}
         {(access.isError || access.data === false) && (
           <p role="alert">Anda tidak memiliki akses mengelola kelas ini.</p>
         )}
         {access.data === true && (
           <>
-            <nav className="flex gap-2 overflow-x-auto">
-              {Object.keys(tables).map((t) => (
-                <Button
-                  key={t}
-                  disabled={busy}
-                  className="capitalize"
-                  size="sm"
-                  variant={tab === t ? "default" : "outline"}
-                  onClick={() => {
-                    setTab(t as Tab);
-                    reset();
-                    save.reset();
-                    remove.reset();
-                  }}
-                >
-                  {t === "quiz" ? "Kuis" : t}
-                </Button>
-              ))}
+            <nav className="grid grid-cols-2 gap-2 sm:grid-cols-5" aria-label="Aktivitas kelas">
+              {contentTabs.map((item) => {
+                const Icon = item.icon;
+                const active = tab === item.id;
+                return (
+                  <button
+                    type="button"
+                    key={item.id}
+                    disabled={busy}
+                    aria-pressed={active}
+                    onClick={() => {
+                      setTab(item.id);
+                      reset();
+                      save.reset();
+                      remove.reset();
+                    }}
+                    className={
+                      "flex min-h-[4.8rem] items-center gap-3 rounded-2xl border px-3 py-3 text-left transition sm:flex-col sm:items-center sm:justify-center sm:gap-1.5 sm:text-center " +
+                      (active
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : "border-border/70 bg-card hover:border-primary/40 hover:bg-primary/[0.05]")
+                    }
+                  >
+                    <Icon className={"size-5 shrink-0 " + (active ? "" : "text-primary")} />
+                    <span>
+                      <span className="block text-xs font-bold">{item.label}</span>
+                      <span
+                        className={
+                          "mt-0.5 block text-[10px] " +
+                          (active ? "text-primary-foreground/75" : "text-muted-foreground")
+                        }
+                      >
+                        {item.helper}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
             </nav>
-            <Card>
-              <CardContent className="space-y-3 p-4">
-                <h1 className="font-black">
-                  {id ? "Edit" : "Buat"} {tab === "quiz" ? "kuis" : tab}
-                </h1>
+            <Card className="border-border/70 shadow-sm">
+              <CardContent className="space-y-4 p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                    {tab === "materi" && <BookOpenText className="size-5" />}
+                    {tab === "tugas" && <ClipboardList className="size-5" />}
+                    {tab === "quiz" && <FileQuestion className="size-5" />}
+                    {tab === "jadwal" && <CalendarDays className="size-5" />}
+                    {tab === "pengumuman" && <Megaphone className="size-5" />}
+                  </span>
+                  <div>
+                    <h1 className="font-black">
+                      {id ? "Edit" : "Buat"} {tab === "quiz" ? "kuis" : tab}
+                    </h1>
+                    <p className="text-xs text-muted-foreground">
+                      {tab === "quiz"
+                        ? "Buat soal pilihan ganda, tandai jawaban benar, lalu nilai peserta otomatis."
+                        : tab === "pengumuman"
+                          ? "Peserta aktif akan menerima notifikasi saat Anda menerbitkannya."
+                          : "Isi bagian penting saja; Anda bisa menyempurnakannya kapan saja."}
+                    </p>
+                  </div>
+                </div>
                 <Field label="Judul">
                   <Input value={f.title} onChange={(e) => set("title", e.target.value)} />
                 </Field>
@@ -219,6 +306,33 @@ function Page() {
                   >
                     <Input type="url" value={f.url} onChange={(e) => set("url", e.target.value)} />
                   </Field>
+                )}
+                {tab === "tugas" && !id && (
+                  <div className="flex flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                        <CheckCircle2 className="size-4" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-bold">Ingin nilai langsung masuk?</p>
+                        <p className="text-xs text-muted-foreground">
+                          Gunakan Kuis otomatis untuk pilihan ganda dengan kunci jawaban dan skor
+                          instan.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setTab("quiz");
+                        reset();
+                      }}
+                    >
+                      <FileQuestion className="size-4" /> Buat kuis otomatis
+                    </Button>
+                  </div>
                 )}
                 {tab === "tugas" && (
                   <>
@@ -274,13 +388,29 @@ function Page() {
                   </>
                 )}
                 {(tab === "tugas" || tab === "quiz") && (
-                  <Field label="Batas pengumpulan (waktu lokal perangkat, opsional)">
-                    <Input
-                      type="datetime-local"
-                      value={f.date}
-                      onChange={(e) => set("date", e.target.value)}
-                    />
-                  </Field>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Batas pengumpulan (waktu lokal, opsional)">
+                      <Input
+                        type="datetime-local"
+                        value={f.date}
+                        onChange={(e) => set("date", e.target.value)}
+                      />
+                    </Field>
+                    {tab === "quiz" && (
+                      <Field label="Durasi target (menit)">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="480"
+                          value={f.duration_minutes}
+                          onChange={(e) => set("duration_minutes", e.target.value)}
+                        />
+                        <span className="block text-[10px] font-normal text-muted-foreground">
+                          Ditampilkan ke peserta sebagai estimasi pengerjaan.
+                        </span>
+                      </Field>
+                    )}
+                  </div>
                 )}
                 {tab === "jadwal" && (
                   <>
@@ -345,6 +475,11 @@ function Page() {
                 )}
                 <div className="flex flex-wrap gap-2">
                   <Button disabled={busy || !f.title.trim()} onClick={() => save.mutate()}>
+                    {tab === "pengumuman" ? (
+                      <Send className="size-4" />
+                    ) : (
+                      <Plus className="size-4" />
+                    )}
                     {save.isPending
                       ? "Menyimpan…"
                       : tab === "jadwal"
@@ -354,6 +489,7 @@ function Page() {
                           : "Simpan Draft"}
                   </Button>
                   <Button variant="outline" onClick={() => setPreview(!preview)}>
+                    <Eye className="size-4" />
                     Pratinjau
                   </Button>
                   {id && (
@@ -418,6 +554,7 @@ function Page() {
                   )}
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" disabled={busy} onClick={() => edit(row)}>
+                      <Pencil className="size-3.5" />
                       Edit
                     </Button>
                     {(tab === "materi" || tab === "tugas") && (
@@ -427,7 +564,7 @@ function Page() {
                         disabled={busy}
                         onClick={() => edit(row, true)}
                       >
-                        Duplikat
+                        <Copy className="size-3.5" /> Duplikat
                       </Button>
                     )}
                     {tab === "quiz" && (
@@ -436,7 +573,7 @@ function Page() {
                           to="/guru-kelas/$classId/quiz/$quizId"
                           params={{ classId, quizId: row.id }}
                         >
-                          Kelola Soal
+                          <FileQuestion className="size-3.5" /> Kelola Soal
                         </Link>
                       </Button>
                     )}
@@ -448,7 +585,7 @@ function Page() {
                         if (window.confirm("Hapus " + row.title + "?")) remove.mutate(row);
                       }}
                     >
-                      Hapus
+                      <Trash2 className="size-3.5" /> Hapus
                     </Button>
                   </div>
                 </CardContent>

@@ -1,6 +1,20 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Award,
+  BookOpenText,
+  CalendarDays,
+  ClipboardList,
+  Clock3,
+  GraduationCap,
+  LayoutDashboard,
+  ListChecks,
+  Megaphone,
+  PlayCircle,
+  Sparkles,
+  Video,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -135,18 +149,44 @@ function Page() {
     lewat: "Batas waktu berakhir",
     belum: "Belum dikumpulkan",
   };
+  const workspaceTabs = [
+    { id: "beranda", label: "Beranda", icon: LayoutDashboard },
+    { id: "materi", label: "Materi", icon: BookOpenText },
+    { id: "tugas", label: "Tugas", icon: ClipboardList },
+    { id: "kuis", label: "Kuis", icon: ListChecks },
+    { id: "jadwal", label: "Jadwal", icon: CalendarDays },
+    { id: "pengumuman", label: "Info", icon: Megaphone },
+    { id: "nilai", label: "Nilai", icon: Award },
+  ] as const;
   const task = (a: any) => (
-    <Card key={a.id}>
-      <CardContent className="space-y-2 p-4">
-        <h2 className="font-bold">{a.title}</h2>
-        <p className="text-xs text-primary">
-          {a.category}
-          {a.topic ? " / " + a.topic : ""}
-        </p>
-        <p className="whitespace-pre-wrap text-sm">{a.description}</p>
-        {a.due_at && <p className="text-xs">Batas: {sessionTime(a.due_at)}</p>}
-        <p className="text-xs font-bold">{statusLabel[taskStatus(a)]}</p>
-        <Button size="sm" asChild>
+    <Card key={a.id} className="overflow-hidden border-border/70 shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <ClipboardList className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-bold leading-tight">{a.title}</h2>
+              <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-semibold">
+                {statusLabel[taskStatus(a)]}
+              </span>
+            </div>
+            <p className="text-xs font-medium text-primary">
+              {a.category}
+              {a.topic ? " · " + a.topic : ""}
+            </p>
+            {a.description && (
+              <p className="whitespace-pre-wrap text-sm text-muted-foreground">{a.description}</p>
+            )}
+            {a.due_at && (
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock3 className="size-3.5" /> Batas {sessionTime(a.due_at)}
+              </p>
+            )}
+          </div>
+        </div>
+        <Button className="mt-4 w-full sm:w-auto" size="sm" asChild>
           <Link to="/kelas/$classId/tugas/$assignmentId" params={{ classId, assignmentId: a.id }}>
             Buka Tugas
           </Link>
@@ -155,50 +195,80 @@ function Page() {
     </Card>
   );
   const notice = (a: any) => (
-    <Card key={a.id}>
-      <CardContent className="space-y-2 p-4">
-        <h2 className="font-bold">{a.title}</h2>
-        <p className="whitespace-pre-wrap text-sm">{a.body}</p>
-        <p className="text-xs text-muted-foreground">
-          {new Date(a.created_at).toLocaleString("id-ID")}
-        </p>
+    <Card key={a.id} className="border-amber-500/20 bg-amber-500/[0.06] shadow-sm">
+      <CardContent className="flex gap-3 p-4">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-500/15 text-amber-600">
+          <Megaphone className="size-4" />
+        </span>
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-bold">{a.title}</h2>
+            <span className="text-[10px] text-muted-foreground">
+              {new Date(a.created_at).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+              })}
+            </span>
+          </div>
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{a.body}</p>
+        </div>
       </CardContent>
     </Card>
   );
   return (
     <AppShell title="Ruang Kelas" backTo="/kelas-saya">
-      <div className="mx-auto max-w-3xl space-y-4">
+      <div className="mx-auto max-w-4xl space-y-5">
         {d?.kelas && (
-          <header>
-            <h1 className="text-xl font-black">{d.kelas.title}</h1>
-            <p className="text-xs text-primary">
-              {d.kelas.level}
-              {d.kelas.status === "closed"
-                ? " · Kelas diarsipkan — materi dan hasil belajar tetap tersedia"
-                : ""}
-            </p>
+          <header className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.16] via-card to-card p-5 shadow-sm sm:p-6">
+            <div className="absolute -right-8 -top-10 size-32 rounded-full bg-primary/10 blur-2xl" />
+            <div className="relative flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-primary">
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1">{d.kelas.level}</span>
+                  <span className="rounded-full bg-background/70 px-2.5 py-1">
+                    {d.kelas.status === "closed" ? "Diarsipkan" : "Kelas aktif"}
+                  </span>
+                </div>
+                <h1 className="max-w-2xl text-2xl font-black tracking-tight sm:text-3xl">
+                  {d.kelas.title}
+                </h1>
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  Semua materi, tugas, jadwal, dan pengumuman kelas ada di satu tempat.
+                </p>
+              </div>
+              <span className="hidden size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary sm:grid">
+                <GraduationCap className="size-6" />
+              </span>
+            </div>
+            {d.kelas.status === "closed" && (
+              <p className="relative mt-3 text-xs text-amber-700">
+                Kelas diarsipkan; materi dan hasil belajar tetap tersedia.
+              </p>
+            )}
           </header>
         )}
-        <nav className="flex gap-2 overflow-x-auto" aria-label="Bagian ruang kelas">
-          {[
-            ["beranda", "Beranda"],
-            ["materi", "Materi"],
-            ["tugas", "Tugas"],
-            ["kuis", "Kuis"],
-            ["jadwal", "Jadwal"],
-            ["pengumuman", "Pengumuman"],
-            ["nilai", "Nilai"],
-          ].map(([id, label]) => (
-            <Button
-              size="sm"
-              key={id}
-              variant={tab === id ? "default" : "outline"}
-              aria-pressed={tab === id}
-              onClick={() => setTab(id!)}
-            >
-              {label}
-            </Button>
-          ))}
+        <nav className="grid grid-cols-4 gap-2 sm:grid-cols-7" aria-label="Bagian ruang kelas">
+          {workspaceTabs.map((item) => {
+            const Icon = item.icon;
+            const active = tab === item.id;
+            return (
+              <button
+                type="button"
+                key={item.id}
+                aria-pressed={active}
+                onClick={() => setTab(item.id)}
+                className={
+                  "group flex min-h-[4.6rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-2 text-center text-[11px] font-semibold transition " +
+                  (active
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-border/70 bg-card text-muted-foreground hover:border-primary/40 hover:bg-primary/[0.05] hover:text-foreground")
+                }
+              >
+                <Icon className={"size-[18px] " + (active ? "" : "text-primary")} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
         {q.isPending && <p>Memuat kelas…</p>}
         {q.isError && (
@@ -210,24 +280,61 @@ function Page() {
           <>
             {tab === "beranda" && (
               <>
-                <h1 className="text-xl font-black">Kegiatan Kelas</h1>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {[
+                    [BookOpenText, "Materi", d.materials.length],
+                    [ClipboardList, "Tugas", d.assignments.length],
+                    [ListChecks, "Kuis", d.quizzes.length],
+                    [CalendarDays, "Sesi", d.schedule.length],
+                  ].map(([Icon, label, value]) => (
+                    <Card key={label as string} className="border-border/70 shadow-sm">
+                      <CardContent className="flex items-center gap-2.5 p-3">
+                        <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary">
+                          <Icon className="size-4" />
+                        </span>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">{label as string}</p>
+                          <strong className="text-lg">{value as number}</strong>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Sparkles className="size-4 text-primary" />
+                  <h1 className="text-xl font-black">Kegiatan kelas</h1>
+                </div>
                 {next ? (
-                  <Card>
-                    <CardContent className="space-y-2 p-4">
-                      <h2 className="font-bold">
-                        {new Date(next.starts_at).getTime() <= Date.now()
-                          ? "Sesi berlangsung"
-                          : "Sesi berikutnya"}
-                        : {next.title}
-                      </h2>
-                      <p className="text-xs">{sessionTime(next.starts_at, next.ends_at)}</p>
+                  <Card className="overflow-hidden border-primary/20 bg-gradient-to-r from-primary/[0.08] to-card shadow-sm">
+                    <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                          <Video className="size-5" />
+                        </span>
+                        <div>
+                          <p className="text-xs font-semibold text-primary">
+                            {new Date(next.starts_at).getTime() <= Date.now()
+                              ? "Sedang berlangsung"
+                              : "Sesi berikutnya"}
+                          </p>
+                          <h2 className="font-bold">{next.title}</h2>
+                          <p className="text-xs text-muted-foreground">
+                            {sessionTime(next.starts_at, next.ends_at)}
+                          </p>
+                        </div>
+                      </div>
                       <Live meeting={next.meeting_url ? next : d.meeting} />
                     </CardContent>
                   </Card>
                 ) : (
                   <Live meeting={d.meeting} />
                 )}
-                <h2 className="font-bold">Tugas belum selesai ({outstanding?.length ?? 0})</h2>
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <h2 className="font-bold">Tugas belum selesai</h2>
+                  <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+                    {outstanding?.length ?? 0}
+                  </span>
+                </div>
                 {outstanding?.slice(0, 3).map(task)}
                 {(outstanding?.length ?? 0) > 3 && (
                   <Button variant="outline" size="sm" onClick={() => setTab("tugas")}>
@@ -239,7 +346,10 @@ function Page() {
                     Tidak ada tugas yang perlu dikumpulkan.
                   </p>
                 )}
-                <h2 className="font-bold">Pengumuman terbaru</h2>
+                <div className="flex items-center gap-2 pt-1">
+                  <Megaphone className="size-4 text-amber-600" />
+                  <h2 className="font-bold">Pengumuman terbaru</h2>
+                </div>
                 {d.announcements.slice(0, 2).map(notice)}
                 {!d.announcements.length && (
                   <p className="text-sm text-muted-foreground">Belum ada pengumuman.</p>
@@ -422,12 +532,24 @@ function Page() {
   );
 }
 function Empty() {
-  return <p className="rounded-xl bg-muted p-4 text-sm">Belum ada konten pada bagian ini.</p>;
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-dashed border-border/80 bg-muted/40 p-5 text-sm text-muted-foreground">
+      <span className="grid size-9 place-items-center rounded-xl bg-background text-primary">
+        <BookOpenText className="size-4" />
+      </span>
+      Belum ada konten pada bagian ini.
+    </div>
+  );
 }
 function Live({ meeting }: { meeting: any }) {
   const [message, setMessage] = useState("");
   const url = secureUrl(meeting?.meeting_url);
-  if (!url) return <p className="text-xs text-muted-foreground">Akses sesi live belum tersedia.</p>;
+  if (!url)
+    return (
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Video className="size-3.5" /> Akses sesi live belum tersedia.
+      </p>
+    );
   async function copy(value: string) {
     try {
       await navigator.clipboard.writeText(value);
@@ -438,8 +560,9 @@ function Live({ meeting }: { meeting: any }) {
   }
   return (
     <div className="space-y-2">
-      <Button size="sm" asChild>
+      <Button size="sm" className="w-full sm:w-auto" asChild>
         <a href={url} target="_blank" rel="noreferrer">
+          <PlayCircle className="size-4" />
           Masuk Kelas Live
         </a>
       </Button>
