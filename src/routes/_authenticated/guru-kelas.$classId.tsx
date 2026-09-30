@@ -1,6 +1,21 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Archive,
+  BarChart3,
+  BookOpenText,
+  ClipboardCheck,
+  ClipboardList,
+  Eye,
+  GraduationCap,
+  LayoutDashboard,
+  Megaphone,
+  Settings2,
+  Sparkles,
+  UsersRound,
+  Video,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +60,7 @@ function Page() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["teacher-workspace", classId] });
   return (
     <AppShell title="Kelola Kelas" backTo="/guru">
-      <div className="mx-auto max-w-3xl space-y-4">
+      <div className="mx-auto max-w-4xl space-y-5">
         {q.isPending && <p>Memuat kelas…</p>}
         {q.isError && (
           <p role="alert" className="text-sm text-destructive">
@@ -54,76 +69,161 @@ function Page() {
         )}
         {d && (
           <>
-            <div>
-              <p className="text-xs text-primary">
-                {d.kelas.level} · {d.kelas.status}
-              </p>
-              <h1 className="text-xl font-black">{d.kelas.title}</h1>
-            </div>
-            <nav className="flex flex-wrap gap-2" aria-label="Kelola kelas">
+            <header className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.16] via-card to-card p-5 shadow-sm sm:p-6">
+              <div className="absolute -right-8 -top-10 size-36 rounded-full bg-primary/10 blur-2xl" />
+              <div className="relative flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-primary">
+                    <span className="rounded-full bg-primary/10 px-2.5 py-1">{d.kelas.level}</span>
+                    <span className="rounded-full bg-background/75 px-2.5 py-1 capitalize">
+                      {d.kelas.status}
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
+                    {d.kelas.title}
+                  </h1>
+                  <p className="max-w-2xl text-sm text-muted-foreground">
+                    Kelola perjalanan belajar peserta, publikasikan aktivitas, dan siapkan sesi
+                    berikutnya.
+                  </p>
+                </div>
+                <span className="hidden size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary sm:grid">
+                  <GraduationCap className="size-6" />
+                </span>
+              </div>
+            </header>
+            <nav className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Kelola kelas">
               {[
-                ["ringkasan", "Ringkasan"],
-                ["peserta", "Peserta & Nilai"],
-                ["pengaturan", "Pengaturan Kelas"],
-              ].map(([id, label]) => (
-                <Button
-                  key={id}
-                  size="sm"
-                  variant={tab === id ? "default" : "outline"}
-                  onClick={() => setTab(id!)}
-                >
-                  {label}
-                </Button>
-              ))}
-              <Button size="sm" variant="outline" asChild>
+                { id: "ringkasan", label: "Ringkasan", icon: LayoutDashboard },
+                { id: "peserta", label: "Peserta", icon: UsersRound },
+                { id: "pengaturan", label: "Pengaturan", icon: Settings2 },
+              ].map((item) => {
+                const Icon = item.icon;
+                const active = tab === item.id;
+                return (
+                  <button
+                    type="button"
+                    key={item.id}
+                    aria-pressed={active}
+                    onClick={() => setTab(item.id)}
+                    className={
+                      "flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-2 text-center text-[11px] font-semibold transition " +
+                      (active
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : "border-border/70 bg-card text-muted-foreground hover:border-primary/40 hover:bg-primary/[0.05] hover:text-foreground")
+                    }
+                  >
+                    <Icon className={"size-[18px] " + (active ? "" : "text-primary")} />
+                    {item.label}
+                  </button>
+                );
+              })}
+              <Button
+                className="h-auto min-h-[4.5rem] flex-col gap-1.5 rounded-2xl px-2 text-[11px]"
+                variant="outline"
+                asChild
+              >
                 <Link to="/guru-kelas/$classId/konten" params={{ classId }}>
-                  Materi, Tugas & Jadwal
+                  <BookOpenText className="size-[18px] text-primary" />
+                  Konten & tugas
                 </Link>
               </Button>
-              <Button size="sm" variant="outline" asChild>
+              <Button
+                className="h-auto min-h-[4.5rem] flex-col gap-1.5 rounded-2xl px-2 text-[11px]"
+                variant="outline"
+                asChild
+              >
                 <Link to="/guru-kelas/$classId/nilai" params={{ classId }}>
-                  Nilai Tugas
+                  <ClipboardCheck className="size-[18px] text-primary" />
+                  Nilai tugas
                 </Link>
               </Button>
-              <Button size="sm" variant="outline" asChild>
+              <Button
+                className="h-auto min-h-[4.5rem] flex-col gap-1.5 rounded-2xl px-2 text-[11px]"
+                variant="outline"
+                asChild
+              >
                 <Link to="/kelas/$classId/workspace" params={{ classId }}>
-                  Pratinjau Konten Terbit
+                  <Eye className="size-[18px] text-primary" />
+                  Pratinjau siswa
                 </Link>
               </Button>
             </nav>
             {tab === "ringkasan" && (
               <>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {[
                     [
+                      UsersRound,
                       "Peserta aktif",
                       d.participants.filter((p: any) => p.status === "active").length,
+                      "bg-sky-500/10 text-sky-600",
                     ],
-                    ["Tugas terbit", d.assignments.filter((a: any) => a.is_published).length],
                     [
+                      ClipboardList,
+                      "Tugas terbit",
+                      d.assignments.filter((a: any) => a.is_published).length,
+                      "bg-violet-500/10 text-violet-600",
+                    ],
+                    [
+                      ClipboardCheck,
                       "Perlu dinilai",
                       d.submissions.filter((s: any) => s.current_score == null).length,
+                      "bg-amber-500/10 text-amber-600",
                     ],
-                  ].map(([label, value]) => (
-                    <Card key={label}>
-                      <CardContent className="p-3">
-                        <p className="text-[10px] text-muted-foreground">{label}</p>
-                        <strong className="text-xl">{value}</strong>
+                    [
+                      BarChart3,
+                      "Topik dianalisis",
+                      d.insights.length,
+                      "bg-primary/10 text-primary",
+                    ],
+                  ].map(([Icon, label, value, tone]) => (
+                    <Card key={label as string} className="border-border/70 shadow-sm">
+                      <CardContent className="flex items-center gap-2.5 p-3">
+                        <span
+                          className={
+                            "grid size-9 place-items-center rounded-xl " + (tone as string)
+                          }
+                        >
+                          <Icon className="size-4" />
+                        </span>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">{label as string}</p>
+                          <strong className="text-xl">{value as number}</strong>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-                <Card>
-                  <CardContent className="space-y-2 p-4">
-                    <h2 className="font-bold">Persiapan mengajar</h2>
-                    <p className="text-xs text-muted-foreground">
-                      Buka Peserta & Nilai untuk melihat tugas yang tertinggal, koreksi guru, dan
-                      topik yang perlu diulang. Statistik kuis menggunakan percobaan terbaru setiap
-                      kuis.
-                    </p>
-                    <Button size="sm" onClick={() => setTab("peserta")}>
-                      Lihat perkembangan peserta
-                    </Button>
+                <Card className="overflow-hidden border-primary/20 bg-gradient-to-r from-primary/[0.08] to-card shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                        <Sparkles className="size-5" />
+                      </span>
+                      <div className="space-y-2">
+                        <h2 className="font-black">Persiapan mengajar</h2>
+                        <p className="text-xs text-muted-foreground">
+                          Buka Peserta & Nilai untuk melihat tugas yang tertinggal, koreksi guru,
+                          dan topik yang perlu diulang. Statistik kuis menggunakan percobaan terbaru
+                          setiap kuis.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" onClick={() => setTab("peserta")}>
+                            <BarChart3 className="size-4" /> Lihat perkembangan peserta
+                          </Button>
+                          <Button size="sm" variant="outline" asChild>
+                            <Link
+                              to="/guru-kelas/$classId/konten"
+                              params={{ classId }}
+                              search={{ tab: "pengumuman" }}
+                            >
+                              <Megaphone className="size-4" /> Buat pengumuman
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </>
@@ -131,7 +231,9 @@ function Page() {
             {tab === "peserta" && (
               <div className="space-y-3">
                 {d.participants.length === 0 && (
-                  <p className="rounded-xl bg-muted p-4 text-sm">Belum ada peserta.</p>
+                  <div className="flex items-center gap-3 rounded-2xl border border-dashed bg-muted/40 p-5 text-sm text-muted-foreground">
+                    <UsersRound className="size-5 text-primary" /> Belum ada peserta.
+                  </div>
                 )}
                 {d.participants.map((p: any) => {
                   const submitted = d.submissions.filter((s: any) => s.user_id === p.user_id);
@@ -152,23 +254,45 @@ function Page() {
                   const topics = d.insights.filter((i: any) => i.user_id === p.user_id);
                   const attempts = d.attempts.filter((a: any) => a.user_id === p.user_id);
                   return (
-                    <details key={p.user_id} className="rounded-xl border p-4">
-                      <summary className="cursor-pointer">
-                        <strong className="text-sm">{p.display_name}</strong>
+                    <details
+                      key={p.user_id}
+                      className="group rounded-2xl border border-border/70 bg-card p-4 shadow-sm"
+                    >
+                      <summary className="cursor-pointer list-none">
+                        <div className="flex items-start gap-3">
+                          <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                            <UsersRound className="size-5" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <strong className="text-sm">{p.display_name}</strong>
+                            <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold">
+                              <span className="rounded-full bg-primary/10 px-2 py-1 text-primary">
+                                {p.status}
+                              </span>
+                              <span className="rounded-full bg-muted px-2 py-1">
+                                {missing.length} belum dikumpulkan
+                              </span>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-muted px-2 py-1 text-xs font-bold">
+                            {average == null ? "—" : average}
+                          </span>
+                        </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Rata-rata tugas: {average == null ? "Belum dinilai" : average + "/100"} ·{" "}
-                          {missing.length} belum dikumpulkan · {p.status}
+                          Rata-rata tugas {average == null ? "belum dinilai" : average + "/100"}
                         </p>
                       </summary>
-                      <div className="mt-4 space-y-3 text-xs">
-                        <h3 className="font-bold">Nilai tugas dan koreksi</h3>
+                      <div className="mt-4 space-y-4 border-t pt-4 text-xs">
+                        <h3 className="flex items-center gap-2 font-bold">
+                          <ClipboardCheck className="size-4 text-primary" /> Nilai tugas dan koreksi
+                        </h3>
                         {submitted.map((s: any) => {
                           const grade = d.grades.find(
                             (g: any) =>
                               g.assignment_id === s.assignment_id && g.user_id === p.user_id,
                           );
                           return (
-                            <div key={s.id} className="rounded-lg bg-muted p-3">
+                            <div key={s.id} className="rounded-xl border bg-muted/40 p-3">
                               <b>{s.assignment_title}</b>
                               <p>
                                 {s.current_score == null
@@ -183,7 +307,9 @@ function Page() {
                         {missing.length > 0 && (
                           <p>Belum dikumpulkan: {missing.map((a: any) => a.title).join(", ")}</p>
                         )}
-                        <h3 className="font-bold">Kemampuan per topik</h3>
+                        <h3 className="flex items-center gap-2 font-bold">
+                          <BarChart3 className="size-4 text-primary" /> Kemampuan per topik
+                        </h3>
                         {topics.length === 0 ? (
                           <p className="text-muted-foreground">
                             Belum ada jawaban kuis untuk dianalisis.
@@ -210,7 +336,9 @@ function Page() {
                             untuk menyimpulkan kemampuan keseluruhan.
                           </p>
                         )}
-                        <h3 className="font-bold">Riwayat kuis</h3>
+                        <h3 className="flex items-center gap-2 font-bold">
+                          <ClipboardList className="size-4 text-primary" /> Riwayat kuis
+                        </h3>
                         {attempts.map((a: any) => (
                           <p key={a.attempt_id}>
                             {a.quiz_title} · {a.score}/100 ·{" "}
@@ -304,9 +432,19 @@ function Settings({
     }
   }
   return (
-    <Card>
+    <Card className="border-border/70 shadow-sm">
       <CardContent className="space-y-4 p-4">
-        <h2 className="font-black">Informasi Kelas</h2>
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <Settings2 className="size-5" />
+          </span>
+          <div>
+            <h2 className="font-black">Informasi kelas</h2>
+            <p className="text-xs text-muted-foreground">
+              Perbarui detail yang terlihat peserta dan akses kelas live.
+            </p>
+          </div>
+        </div>
         <Field label="Nama kelas">
           <Input value={f.title} onChange={(e) => set("title", e.target.value)} />
         </Field>
@@ -342,7 +480,9 @@ function Settings({
             onChange={(e) => set("price", e.target.value)}
           />
         </Field>
-        <h2 className="font-black">Google Meet / Zoom</h2>
+        <h2 className="flex items-center gap-2 border-t pt-4 font-black">
+          <Video className="size-4 text-primary" /> Google Meet / Zoom
+        </h2>
         <p className="text-xs text-muted-foreground">
           Akses umum kelas. Jadwal sesi dapat memakai link dan kode tersendiri.
         </p>
@@ -392,6 +532,7 @@ function Settings({
           )}
           {kelas.status !== "closed" && (
             <Button disabled={busy} variant="outline" onClick={() => run("archive")}>
+              <Archive className="size-4" />
               Arsipkan Kelas
             </Button>
           )}
