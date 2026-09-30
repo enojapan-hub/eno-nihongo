@@ -121,6 +121,7 @@ function Quiz({
   const [now, setNow] = useState(Date.now());
   const key = `class-quiz:${userId}:${quiz.id}`;
   const expired = !!quiz.due_at && new Date(quiz.due_at).getTime() < now;
+  const completed = submitted || attempts[0] || null;
   const current = submitted?.id === selected ? submitted : attempts.find((a) => a.id === selected);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -142,13 +143,13 @@ function Quiz({
     setLoaded(true);
   }, [key, questions]);
   useEffect(() => {
-    if (!loaded || selected || expired) return;
+    if (!loaded || selected || expired || completed) return;
     try {
       localStorage.setItem(key, JSON.stringify(answers));
     } catch {
       setDraftAvailable(false);
     }
-  }, [answers, key, loaded, selected, expired]);
+  }, [answers, key, loaded, selected, expired, completed]);
   const review = useQuery({
     queryKey: ["student-quiz-review", userId, selected],
     enabled: !!current,
@@ -156,7 +157,7 @@ function Quiz({
       result<Review[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: selected })),
   });
   async function submit() {
-    if (busy || expired || Object.keys(answers).length !== questions.length) return;
+    if (busy || expired || completed || Object.keys(answers).length !== questions.length) return;
     setBusy(true);
     setError("");
     try {
@@ -208,7 +209,22 @@ function Quiz({
           </div>
         </div>
       </div>
-      {selected ? (
+      {!selected && completed ? (
+        <Card className="border-primary/20 bg-primary/[0.05]">
+          <CardContent className="space-y-3 p-5 text-center">
+            <h2 className="font-bold">Kuis sudah dikumpulkan</h2>
+            <p className="text-sm text-muted-foreground">
+              Setiap peserta hanya dapat mengirim kuis ini satu kali. Jawaban dan nilai sudah tercatat di panel guru.
+            </p>
+            <p className="text-3xl font-black text-primary">
+              {completed.score}<span className="text-sm"> / 100</span>
+            </p>
+            <Button variant="outline" onClick={() => setSelected(completed.id)}>
+              Lihat Hasil & Pembahasan
+            </Button>
+          </CardContent>
+        </Card>
+      ) : selected ? (
         <>
           {current ? (
             <>
@@ -270,7 +286,7 @@ function Quiz({
             <p role="alert">Hasil ini tidak ditemukan dalam riwayat kuis Anda.</p>
           )}
           <Button variant="outline" onClick={() => setSelected(null)}>
-            {expired ? "Lihat Riwayat" : "Kembali ke Kuis"}
+            Kembali ke Hasil
           </Button>
         </>
       ) : (
@@ -346,7 +362,7 @@ function Quiz({
             <section className="space-y-2">
               <h2 className="font-bold">Riwayat Kuis</h2>
               <p className="text-xs text-muted-foreground">
-                Statistik topik menggunakan hasil percobaan terbaru.
+                Kuis hanya dapat dikumpulkan satu kali.
               </p>
               {attempts.map((a) => (
                 <button
