@@ -46,7 +46,7 @@ const sections = [
     items: [
       ["Pengguna", Users, "Akun, role, paket dan status", "/admin-pengguna"],
       ["Langganan", ShoppingBag, "Free, Premium dan Lifetime", "/admin-langganan"],
-      ["Keuangan", DollarSign, "Menunggu integrasi Duitku", null],
+      ["Keuangan", DollarSign, "Dashboard finansial dan komisi guru", "/admin-keuangan"],
       ["Analitik", BarChart3, "Aktivitas dan performa platform", "/admin-analitik"],
     ],
   },
