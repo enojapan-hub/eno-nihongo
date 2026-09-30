@@ -53,13 +53,13 @@ const sections = [
   {
     title: "Operasional",
     items: [
-      ["Review Konten", ClipboardCheck, "Draft yang menunggu pemeriksaan", "/admin-operasional"],
-      ["Pengumuman", Megaphone, "Informasi dan notifikasi pengguna", "/admin-operasional"],
-      ["Laporan", MessageSquareWarning, "Kesalahan konten dan laporan pengguna", "/admin-operasional"],
-      ["Media", Image, "Gambar, audio, banner dan file", "/admin-operasional"],
+      ["Review Konten", ClipboardCheck, "Status pemeriksaan dan kualitas materi", "/admin-operasional?tab=review"],
+      ["Pengumuman", Megaphone, "Informasi dan notifikasi pengguna", "/admin-operasional?tab=pengumuman"],
+      ["Laporan", MessageSquareWarning, "Kesalahan konten dan laporan pengguna", "/admin-operasional?tab=laporan"],
+      ["Media", Image, "Gambar, audio, banner dan file", "/admin-operasional?tab=media"],
       ["Import / Export", FileUp, "Pekerjaan batch dan ekspor data", "/admin-terjemahan"],
       ["Sistem & Audit", CloudCog, "Kesehatan sistem dan audit log", "/admin-sistem"],
-      ["Role & Permission", Settings, "Kontrol akses pengguna", "/admin-pengguna"],
+      ["Role & Permission", Settings, "Kontrol role dan hak akses pengguna", "/admin-pengguna?view=roles"],
     ],
   },
 ] as const;
