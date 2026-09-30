@@ -339,12 +339,13 @@ function Page() {
                         <h3 className="flex items-center gap-2 font-bold">
                           <ClipboardList className="size-4 text-primary" /> Riwayat kuis
                         </h3>
-                        {attempts.map((a: any) => (
-                          <p key={a.attempt_id}>
-                            {a.quiz_title} · {a.score}/100 ·{" "}
-                            {new Date(a.submitted_at).toLocaleString("id-ID")}
-                          </p>
-                        ))}
+                        {attempts.length === 0 ? (
+                          <p className="text-muted-foreground">Belum ada kuis yang dikumpulkan.</p>
+                        ) : (
+                          attempts.map((a: any) => (
+                            <TeacherQuizAttempt key={a.attempt_id} attempt={a} />
+                          ))
+                        )}
                       </div>
                     </details>
                   );
@@ -364,6 +365,68 @@ function Page() {
         )}
       </div>
     </AppShell>
+  );
+}
+function TeacherQuizAttempt({ attempt }: { attempt: any }) {
+  const review = useQuery({
+    queryKey: ["teacher-quiz-review", attempt.attempt_id],
+    queryFn: () =>
+      result<any[]>(
+        classroom.rpc("get_class_quiz_review", { p_attempt_id: attempt.attempt_id }),
+      ),
+    staleTime: Infinity,
+  });
+  const wrong = review.data?.filter((row: any) => !row.is_correct) ?? [];
+  return (
+    <details className="rounded-xl border bg-muted/30 p-3">
+      <summary className="cursor-pointer list-none">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <b>{attempt.quiz_title}</b>
+            <p className="text-[10px] text-muted-foreground">
+              {new Date(attempt.submitted_at).toLocaleString("id-ID")} · satu kali pengerjaan
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 font-black text-primary">
+            {attempt.score}/100
+          </span>
+        </div>
+        <p className="mt-1 text-[11px]">
+          {attempt.correct_count}/{attempt.total_questions} benar
+          {review.data ? ` · ${wrong.length} salah` : ""}
+        </p>
+      </summary>
+      <div className="mt-3 space-y-2 border-t pt-3">
+        {review.isPending && <p className="text-muted-foreground">Memuat detail jawaban…</p>}
+        {review.isError && (
+          <p className="text-destructive">Detail jawaban gagal dimuat.</p>
+        )}
+        {review.data?.map((row: any, index: number) => {
+          const selected = Number(row.selected_index);
+          const correct = Number(row.correct_index);
+          return (
+            <div
+              key={row.question_id}
+              className={
+                "rounded-lg border p-2.5 " +
+                (row.is_correct ? "border-primary/20" : "border-destructive/25 bg-destructive/[0.04]")
+              }
+            >
+              <p className="font-bold">
+                {index + 1}. {row.question}
+              </p>
+              <p className={row.is_correct ? "text-primary" : "text-destructive"}>
+                {row.is_correct ? "Benar" : "Salah"} · Jawaban peserta:{" "}
+                {selected >= 0 ? row.choices?.[selected] ?? "Tidak valid" : "Tidak dijawab"}
+              </p>
+              {!row.is_correct && (
+                <p>Jawaban benar: {row.choices?.[correct] ?? "—"}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </details>
   );
 }
 function Settings({
