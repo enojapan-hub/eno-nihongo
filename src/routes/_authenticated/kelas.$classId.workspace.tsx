@@ -170,10 +170,9 @@ function Page() {
   const workspaceTabs = [
     { id: "beranda", label: "Beranda", icon: LayoutDashboard },
     { id: "materi", label: "Materi", icon: BookOpenText },
-    { id: "tugas", label: "Tugas", icon: ClipboardList },
-    { id: "kuis", label: "Kuis", icon: ListChecks },
+    { id: "tugas", label: "Tugas & Kuis", icon: ClipboardList },
     { id: "jadwal", label: "Jadwal", icon: CalendarDays },
-    { id: "pengumuman", label: "Info", icon: Megaphone },
+    { id: "pengumuman", label: "Pengumuman", icon: Megaphone },
     { id: "nilai", label: "Nilai", icon: Award },
   ] as const;
   const task = (a: any) => (
@@ -274,7 +273,7 @@ function Page() {
             )}
           </header>
         )}
-        <nav className="grid grid-cols-4 gap-2 sm:grid-cols-7" aria-label="Bagian ruang kelas">
+        <nav className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Bagian ruang kelas">
           {workspaceTabs.map((item) => {
             const Icon = item.icon;
             const active = tab === item.id;
@@ -458,8 +457,9 @@ function Page() {
                 {!d.assignments.length && <Empty />}
               </>
             )}
-            {tab === "kuis" && (
+            {tab === "tugas" && (
               <>
+                <div className="mt-2 flex items-center gap-2"><ListChecks className="size-4 text-primary"/><h2 className="font-bold">Kuis</h2><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{d.quizzes.length}</span></div>
                 {d.quizzes.map((k: any) => (
                   <Card key={k.id}>
                     <CardContent className="space-y-2 p-4">
@@ -485,7 +485,7 @@ function Page() {
                     </CardContent>
                   </Card>
                 ))}
-                {!d.quizzes.length && <Empty />}
+                {!d.quizzes.length && <p className="text-sm text-muted-foreground">Belum ada kuis.</p>}
               </>
             )}
             {tab === "jadwal" && (
