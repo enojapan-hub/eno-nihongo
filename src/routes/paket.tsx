@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, Check, ChevronRight, Crown, Gem, GraduationCap, Headphones, Infinity, LockKeyhole, Mail, MapPin, Phone, ShieldCheck, Sparkles, Trophy } from "lucide-react";
+import { BarChart3, Check, ChevronRight, Crown, Gem, GraduationCap, Headphones, Infinity as InfinityIcon, LockKeyhole, Mail, MapPin, Phone, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import { PUBLIC_PLANS, formatRupiah } from "@/lib/public-plans";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -25,7 +25,7 @@ function PaketPage(){
    <section className="relative mt-9 grid items-stretch gap-4 md:grid-cols-3">
     {PUBLIC_PLANS.map(plan=><article key={plan.code} className={`relative flex flex-col rounded-[1.75rem] border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-card ${plan.featured?"border-[#23804d] ring-1 ring-[#23804d]/10 md:-translate-y-2":"border-slate-200 dark:border-border"}`}>
      {plan.featured&&<span className="absolute -top-3 left-5 inline-flex items-center gap-1.5 rounded-full bg-[#23804d] px-3 py-1.5 text-[10px] font-black text-white shadow-sm"><Crown className="size-3.5"/>PILIHAN TERBAIK</span>}
-     <div className={plan.featured?"mt-2":""}><div className="flex items-start justify-between gap-2"><h2 className="text-lg font-black">{plan.name}</h2>{plan.code==="lifetime"&&<Infinity className="size-5 text-[#23804d]"/>}</div><p className="mt-4 text-3xl font-black tracking-tight text-[#23804d]">{formatRupiah(plan.price)}</p><p className="mt-1 text-xs font-medium text-slate-500 dark:text-muted-foreground">{plan.billing}</p></div>
+     <div className={plan.featured?"mt-2":""}><div className="flex items-start justify-between gap-2"><h2 className="text-lg font-black">{plan.name}</h2>{plan.code==="lifetime"&&<InfinityIcon className="size-5 text-[#23804d]"/>}</div><p className="mt-4 text-3xl font-black tracking-tight text-[#23804d]">{formatRupiah(plan.price)}</p><p className="mt-1 text-xs font-medium text-slate-500 dark:text-muted-foreground">{plan.billing}</p></div>
      <p className="mt-4 min-h-10 text-xs leading-5 text-slate-600 dark:text-muted-foreground">{plan.description}</p>
      <div className="my-4 h-px bg-slate-100 dark:bg-border"/>
      <ul className="space-y-2.5 text-[11px] text-slate-700 dark:text-foreground">{["Latihan Premium dan progres akun","ENO Exam Bulanan","Akses fitur Premium"].map(x=><li key={x} className="flex items-center gap-2"><span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-50 text-[#23804d] dark:bg-primary/10 dark:text-primary"><Check className="size-3.5"/></span>{x}</li>)}</ul>
