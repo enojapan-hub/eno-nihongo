@@ -208,14 +208,14 @@ function Page() {
               <Sparkles className="size-4 text-primary" />
               <h2 className="text-sm font-black">{section.title}</h2>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               {section.items.map(([label, Icon, desc, to]) => {
                 const body = (
                   <Card className="group h-full border-border/60 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
-                    <CardContent className="flex h-full flex-col p-4">
+                    <CardContent className="flex h-full min-h-[132px] flex-col p-3 sm:min-h-[150px] sm:p-4">
                       <div className="flex items-start justify-between">
-                        <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-                          <Icon className="size-5" />
+                        <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground sm:size-10 sm:rounded-2xl">
+                          <Icon className="size-4 sm:size-5" />
                         </span>
                         {to ? (
                           <ArrowUpRight className="size-4 text-muted-foreground/40 transition group-hover:text-primary" />
@@ -225,9 +225,9 @@ function Page() {
                           </span>
                         )}
                       </div>
-                      <h3 className="mt-4 text-sm font-black">{label}</h3>
-                      <p className="mt-1 flex-1 text-[10px] leading-relaxed text-muted-foreground">{desc}</p>
-                      <p className="mt-4 text-[10px] font-bold text-primary">
+                      <h3 className="mt-2.5 text-xs font-black sm:mt-4 sm:text-sm">{label}</h3>
+                      <p className="mt-1 line-clamp-2 flex-1 text-[9px] leading-relaxed text-muted-foreground sm:text-[10px]">{desc}</p>
+                      <p className="mt-2 text-[9px] font-bold text-primary sm:mt-4 sm:text-[10px]">
                         {to ? "Kelola →" : "Menunggu Duitku"}
                       </p>
                     </CardContent>
