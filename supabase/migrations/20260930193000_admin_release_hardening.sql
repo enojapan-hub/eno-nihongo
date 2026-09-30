@@ -108,3 +108,25 @@ drop policy if exists "admin_media_staff_delete" on storage.objects;
 create policy "admin_media_staff_insert" on storage.objects for insert to authenticated with check(bucket_id='admin-media' and public.has_permission('operations.manage'));
 create policy "admin_media_staff_update" on storage.objects for update to authenticated using(bucket_id='admin-media' and public.has_permission('operations.manage')) with check(bucket_id='admin-media' and public.has_permission('operations.manage'));
 create policy "admin_media_staff_delete" on storage.objects for delete to authenticated using(bucket_id='admin-media' and public.has_permission('operations.manage'));
+
+create table if not exists public.admin_import_backups(
+ id uuid primary key default gen_random_uuid(),
+ actor_id uuid not null references auth.users(id),
+ content_type text not null,
+ key_field text not null,
+ source_file text,
+ rows jsonb not null,
+ row_count int not null,
+ created_at timestamptz not null default now()
+);
+alter table public.admin_import_backups enable row level security;
+revoke all on public.admin_import_backups from anon,authenticated;
+create or replace function public.get_admin_import_backups()
+returns table(id uuid,content_type text,source_file text,row_count int,created_at timestamptz)
+language plpgsql security definer set search_path='' as $$
+begin
+ if not public.has_permission('import_export.manage') then raise exception 'forbidden'; end if;
+ return query select b.id,b.content_type,b.source_file,b.row_count,b.created_at from public.admin_import_backups b order by b.created_at desc limit 20;
+end$$;
+revoke all on function public.get_admin_import_backups() from public,anon;
+grant execute on function public.get_admin_import_backups() to authenticated;
