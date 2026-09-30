@@ -53,7 +53,8 @@ const sections = [
   {
     title: "Operasional",
     items: [
-      ["Kontrol Operasional", ClipboardCheck, "Review, laporan, pengumuman dan media", "/admin-operasional"],
+      ["Kontrol Operasional", ClipboardCheck, "Review, laporan dan pengumuman", "/admin-operasional"],
+      ["Media Manager", Image, "Upload, preview dan safe-delete media", "/admin-media"],
       ["Import / Export", FileUp, "Import aman, validasi dan ekspor data", "/admin-import-export"],
       ["Sistem & Audit", CloudCog, "Kesehatan sistem dan audit log", "/admin-sistem"],
       ["Role & Permission", Settings, "Role dinamis, permission dan anggota", "/admin-role-permission"],
