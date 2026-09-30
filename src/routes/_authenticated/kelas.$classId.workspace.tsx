@@ -21,10 +21,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { classroom, result, secureUrl, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    preview: search.preview === "guru" ? ("guru" as const) : undefined,
+  }),
   component: Page,
 });
 function Page() {
   const { classId } = Route.useParams();
+  const { preview } = Route.useSearch();
+  const teacherPreview = preview === "guru";
   const [tab, setTab] = useState("beranda");
   const [taskFilter, setTaskFilter] = useState("semua");
   const q = useQuery({
@@ -33,8 +38,10 @@ function Page() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user || !(await result(classroom.rpc("is_class_member", { p_class_id: classId }))))
-        throw new Error("Anda belum terdaftar di kelas ini.");
+      if (!user) throw new Error("Login diperlukan.");
+      const canManage = await result(classroom.rpc("can_manage_class", { p_class_id: classId }));
+      if (teacherPreview ? !canManage : !(await result(classroom.rpc("is_class_member", { p_class_id: classId }))))
+        throw new Error(teacherPreview ? "Akses guru diperlukan." : "Anda belum terdaftar di kelas ini.");
       const [materials, assignments, quizzes, schedule, announcements, grades, meeting, myClasses] =
         await Promise.all([
           result(
@@ -82,9 +89,9 @@ function Page() {
           result(
             classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle(),
           ),
-          result(classroom.rpc("get_my_classes")),
+          teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_classes")),
         ]);
-      const submissions = assignments.length
+      const submissions = teacherPreview ? [] : assignments.length
         ? await result(
             classroom
               .from("class_assignment_submissions")
@@ -97,7 +104,7 @@ function Page() {
           )
         : [];
       const [attempts, topics] = await Promise.all([
-        quizzes.length
+        !teacherPreview && quizzes.length
           ? result(
               classroom
                 .from("class_quiz_attempts")
@@ -110,10 +117,12 @@ function Page() {
                 .order("submitted_at", { ascending: false }),
             )
           : Promise.resolve([]),
-        result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
+        teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
       ]);
       return {
-        kelas: myClasses.find((c: any) => c.id === classId),
+        kelas: teacherPreview
+          ? await result(classroom.from("classes").select("*").eq("id", classId).single())
+          : myClasses.find((c: any) => c.id === classId),
         attempts,
         topics,
         materials,
@@ -132,6 +141,12 @@ function Page() {
   const next = d?.schedule.find(
     (s: any) => new Date(s.ends_at || s.starts_at).getTime() > Date.now(),
   );
+  const completedAssignments = d?.submissions.length ?? 0;
+  const completedQuizzes = d?.attempts.length ?? 0;
+  const totalActivities = (d?.assignments.length ?? 0) + (d?.quizzes.length ?? 0);
+  const progressPercent = totalActivities
+    ? Math.round(((completedAssignments + completedQuizzes) / totalActivities) * 100)
+    : 0;
   const outstanding = d?.assignments.filter(
     (a: any) => !d.submissions.some((s: any) => s.assignment_id === a.id),
   );
@@ -186,11 +201,15 @@ function Page() {
             )}
           </div>
         </div>
-        <Button className="mt-4 w-full sm:w-auto" size="sm" asChild>
-          <Link to="/kelas/$classId/tugas/$assignmentId" params={{ classId, assignmentId: a.id }}>
-            Buka Tugas
-          </Link>
-        </Button>
+        {teacherPreview ? (
+          <Button className="mt-4 w-full sm:w-auto" size="sm" disabled>Pratinjau · pengumpulan dinonaktifkan</Button>
+        ) : (
+          <Button className="mt-4 w-full sm:w-auto" size="sm" asChild>
+            <Link to="/kelas/$classId/tugas/$assignmentId" params={{ classId, assignmentId: a.id }}>
+              Buka Tugas
+            </Link>
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
@@ -216,8 +235,13 @@ function Page() {
     </Card>
   );
   return (
-    <AppShell title="Ruang Kelas" backTo="/kelas-saya">
+    <AppShell title={teacherPreview ? "Pratinjau Siswa" : "Ruang Kelas"} backTo={teacherPreview ? "/guru-kelas/" + classId : "/kelas-saya"}>
       <div className="mx-auto max-w-4xl space-y-5">
+        {teacherPreview && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] p-3 text-xs">
+            <b>Mode pratinjau guru.</b> Anda melihat tampilan ruang kelas peserta tanpa menjadi peserta. Aksi pengumpulan tugas dan kuis dinonaktifkan.
+          </div>
+        )}
         {d?.kelas && (
           <header className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.16] via-card to-card p-5 shadow-sm sm:p-6">
             <div className="absolute -right-8 -top-10 size-32 rounded-full bg-primary/10 blur-2xl" />
@@ -280,6 +304,18 @@ function Page() {
           <>
             {tab === "beranda" && (
               <>
+                {!teacherPreview && (
+                  <Card className="border-primary/20">
+                    <CardContent className="space-y-2 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div><p className="text-xs text-muted-foreground">Progress kelas</p><b>{progressPercent}% selesai</b></div>
+                        <span className="text-xs font-bold">{completedAssignments + completedQuizzes}/{totalActivities} aktivitas</span>
+                      </div>
+                      <progress className="h-2 w-full accent-green-600" max="100" value={progressPercent} />
+                      {d.kelas.ends_at && <p className="text-xs text-muted-foreground">Kelas berakhir {sessionTime(d.kelas.ends_at)}</p>}
+                    </CardContent>
+                  </Card>
+                )}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {[
                     [BookOpenText, "Materi", d.materials.length],
@@ -434,11 +470,15 @@ function Page() {
                             ? "Batas waktu berakhir"
                             : "Belum dikerjakan"}
                       </p>
-                      <Button size="sm" asChild>
-                        <Link to="/kelas/$classId/quiz/$quizId" params={{ classId, quizId: k.id }}>
-                          Buka Kuis
-                        </Link>
-                      </Button>
+                      {teacherPreview ? (
+                        <Button size="sm" disabled>Pratinjau · pengerjaan dinonaktifkan</Button>
+                      ) : (
+                        <Button size="sm" asChild>
+                          <Link to="/kelas/$classId/quiz/$quizId" params={{ classId, quizId: k.id }}>
+                            Buka Kuis
+                          </Link>
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
