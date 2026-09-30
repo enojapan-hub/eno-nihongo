@@ -172,18 +172,25 @@ function Page() {
       }
       if (tab === "quiz" && !id) {
         return (await result(
-          classroom.rpc("teacher_create_quiz_with_first_question", {
+          classroom.rpc("teacher_create_class_quiz_with_questions", {
             p_class_id: classId,
-            p_title: f.title.trim(),
-            p_description: f.text,
-            p_due_at: isoDate(f.date),
-            p_duration_minutes: f.duration_minutes ? Number(f.duration_minutes) : null,
-            p_question: quizQuestion.trim(),
-            p_choices: quizChoices.map((choice) => choice.trim()),
-            p_correct_index: quizCorrect,
-            p_explanation: quizExplanation,
-            p_category: f.category,
-            p_topic: f.topic,
+            p_data: {
+              title: f.title.trim(),
+              description: f.text,
+              due_at: isoDate(f.date),
+              duration_minutes: f.duration_minutes ? Number(f.duration_minutes) : null,
+              is_published: false,
+            },
+            p_questions: [
+              {
+                question: quizQuestion.trim(),
+                choices: quizChoices.map((choice) => choice.trim()),
+                correct_index: quizCorrect,
+                explanation: quizExplanation,
+                category: f.category,
+                topic: f.topic,
+              },
+            ],
           }),
         )) as string;
       }
