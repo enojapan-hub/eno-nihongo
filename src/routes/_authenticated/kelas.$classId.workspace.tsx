@@ -147,12 +147,25 @@ function Page() {
   const completedAssignments = d?.submissions.length ?? 0;
   const completedQuizzes = d?.attempts.length ?? 0;
   const totalActivities = (d?.assignments.length ?? 0) + (d?.quizzes.length ?? 0);
+  // Materi belum memiliki tabel/status "sudah dibaca", jadi tidak dipalsukan sebagai progres selesai.
   const progressPercent = totalActivities
     ? Math.round(((completedAssignments + completedQuizzes) / totalActivities) * 100)
     : 0;
   const outstanding = d?.assignments.filter(
     (a: any) => !d.submissions.some((s: any) => s.assignment_id === a.id),
   );
+  const pendingQuizzes = d?.quizzes.filter((k: any) => !d.attempts.some((a: any) => a.quiz_id === k.id)) ?? [];
+  const nextAction = [...(outstanding ?? []).map((a:any)=>({type:"tugas",id:a.id,title:a.title,due_at:a.due_at})), ...pendingQuizzes.map((k:any)=>({type:"kuis",id:k.id,title:k.title,due_at:k.due_at}))].sort((a:any,b:any)=>(a.due_at?new Date(a.due_at).getTime():Infinity)-(b.due_at?new Date(b.due_at).getTime():Infinity))[0];
+  const deadlineLabel = (value?: string | null) => {
+    if (!value) return "Tanpa tenggat";
+    const due = new Date(value); const now = new Date();
+    const start = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+    const target = new Date(due.getFullYear(),due.getMonth(),due.getDate()).getTime();
+    const days = Math.round((target-start)/86400000);
+    if (due.getTime() < now.getTime()) return "Terlambat";
+    if (days===0) return "Hari ini"; if(days===1) return "Besok";
+    return sessionTime(value);
+  };
   const taskStatus = (a: any) =>
     d?.grades.some((g: any) => g.assignment_id === a.id)
       ? "dinilai"
@@ -196,11 +209,7 @@ function Page() {
             {a.description && (
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">{a.description}</p>
             )}
-            {a.due_at && (
-              <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock3 className="size-3.5" /> Batas {sessionTime(a.due_at)}
-              </p>
-            )}
+            {a.due_at && (<p className={"flex items-center gap-1 text-xs " + (deadlineLabel(a.due_at)==="Terlambat" ? "font-bold text-destructive" : "text-muted-foreground")}><Clock3 className="size-3.5" /> Batas {deadlineLabel(a.due_at)}</p>)}
           </div>
         </div>
         {teacherPreview ? (
@@ -266,11 +275,7 @@ function Page() {
                 <GraduationCap className="size-6" />
               </span>
             </div>
-            {d.kelas.status === "closed" && (
-              <p className="relative mt-3 text-xs text-amber-700">
-                Kelas diarsipkan; materi dan hasil belajar tetap tersedia.
-              </p>
-            )}
+            {d.kelas.status === "closed" && (<div className="relative mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] p-3"><p className="text-xs font-bold text-amber-700">Kelas telah selesai</p><p className="mt-1 text-xs text-muted-foreground">Materi, riwayat tugas, nilai, dan hasil kuis tetap dapat Anda buka sebagai arsip belajar.</p></div>)}
           </header>
         )}
         <nav className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Bagian ruang kelas">
@@ -315,6 +320,14 @@ function Page() {
                       </div>
                       <progress className="h-2 w-full accent-green-600" max="100" value={progressPercent} />
                       {d.kelas?.ends_at && <p className="text-xs text-muted-foreground">Kelas berakhir {sessionTime(d.kelas.ends_at)}</p>}
+                    </CardContent>
+                  </Card>
+                )}
+                {!teacherPreview && nextAction && (
+                  <Card className="border-primary/25 bg-primary/[0.05] shadow-sm">
+                    <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div><p className="text-[11px] font-bold uppercase tracking-wide text-primary">Kerjakan berikutnya</p><h2 className="mt-1 font-black">{nextAction.title}</h2><p className="mt-1 text-xs text-muted-foreground">{nextAction.type === "tugas" ? "Tugas" : "Kuis"} · {deadlineLabel(nextAction.due_at)}</p></div>
+                      <Button size="sm" asChild>{nextAction.type === "tugas" ? <Link to="/kelas/$classId/tugas/$assignmentId" params={{classId,assignmentId:nextAction.id}}>Kerjakan Sekarang</Link> : <Link to="/kelas/$classId/quiz/$quizId" params={{classId,quizId:nextAction.id}}>Mulai Kuis</Link>}</Button>
                     </CardContent>
                   </Card>
                 )}
@@ -465,7 +478,7 @@ function Page() {
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{k.title}</h2>
                       <p className="text-sm">{k.description}</p>
-                      {k.due_at && <p className="text-xs">Batas: {sessionTime(k.due_at)}</p>}
+                      {k.due_at && <p className={"text-xs " + (deadlineLabel(k.due_at)==="Terlambat" ? "font-bold text-destructive" : "")}>Batas: {deadlineLabel(k.due_at)}</p>}
                       <p className="text-xs font-bold">
                         {d.attempts.some((a: any) => a.quiz_id === k.id)
                           ? "Sudah dikerjakan"
