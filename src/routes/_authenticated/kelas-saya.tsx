@@ -91,13 +91,13 @@ function Page() {
                   <h2 className="line-clamp-2 text-sm font-bold">{c.title}</h2>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {c.status === "closed"
-                      ? "Materi dan riwayat nilai tetap dapat dibuka."
+                      ? "Kelas selesai · materi, tugas, kuis, dan nilai tetap tersedia."
                       : c.starts_at
                         ? "Mulai: " + sessionTime(c.starts_at)
                         : "Jadwal menyusul"}
                   </p>
                   <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary">
-                    Buka Ruang Kelas <ArrowRight className="size-3" />
+                    {c.status === "closed" ? "Lihat Arsip Kelas" : "Lanjutkan Kelas"} <ArrowRight className="size-3" />
                   </span>
                 </div></div>
               </Link>
