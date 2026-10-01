@@ -102,7 +102,7 @@ export const Route = createFileRoute("/api/kotoba/examples")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         const body = (await request.json().catch(() => null)) as { id?: string } | null;
         if (!body?.id) return Response.json({ error: "Missing vocabulary id" }, { status: 400 });
-        const { data: vocab, error } = await (supabaseAdmin as any)
+        const { data: vocab, error } = await supabaseAdmin
           .from("vocabulary")
           .select("id, term, reading, meaning_id, part_of_speech, level, examples, explanation")
           .eq("id", body.id)
@@ -111,7 +111,7 @@ export const Route = createFileRoute("/api/kotoba/examples")({
         if (error) return Response.json({ error: error.message }, { status: 500 });
         if (!vocab) return Response.json({ error: "Vocabulary not found" }, { status: 404 });
 
-        const { data: cached } = await (supabaseAdmin as any)
+        const { data: cached } = await supabaseAdmin
           .from("ai_learning_content")
           .select("examples, synonyms, antonyms, explanation")
           .eq("content_type", "kotoba")
@@ -139,11 +139,11 @@ export const Route = createFileRoute("/api/kotoba/examples")({
 
         try {
           const content = await generateContent(vocab);
-          await (supabaseAdmin as any)
+          await supabaseAdmin
             .from("vocabulary")
             .update({ examples: content.examples, explanation: content.explanation })
             .eq("id", body.id);
-          await (supabaseAdmin as any).from("ai_learning_content").upsert(
+          await supabaseAdmin.from("ai_learning_content").upsert(
             {
               content_type: "kotoba",
               content_id: body.id,
