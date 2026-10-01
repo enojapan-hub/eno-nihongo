@@ -172,7 +172,7 @@ function FullSessionRunner() {
   const serverKey = `${storageKey}-server-id`;
   const answerKey = `${storageKey}-session-${sessionIndex}-answers`;
   const deadlineKey = `${storageKey}-session-${sessionIndex}-deadline`;
-  const sections = session?.sections ?? [];
+  const sections = useMemo(() => session?.sections ?? [], [session]);
   const q = useQuery({
     queryKey: ["simulation-full-session", level, examNo, sessionIndex, sections.join("-")],
     queryFn: () => fetchQuestions(level, examNo, sections),
@@ -184,7 +184,7 @@ function FullSessionRunner() {
     enabled: !!session && sections.includes("listening") && examNo === 1,
     staleTime: 30 * 60 * 1000,
   });
-  const questions = q.data ?? [];
+  const questions = useMemo(() => q.data ?? [], [q.data]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [remaining, setRemaining] = useState((session?.minutes ?? 0) * 60);
