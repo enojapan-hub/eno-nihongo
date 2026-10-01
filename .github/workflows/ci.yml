@@ -47,8 +47,8 @@ jobs:
           PROJECT_REF: upxtqsvgppvqpbrjoitz
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
-            echo "::warning::Supabase type freshness check skipped because SUPABASE_ACCESS_TOKEN is not configured."
-            exit 0
+            echo "::error::SUPABASE_ACCESS_TOKEN is required to verify the committed database types against the live Supabase schema."
+            exit 1
           fi
           bunx supabase@latest gen types typescript --project-id "$PROJECT_REF" --schema public > generated-types.ts
 
