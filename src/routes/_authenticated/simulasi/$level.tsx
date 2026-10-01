@@ -295,7 +295,18 @@ function SimulationRunner() {
     } finally {
       setSaving(false);
     }
-  }, [answers, finished, level, levelSections, questionSets, questions, section.key, sectionFinished, sectionIndex, seconds]);
+  }, [
+    answers,
+    finished,
+    level,
+    levelSections,
+    questionSets,
+    questions,
+    section.key,
+    sectionFinished,
+    sectionIndex,
+    seconds,
+  ]);
 
   function nextSection() {
     setSectionIndex((value) => value + 1);
