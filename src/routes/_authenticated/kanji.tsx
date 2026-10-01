@@ -153,7 +153,7 @@ function kanaToRomaji(input: string) {
     ぺ: "pe",
     ぽ: "po",
   };
-  let s = input.replace(/[\s。、！？]/g, " "),
+  const s = input.replace(/[\s。、！？]/g, " "),
     out = "",
     gem = false;
   for (let i = 0; i < s.length; i++) {
@@ -209,7 +209,7 @@ function KanjiPage() {
       return (data ?? []) as Array<{ item_id: string }>;
     },
   });
-  const allCards = (data ?? []) as KanjiRow[];
+  const allCards = useMemo(() => (data ?? []) as KanjiRow[], [data]);
   const lessons = useMemo(
     () =>
       [
@@ -227,7 +227,7 @@ function KanjiPage() {
     qc = useQueryClient();
   useEffect(() => {
     if (lessons.length) setLesson((c) => (c && lessons.includes(c) ? c : lessons[0]));
-  }, [level, lessons.join(",")]);
+  }, [level, lessons]);
   useEffect(() => {
     if (masteredRows) setLearned(Object.fromEntries(masteredRows.map((r) => [r.item_id, true])));
   }, [masteredRows]);
