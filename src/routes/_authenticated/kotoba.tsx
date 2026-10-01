@@ -157,8 +157,8 @@ function kanaToRomaji(input: string) {
       if (tok === "は") return "wa";
       if (tok === "へ") return "e";
       if (tok === "を") return "o";
-      const s = tok.replace(/[ァ-ヶ]/g, (x) => String.fromCharCode(x.charCodeAt(0) - 96)),
-        o = "";
+      const s = tok.replace(/[ァ-ヶ]/g, (x) => String.fromCharCode(x.charCodeAt(0) - 96));
+      let o = "";
       for (let i = 0; i < s.length; i++) {
         if (s[i] === "っ") {
           const pair = d[s.slice(i + 1, i + 3)] || m[s[i + 1]] || "";
