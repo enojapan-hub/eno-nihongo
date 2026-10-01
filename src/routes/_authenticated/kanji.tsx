@@ -153,8 +153,8 @@ function kanaToRomaji(input: string) {
     ぺ: "pe",
     ぽ: "po",
   };
-  const s = input.replace(/[\s。、！？]/g, " "),
-    out = "",
+  const s = input.replace(/[\s。、！？]/g, " ");
+  let out = "",
     gem = false;
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
