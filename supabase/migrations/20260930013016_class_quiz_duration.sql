@@ -1,4 +1,1 @@
--- Historical migration marker restored from Supabase migration history.
--- Version: 20260930013016
--- Name: class_quiz_duration
--- Production already records this migration as applied.
+alter table public.class_quizzes add column if not exists duration_minutes integer; alter table public.class_quizzes add constraint class_quizzes_duration_minutes_check check (duration_minutes is null or duration_minutes between 1 and 480);

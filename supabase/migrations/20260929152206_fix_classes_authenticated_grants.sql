@@ -1,4 +1,1 @@
--- Historical migration marker restored from Supabase migration history.
--- Version: 20260929152206
--- Name: fix_classes_authenticated_grants
--- Production already records this migration as applied.
+grant select, update on table public.classes to authenticated;
