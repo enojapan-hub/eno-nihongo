@@ -29,6 +29,12 @@ export async function fetchVocabPage(level:Level,offset=0,limit=VOCAB_PAGE_SIZE)
  return (res.data??[]).map((row:any)=>({...row,senses:[],curriculum:[],profile_level:level}));
 }
 
+export async function fetchVocabById(id:string){
+ const res:any=await withTimeout(supabase.from("vocabulary").select("id, term, reading, romaji, meaning_id, meaning_en, part_of_speech, examples, level, lesson_number, usage_note_id").eq("id",id).eq("is_published",true).maybeSingle());
+ if(res.error)throw new Error(res.error.message);
+ return res.data;
+}
+
 export async function fetchVocabSenses(vocabularyId:string){
  const res:any=await withTimeout(supabase.from("vocabulary_senses").select("meaning_id, part_of_speech, usage_note_id, examples, source_book").eq("vocabulary_id",vocabularyId));
  if(res.error)throw new Error(res.error.message);
