@@ -43,7 +43,7 @@ function Page() {
       return data || [];
     },
   });
-  const rows: any[] = audit.data || [],
+  const rows: any[] = useMemo(() => audit.data || [], [audit.data]),
     actions = useMemo(() => [...new Set(rows.map((x) => x.action).filter(Boolean))], [rows]),
     entities = useMemo(() => [...new Set(rows.map((x) => x.entity_type).filter(Boolean))], [rows]),
     shown = rows.filter(
