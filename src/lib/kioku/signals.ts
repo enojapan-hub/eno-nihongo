@@ -50,7 +50,7 @@ export function toReviewEvents(
     direction: string;
     rating: number;
     created_at: string;
-    meta: Record<string, any> | null;
+    meta: Record<string, unknown> | null;
   }>,
 ): ReviewEvent[] {
   return rows
