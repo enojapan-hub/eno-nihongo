@@ -154,7 +154,7 @@ export async function resolveContinueLesson(
   const cfg = map[last.type];
   if (!cfg) return null;
   try {
-    const { data } = await (supabase as any)
+    const { data } = await dynamicTables
       .from(cfg.table)
       .select(cfg.select)
       .eq("id", last.id)
