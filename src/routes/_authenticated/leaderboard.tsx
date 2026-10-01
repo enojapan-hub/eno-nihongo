@@ -14,7 +14,8 @@ export const Route = createFileRoute("/_authenticated/leaderboard")({
   component: LeaderboardPage,
 });
 function LeaderboardPage() {
-  const [period, setPeriod] = useState<"weekly" | "monthly" | "all">("weekly");
+  type Period = "weekly" | "monthly" | "all";
+  const [period, setPeriod] = useState<Period>("weekly");
   const [level, setLevel] = useState("Semua");
   const [tab, setTab] = useState<"ranking" | "league">("ranking");
   const leaderboard = useQuery({
@@ -114,7 +115,7 @@ function LeaderboardPage() {
               ].map(([id, label]) => (
                 <button
                   key={id}
-                  onClick={() => setPeriod(id as any)}
+                  onClick={() => setPeriod(id)}
                   className={
                     "rounded-xl px-1 py-2.5 text-[9px] font-bold " +
                     (period === id
