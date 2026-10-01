@@ -24,16 +24,8 @@ export function getAccountLevel(xp: number): AccountLevel {
   const currentFloor = xpFloorForLevel(level);
   const nextFloor = level < MAX_ACCOUNT_LEVEL ? xpFloorForLevel(level + 1) : null;
   const span = nextFloor == null ? 1 : Math.max(1, nextFloor - currentFloor);
-  const progress =
-    nextFloor == null ? 100 : Math.min(100, Math.max(0, ((safeXp - currentFloor) / span) * 100));
-  return {
-    level,
-    currentXp: safeXp,
-    currentFloor,
-    nextFloor,
-    progress,
-    xpToNext: nextFloor == null ? 0 : Math.max(0, nextFloor - safeXp),
-  };
+  const progress = nextFloor == null ? 100 : Math.min(100, Math.max(0, ((safeXp - currentFloor) / span) * 100));
+  return { level, currentXp: safeXp, currentFloor, nextFloor, progress, xpToNext: nextFloor == null ? 0 : Math.max(0, nextFloor - safeXp) };
 }
 
 export const LEAGUES = [
@@ -44,7 +36,7 @@ export const LEAGUES = [
   { name: "Diamond", minWeeklyXp: 12000, rewardPoints: 350, rewardLabel: "350 Poin" },
 ] as const;
 
-export type LeagueName = (typeof LEAGUES)[number]["name"];
+export type LeagueName = typeof LEAGUES[number]["name"];
 
 export function getLeague(weeklyXp: number) {
   const xp = Math.max(0, Math.trunc(weeklyXp || 0));
@@ -58,11 +50,6 @@ export function getLeague(weeklyXp: number) {
     weeklyXp: xp,
     next,
     xpToNext: next ? Math.max(0, next.minWeeklyXp - xp) : 0,
-    progress: next
-      ? Math.min(
-          100,
-          ((xp - current.minWeeklyXp) / Math.max(1, next.minWeeklyXp - current.minWeeklyXp)) * 100,
-        )
-      : 100,
+    progress: next ? Math.min(100, ((xp - current.minWeeklyXp) / Math.max(1, next.minWeeklyXp - current.minWeeklyXp)) * 100) : 100,
   };
 }

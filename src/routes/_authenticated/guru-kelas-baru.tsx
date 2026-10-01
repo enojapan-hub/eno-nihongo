@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -57,8 +57,8 @@ function Page() {
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from("class-banners").getPublicUrl(path);
       set("banner_url", data.publicUrl);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Upload banner gagal.");
+    } catch (e: any) {
+      setError(e?.message || "Upload banner gagal.");
     } finally {
       setUploading(false);
     }
@@ -100,7 +100,7 @@ function Page() {
     setError("");
     try {
       const sessions = makeSessions();
-      const { error: createError } = await supabase.rpc(
+      const { error: createError } = await (supabase as any).rpc(
         "teacher_create_class_with_sessions",
         {
           p_data: {
@@ -118,8 +118,8 @@ function Page() {
       );
       if (createError) throw createError;
       await nav({ to: "/guru" });
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Kelas gagal disimpan.");
+    } catch (e: any) {
+      setError(e?.message || "Kelas gagal disimpan.");
     } finally {
       setBusy(false);
     }
@@ -295,7 +295,7 @@ function Page() {
     </AppShell>
   );
 }
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children }: { label: string; children: any }) {
   return (
     <label className="block space-y-1">
       <span className="text-xs font-bold">{label}</span>

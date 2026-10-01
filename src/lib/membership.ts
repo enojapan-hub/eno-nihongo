@@ -1,36 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type MembershipPlan = "free" | "premium" | "lifetime";
-type MembershipRpcRow = {
-  plan?: MembershipPlan | null;
-  premium_until?: string | null;
-  allowed?: boolean | null;
-  used_this_month?: number | null;
-  monthly_limit?: number | null;
-  monthly_exam?: boolean | null;
-};
-type MembershipRpcClient = {
-  rpc: (
-    name: "get_my_membership" | "can_start_full_simulation",
-  ) => PromiseLike<{ data: MembershipRpcRow | null; error: { message: string } | null }>;
-};
-const membershipRpc = supabase as unknown as MembershipRpcClient;
-export type Membership = {
-  plan: MembershipPlan;
-  premiumUntil: string | null;
-  monthlyExam: boolean;
-};
+export type Membership = { plan: MembershipPlan; premiumUntil: string | null; monthlyExam: boolean };
 export type MembershipAccess = Membership & { hasPremiumAccess: boolean };
-export type FullSimulationAccess = {
-  allowed: boolean;
-  plan: MembershipPlan;
-  usedThisMonth: number;
-  monthlyLimit: number | null;
-  monthlyExam: boolean;
-};
+export type FullSimulationAccess = { allowed: boolean; plan: MembershipPlan; usedThisMonth: number; monthlyLimit: number | null; monthlyExam: boolean };
 
 export async function fetchMembership(): Promise<Membership> {
-  const { data, error } = await membershipRpc.rpc("get_my_membership");
+  const { data, error } = await (supabase as any).rpc("get_my_membership");
   if (error) throw error;
   const plan = (data?.plan ?? "free") as MembershipPlan;
   return { plan, premiumUntil: data?.premium_until ?? null, monthlyExam: plan !== "free" };
@@ -41,17 +17,13 @@ export async function fetchMembershipAccess(): Promise<MembershipAccess> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { ...membership, hasPremiumAccess: false };
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
   const privileged = ["owner", "admin", "editor", "teacher"].includes(profile?.role ?? "");
   return { ...membership, hasPremiumAccess: privileged || membership.plan !== "free" };
 }
 
 export async function fetchFullSimulationAccess(): Promise<FullSimulationAccess> {
-  const { data, error } = await membershipRpc.rpc("can_start_full_simulation");
+  const { data, error } = await (supabase as any).rpc("can_start_full_simulation");
   if (error) throw error;
   return {
     allowed: !!data?.allowed,

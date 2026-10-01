@@ -214,12 +214,10 @@ function Quiz({
           <CardContent className="space-y-3 p-5 text-center">
             <h2 className="font-bold">Kuis sudah dikumpulkan</h2>
             <p className="text-sm text-muted-foreground">
-              Setiap peserta hanya dapat mengirim kuis ini satu kali. Jawaban dan nilai sudah
-              tercatat di panel guru.
+              Setiap peserta hanya dapat mengirim kuis ini satu kali. Jawaban dan nilai sudah tercatat di panel guru.
             </p>
             <p className="text-3xl font-black text-primary">
-              {completed.score}
-              <span className="text-sm"> / 100</span>
+              {completed.score}<span className="text-sm"> / 100</span>
             </p>
             <Button variant="outline" onClick={() => setSelected(completed.id)}>
               Lihat Hasil & Pembahasan

@@ -201,13 +201,12 @@ function KiokuPage() {
   // A correct choice answer moves on by itself; a wrong one waits so the right answer can be read.
   const advanceRef = useRef(advance);
   advanceRef.current = advance;
-  const exId = ex?.id;
-  const lastCorrect = exId ? session?.results[exId] : undefined;
+  const lastCorrect = ex ? session?.results[ex.id] : undefined;
   useEffect(() => {
-    if (!exId || !isChoice || lastCorrect !== true) return;
+    if (!ex || !isChoice || lastCorrect !== true) return;
     const t = window.setTimeout(() => advanceRef.current(), AUTO_ADVANCE_MS);
     return () => window.clearTimeout(t);
-  }, [exId, isChoice, lastCorrect]);
+  }, [ex?.id, isChoice, lastCorrect]);
 
   // After a wrong answer keep "Lanjut" reachable on short screens (the fixed bottom nav would otherwise cover it).
   const nextRef = useRef<HTMLButtonElement | null>(null);
@@ -260,10 +259,7 @@ function KiokuPage() {
             <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10">
               <BrainCircuit className="size-6 text-primary" />
             </span>
-            <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">
-              ENO NIHONGO
-            </p>
-            <h1 className="mt-1 text-[22px] font-black">ENO Kioku</h1>
+            <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">ENO NIHONGO</p><h1 className="mt-1 text-[22px] font-black">ENO Kioku</h1>
             <p className="mt-1 text-[10px] text-muted-foreground">
               Latihan ingatan adaptif dari materi yang sudah kamu pelajari.
             </p>
@@ -322,8 +318,7 @@ function KiokuPage() {
               />
             </div>
             <section className="relative min-h-[210px] overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.055] to-card p-6 text-center shadow-[0_18px_50px_-32px_rgba(0,0,0,.5)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary/70" />
-              <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary/70" /><p className="text-[9px] font-bold uppercase tracking-widest text-primary">
                 {ex.label
                   ? ex.label
                   : ex.direction === "reverse"
