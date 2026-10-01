@@ -18,6 +18,22 @@ export type DashboardMetrics = {
   last: { type: string; id: string; level: string; at: string } | null;
 };
 
+type RpcResult<T> = { data: T | null; error: { message: string } | null };
+type DashboardRpcClient = {
+  rpc: (name: "get_my_dashboard_metrics", args: Record<string, never>) => PromiseLike<RpcResult<unknown>>;
+};
+type DynamicTableClient = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        maybeSingle: () => PromiseLike<RpcResult<Record<string, unknown>>>;
+      };
+    };
+  };
+};
+const dashboardRpc = supabase as unknown as DashboardRpcClient;
+const dynamicTables = supabase as unknown as DynamicTableClient;
+
 const empty: DashboardMetrics = {
   level: "N5",
   progress: {
@@ -82,7 +98,7 @@ function normalizeDashboardMetrics(value: unknown): DashboardMetrics {
 
 export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   try {
-    const { data, error } = await (supabase as any).rpc("get_my_dashboard_metrics", {});
+    const { data, error } = await dashboardRpc.rpc("get_my_dashboard_metrics", {});
     if (error || !data) return empty;
     return normalizeDashboardMetrics(data);
   } catch (error) {
