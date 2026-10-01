@@ -25,7 +25,12 @@ export const Route = createFileRoute("/pembayaran/duitku/callback")({
           if (!merchantOrderId || merchantCode !== expectedMerchantCode || !amount || !signature) {
             return new Response("Invalid payment callback", { status: 400 });
           }
-          const expectedSignature = createCallbackSignature(merchantCode, amount, merchantOrderId, apiKey);
+          const expectedSignature = createCallbackSignature(
+            merchantCode,
+            amount,
+            merchantOrderId,
+            apiKey,
+          );
           if (!isValidCallbackSignature(expectedSignature, signature)) {
             return new Response("Invalid payment callback signature", { status: 401 });
           }
@@ -37,25 +42,36 @@ export const Route = createFileRoute("/pembayaran/duitku/callback")({
             .eq("merchant_order_id", merchantOrderId)
             .maybeSingle();
           if (orderError) throw new Error(orderError.message);
-          if (!order || Number(order.amount_idr) !== Number(amount) || !isDuitkuPlanCode(order.plan)) {
+          if (
+            !order ||
+            Number(order.amount_idr) !== Number(amount) ||
+            !isDuitkuPlanCode(order.plan)
+          ) {
             return new Response("Payment order not found", { status: 404 });
           }
 
           const callbackPayload = Object.fromEntries(form.entries());
           if (resultCode !== "00") {
             const eventKey = `${merchantOrderId}:${resultCode}:${reference || "none"}`;
-            await admin.from("payment_webhook_events").upsert({
-              provider: "duitku",
-              event_key: eventKey,
-              merchant_order_id: merchantOrderId,
-              status: "received",
-              payload: callbackPayload,
-            }, { onConflict: "provider,event_key" });
-            await admin.from("payment_orders").update({
-              status: resultCode === "01" ? "failed" : "cancelled",
-              provider_reference: reference || null,
-              updated_at: new Date().toISOString(),
-            }).eq("id", order.id).neq("status", "paid");
+            await admin.from("payment_webhook_events").upsert(
+              {
+                provider: "duitku",
+                event_key: eventKey,
+                merchant_order_id: merchantOrderId,
+                status: "received",
+                payload: callbackPayload,
+              },
+              { onConflict: "provider,event_key" },
+            );
+            await admin
+              .from("payment_orders")
+              .update({
+                status: resultCode === "01" ? "failed" : "cancelled",
+                provider_reference: reference || null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", order.id)
+              .neq("status", "paid");
             return new Response("OK", { status: 200 });
           }
 

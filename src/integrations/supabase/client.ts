@@ -1,32 +1,35 @@
 // Supabase client for ENO JAPAN.
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./types";
 
-const SUPABASE_URL = 'https://upxtqsvgppvqpbrjoitz.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lOFCqoqCndJ5DE_3S4RKjQ_28F6nK6u';
+const SUPABASE_URL = "https://upxtqsvgppvqpbrjoitz.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_lOFCqoqCndJ5DE_3S4RKjQ_28F6nK6u";
 
 function isNewSupabaseApiKey(value: string): boolean {
-  return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
+  return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
 }
 
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
   return (input, init) => {
     const headers = new Headers(
-      typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined,
+      typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined,
     );
     if (init?.headers) {
       new Headers(init.headers).forEach((value, key) => headers.set(key, value));
     }
-    if (isNewSupabaseApiKey(supabaseKey) && headers.get('Authorization') === `Bearer ${supabaseKey}`) {
-      headers.delete('Authorization');
+    if (
+      isNewSupabaseApiKey(supabaseKey) &&
+      headers.get("Authorization") === `Bearer ${supabaseKey}`
+    ) {
+      headers.delete("Authorization");
     }
-    headers.set('apikey', supabaseKey);
+    headers.set("apikey", supabaseKey);
     return fetch(input, { ...init, headers });
   };
 }
 
 function browserStorage() {
-  if (typeof window === 'undefined') return undefined;
+  if (typeof window === "undefined") return undefined;
   return window.localStorage;
 }
 
@@ -40,7 +43,7 @@ function createSupabaseClient() {
       // Let Supabase process either the PKCE `code` callback or an OAuth hash
       // callback. Some mobile in-app browsers return the latter.
       detectSessionInUrl: true,
-      flowType: 'pkce',
+      flowType: "pkce",
     },
   });
 }

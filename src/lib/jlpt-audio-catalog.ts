@@ -43,16 +43,42 @@ export const JLPT_AUDIO_CATALOG: JlptAudioSource[] = [
     publicUrl:
       "https://upxtqsvgppvqpbrjoitz.supabase.co/storage/v1/object/public/jlpt-simulation-audio/N5/2024/Audio%20N5.mp3",
     sections: [
-      { mondai: 1, questionCount: 7, startSeconds: 0, endSeconds: 399.276, boundarySource: "silence-analysis" },
-      { mondai: 2, questionCount: 6, startSeconds: 399.276, endSeconds: 840.272, boundarySource: "silence-analysis" },
-      { mondai: 3, questionCount: 5, startSeconds: 840.272, endSeconds: 1024.274, boundarySource: "silence-analysis" },
-      { mondai: 4, questionCount: null, startSeconds: 1024.274, endSeconds: 1195.651, boundarySource: "silence-analysis" },
+      {
+        mondai: 1,
+        questionCount: 7,
+        startSeconds: 0,
+        endSeconds: 399.276,
+        boundarySource: "silence-analysis",
+      },
+      {
+        mondai: 2,
+        questionCount: 6,
+        startSeconds: 399.276,
+        endSeconds: 840.272,
+        boundarySource: "silence-analysis",
+      },
+      {
+        mondai: 3,
+        questionCount: 5,
+        startSeconds: 840.272,
+        endSeconds: 1024.274,
+        boundarySource: "silence-analysis",
+      },
+      {
+        mondai: 4,
+        questionCount: null,
+        startSeconds: 1024.274,
+        endSeconds: 1195.651,
+        boundarySource: "silence-analysis",
+      },
     ],
   },
 ];
 
 export function getJlptAudioSource(level: JlptAudioSource["level"], year = 2024) {
-  return JLPT_AUDIO_CATALOG.find((source) => source.level === level && source.year === year) ?? null;
+  return (
+    JLPT_AUDIO_CATALOG.find((source) => source.level === level && source.year === year) ?? null
+  );
 }
 
 export function getJlptAudioSectionForQuestionType(
@@ -75,7 +101,9 @@ export function getJlptAudioSectionForQuestionType(
   const mondai = n5MondaiByType[questionType];
   if (!mondai) return null;
 
-  return getJlptAudioSource(level, year)?.sections.find((section) => section.mondai === mondai) ?? null;
+  return (
+    getJlptAudioSource(level, year)?.sections.find((section) => section.mondai === mondai) ?? null
+  );
 }
 
 export function getJlptAudioSegment(

@@ -15,11 +15,16 @@ export function spaceJapanese(input: string | null | undefined): string {
   if (!HAS_JAPANESE.test(text)) return text.replace(/\s+/g, " ");
   if (typeof Intl === "undefined" || !("Segmenter" in Intl)) return text;
 
-  const Segmenter = (Intl as typeof Intl & {
-    Segmenter: new (locale: string, options: { granularity: "word" }) => {
-      segment(value: string): Iterable<{ segment: string; isWordLike?: boolean }>;
-    };
-  }).Segmenter;
+  const Segmenter = (
+    Intl as typeof Intl & {
+      Segmenter: new (
+        locale: string,
+        options: { granularity: "word" },
+      ) => {
+        segment(value: string): Iterable<{ segment: string; isWordLike?: boolean }>;
+      };
+    }
+  ).Segmenter;
   const segmenter = new Segmenter("ja-JP", { granularity: "word" });
   const parts = Array.from(segmenter.segment(text))
     .map(({ segment }) => segment.trim())
@@ -45,5 +50,8 @@ export function spaceJapanese(input: string | null | undefined): string {
 }
 
 export function normalizeRomaji(input: string | null | undefined): string {
-  return (input ?? "").trim().replace(/\s+/g, " ").replace(/\s+([,.!?;:])/g, "$1");
+  return (input ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.!?;:])/g, "$1");
 }

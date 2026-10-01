@@ -1,3 +1,115 @@
-import{createFileRoute}from'@tanstack/react-router';import{useQuery,useQueryClient}from'@tanstack/react-query';import{useEffect,useState}from'react';import{Save,Settings,ShieldCheck}from'lucide-react';import{AppShell}from'@/components/layout/AppShell';import{Button}from'@/components/ui/button';import{Card,CardContent}from'@/components/ui/card';import{Input}from'@/components/ui/input';import{supabase}from'@/integrations/supabase/client';
-export const Route=createFileRoute('/_authenticated/admin-pengaturan')({component:Page});
-function Page(){const qc=useQueryClient(),[form,setForm]=useState<any>(null),[msg,setMsg]=useState(''),[busy,setBusy]=useState(false);const q=useQuery({queryKey:['platform-settings-admin'],queryFn:async()=>{const{data,error}=await(supabase as any).rpc('get_platform_settings_admin');if(error)throw error;return data as any},retry:false});useEffect(()=>{if(q.data)setForm(q.data)},[q.data]);async function save(){setBusy(true);setMsg('');const{error}=await(supabase as any).rpc('admin_save_platform_settings',{p_settings:form});setBusy(false);setMsg(error?error.message:'Pengaturan platform disimpan.');if(!error)qc.invalidateQueries({queryKey:['platform-settings-admin']})}if(q.isLoading)return <AppShell title="Pengaturan Platform" backTo="/admin"><p className="p-4 text-xs">Memuat…</p></AppShell>;if(q.isError||!form)return <AppShell title="Pengaturan Platform" backTo="/admin"><p className="p-4 text-xs text-destructive">Akses Sistem diperlukan.</p></AppShell>;const Toggle=({k,title,desc}:{k:string,title:string,desc:string})=><label className="flex items-center justify-between gap-4 rounded-xl border p-3"><span><b className="text-xs">{title}</b><p className="text-[10px] text-muted-foreground">{desc}</p></span><input type="checkbox" checked={!!form[k]} onChange={e=>setForm({...form,[k]:e.target.checked})}/></label>;return <AppShell title="Pengaturan Platform" backTo="/admin"><div className="mx-auto max-w-3xl space-y-4 pb-10"><section className="rounded-[2rem] bg-gradient-to-br from-slate-950 to-emerald-900 p-5 text-white"><Settings className="size-6 text-emerald-300"/><h1 className="mt-2 text-2xl font-black">Pengaturan Platform</h1><p className="text-xs text-white/65">Konfigurasi global tanpa mengubah kode aplikasi.</p></section>{msg&&<p className="rounded-xl bg-muted p-3 text-xs">{msg}</p>}<Card><CardContent className="space-y-3 p-4"><Toggle k="maintenance_mode" title="Mode maintenance" desc="Penanda operasional untuk pemeliharaan platform."/><Toggle k="registration_enabled" title="Registrasi pengguna" desc="Kontrol apakah pendaftaran pengguna baru diizinkan."/><Toggle k="class_creation_enabled" title="Pengajuan kelas guru" desc="Kontrol pembuatan pengajuan kelas baru."/><label className="block rounded-xl border p-3"><b className="text-xs">Batas upload umum</b><p className="mb-2 text-[10px] text-muted-foreground">1–100 MB. Kebijakan bucket khusus tetap berlaku.</p><Input type="number" min={1} max={100} value={Number(form.max_upload_mb||10)} onChange={e=>setForm({...form,max_upload_mb:Number(e.target.value)})}/></label><Button onClick={save} disabled={busy}><Save className="mr-1 size-4"/>{busy?'Menyimpan…':'Simpan Pengaturan'}</Button></CardContent></Card><p className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground"><ShieldCheck className="size-3"/>Perubahan dicatat ke Audit Log.</p></div></AppShell>}
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { Save, Settings, ShieldCheck } from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+export const Route = createFileRoute("/_authenticated/admin-pengaturan")({ component: Page });
+function Page() {
+  const qc = useQueryClient(),
+    [form, setForm] = useState<any>(null),
+    [msg, setMsg] = useState(""),
+    [busy, setBusy] = useState(false);
+  const q = useQuery({
+    queryKey: ["platform-settings-admin"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_platform_settings_admin");
+      if (error) throw error;
+      return data as any;
+    },
+    retry: false,
+  });
+  useEffect(() => {
+    if (q.data) setForm(q.data);
+  }, [q.data]);
+  async function save() {
+    setBusy(true);
+    setMsg("");
+    const { error } = await (supabase as any).rpc("admin_save_platform_settings", {
+      p_settings: form,
+    });
+    setBusy(false);
+    setMsg(error ? error.message : "Pengaturan platform disimpan.");
+    if (!error) qc.invalidateQueries({ queryKey: ["platform-settings-admin"] });
+  }
+  if (q.isLoading)
+    return (
+      <AppShell title="Pengaturan Platform" backTo="/admin">
+        <p className="p-4 text-xs">Memuat…</p>
+      </AppShell>
+    );
+  if (q.isError || !form)
+    return (
+      <AppShell title="Pengaturan Platform" backTo="/admin">
+        <p className="p-4 text-xs text-destructive">Akses Sistem diperlukan.</p>
+      </AppShell>
+    );
+  const Toggle = ({ k, title, desc }: { k: string; title: string; desc: string }) => (
+    <label className="flex items-center justify-between gap-4 rounded-xl border p-3">
+      <span>
+        <b className="text-xs">{title}</b>
+        <p className="text-[10px] text-muted-foreground">{desc}</p>
+      </span>
+      <input
+        type="checkbox"
+        checked={!!form[k]}
+        onChange={(e) => setForm({ ...form, [k]: e.target.checked })}
+      />
+    </label>
+  );
+  return (
+    <AppShell title="Pengaturan Platform" backTo="/admin">
+      <div className="mx-auto max-w-3xl space-y-4 pb-10">
+        <section className="rounded-[2rem] bg-gradient-to-br from-slate-950 to-emerald-900 p-5 text-white">
+          <Settings className="size-6 text-emerald-300" />
+          <h1 className="mt-2 text-2xl font-black">Pengaturan Platform</h1>
+          <p className="text-xs text-white/65">Konfigurasi global tanpa mengubah kode aplikasi.</p>
+        </section>
+        {msg && <p className="rounded-xl bg-muted p-3 text-xs">{msg}</p>}
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <Toggle
+              k="maintenance_mode"
+              title="Mode maintenance"
+              desc="Penanda operasional untuk pemeliharaan platform."
+            />
+            <Toggle
+              k="registration_enabled"
+              title="Registrasi pengguna"
+              desc="Kontrol apakah pendaftaran pengguna baru diizinkan."
+            />
+            <Toggle
+              k="class_creation_enabled"
+              title="Pengajuan kelas guru"
+              desc="Kontrol pembuatan pengajuan kelas baru."
+            />
+            <label className="block rounded-xl border p-3">
+              <b className="text-xs">Batas upload umum</b>
+              <p className="mb-2 text-[10px] text-muted-foreground">
+                1–100 MB. Kebijakan bucket khusus tetap berlaku.
+              </p>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={Number(form.max_upload_mb || 10)}
+                onChange={(e) => setForm({ ...form, max_upload_mb: Number(e.target.value) })}
+              />
+            </label>
+            <Button onClick={save} disabled={busy}>
+              <Save className="mr-1 size-4" />
+              {busy ? "Menyimpan…" : "Simpan Pengaturan"}
+            </Button>
+          </CardContent>
+        </Card>
+        <p className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+          <ShieldCheck className="size-3" />
+          Perubahan dicatat ke Audit Log.
+        </p>
+      </div>
+    </AppShell>
+  );
+}

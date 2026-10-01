@@ -1,17 +1,33 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, BookOpenText, Check, Headphones, Pause, Play, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpenText,
+  Check,
+  Headphones,
+  Pause,
+  Play,
+  RotateCcw,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PassagePanel, QuestionCard, passagePosition } from "@/components/simulation/QuestionView";
-import { ExamExitDialog, ExamHeader, ExamPausedScreen, useExamLeaveGuard } from "@/components/simulation/ExamFocus";
+import {
+  ExamExitDialog,
+  ExamHeader,
+  ExamPausedScreen,
+  useExamLeaveGuard,
+} from "@/components/simulation/ExamFocus";
 import { supabase } from "@/integrations/supabase/client";
 import { jlptSessions } from "@/lib/jlpt-simulation-config";
 import type { Level } from "@/lib/learn-queries";
 
-export const Route = createFileRoute("/_authenticated/simulasi-bagian/$level/$section")({ component: SectionRunner });
+export const Route = createFileRoute("/_authenticated/simulasi-bagian/$level/$section")({
+  component: SectionRunner,
+});
 
 const labels: Record<string, string> = {
   vocabulary: "文字・語彙",
@@ -47,14 +63,31 @@ type Row = {
 };
 
 type Result = { total_questions: number; correct_count: number; score_percent: number };
-type FullProgress = { sessionIndex: number; sectionIndex: number; startedAt: number; completed: string[]; results?: Record<string, Result> };
-type AudioManifestItem = { id: string; level: string; mondai_no: number | null; mapping_scope: "mondai" | "session"; delivery_path: string };
+type FullProgress = {
+  sessionIndex: number;
+  sectionIndex: number;
+  startedAt: number;
+  completed: string[];
+  results?: Record<string, Result>;
+};
+type AudioManifestItem = {
+  id: string;
+  level: string;
+  mondai_no: number | null;
+  mapping_scope: "mondai" | "session";
+  delivery_path: string;
+};
 
 async function fetchQuestions(level: Level, section: string): Promise<Row[]> {
-  const { data, error } = await (supabase as any)
-    .rpc("get_published_simulation_questions", { p_level: level, p_section: section });
+  const { data, error } = await (supabase as any).rpc("get_published_simulation_questions", {
+    p_level: level,
+    p_section: section,
+  });
   if (error) throw error;
-  return (data ?? []).filter((x: any) => x.prompt_jp && Array.isArray(x.choices) && (x.choices.length === 3 || x.choices.length === 4));
+  return (data ?? []).filter(
+    (x: any) =>
+      x.prompt_jp && Array.isArray(x.choices) && (x.choices.length === 3 || x.choices.length === 4),
+  );
 }
 
 async function fetchAudioManifest(level: Level): Promise<AudioManifestItem[]> {
@@ -64,9 +97,16 @@ async function fetchAudioManifest(level: Level): Promise<AudioManifestItem[]> {
   return Array.isArray(payload?.items) ? payload.items : [];
 }
 
-const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+const fmt = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-function SimulationAudio({ audioUrl, groupedLabel }: { audioUrl: string | null; groupedLabel?: string | null }) {
+function SimulationAudio({
+  audioUrl,
+  groupedLabel,
+}: {
+  audioUrl: string | null;
+  groupedLabel?: string | null;
+}) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -90,7 +130,9 @@ function SimulationAudio({ audioUrl, groupedLabel }: { audioUrl: string | null; 
       <div className="rounded-xl border border-dashed p-4 text-center">
         <Headphones className="mx-auto mb-2 size-5 text-muted-foreground" />
         <p className="text-xs font-medium">音声問題</p>
-        <p className="mt-1 text-[10px] text-muted-foreground">専用音声を準備中です。本文は試験画面に表示しません。</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          専用音声を準備中です。本文は試験画面に表示しません。
+        </p>
       </div>
     );
   }
@@ -101,18 +143,60 @@ function SimulationAudio({ audioUrl, groupedLabel }: { audioUrl: string | null; 
       {grouped && <p className="text-[10px] font-semibold text-muted-foreground">{groupedLabel}</p>}
       <div className="flex items-center gap-2">
         <audio ref={audioRef} src={audioUrl} preload="metadata" />
-        <Button size="sm" onClick={() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) void audio.play(); else audio.pause(); }}>
-          {playing ? <Pause className="mr-1 size-4" /> : <Play className="mr-1 size-4" />}{playing ? "一時停止" : "再生"}
+        <Button
+          size="sm"
+          onClick={() => {
+            const audio = audioRef.current;
+            if (!audio) return;
+            if (audio.paused) void audio.play();
+            else audio.pause();
+          }}
+        >
+          {playing ? <Pause className="mr-1 size-4" /> : <Play className="mr-1 size-4" />}
+          {playing ? "一時停止" : "再生"}
         </Button>
-        {!grouped && <Button size="sm" variant="outline" onClick={() => { if (audioRef.current) { audioRef.current.currentTime = 0; void audioRef.current.play(); } }}><RotateCcw className="mr-1 size-4" />最初から</Button>}
+        {!grouped && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                void audioRef.current.play();
+              }
+            }}
+          >
+            <RotateCcw className="mr-1 size-4" />
+            最初から
+          </Button>
+        )}
       </div>
-      {grouped && <p className="text-[10px] text-muted-foreground">この音声は複数の設問で共通です。設問を移動しても同じ問題内では再生位置を維持します。</p>}
+      {grouped && (
+        <p className="text-[10px] text-muted-foreground">
+          この音声は複数の設問で共通です。設問を移動しても同じ問題内では再生位置を維持します。
+        </p>
+      )}
     </div>
   );
 }
 
-function QuestionBody({ current, selected, onSelect }: { current: Row; selected: number | undefined; onSelect: (i: number) => void }) {
-  return <QuestionCard q={current} number={current.display_question_no ?? current.question_no} selected={selected} onSelect={onSelect} />;
+function QuestionBody({
+  current,
+  selected,
+  onSelect,
+}: {
+  current: Row;
+  selected: number | undefined;
+  onSelect: (i: number) => void;
+}) {
+  return (
+    <QuestionCard
+      q={current}
+      number={current.display_question_no ?? current.question_no}
+      selected={selected}
+      onSelect={onSelect}
+    />
+  );
 }
 
 function SectionRunner() {
@@ -121,8 +205,16 @@ function SectionRunner() {
   const level = params.level.toUpperCase() as Level;
   const section = params.section;
   const storageKey = `eno-jlpt-full-${level}`;
-  const q = useQuery({ queryKey: ["simulation-bank", level, section], queryFn: () => fetchQuestions(level, section) });
-  const manifestQuery = useQuery({ queryKey: ["simulation-audio-manifest", level], queryFn: () => fetchAudioManifest(level), enabled: section === "listening", staleTime: 30 * 60 * 1000 });
+  const q = useQuery({
+    queryKey: ["simulation-bank", level, section],
+    queryFn: () => fetchQuestions(level, section),
+  });
+  const manifestQuery = useQuery({
+    queryKey: ["simulation-audio-manifest", level],
+    queryFn: () => fetchAudioManifest(level),
+    enabled: section === "listening",
+    staleTime: 30 * 60 * 1000,
+  });
   const questions = q.data ?? [];
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -145,42 +237,55 @@ function SectionRunner() {
   const mondai = useMemo(() => Array.from(new Set(questions.map((x) => x.mondai_no))), [questions]);
   const answered = Object.keys(answers).length;
 
-  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   const groupedAudio = useMemo(() => {
     if (section !== "listening" || !current) return null;
     const items = manifestQuery.data ?? [];
-    const mondaiSource = items.find((item) => item.mapping_scope === "mondai" && item.mondai_no === current.mondai_no);
-    if (mondaiSource) return { url: mondaiSource.delivery_path, label: `問題 ${current.mondai_no} 共通音声` };
+    const mondaiSource = items.find(
+      (item) => item.mapping_scope === "mondai" && item.mondai_no === current.mondai_no,
+    );
+    if (mondaiSource)
+      return { url: mondaiSource.delivery_path, label: `問題 ${current.mondai_no} 共通音声` };
     const sessionSource = items.find((item) => item.mapping_scope === "session");
     if (sessionSource) return { url: sessionSource.delivery_path, label: "聴解セッション共通音声" };
     return null;
   }, [section, current, manifestQuery.data]);
 
   const activeAudioUrl = current?.audio_url ?? groupedAudio?.url ?? null;
-  const activeAudioLabel = current?.audio_url ? null : groupedAudio?.label ?? null;
+  const activeAudioLabel = current?.audio_url ? null : (groupedAudio?.label ?? null);
 
-  const advanceFullExam = useCallback((score: Result) => {
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (!raw) return null;
-      const p: FullProgress = JSON.parse(raw);
-      const sessions = jlptSessions[level] ?? [];
-      const active = sessions[p.sessionIndex];
-      if (!active || active.sections[p.sectionIndex] !== section) return null;
-      const key = `${p.sessionIndex}:${section}`;
-      const completed = Array.from(new Set([...(p.completed ?? []), key]));
-      const results = { ...(p.results ?? {}), [key]: score };
-      let sessionIndex = p.sessionIndex;
-      let sectionIndex = p.sectionIndex + 1;
-      if (sectionIndex >= active.sections.length) { sessionIndex += 1; sectionIndex = 0; }
-      const next = { ...p, sessionIndex, sectionIndex, completed, results };
-      window.localStorage.setItem(storageKey, JSON.stringify(next));
-      const nextSession = sessions[sessionIndex];
-      const nextSection = nextSession?.sections[sectionIndex];
-      return nextSection ? { section: nextSection } : { done: true };
-    } catch { return null; }
-  }, [level, section, storageKey]);
+  const advanceFullExam = useCallback(
+    (score: Result) => {
+      try {
+        const raw = window.localStorage.getItem(storageKey);
+        if (!raw) return null;
+        const p: FullProgress = JSON.parse(raw);
+        const sessions = jlptSessions[level] ?? [];
+        const active = sessions[p.sessionIndex];
+        if (!active || active.sections[p.sectionIndex] !== section) return null;
+        const key = `${p.sessionIndex}:${section}`;
+        const completed = Array.from(new Set([...(p.completed ?? []), key]));
+        const results = { ...(p.results ?? {}), [key]: score };
+        let sessionIndex = p.sessionIndex;
+        let sectionIndex = p.sectionIndex + 1;
+        if (sectionIndex >= active.sections.length) {
+          sessionIndex += 1;
+          sectionIndex = 0;
+        }
+        const next = { ...p, sessionIndex, sectionIndex, completed, results };
+        window.localStorage.setItem(storageKey, JSON.stringify(next));
+        const nextSession = sessions[sessionIndex];
+        const nextSection = nextSession?.sections[sectionIndex];
+        return nextSection ? { section: nextSection } : { done: true };
+      } catch {
+        return null;
+      }
+    },
+    [level, section, storageKey],
+  );
 
   const finish = useCallback(async () => {
     if (finishingRef.current) return;
@@ -188,13 +293,28 @@ function SectionRunner() {
     setSaving(true);
     setSubmitError(null);
     try {
-      const duration = Math.min(totalSeconds, Math.max(0, Math.round((Date.now() - started.current) / 1000)));
-      const payload = Object.entries(answersRef.current).map(([question_id, selected_index]) => ({ question_id, selected_index }));
-      const { data, error } = await (supabase as any).rpc("submit_jlpt_simulation_section", { p_level: level, p_section: section, p_duration_seconds: duration, p_answers: payload });
+      const duration = Math.min(
+        totalSeconds,
+        Math.max(0, Math.round((Date.now() - started.current) / 1000)),
+      );
+      const payload = Object.entries(answersRef.current).map(([question_id, selected_index]) => ({
+        question_id,
+        selected_index,
+      }));
+      const { data, error } = await (supabase as any).rpc("submit_jlpt_simulation_section", {
+        p_level: level,
+        p_section: section,
+        p_duration_seconds: duration,
+        p_answers: payload,
+      });
       if (error) throw error;
       const r = Array.isArray(data) ? data[0] : data;
       if (!r) throw new Error("Hasil simulasi tidak tersedia");
-      const score = { total_questions: Number(r.total_questions), correct_count: Number(r.correct_count), score_percent: Number(r.score_percent) };
+      const score = {
+        total_questions: Number(r.total_questions),
+        correct_count: Number(r.correct_count),
+        score_percent: Number(r.score_percent),
+      };
       setResult(score);
       setAttemptId(r.attempt_id ? String(r.attempt_id) : null);
       setFinished(true);
@@ -203,22 +323,44 @@ function SectionRunner() {
       console.error(e);
       setSubmitError("Jawaban belum berhasil dikirim. Silakan coba lagi.");
       finishingRef.current = false;
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   }, [level, section, totalSeconds, advanceFullExam]);
 
   useEffect(() => {
     if (finished || q.isLoading || !questions.length || paused) return;
-    const tick = () => { const left = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)); setRemaining(left); if (left === 0) void finish(); };
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000));
+      setRemaining(left);
+      if (left === 0) void finish();
+    };
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
   }, [finished, q.isLoading, questions.length, finish, paused]);
 
-  const pauseExam = () => { pausedAtRef.current = Date.now(); setPaused(true); setExitOpen(false); };
-  const resumeExam = () => { if (pausedAtRef.current) { deadline.current += Math.max(0, Date.now() - pausedAtRef.current); pausedAtRef.current = null; } setPaused(false); };
-  const leaveGuard = useExamLeaveGuard(!finished && !q.isLoading && questions.length > 0, allowLeave);
+  const pauseExam = () => {
+    pausedAtRef.current = Date.now();
+    setPaused(true);
+    setExitOpen(false);
+  };
+  const resumeExam = () => {
+    if (pausedAtRef.current) {
+      deadline.current += Math.max(0, Date.now() - pausedAtRef.current);
+      pausedAtRef.current = null;
+    }
+    setPaused(false);
+  };
+  const leaveGuard = useExamLeaveGuard(
+    !finished && !q.isLoading && questions.length > 0,
+    allowLeave,
+  );
   const blocked = leaveGuard.status === "blocked";
-  const closeExit = () => { setExitOpen(false); if (leaveGuard.status === "blocked") leaveGuard.reset(); };
+  const closeExit = () => {
+    setExitOpen(false);
+    if (leaveGuard.status === "blocked") leaveGuard.reset();
+  };
 
   const continueFull = () => {
     try {
@@ -226,19 +368,206 @@ function SectionRunner() {
       if (!raw) return;
       const p: FullProgress = JSON.parse(raw);
       const next = jlptSessions[level]?.[p.sessionIndex]?.sections[p.sectionIndex];
-      if (next) void navigate({ to: "/simulasi-bagian/$level/$section", params: { level, section: next } });
+      if (next)
+        void navigate({ to: "/simulasi-bagian/$level/$section", params: { level, section: next } });
       else void navigate({ to: "/simulasi-penuh/$level", params: { level } });
-    } catch { void navigate({ to: "/simulasi", params: {} } as any); }
+    } catch {
+      void navigate({ to: "/simulasi", params: {} } as any);
+    }
   };
 
-  if (q.isLoading) return <AppShell title="Simulasi JLPT"><p className="py-10 text-center text-xs text-muted-foreground">問題を読み込んでいます…</p></AppShell>;
-  if (q.isError) return <AppShell title="Simulasi JLPT"><Card><CardContent className="p-6 text-center text-xs"><p className="text-destructive">Bank soal gagal dimuat. Coba masuk ulang bila sesi akun telah berakhir.</p><Button className="mt-4" onClick={() => void q.refetch()}>Coba lagi</Button></CardContent></Card></AppShell>;
-  if (!questions.length) return <AppShell title="Simulasi JLPT"><Card><CardContent className="p-6 text-center text-xs">Bank Simulasi {level} · {labels[section]} sedang disiapkan.<Button asChild className="mt-4"><Link to="/simulasi">Kembali</Link></Button></CardContent></Card></AppShell>;
+  if (q.isLoading)
+    return (
+      <AppShell title="Simulasi JLPT">
+        <p className="py-10 text-center text-xs text-muted-foreground">問題を読み込んでいます…</p>
+      </AppShell>
+    );
+  if (q.isError)
+    return (
+      <AppShell title="Simulasi JLPT">
+        <Card>
+          <CardContent className="p-6 text-center text-xs">
+            <p className="text-destructive">
+              Bank soal gagal dimuat. Coba masuk ulang bila sesi akun telah berakhir.
+            </p>
+            <Button className="mt-4" onClick={() => void q.refetch()}>
+              Coba lagi
+            </Button>
+          </CardContent>
+        </Card>
+      </AppShell>
+    );
+  if (!questions.length)
+    return (
+      <AppShell title="Simulasi JLPT">
+        <Card>
+          <CardContent className="p-6 text-center text-xs">
+            Bank Simulasi {level} · {labels[section]} sedang disiapkan.
+            <Button asChild className="mt-4">
+              <Link to="/simulasi">Kembali</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </AppShell>
+    );
   if (finished) {
-    const fullExamActive = typeof window !== "undefined" && Boolean(window.localStorage.getItem(storageKey));
-    return <AppShell title="Hasil Simulasi"><div className="mx-auto max-w-md"><Card><CardContent className="p-6 text-center"><Check className="mx-auto size-8 text-primary"/><p className="text-xs font-semibold text-primary">{level} · {labels[section]}</p><h1 className="mt-3 text-xl font-bold">{result?.correct_count ?? 0} / {result?.total_questions ?? questions.length}</h1><p className="mt-1 text-sm font-semibold">{result?.score_percent ?? 0}%</p><p className="mt-2 text-[10px] text-muted-foreground">Nilai latihan ENO NIHONGO. Skor JLPT resmi menggunakan scaled score.</p>{fullExamActive ? <Button className="mt-4 w-full" onClick={continueFull}>Lanjutkan simulasi penuh<ArrowRight className="ml-1 size-4"/></Button> : <div className="mt-4 space-y-2">{attemptId && <Button asChild className="w-full"><Link to="/simulasi-review/$attemptId" params={{ attemptId }}><BookOpenText className="mr-2 size-4"/>Lihat Pembahasan Soal</Link></Button>}<Button asChild variant="outline" className="w-full"><Link to="/simulasi">Kembali ke Simulasi</Link></Button></div>}</CardContent></Card></div></AppShell>;
+    const fullExamActive =
+      typeof window !== "undefined" && Boolean(window.localStorage.getItem(storageKey));
+    return (
+      <AppShell title="Hasil Simulasi">
+        <div className="mx-auto max-w-md">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Check className="mx-auto size-8 text-primary" />
+              <p className="text-xs font-semibold text-primary">
+                {level} · {labels[section]}
+              </p>
+              <h1 className="mt-3 text-xl font-bold">
+                {result?.correct_count ?? 0} / {result?.total_questions ?? questions.length}
+              </h1>
+              <p className="mt-1 text-sm font-semibold">{result?.score_percent ?? 0}%</p>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                Nilai latihan ENO NIHONGO. Skor JLPT resmi menggunakan scaled score.
+              </p>
+              {fullExamActive ? (
+                <Button className="mt-4 w-full" onClick={continueFull}>
+                  Lanjutkan simulasi penuh
+                  <ArrowRight className="ml-1 size-4" />
+                </Button>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {attemptId && (
+                    <Button asChild className="w-full">
+                      <Link to="/simulasi-review/$attemptId" params={{ attemptId }}>
+                        <BookOpenText className="mr-2 size-4" />
+                        Lihat Pembahasan Soal
+                      </Link>
+                    </Button>
+                  )}
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/simulasi">Kembali ke Simulasi</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </AppShell>
+    );
   }
 
   const shownQuestionNo = current.display_question_no ?? current.question_no;
-  return <AppShell title={`${level} · ${labels[section]}`} focus><ExamHeader title={`日本語能力試験 ${level} · ${labels[section]} · ${answered}/${questions.length} 解答`} remaining={remaining} onExit={() => setExitOpen(true)}><div className="flex gap-1 overflow-x-auto">{mondai.map((m) => { const first = questions.findIndex((x) => x.mondai_no === m); const active = current.mondai_no === m; const qs = questions.filter((x) => x.mondai_no === m); const done = qs.filter((x) => answers[x.id] !== undefined).length; return <button key={m} onClick={() => setIndex(first)} className={`shrink-0 rounded-lg border px-3 py-1.5 text-[10px] font-semibold ${active ? "border-primary bg-primary text-primary-foreground" : "bg-background"}`}>問題 {m} <span className={active ? "opacity-80" : "text-muted-foreground"}>{done}/{qs.length}</span></button>; })}</div></ExamHeader><div className="mx-auto max-w-2xl space-y-3 pt-3">{paused ? <ExamPausedScreen remaining={remaining} onResume={resumeExam} onExit={() => setExitOpen(true)} /> : <><Card className="rounded-2xl"><CardContent className="p-4"><strong className="text-sm">問題 {current.mondai_no}</strong><p className="mt-2 font-jp text-[12px] leading-6">{current.instruction_jp}</p></CardContent></Card>{section !== "listening" && current.passage_jp && <PassagePanel title={current.passage_title} text={current.passage_jp} position={passagePosition(questions, current!)} />}{section === "listening" && <Card className="rounded-2xl"><CardContent className="space-y-3 p-4">{current.image_url && <img src={current.image_url} alt={`問題 ${current.mondai_no} 問 ${shownQuestionNo}`} className="mx-auto w-full max-w-lg rounded-xl border bg-white object-contain" loading="eager"/>}<SimulationAudio audioUrl={activeAudioUrl} groupedLabel={activeAudioLabel}/></CardContent></Card>}<QuestionBody current={current} selected={answers[current.id]} onSelect={(i) => setAnswers((v) => ({ ...v, [current.id]: i }))}/>{submitError && <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{submitError}</p>}<div className="flex justify-between gap-2"><Button variant="outline" disabled={index === 0 || saving} onClick={() => setIndex((v) => v - 1)}><ArrowLeft className="mr-1 size-4"/>前へ</Button>{index === questions.length - 1 ? <Button disabled={saving} onClick={() => void finish()}><Check className="mr-1 size-4"/>{saving ? "送信中…" : "終了"}</Button> : <Button disabled={saving} onClick={() => setIndex((v) => v + 1)}>次へ<ArrowRight className="ml-1 size-4"/></Button>}</div></>}</div><ExamExitDialog open={exitOpen || blocked} finishing={saving} finishHint="Akhiri Ujian akan mengirim dan menilai bagian ini." onContinue={closeExit} onFinish={() => { setExitOpen(false); void finish(); if (leaveGuard.status === "blocked") leaveGuard.reset(); }} onPause={paused ? undefined : pauseExam} /></AppShell>;
+  return (
+    <AppShell title={`${level} · ${labels[section]}`} focus>
+      <ExamHeader
+        title={`日本語能力試験 ${level} · ${labels[section]} · ${answered}/${questions.length} 解答`}
+        remaining={remaining}
+        onExit={() => setExitOpen(true)}
+      >
+        <div className="flex gap-1 overflow-x-auto">
+          {mondai.map((m) => {
+            const first = questions.findIndex((x) => x.mondai_no === m);
+            const active = current.mondai_no === m;
+            const qs = questions.filter((x) => x.mondai_no === m);
+            const done = qs.filter((x) => answers[x.id] !== undefined).length;
+            return (
+              <button
+                key={m}
+                onClick={() => setIndex(first)}
+                className={`shrink-0 rounded-lg border px-3 py-1.5 text-[10px] font-semibold ${active ? "border-primary bg-primary text-primary-foreground" : "bg-background"}`}
+              >
+                問題 {m}{" "}
+                <span className={active ? "opacity-80" : "text-muted-foreground"}>
+                  {done}/{qs.length}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </ExamHeader>
+      <div className="mx-auto max-w-2xl space-y-3 pt-3">
+        {paused ? (
+          <ExamPausedScreen
+            remaining={remaining}
+            onResume={resumeExam}
+            onExit={() => setExitOpen(true)}
+          />
+        ) : (
+          <>
+            <Card className="rounded-2xl">
+              <CardContent className="p-4">
+                <strong className="text-sm">問題 {current.mondai_no}</strong>
+                <p className="mt-2 font-jp text-[12px] leading-6">{current.instruction_jp}</p>
+              </CardContent>
+            </Card>
+            {section !== "listening" && current.passage_jp && (
+              <PassagePanel
+                title={current.passage_title}
+                text={current.passage_jp}
+                position={passagePosition(questions, current!)}
+              />
+            )}
+            {section === "listening" && (
+              <Card className="rounded-2xl">
+                <CardContent className="space-y-3 p-4">
+                  {current.image_url && (
+                    <img
+                      src={current.image_url}
+                      alt={`問題 ${current.mondai_no} 問 ${shownQuestionNo}`}
+                      className="mx-auto w-full max-w-lg rounded-xl border bg-white object-contain"
+                      loading="eager"
+                    />
+                  )}
+                  <SimulationAudio audioUrl={activeAudioUrl} groupedLabel={activeAudioLabel} />
+                </CardContent>
+              </Card>
+            )}
+            <QuestionBody
+              current={current}
+              selected={answers[current.id]}
+              onSelect={(i) => setAnswers((v) => ({ ...v, [current.id]: i }))}
+            />
+            {submitError && (
+              <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
+                {submitError}
+              </p>
+            )}
+            <div className="flex justify-between gap-2">
+              <Button
+                variant="outline"
+                disabled={index === 0 || saving}
+                onClick={() => setIndex((v) => v - 1)}
+              >
+                <ArrowLeft className="mr-1 size-4" />
+                前へ
+              </Button>
+              {index === questions.length - 1 ? (
+                <Button disabled={saving} onClick={() => void finish()}>
+                  <Check className="mr-1 size-4" />
+                  {saving ? "送信中…" : "終了"}
+                </Button>
+              ) : (
+                <Button disabled={saving} onClick={() => setIndex((v) => v + 1)}>
+                  次へ
+                  <ArrowRight className="ml-1 size-4" />
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      <ExamExitDialog
+        open={exitOpen || blocked}
+        finishing={saving}
+        finishHint="Akhiri Ujian akan mengirim dan menilai bagian ini."
+        onContinue={closeExit}
+        onFinish={() => {
+          setExitOpen(false);
+          void finish();
+          if (leaveGuard.status === "blocked") leaveGuard.reset();
+        }}
+        onPause={paused ? undefined : pauseExam}
+      />
+    </AppShell>
+  );
 }

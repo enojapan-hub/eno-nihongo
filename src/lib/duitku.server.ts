@@ -23,14 +23,23 @@ export function createInvoiceSignature(merchantCode: string, timestamp: string, 
   return createHmac("sha256", apiKey).update(`${merchantCode}${timestamp}`).digest("hex");
 }
 
-export function createCallbackSignature(merchantCode: string, amount: string, merchantOrderId: string, apiKey: string) {
-  return createHmac("sha256", apiKey).update(`${merchantCode}${amount}${merchantOrderId}`).digest("hex");
+export function createCallbackSignature(
+  merchantCode: string,
+  amount: string,
+  merchantOrderId: string,
+  apiKey: string,
+) {
+  return createHmac("sha256", apiKey)
+    .update(`${merchantCode}${amount}${merchantOrderId}`)
+    .digest("hex");
 }
 
 export function isValidCallbackSignature(expected: string, received: string) {
   const expectedBytes = Buffer.from(expected, "utf8");
   const receivedBytes = Buffer.from(received, "utf8");
-  return expectedBytes.length === receivedBytes.length && timingSafeEqual(expectedBytes, receivedBytes);
+  return (
+    expectedBytes.length === receivedBytes.length && timingSafeEqual(expectedBytes, receivedBytes)
+  );
 }
 
 export function applicationOrigin() {

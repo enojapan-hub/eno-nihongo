@@ -17,12 +17,23 @@ const speakerPattern = /\s*([A-ZＡ-Ｚ]|[一-龥ァ-ヶぁ-んー]{1,8})「/y;
 const wrap = "[overflow-wrap:anywhere]";
 
 function Target({ children }: { children: ReactNode }) {
-  return <span className="font-bold text-primary underline decoration-2 decoration-primary underline-offset-[6px]">{children}</span>;
+  return (
+    <span className="font-bold text-primary underline decoration-2 decoration-primary underline-offset-[6px]">
+      {children}
+    </span>
+  );
 }
 
 /** One answer slot of a sentence-ordering question; wraps as a single unit. */
 function Slot({ star }: { star: boolean }) {
-  return <span aria-hidden={!star} className={`mx-1 inline-block min-w-[2.75em] whitespace-nowrap border-b-2 text-center align-baseline ${star ? "border-primary font-bold text-primary" : "border-foreground/40"}`}>{star ? "★" : " "}</span>;
+  return (
+    <span
+      aria-hidden={!star}
+      className={`mx-1 inline-block min-w-[2.75em] whitespace-nowrap border-b-2 text-center align-baseline ${star ? "border-primary font-bold text-primary" : "border-foreground/40"}`}
+    >
+      {star ? "★" : " "}
+    </span>
+  );
 }
 
 function renderTokens(text: string, keyPrefix: string) {
@@ -32,10 +43,19 @@ function renderTokens(text: string, keyPrefix: string) {
   return parts.map((part, index) => {
     const token = tokens[index];
 
-    return <Fragment key={`${keyPrefix}-${index}`}>
-      {part}
-      {token && (token === "★" ? <Slot star /> : /^[_＿]/.test(token) ? <Slot star={false} /> : <Target>{token}</Target>)}
-    </Fragment>;
+    return (
+      <Fragment key={`${keyPrefix}-${index}`}>
+        {part}
+        {token &&
+          (token === "★" ? (
+            <Slot star />
+          ) : /^[_＿]/.test(token) ? (
+            <Slot star={false} />
+          ) : (
+            <Target>{token}</Target>
+          ))}
+      </Fragment>
+    );
   });
 }
 
@@ -71,15 +91,24 @@ function splitDialogue(text: string): { lines: Line[]; tail: [number, number] | 
 }
 
 /** Renders text[from, to) with the explicit target range (if it overlaps) marked. */
-function renderRange(text: string, from: number, to: number, mark: [number, number] | null, keyPrefix: string) {
-  if (!mark || mark[1] <= from || mark[0] >= to) return renderTokens(text.slice(from, to), keyPrefix);
+function renderRange(
+  text: string,
+  from: number,
+  to: number,
+  mark: [number, number] | null,
+  keyPrefix: string,
+) {
+  if (!mark || mark[1] <= from || mark[0] >= to)
+    return renderTokens(text.slice(from, to), keyPrefix);
   const a = Math.max(from, mark[0]);
   const b = Math.min(to, mark[1]);
-  return <>
-    {renderTokens(text.slice(from, a), `${keyPrefix}-a`)}
-    <Target>{text.slice(a, b)}</Target>
-    {renderTokens(text.slice(b, to), `${keyPrefix}-b`)}
-  </>;
+  return (
+    <>
+      {renderTokens(text.slice(from, a), `${keyPrefix}-a`)}
+      <Target>{text.slice(a, b)}</Target>
+      {renderTokens(text.slice(b, to), `${keyPrefix}-b`)}
+    </>
+  );
 }
 
 /** Renders the tested part explicitly, keeps dialogue readable, and never alters the question text. */
@@ -89,14 +118,31 @@ export function QuestionPrompt({ text, className, target, occurrence }: Props) {
   const dialogue = splitDialogue(text);
 
   if (dialogue) {
-    return <span className={`${className ?? ""} ${wrap} grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-2 gap-y-2`} lang="ja">
-      {dialogue.lines.map((line, i) => <Fragment key={i}>
-        <span className="text-xs font-bold text-muted-foreground">{line.speaker}</span>
-        <span className="min-w-0">{renderRange(text, line.start, line.end, mark, `l${i}`)}</span>
-      </Fragment>)}
-      {dialogue.tail && <span className="col-span-2">{renderRange(text, dialogue.tail[0], dialogue.tail[1], mark, "tail")}</span>}
-    </span>;
+    return (
+      <span
+        className={`${className ?? ""} ${wrap} grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-2 gap-y-2`}
+        lang="ja"
+      >
+        {dialogue.lines.map((line, i) => (
+          <Fragment key={i}>
+            <span className="text-xs font-bold text-muted-foreground">{line.speaker}</span>
+            <span className="min-w-0">
+              {renderRange(text, line.start, line.end, mark, `l${i}`)}
+            </span>
+          </Fragment>
+        ))}
+        {dialogue.tail && (
+          <span className="col-span-2">
+            {renderRange(text, dialogue.tail[0], dialogue.tail[1], mark, "tail")}
+          </span>
+        )}
+      </span>
+    );
   }
 
-  return <span className={`${className ?? ""} ${wrap}`} lang="ja">{renderRange(text, 0, text.length, mark, "all")}</span>;
+  return (
+    <span className={`${className ?? ""} ${wrap}`} lang="ja">
+      {renderRange(text, 0, text.length, mark, "all")}
+    </span>
+  );
 }

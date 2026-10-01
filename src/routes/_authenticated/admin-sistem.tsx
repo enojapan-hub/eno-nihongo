@@ -1,2 +1,298 @@
-import{createFileRoute}from'@tanstack/react-router';import{useQuery}from'@tanstack/react-query';import{useMemo,useState}from'react';import{Activity,AlertTriangle,Clock3,Database,FileClock,Search,ShieldCheck,Users}from'lucide-react';import{AppShell}from'@/components/layout/AppShell';import{Card,CardContent}from'@/components/ui/card';import{Button}from'@/components/ui/button';import{supabase}from'@/integrations/supabase/client';
-export const Route=createFileRoute('/_authenticated/admin-sistem')({component:Page});function Page(){const[search,setSearch]=useState(''),[action,setAction]=useState('all'),[entity,setEntity]=useState('all');const health=useQuery({queryKey:['system-console-v2'],queryFn:async()=>{const{data,error}=await(supabase as any).rpc('get_system_console');if(error)throw error;return data as any},retry:false});const audit=useQuery({queryKey:['audit-v2'],enabled:health.isSuccess,queryFn:async()=>{const{data,error}=await(supabase as any).rpc('get_admin_audit_events',{p_limit:200,p_search:null,p_action:null,p_entity_type:null});if(error)throw error;return data||[]}});const rows:any[]=audit.data||[],actions=useMemo(()=>[...new Set(rows.map(x=>x.action).filter(Boolean))],[rows]),entities=useMemo(()=>[...new Set(rows.map(x=>x.entity_type).filter(Boolean))],[rows]),shown=rows.filter(x=>(action==='all'||x.action===action)&&(entity==='all'||x.entity_type===entity)&&(!search||[x.actor_name,x.action,x.entity_type,x.entity_id].some(v=>String(v||'').toLowerCase().includes(search.toLowerCase()))));if(health.isError)return <AppShell title="Sistem & Audit" backTo="/admin"><p className="p-4 text-xs text-destructive">Khusus Admin/Owner.</p></AppShell>;const h=health.data||{},crons:any[]=h.cron_jobs||[],critical=(h.expired_premium||0),warning=(h.import_failures||0)+(h.payment_pending||0)+(h.review_needs_fix||0)+crons.filter(x=>x.active&&x.last_status==='failed').length,warnings=critical+warning;return <AppShell title="Sistem & Audit" backTo="/admin"><div className="mx-auto max-w-6xl space-y-4 pb-10"><section className="rounded-[2rem] bg-gradient-to-br from-slate-950 to-emerald-900 p-5 text-white shadow-lg"><div className="flex items-center justify-between"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-300">System Control Center</p><h1 className="mt-2 text-2xl font-black">Sistem & Audit</h1><p className="mt-1 text-xs text-white/65">Status operasional dan jejak aktivitas administratif.</p></div><ShieldCheck className="size-8 text-emerald-300"/></div></section><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{[[Users,'Pengguna',h.profiles],[Activity,'Sesi Belajar',h.sessions],[FileClock,'Audit Event',h.audit_events],[AlertTriangle,'Peringatan',warnings]].map(([I,l,v]:any)=><Card key={l}><CardContent className="p-3"><I className="mb-2 size-4 text-primary"/><p className="text-xl font-black">{v||0}</p><p className="text-[10px] text-muted-foreground">{l}</p></CardContent></Card>)}</div><Card><CardContent className="p-4"><div className="mb-3 flex items-center gap-2"><Database className="size-4 text-primary"/><p className="text-sm font-black">Status Sistem</p></div><div className="grid gap-2 sm:grid-cols-2"><div className="rounded-xl bg-muted p-3 text-xs"><b>Database aplikasi</b><p className="text-primary">Terhubung · metrik berhasil dibaca</p></div><div className="rounded-xl bg-muted p-3 text-xs"><b>Premium kedaluwarsa tertinggal</b><p className={h.expired_premium?'text-destructive':'text-primary'}>{h.expired_premium||0} akun</p></div><div className="rounded-xl bg-muted p-3 text-xs"><b>Import gagal</b><p className={h.import_failures?'text-destructive':'text-primary'}>{h.import_failures||0} dari {h.import_jobs||0} job</p></div><div className="rounded-xl bg-muted p-3 text-xs"><b>Pembayaran pending &gt;24 jam</b><p className={h.payment_pending?'text-amber-600':'text-primary'}>{h.payment_pending||0} order</p></div><div className="rounded-xl bg-muted p-3 text-xs"><b>Konten perlu perbaikan</b><p className={h.review_needs_fix?'text-amber-600':'text-primary'}>{h.review_needs_fix||0} item</p></div><div className="rounded-xl bg-muted p-3 text-xs"><b>Laporan aktif</b><p>{h.reports_open||0} laporan</p></div></div></CardContent></Card><Card><CardContent className="p-4"><div className="mb-3 flex items-center gap-2"><Clock3 className="size-4 text-primary"/><p className="text-sm font-black">Job & Otomasi</p></div><div className="space-y-2">{crons.map(x=><div key={x.jobid} className="flex items-center justify-between rounded-xl border p-3 text-xs"><div><b>{x.label}</b><p className="text-[10px] text-muted-foreground">{x.schedule} · terakhir {x.last_start?new Date(x.last_start).toLocaleString('id-ID'):'belum ada'}</p>{x.last_status&&<p className={`text-[9px] ${x.last_status==='succeeded'?'text-primary':x.last_status==='failed'?'text-destructive':'text-muted-foreground'}`}>Eksekusi terakhir: {x.last_status}</p>}</div><span className={`rounded-full px-2 py-1 text-[9px] font-bold ${x.active?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>{x.active?'Aktif':'Nonaktif'}</span></div>)}</div></CardContent></Card><Card><CardContent className="p-4"><div className="flex items-center justify-between gap-2"><p className="text-sm font-black">Audit Aktivitas Admin</p><Button size="sm" variant="outline" onClick={()=>{const head=['waktu','pelaku','aksi','jenis','target'];const lines=shown.map((x:any)=>[x.created_at,x.actor_name||'Sistem',x.action,x.entity_type||'',x.entity_id||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+[head.join(','),...lines].join('\n')],{type:'text/csv;charset=utf-8'}));a.download='audit-eno-nihongo.csv';a.click();URL.revokeObjectURL(a.href)}}>Export CSV</Button></div><div className="mt-2 flex gap-2 text-[9px]"><span className="rounded-full bg-destructive/10 px-2 py-1 text-destructive">Critical {critical}</span><span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700">Warning {warning}</span></div><div className="mt-3 grid gap-2 sm:grid-cols-3"><div className="relative"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari aktivitas…" className="w-full rounded-xl border bg-background py-2 pl-9 pr-3 text-xs"/></div><select value={action} onChange={e=>setAction(e.target.value)} className="rounded-xl border bg-background p-2 text-xs"><option value="all">Semua aksi</option>{actions.map(x=><option key={x}>{x}</option>)}</select><select value={entity} onChange={e=>setEntity(e.target.value)} className="rounded-xl border bg-background p-2 text-xs"><option value="all">Semua jenis</option>{entities.map(x=><option key={x}>{x}</option>)}</select></div><div className="mt-3 space-y-2">{shown.slice(0,100).map((x:any)=><div key={x.id} className="rounded-xl border p-3 text-xs"><div className="flex justify-between gap-2"><b>{x.action}</b><span className="text-[9px] text-muted-foreground">{new Date(x.created_at).toLocaleString('id-ID')}</span></div><p className="mt-1 text-[10px] text-muted-foreground">{x.actor_name||'Sistem'} · {x.entity_type||'-'} {x.entity_id?'· '+x.entity_id:''}</p>{x.metadata&&Object.keys(x.metadata).length>0&&<details className="mt-2 text-[10px]"><summary className="cursor-pointer font-bold text-primary">Detail perubahan</summary><pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded-lg bg-muted p-2">{JSON.stringify(x.metadata,null,2)}</pre></details>}</div>)}{!shown.length&&<p className="rounded-xl bg-muted p-4 text-xs text-muted-foreground">Tidak ada audit event yang cocok.</p>}</div></CardContent></Card><p className="text-center text-[10px] text-muted-foreground">Audit bersifat read-only di panel. Backup fisik tetap dikelola platform database.</p></div></AppShell>}
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  Clock3,
+  Database,
+  FileClock,
+  Search,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+export const Route = createFileRoute("/_authenticated/admin-sistem")({ component: Page });
+function Page() {
+  const [search, setSearch] = useState(""),
+    [action, setAction] = useState("all"),
+    [entity, setEntity] = useState("all");
+  const health = useQuery({
+    queryKey: ["system-console-v2"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_system_console");
+      if (error) throw error;
+      return data as any;
+    },
+    retry: false,
+  });
+  const audit = useQuery({
+    queryKey: ["audit-v2"],
+    enabled: health.isSuccess,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_admin_audit_events", {
+        p_limit: 200,
+        p_search: null,
+        p_action: null,
+        p_entity_type: null,
+      });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const rows: any[] = audit.data || [],
+    actions = useMemo(() => [...new Set(rows.map((x) => x.action).filter(Boolean))], [rows]),
+    entities = useMemo(() => [...new Set(rows.map((x) => x.entity_type).filter(Boolean))], [rows]),
+    shown = rows.filter(
+      (x) =>
+        (action === "all" || x.action === action) &&
+        (entity === "all" || x.entity_type === entity) &&
+        (!search ||
+          [x.actor_name, x.action, x.entity_type, x.entity_id].some((v) =>
+            String(v || "")
+              .toLowerCase()
+              .includes(search.toLowerCase()),
+          )),
+    );
+  if (health.isError)
+    return (
+      <AppShell title="Sistem & Audit" backTo="/admin">
+        <p className="p-4 text-xs text-destructive">Khusus Admin/Owner.</p>
+      </AppShell>
+    );
+  const h = health.data || {},
+    crons: any[] = h.cron_jobs || [],
+    critical = h.expired_premium || 0,
+    warning =
+      (h.import_failures || 0) +
+      (h.payment_pending || 0) +
+      (h.review_needs_fix || 0) +
+      crons.filter((x) => x.active && x.last_status === "failed").length,
+    warnings = critical + warning;
+  return (
+    <AppShell title="Sistem & Audit" backTo="/admin">
+      <div className="mx-auto max-w-6xl space-y-4 pb-10">
+        <section className="rounded-[2rem] bg-gradient-to-br from-slate-950 to-emerald-900 p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-300">
+                System Control Center
+              </p>
+              <h1 className="mt-2 text-2xl font-black">Sistem & Audit</h1>
+              <p className="mt-1 text-xs text-white/65">
+                Status operasional dan jejak aktivitas administratif.
+              </p>
+            </div>
+            <ShieldCheck className="size-8 text-emerald-300" />
+          </div>
+        </section>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            [Users, "Pengguna", h.profiles],
+            [Activity, "Sesi Belajar", h.sessions],
+            [FileClock, "Audit Event", h.audit_events],
+            [AlertTriangle, "Peringatan", warnings],
+          ].map(([I, l, v]: any) => (
+            <Card key={l}>
+              <CardContent className="p-3">
+                <I className="mb-2 size-4 text-primary" />
+                <p className="text-xl font-black">{v || 0}</p>
+                <p className="text-[10px] text-muted-foreground">{l}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <Database className="size-4 text-primary" />
+              <p className="text-sm font-black">Status Sistem</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="rounded-xl bg-muted p-3 text-xs">
+                <b>Database aplikasi</b>
+                <p className="text-primary">Terhubung · metrik berhasil dibaca</p>
+              </div>
+              <div className="rounded-xl bg-muted p-3 text-xs">
+                <b>Premium kedaluwarsa tertinggal</b>
+                <p className={h.expired_premium ? "text-destructive" : "text-primary"}>
+                  {h.expired_premium || 0} akun
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted p-3 text-xs">
+                <b>Import gagal</b>
+                <p className={h.import_failures ? "text-destructive" : "text-primary"}>
+                  {h.import_failures || 0} dari {h.import_jobs || 0} job
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted p-3 text-xs">
+                <b>Pembayaran pending &gt;24 jam</b>
+                <p className={h.payment_pending ? "text-amber-600" : "text-primary"}>
+                  {h.payment_pending || 0} order
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted p-3 text-xs">
+                <b>Konten perlu perbaikan</b>
+                <p className={h.review_needs_fix ? "text-amber-600" : "text-primary"}>
+                  {h.review_needs_fix || 0} item
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted p-3 text-xs">
+                <b>Laporan aktif</b>
+                <p>{h.reports_open || 0} laporan</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <Clock3 className="size-4 text-primary" />
+              <p className="text-sm font-black">Job & Otomasi</p>
+            </div>
+            <div className="space-y-2">
+              {crons.map((x) => (
+                <div
+                  key={x.jobid}
+                  className="flex items-center justify-between rounded-xl border p-3 text-xs"
+                >
+                  <div>
+                    <b>{x.label}</b>
+                    <p className="text-[10px] text-muted-foreground">
+                      {x.schedule} · terakhir{" "}
+                      {x.last_start ? new Date(x.last_start).toLocaleString("id-ID") : "belum ada"}
+                    </p>
+                    {x.last_status && (
+                      <p
+                        className={`text-[9px] ${x.last_status === "succeeded" ? "text-primary" : x.last_status === "failed" ? "text-destructive" : "text-muted-foreground"}`}
+                      >
+                        Eksekusi terakhir: {x.last_status}
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={`rounded-full px-2 py-1 text-[9px] font-bold ${x.active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                  >
+                    {x.active ? "Aktif" : "Nonaktif"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-black">Audit Aktivitas Admin</p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const head = ["waktu", "pelaku", "aksi", "jenis", "target"];
+                  const lines = shown.map((x: any) =>
+                    [
+                      x.created_at,
+                      x.actor_name || "Sistem",
+                      x.action,
+                      x.entity_type || "",
+                      x.entity_id || "",
+                    ]
+                      .map((v) => '"' + String(v).replace(/"/g, '""') + '"')
+                      .join(","),
+                  );
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(
+                    new Blob(["\uFEFF" + [head.join(","), ...lines].join("\n")], {
+                      type: "text/csv;charset=utf-8",
+                    }),
+                  );
+                  a.download = "audit-eno-nihongo.csv";
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                }}
+              >
+                Export CSV
+              </Button>
+            </div>
+            <div className="mt-2 flex gap-2 text-[9px]">
+              <span className="rounded-full bg-destructive/10 px-2 py-1 text-destructive">
+                Critical {critical}
+              </span>
+              <span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700">
+                Warning {warning}
+              </span>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Cari aktivitas…"
+                  className="w-full rounded-xl border bg-background py-2 pl-9 pr-3 text-xs"
+                />
+              </div>
+              <select
+                value={action}
+                onChange={(e) => setAction(e.target.value)}
+                className="rounded-xl border bg-background p-2 text-xs"
+              >
+                <option value="all">Semua aksi</option>
+                {actions.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+              <select
+                value={entity}
+                onChange={(e) => setEntity(e.target.value)}
+                className="rounded-xl border bg-background p-2 text-xs"
+              >
+                <option value="all">Semua jenis</option>
+                {entities.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-3 space-y-2">
+              {shown.slice(0, 100).map((x: any) => (
+                <div key={x.id} className="rounded-xl border p-3 text-xs">
+                  <div className="flex justify-between gap-2">
+                    <b>{x.action}</b>
+                    <span className="text-[9px] text-muted-foreground">
+                      {new Date(x.created_at).toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {x.actor_name || "Sistem"} · {x.entity_type || "-"}{" "}
+                    {x.entity_id ? "· " + x.entity_id : ""}
+                  </p>
+                  {x.metadata && Object.keys(x.metadata).length > 0 && (
+                    <details className="mt-2 text-[10px]">
+                      <summary className="cursor-pointer font-bold text-primary">
+                        Detail perubahan
+                      </summary>
+                      <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded-lg bg-muted p-2">
+                        {JSON.stringify(x.metadata, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              ))}
+              {!shown.length && (
+                <p className="rounded-xl bg-muted p-4 text-xs text-muted-foreground">
+                  Tidak ada audit event yang cocok.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <p className="text-center text-[10px] text-muted-foreground">
+          Audit bersifat read-only di panel. Backup fisik tetap dikelola platform database.
+        </p>
+      </div>
+    </AppShell>
+  );
+}

@@ -10,7 +10,8 @@ type JsonObject = Record<string, unknown>;
 type QueryRows = { data?: JsonObject[] | null };
 type VocabSenseRow = { vocabulary_id: string; meaning_id: string | null; examples: unknown };
 type KanjiVocabLinkRow = { kanji_id: string; vocabulary_id: string; sort_order: number };
-const isObject = (value: unknown): value is JsonObject => typeof value === "object" && value !== null;
+const isObject = (value: unknown): value is JsonObject =>
+  typeof value === "object" && value !== null;
 const arr = (v: unknown) => (Array.isArray(v) ? v.filter(Boolean).join("、") : v ? String(v) : "");
 const exList = (v: unknown): Array<{ ja: string; id: string }> =>
   Array.isArray(v)
@@ -21,7 +22,10 @@ const exList = (v: unknown): Array<{ ja: string; id: string }> =>
 const wrongList = (v: unknown): Array<{ wrong: string; correct: string; reason: string }> =>
   Array.isArray(v)
     ? v
-        .filter((e): e is JsonObject => isObject(e) && typeof e.wrong === "string" && typeof e.correct === "string")
+        .filter(
+          (e): e is JsonObject =>
+            isObject(e) && typeof e.wrong === "string" && typeof e.correct === "string",
+        )
         .map((e) => ({
           wrong: String(e.wrong),
           correct: String(e.correct),
@@ -100,7 +104,8 @@ async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
       .select(`${a},${b}`)
       .or(`${a}.in.${inList},${b}.in.${inList}`)
       .limit(200);
-    for (const row of r.data ?? []) out.push({ type, a: String(row[a] ?? ""), b: String(row[b] ?? "") });
+    for (const row of r.data ?? [])
+      out.push({ type, a: String(row[a] ?? ""), b: String(row[b] ?? "") });
   };
   await Promise.all([
     run(kanji, "kanji_relations", "kanji_id", "related_kanji_id", "kanji").catch(() => undefined),

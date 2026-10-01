@@ -1,10 +1,223 @@
-import{createFileRoute}from'@tanstack/react-router';import{useState}from'react';import{useQuery}from'@tanstack/react-query';import{Activity,BarChart3,BookOpen,Clock3,Flame,GraduationCap,Target,Trophy,UserPlus,Users}from'lucide-react';import{AppShell}from'@/components/layout/AppShell';import{Card,CardContent}from'@/components/ui/card';import{supabase}from'@/integrations/supabase/client';
-export const Route=createFileRoute('/_authenticated/admin-analitik')({component:Page});
-function Page(){const[days,setDays]=useState(30);const q=useQuery({queryKey:['admin-analytics',days],queryFn:async()=>{const{data,error}=await(supabase as any).rpc('get_admin_analytics',{p_days:days});if(error)throw error;return data as any},retry:false});const d=q.data||{};const stats=[['Total Pengguna',d.users_total,Users],['Pengguna Baru',d.users_new,UserPlus],['Pengguna Aktif',d.active_users,Activity],['Sesi Belajar',d.sessions,Users],['Jam Belajar',(Number(d.study_seconds||0)/3600).toFixed(1),Clock3],['Rata-rata Streak',d.avg_streak,Flame]] as const;const levels=['N5','N4','N3','N2','N1'];const daily:any[]=d.daily||[];const chart=daily.filter((_:any,i:number)=>daily.length<=10||i%Math.ceil(daily.length/10)===0||i===daily.length-1);const max=Math.max(1,...daily.map(x=>Number(x.sessions||0)));return <AppShell title="Analitik" backTo="/admin"><div className="mx-auto w-full min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-10">
-<section className="rounded-[2rem] bg-gradient-to-br from-primary to-emerald-800 p-5 text-primary-foreground shadow-lg"><p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><BarChart3 className="size-4"/>Analytics Center</p><h1 className="mt-2 text-2xl font-black">Analitik ENO NIHONGO</h1><p className="mt-1 text-xs text-white/75">Aktivitas dan perkembangan pengguna berdasarkan data aktual.</p></section><div className="flex gap-1 overflow-x-auto">{[[7,"7 hari"],[30,"30 hari"],[90,"90 hari"],[365,"1 tahun"]].map(([v,l]:any)=><button key={v} onClick={()=>setDays(v)} className={"rounded-full px-3 py-1.5 text-[10px] font-bold "+(days===v?"bg-primary text-primary-foreground":"bg-muted text-muted-foreground")}>{l}</button>)}</div>
-{q.isLoading?<p className="text-xs">Memuat…</p>:q.isError?<p className="text-xs text-destructive">Akses analitik tidak tersedia.</p>:<><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{stats.map(([l,v,I])=><Card key={l}><CardContent className="p-3"><I className="size-4 text-primary"/><p className="mt-2 text-xl font-black">{String(v??0)}</p><p className="text-[10px] text-muted-foreground">{l}</p></CardContent></Card>)}</div>
-<Card className="min-w-0 overflow-hidden"><CardContent className="min-w-0 p-4"><h2 className="flex items-center gap-2 text-sm font-black"><BarChart3 className="size-4 text-primary"/>Tren Aktivitas</h2><div className="mt-4 grid h-28 min-w-0 items-end gap-1" style={{gridTemplateColumns:`repeat(${Math.max(chart.length,1)},minmax(0,1fr))`}}>{chart.map((x:any)=><div key={x.activity_date} className="flex min-w-0 flex-col items-center gap-1 overflow-hidden"><span className="text-[9px] font-bold">{x.sessions}</span><div className="w-full rounded-t bg-primary/80" style={{height:Math.max(4,Number(x.sessions||0)/max*76)}}/><span className="max-w-full truncate text-[8px] text-muted-foreground">{String(x.activity_date).slice(5)}</span></div>)}</div></CardContent></Card>
-<section><h2 className="mb-2 text-sm font-black">Distribusi Level</h2><div className="grid grid-cols-5 gap-1 sm:gap-2">{levels.map(l=><Card key={l} className="min-w-0"><CardContent className="p-1.5 text-center sm:p-2"><p className="text-base font-black text-primary">{d.level_distribution?.[l]||0}</p><p className="text-[9px] text-muted-foreground">{l}</p></CardContent></Card>)}</div>{d.level_distribution?.['Belum dipilih']>0&&<p className="mt-2 text-[10px] text-muted-foreground">Belum memilih level: {d.level_distribution['Belum dipilih']}</p>}</section>
-<section><h2 className="mb-2 text-sm font-black">Performa JLPT per Level</h2><div className="grid gap-2 sm:grid-cols-2">{(d.simulation_by_level||[]).length===0?<Card><CardContent className="p-4 text-xs text-muted-foreground">Belum ada simulasi selesai pada periode ini.</CardContent></Card>:(d.simulation_by_level||[]).map((x:any)=><Card key={x.level}><CardContent className="p-3"><div className="flex justify-between"><b className="text-sm">{x.level}</b><span className="text-xs font-black text-primary">{x.accuracy}%</span></div><p className="mt-1 text-[10px] text-muted-foreground">{x.participants} peserta · {x.attempts} pengerjaan</p></CardContent></Card>)}</div></section>
-<section><h2 className="mb-2 text-sm font-black">Aktivitas Materi</h2><Card><CardContent className="p-4">{(d.activity_types||[]).length===0?<p className="text-xs text-muted-foreground">Belum ada aktivitas.</p>:(d.activity_types||[]).map((x:any)=><div key={x.activity_type} className="flex justify-between border-b py-2 text-xs last:border-0"><span>{x.activity_type}</span><b>{x.cnt}</b></div>)}</CardContent></Card></section><section><h2 className="mb-2 text-sm font-black">Soal Simulasi Paling Sulit</h2><Card><CardContent className="p-4">{(d.hardest_simulation_questions||[]).length===0?<p className="text-xs text-muted-foreground">Belum cukup data jawaban.</p>:(d.hardest_simulation_questions||[]).map((x:any)=><div key={x.id} className="border-b py-2 last:border-0"><div className="flex justify-between gap-3"><p className="line-clamp-1 text-xs font-bold">{x.prompt_jp||"Soal tanpa teks"}</p><b className="shrink-0 text-xs text-destructive">{x.wrong_rate}% salah</b></div><p className="text-[10px] text-muted-foreground">{x.level} · {x.section} · {x.answers} jawaban</p></div>)}</CardContent></Card></section>
-</>}</div></AppShell>}
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  Clock3,
+  Flame,
+  GraduationCap,
+  Target,
+  Trophy,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+export const Route = createFileRoute("/_authenticated/admin-analitik")({ component: Page });
+function Page() {
+  const [days, setDays] = useState(30);
+  const q = useQuery({
+    queryKey: ["admin-analytics", days],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_admin_analytics", { p_days: days });
+      if (error) throw error;
+      return data as any;
+    },
+    retry: false,
+  });
+  const d = q.data || {};
+  const stats = [
+    ["Total Pengguna", d.users_total, Users],
+    ["Pengguna Baru", d.users_new, UserPlus],
+    ["Pengguna Aktif", d.active_users, Activity],
+    ["Sesi Belajar", d.sessions, Users],
+    ["Jam Belajar", (Number(d.study_seconds || 0) / 3600).toFixed(1), Clock3],
+    ["Rata-rata Streak", d.avg_streak, Flame],
+  ] as const;
+  const levels = ["N5", "N4", "N3", "N2", "N1"];
+  const daily: any[] = d.daily || [];
+  const chart = daily.filter(
+    (_: any, i: number) =>
+      daily.length <= 10 || i % Math.ceil(daily.length / 10) === 0 || i === daily.length - 1,
+  );
+  const max = Math.max(1, ...daily.map((x) => Number(x.sessions || 0)));
+  return (
+    <AppShell title="Analitik" backTo="/admin">
+      <div className="mx-auto w-full min-w-0 max-w-5xl space-y-5 overflow-x-hidden pb-10">
+        <section className="rounded-[2rem] bg-gradient-to-br from-primary to-emerald-800 p-5 text-primary-foreground shadow-lg">
+          <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+            <BarChart3 className="size-4" />
+            Analytics Center
+          </p>
+          <h1 className="mt-2 text-2xl font-black">Analitik ENO NIHONGO</h1>
+          <p className="mt-1 text-xs text-white/75">
+            Aktivitas dan perkembangan pengguna berdasarkan data aktual.
+          </p>
+        </section>
+        <div className="flex gap-1 overflow-x-auto">
+          {[
+            [7, "7 hari"],
+            [30, "30 hari"],
+            [90, "90 hari"],
+            [365, "1 tahun"],
+          ].map(([v, l]: any) => (
+            <button
+              key={v}
+              onClick={() => setDays(v)}
+              className={
+                "rounded-full px-3 py-1.5 text-[10px] font-bold " +
+                (days === v
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground")
+              }
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+        {q.isLoading ? (
+          <p className="text-xs">Memuat…</p>
+        ) : q.isError ? (
+          <p className="text-xs text-destructive">Akses analitik tidak tersedia.</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {stats.map(([l, v, I]) => (
+                <Card key={l}>
+                  <CardContent className="p-3">
+                    <I className="size-4 text-primary" />
+                    <p className="mt-2 text-xl font-black">{String(v ?? 0)}</p>
+                    <p className="text-[10px] text-muted-foreground">{l}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <Card className="min-w-0 overflow-hidden">
+              <CardContent className="min-w-0 p-4">
+                <h2 className="flex items-center gap-2 text-sm font-black">
+                  <BarChart3 className="size-4 text-primary" />
+                  Tren Aktivitas
+                </h2>
+                <div
+                  className="mt-4 grid h-28 min-w-0 items-end gap-1"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.max(chart.length, 1)},minmax(0,1fr))`,
+                  }}
+                >
+                  {chart.map((x: any) => (
+                    <div
+                      key={x.activity_date}
+                      className="flex min-w-0 flex-col items-center gap-1 overflow-hidden"
+                    >
+                      <span className="text-[9px] font-bold">{x.sessions}</span>
+                      <div
+                        className="w-full rounded-t bg-primary/80"
+                        style={{ height: Math.max(4, (Number(x.sessions || 0) / max) * 76) }}
+                      />
+                      <span className="max-w-full truncate text-[8px] text-muted-foreground">
+                        {String(x.activity_date).slice(5)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <section>
+              <h2 className="mb-2 text-sm font-black">Distribusi Level</h2>
+              <div className="grid grid-cols-5 gap-1 sm:gap-2">
+                {levels.map((l) => (
+                  <Card key={l} className="min-w-0">
+                    <CardContent className="p-1.5 text-center sm:p-2">
+                      <p className="text-base font-black text-primary">
+                        {d.level_distribution?.[l] || 0}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground">{l}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {d.level_distribution?.["Belum dipilih"] > 0 && (
+                <p className="mt-2 text-[10px] text-muted-foreground">
+                  Belum memilih level: {d.level_distribution["Belum dipilih"]}
+                </p>
+              )}
+            </section>
+            <section>
+              <h2 className="mb-2 text-sm font-black">Performa JLPT per Level</h2>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {(d.simulation_by_level || []).length === 0 ? (
+                  <Card>
+                    <CardContent className="p-4 text-xs text-muted-foreground">
+                      Belum ada simulasi selesai pada periode ini.
+                    </CardContent>
+                  </Card>
+                ) : (
+                  (d.simulation_by_level || []).map((x: any) => (
+                    <Card key={x.level}>
+                      <CardContent className="p-3">
+                        <div className="flex justify-between">
+                          <b className="text-sm">{x.level}</b>
+                          <span className="text-xs font-black text-primary">{x.accuracy}%</span>
+                        </div>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {x.participants} peserta · {x.attempts} pengerjaan
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </section>
+            <section>
+              <h2 className="mb-2 text-sm font-black">Aktivitas Materi</h2>
+              <Card>
+                <CardContent className="p-4">
+                  {(d.activity_types || []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Belum ada aktivitas.</p>
+                  ) : (
+                    (d.activity_types || []).map((x: any) => (
+                      <div
+                        key={x.activity_type}
+                        className="flex justify-between border-b py-2 text-xs last:border-0"
+                      >
+                        <span>{x.activity_type}</span>
+                        <b>{x.cnt}</b>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+            <section>
+              <h2 className="mb-2 text-sm font-black">Soal Simulasi Paling Sulit</h2>
+              <Card>
+                <CardContent className="p-4">
+                  {(d.hardest_simulation_questions || []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Belum cukup data jawaban.</p>
+                  ) : (
+                    (d.hardest_simulation_questions || []).map((x: any) => (
+                      <div key={x.id} className="border-b py-2 last:border-0">
+                        <div className="flex justify-between gap-3">
+                          <p className="line-clamp-1 text-xs font-bold">
+                            {x.prompt_jp || "Soal tanpa teks"}
+                          </p>
+                          <b className="shrink-0 text-xs text-destructive">{x.wrong_rate}% salah</b>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          {x.level} · {x.section} · {x.answers} jawaban
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+          </>
+        )}
+      </div>
+    </AppShell>
+  );
+}
