@@ -90,6 +90,7 @@ end $$;
 revoke all on function private.notify_class_change() from public,anon,authenticated;
 do $$ declare t text; begin
   foreach t in array array['class_materials','class_assignments','class_quizzes','class_announcements','class_schedule','class_meetings'] loop
+    execute format('drop trigger if exists classroom_notify on public.%I',t);
     execute format('create trigger classroom_notify after insert or update on public.%I for each row execute function private.notify_class_change()',t);
   end loop;
 end $$;
