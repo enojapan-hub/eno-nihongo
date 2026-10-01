@@ -23,6 +23,7 @@ import {
   Target,
   LifeBuoy,
   LockKeyhole,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -40,7 +41,7 @@ function Row({
   onClick,
   children,
 }: {
-  icon: any;
+  icon: LucideIcon;
   title: string;
   desc: string;
   onClick?: () => void;
@@ -110,7 +111,7 @@ function Report({ close }: { close: () => void }) {
     [busy, setBusy] = useState(false);
   async function send() {
     setBusy(true);
-    const { data, error } = await (supabase as any).rpc("submit_user_report", {
+    const { data, error } = await supabase.rpc("submit_user_report", {
       p_category: cat,
       p_subject: subject,
       p_description: description,
@@ -181,8 +182,8 @@ function Page() {
       } = await supabase.auth.getUser();
       if (!user) return;
       const [{ data: p }, { data: n }] = await Promise.all([
-        (supabase as any).from("profiles").select("role").eq("id", user.id).maybeSingle(),
-        (supabase as any).rpc("get_my_notification_settings"),
+        supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+        supabase.rpc("get_my_notification_settings"),
       ]);
       setRole(p?.role ?? "student");
       setReminder(Boolean(n?.daily_reminder));
@@ -190,7 +191,7 @@ function Page() {
   }, []);
   async function notify(v: boolean) {
     setReminder(v);
-    const { error } = await (supabase as any).rpc("set_my_daily_reminder", { p_enabled: v });
+    const { error } = await supabase.rpc("set_my_daily_reminder", { p_enabled: v });
     if (error) {
       setReminder(!v);
       toast.error(error.message);
