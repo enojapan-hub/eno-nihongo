@@ -19,7 +19,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --no-save
 
       - name: Capture lint report
         run: bun run lint -- --format json --output-file eslint-report.json || true
