@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260913163152
+-- Name: grant_editor_content_crud
+-- Production already records this migration as applied.

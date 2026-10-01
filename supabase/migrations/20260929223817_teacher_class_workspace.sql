@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260929223817
+-- Name: teacher_class_workspace
+-- Production already records this migration as applied.

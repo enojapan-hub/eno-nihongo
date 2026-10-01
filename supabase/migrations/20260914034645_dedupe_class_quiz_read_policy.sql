@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914034645
+-- Name: dedupe_class_quiz_read_policy
+-- Production already records this migration as applied.

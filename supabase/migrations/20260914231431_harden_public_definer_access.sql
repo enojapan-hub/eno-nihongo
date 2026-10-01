@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914231431
+-- Name: harden_public_definer_access
+-- Production already records this migration as applied.

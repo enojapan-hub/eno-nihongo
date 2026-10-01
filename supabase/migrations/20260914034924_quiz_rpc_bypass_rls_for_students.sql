@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914034924
+-- Name: quiz_rpc_bypass_rls_for_students
+-- Production already records this migration as applied.

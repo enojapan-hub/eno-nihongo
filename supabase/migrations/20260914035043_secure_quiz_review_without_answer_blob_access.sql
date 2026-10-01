@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035043
+-- Name: secure_quiz_review_without_answer_blob_access
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914032953
+-- Name: secure_class_enrollment_and_meeting_access
+-- Production already records this migration as applied.

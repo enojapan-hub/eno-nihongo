@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914231629
+-- Name: optimize_rls_auth_initplans_and_fk_indexes
+-- Production already records this migration as applied.

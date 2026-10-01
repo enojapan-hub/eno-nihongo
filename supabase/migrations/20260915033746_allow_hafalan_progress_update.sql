@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260915033746
+-- Name: allow_hafalan_progress_update
+-- Production already records this migration as applied.

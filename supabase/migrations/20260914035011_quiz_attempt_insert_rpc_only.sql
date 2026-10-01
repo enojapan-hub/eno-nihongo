@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035011
+-- Name: quiz_attempt_insert_rpc_only
+-- Production already records this migration as applied.

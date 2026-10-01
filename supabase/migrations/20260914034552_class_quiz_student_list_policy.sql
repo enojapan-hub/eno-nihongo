@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914034552
+-- Name: class_quiz_student_list_policy
+-- Production already records this migration as applied.

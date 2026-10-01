@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930084944
+-- Name: operations_console_v2_fields
+-- Production already records this migration as applied.

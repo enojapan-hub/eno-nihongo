@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914034841
+-- Name: dedupe_quiz_question_select_policy
+-- Production already records this migration as applied.

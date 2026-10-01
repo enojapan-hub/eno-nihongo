@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914034723
+-- Name: class_workspace_quiz_history_rpc
+-- Production already records this migration as applied.

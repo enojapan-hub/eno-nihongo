@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260917112248
+-- Name: public_simulation_question_delivery
+-- Production already records this migration as applied.

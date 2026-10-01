@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930112257
+-- Name: vocabulary_category_reader
+-- Production already records this migration as applied.

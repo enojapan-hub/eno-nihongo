@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914034524
+-- Name: class_quiz_attempts_and_secure_scoring
+-- Production already records this migration as applied.

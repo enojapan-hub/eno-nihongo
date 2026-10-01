@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914043250
+-- Name: add_premium_monthly_eno_exams
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930072421
+-- Name: separate_paid_transactions_from_orders
+-- Production already records this migration as applied.

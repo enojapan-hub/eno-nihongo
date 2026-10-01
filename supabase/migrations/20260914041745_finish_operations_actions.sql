@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914041745
+-- Name: finish_operations_actions
+-- Production already records this migration as applied.

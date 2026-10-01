@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914041206
+-- Name: admin_editor_operations_modules_v2
+-- Production already records this migration as applied.

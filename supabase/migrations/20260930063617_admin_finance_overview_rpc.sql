@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930063617
+-- Name: admin_finance_overview_rpc
+-- Production already records this migration as applied.

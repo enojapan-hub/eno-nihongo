@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260917042558
+-- Name: editor_teacher_full_premium_access
+-- Production already records this migration as applied.

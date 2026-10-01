@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035519
+-- Name: tighten_published_class_read_policy
+-- Production already records this migration as applied.

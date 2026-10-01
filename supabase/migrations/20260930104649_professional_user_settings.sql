@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930104649
+-- Name: professional_user_settings
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930054233
+-- Name: admin_manual_premium_access
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914034746
+-- Name: class_quiz_student_list_rpc
+-- Production already records this migration as applied.

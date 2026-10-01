@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914054507
+-- Name: complete_eno_monthly_exam_core
+-- Production already records this migration as applied.

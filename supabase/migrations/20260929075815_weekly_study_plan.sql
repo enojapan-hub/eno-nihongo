@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260929075815
+-- Name: weekly_study_plan
+-- Production already records this migration as applied.

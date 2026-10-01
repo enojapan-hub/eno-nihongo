@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914041445
+-- Name: complete_admin_editor_nonpayment_modules
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260915033640
+-- Name: support_hafalan_review_aspects
+-- Production already records this migration as applied.

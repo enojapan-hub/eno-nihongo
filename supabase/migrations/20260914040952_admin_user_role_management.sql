@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914040952
+-- Name: admin_user_role_management
+-- Production already records this migration as applied.

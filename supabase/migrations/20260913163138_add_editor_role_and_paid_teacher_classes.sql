@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260913163138
+-- Name: add_editor_role_and_paid_teacher_classes
+-- Production already records this migration as applied.

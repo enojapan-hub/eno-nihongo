@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930063054
+-- Name: restore_subscription_plans_authenticated_grants
+-- Production already records this migration as applied.

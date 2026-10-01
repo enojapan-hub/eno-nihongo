@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035335
+-- Name: public_class_catalog_safe_rpc
+-- Production already records this migration as applied.

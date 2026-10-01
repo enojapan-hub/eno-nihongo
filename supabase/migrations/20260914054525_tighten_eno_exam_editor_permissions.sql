@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914054525
+-- Name: tighten_eno_exam_editor_permissions
+-- Production already records this migration as applied.

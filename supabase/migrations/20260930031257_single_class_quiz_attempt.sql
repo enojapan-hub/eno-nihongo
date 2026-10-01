@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930031257
+-- Name: single_class_quiz_attempt
+-- Production already records this migration as applied.

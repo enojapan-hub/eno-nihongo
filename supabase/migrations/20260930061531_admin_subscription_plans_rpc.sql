@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930061531
+-- Name: admin_subscription_plans_rpc
+-- Production already records this migration as applied.

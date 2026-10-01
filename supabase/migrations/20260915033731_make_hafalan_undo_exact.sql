@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260915033731
+-- Name: make_hafalan_undo_exact
+-- Production already records this migration as applied.

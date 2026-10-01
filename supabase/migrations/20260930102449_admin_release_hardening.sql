@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930102449
+-- Name: admin_release_hardening
+-- Production already records this migration as applied.

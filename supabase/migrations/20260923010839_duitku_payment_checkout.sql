@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260923010839
+-- Name: duitku_payment_checkout
+-- Production already records this migration as applied.

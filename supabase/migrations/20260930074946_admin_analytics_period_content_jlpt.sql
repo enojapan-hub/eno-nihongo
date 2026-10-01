@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930074946
+-- Name: admin_analytics_period_content_jlpt
+-- Production already records this migration as applied.

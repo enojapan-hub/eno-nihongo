@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035307
+-- Name: secure_class_meetings_and_teacher_workflow
+-- Production already records this migration as applied.

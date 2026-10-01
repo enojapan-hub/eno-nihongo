@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930095634
+-- Name: dynamic_rbac_foundation
+-- Production already records this migration as applied.

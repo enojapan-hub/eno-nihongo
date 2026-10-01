@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035203
+-- Name: grant_class_quiz_teacher_table_access
+-- Production already records this migration as applied.

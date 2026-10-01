@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914041840
+-- Name: harden_quiz_answer_validation
+-- Production already records this migration as applied.

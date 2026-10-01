@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930094301
+-- Name: complete_admin_audit_coverage
+-- Production already records this migration as applied.

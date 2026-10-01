@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260913174906
+-- Name: add_payment_foundation_duitku
+-- Production already records this migration as applied.

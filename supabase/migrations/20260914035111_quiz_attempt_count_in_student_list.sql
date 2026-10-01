@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035111
+-- Name: quiz_attempt_count_in_student_list
+-- Production already records this migration as applied.

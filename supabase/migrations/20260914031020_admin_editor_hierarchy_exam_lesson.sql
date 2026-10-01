@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914031020
+-- Name: admin_editor_hierarchy_exam_lesson
+-- Production already records this migration as applied.

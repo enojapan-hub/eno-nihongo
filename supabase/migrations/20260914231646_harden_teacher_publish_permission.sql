@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914231646
+-- Name: harden_teacher_publish_permission
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260915031909
+-- Name: add_flashcard_review_history
+-- Production already records this migration as applied.

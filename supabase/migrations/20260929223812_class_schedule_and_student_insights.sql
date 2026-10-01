@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260929223812
+-- Name: class_schedule_and_student_insights
+-- Production already records this migration as applied.

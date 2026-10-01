@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930074544
+-- Name: expand_admin_analytics
+-- Production already records this migration as applied.

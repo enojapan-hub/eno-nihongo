@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035729
+-- Name: allow_admin_owner_class_creation_rpc
+-- Production already records this migration as applied.

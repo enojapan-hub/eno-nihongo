@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260929081259
+-- Name: study_days_update_in_place
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260929095342
+-- Name: kioku_selected_item
+-- Production already records this migration as applied.

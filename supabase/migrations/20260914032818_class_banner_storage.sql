@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914032818
+-- Name: class_banner_storage
+-- Production already records this migration as applied.

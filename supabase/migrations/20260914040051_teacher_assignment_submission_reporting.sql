@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914040051
+-- Name: teacher_assignment_submission_reporting
+-- Production already records this migration as applied.

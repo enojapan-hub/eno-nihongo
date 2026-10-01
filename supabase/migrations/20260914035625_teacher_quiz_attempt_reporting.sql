@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035625
+-- Name: teacher_quiz_attempt_reporting
+-- Production already records this migration as applied.

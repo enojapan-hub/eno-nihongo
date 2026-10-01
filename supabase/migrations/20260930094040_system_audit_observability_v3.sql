@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260930094040
+-- Name: system_audit_observability_v3
+-- Production already records this migration as applied.

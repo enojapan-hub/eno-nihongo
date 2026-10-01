@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260915033714
+-- Name: add_hafalan_review_undo_rpc
+-- Production already records this migration as applied.

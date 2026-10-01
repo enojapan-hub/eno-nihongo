@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035234
+-- Name: student_class_grade_rpc
+-- Production already records this migration as applied.

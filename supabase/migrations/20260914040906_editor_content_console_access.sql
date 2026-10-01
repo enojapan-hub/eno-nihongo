@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914040906
+-- Name: editor_content_console_access
+-- Production already records this migration as applied.

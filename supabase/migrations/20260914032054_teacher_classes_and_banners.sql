@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914032054
+-- Name: teacher_classes_and_banners
+-- Production already records this migration as applied.

@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914235512
+-- Name: align_teacher_content_permissions
+-- Production already records this migration as applied.

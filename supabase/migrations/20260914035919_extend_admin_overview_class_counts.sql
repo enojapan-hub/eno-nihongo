@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914035919
+-- Name: extend_admin_overview_class_counts
+-- Production already records this migration as applied.

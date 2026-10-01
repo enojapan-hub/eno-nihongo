@@ -1,0 +1,4 @@
+-- Historical migration marker restored from Supabase migration history.
+-- Version: 20260914033946
+-- Name: class_quiz_submission_grading
+-- Production already records this migration as applied.
