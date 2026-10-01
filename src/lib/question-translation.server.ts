@@ -13,6 +13,8 @@ type QuestionRow = {
   explanation_en: string | null
 }
 
+type GeminiResponse = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+
 type Translated = {
   id: string
   prompt_id: string
@@ -85,8 +87,8 @@ export async function runQuestionTranslationBatch(limit = 100) {
     throw new Error(`Gemini ${response.status}: ${body.slice(0, 500)}`)
   }
 
-  const json = await response.json()
-  const raw = json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text || '').join('') || ''
+  const json = (await response.json()) as GeminiResponse
+  const raw = json.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || ''
   const parsed = JSON.parse(raw)
   const translated = (Array.isArray(parsed?.questions) ? parsed.questions : []) as Translated[]
   const byId = new Map(translated.map((q) => [q.id, q]))

@@ -6,18 +6,23 @@ import { rankCandidates, toLearned } from "./selector";
 import type { KiokuEvent, KiokuItemType, MemoryStateRow } from "./types";
 
 const db = supabase as any;
+type JsonObject = Record<string, unknown>;
+type QueryRows = { data?: JsonObject[] | null };
+type VocabSenseRow = { vocabulary_id: string; meaning_id: string | null; examples: unknown };
+type KanjiVocabLinkRow = { kanji_id: string; vocabulary_id: string; sort_order: number };
+const isObject = (value: unknown): value is JsonObject => typeof value === "object" && value !== null;
 const arr = (v: unknown) => (Array.isArray(v) ? v.filter(Boolean).join("、") : v ? String(v) : "");
 const exList = (v: unknown): Array<{ ja: string; id: string }> =>
   Array.isArray(v)
     ? v
-        .filter((e: any) => e && typeof e.ja === "string")
-        .map((e: any) => ({ ja: String(e.ja), id: String(e.id ?? "") }))
+        .filter((e): e is JsonObject => isObject(e) && typeof e.ja === "string")
+        .map((e) => ({ ja: String(e.ja), id: String(e.id ?? "") }))
     : [];
 const wrongList = (v: unknown): Array<{ wrong: string; correct: string; reason: string }> =>
   Array.isArray(v)
     ? v
-        .filter((e: any) => e && typeof e.wrong === "string" && typeof e.correct === "string")
-        .map((e: any) => ({
+        .filter((e): e is JsonObject => isObject(e) && typeof e.wrong === "string" && typeof e.correct === "string")
+        .map((e) => ({
           wrong: String(e.wrong),
           correct: String(e.correct),
           reason: String(e.reason_id ?? e.reason ?? ""),
@@ -26,15 +31,15 @@ const wrongList = (v: unknown): Array<{ wrong: string; correct: string; reason: 
 
 const TABLE: Record<
   KiokuItemType,
-  { table: string; cols: string; extra?: string; map: (r: any) => Content }
+  { table: string; cols: string; extra?: string; map: (r: JsonObject) => Content }
 > = {
   kanji: {
     table: "kanji",
     cols: "id,character,onyomi,kunyomi,meaning_id,level",
     map: (r) => ({
-      id: r.id,
+      id: String(r.id ?? ""),
       type: "kanji",
-      level: r.level,
+      level: String(r.level ?? ""),
       surface: String(r.character ?? ""),
       reading: [arr(r.onyomi), arr(r.kunyomi)].filter(Boolean).join(" / "),
       meaning: String(r.meaning_id ?? ""),
@@ -45,9 +50,9 @@ const TABLE: Record<
     cols: "id,term,reading,meaning_id,level",
     extra: ",examples",
     map: (r) => ({
-      id: r.id,
+      id: String(r.id ?? ""),
       type: "vocabulary",
-      level: r.level,
+      level: String(r.level ?? ""),
       surface: String(r.term ?? ""),
       reading: String(r.reading ?? ""),
       meaning: String(r.meaning_id ?? ""),
@@ -59,9 +64,9 @@ const TABLE: Record<
     cols: "id,pattern,meaning_id,level",
     extra: ",examples,wrong_examples",
     map: (r) => ({
-      id: r.id,
+      id: String(r.id ?? ""),
       type: "grammar",
-      level: r.level,
+      level: String(r.level ?? ""),
       surface: String(r.pattern ?? ""),
       reading: "",
       meaning: String(r.meaning_id ?? ""),
@@ -95,7 +100,7 @@ async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
       .select(`${a},${b}`)
       .or(`${a}.in.${inList},${b}.in.${inList}`)
       .limit(200);
-    for (const row of r.data ?? []) out.push({ type, a: row[a], b: row[b] });
+    for (const row of r.data ?? []) out.push({ type, a: String(row[a] ?? ""), b: String(row[b] ?? "") });
   };
   await Promise.all([
     run(kanji, "kanji_relations", "kanji_id", "related_kanji_id", "kanji").catch(() => undefined),
@@ -181,8 +186,8 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
           .from(table)
           .select(cols + (TABLE[t].extra ?? ""))
           .in("id", ids[t])
-          .then((r: any) => {
-            for (const row of r.data ?? []) content.set(`${t}:${row.id}`, map(row));
+          .then((r: QueryRows) => {
+            for (const row of r.data ?? []) content.set(`${t}:${String(row.id ?? "")}`, map(row));
           }),
         db
           .from(table)
@@ -190,7 +195,7 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
           .in("level", [...levels[t]])
           .eq("is_published", true)
           .limit(300)
-          .then((r: any) => {
+          .then((r: QueryRows) => {
             for (const row of r.data ?? []) pool.push(map(row));
           }),
       ];
@@ -214,7 +219,7 @@ async function attachContext(content: Map<string, Content>, ids: Record<KiokuIte
   };
   const [senses, links] = await Promise.all([
     ids.vocabulary.length
-      ? ok<any>(
+      ? ok<VocabSenseRow>(
           db
             .from("vocabulary_senses")
             .select("vocabulary_id,meaning_id,examples")
@@ -222,7 +227,7 @@ async function attachContext(content: Map<string, Content>, ids: Record<KiokuIte
         )
       : [],
     ids.kanji.length
-      ? ok<any>(
+      ? ok<KanjiVocabLinkRow>(
           db
             .from("kanji_vocabulary_examples")
             .select("kanji_id,vocabulary_id,sort_order")
@@ -246,14 +251,14 @@ async function attachContext(content: Map<string, Content>, ids: Record<KiokuIte
   const vids = [...new Set([...perKanji.values()].flat())];
   if (!vids.length) return;
   const { table, cols, extra, map } = TABLE.vocabulary;
-  const vocab = await ok<any>(
+  const vocab = await ok<JsonObject>(
     db
       .from(table)
       .select(cols + (extra ?? ""))
       .in("id", vids)
       .eq("is_published", true),
   );
-  const byId = new Map(vocab.map((r: any) => [r.id, map(r)]));
+  const byId = new Map(vocab.map((r) => [String(r.id ?? ""), map(r)]));
   for (const [kid, list] of perKanji) {
     const c = content.get(`kanji:${kid}`);
     if (c) c.compounds = list.map((v) => byId.get(v)).filter(Boolean) as Content[];
