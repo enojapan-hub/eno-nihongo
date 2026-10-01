@@ -1,5 +1,4 @@
-drop view if exists public.jlpt_simulation_questions_public cascade;
-create view public.jlpt_simulation_questions_public with (security_invoker = true) as select id,level,section,mondai_no,question_no,question_type,instruction_jp,prompt_jp,choices,passage_title,passage_jp,audio_url,transcript_jp from public.jlpt_simulation_questions where is_published=true;
+-- Public view is created by the subsequent visual-assets migration with the final column shape.
 revoke all on public.jlpt_simulation_questions from anon, authenticated;
 grant select on public.jlpt_simulation_questions_public to authenticated;
 revoke all on public.jlpt_simulation_questions_public from anon;
