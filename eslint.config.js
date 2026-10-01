@@ -47,7 +47,23 @@ export default tseslint.config(
       // Existing cleanup debt remains visible without masking syntax, invalid
       // hooks usage, restricted server/client imports, or build failures.
       "@typescript-eslint/no-explicit-any": "warn",
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "react-refresh/only-export-components": [
+        "warn",
+        {
+          allowConstantExport: true,
+          allowExportNames: [
+            "formatExamTime",
+            "useExamLeaveGuard",
+            "passagePosition",
+            "badgeVariants",
+            "buttonVariants",
+            "useFormField",
+            "navigationMenuTriggerStyle",
+            "useSidebar",
+            "toggleVariants",
+          ],
+        },
+      ],
       "prettier/prettier": "warn",
       "no-useless-escape": "warn",
       "prefer-const": "warn",
