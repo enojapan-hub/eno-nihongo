@@ -23,17 +23,13 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = QUERY_TIMEOUT_MS): Promise
 }
 
 export async function fetchVocabCount(level: Level): Promise<number> {
-  const res = await withTimeout(
-    vocabRpc.rpc("get_vocabulary_count_by_level", { p_level: level }),
-  );
+  const res = await withTimeout(vocabRpc.rpc("get_vocabulary_count_by_level", { p_level: level }));
   if (res.error) throw new Error(res.error.message);
   return Number(res.data ?? 0);
 }
 
 export async function fetchVocabLessonCounts(level: Level) {
-  const res = await withTimeout(
-    vocabRpc.rpc("get_vocabulary_lesson_counts", { p_level: level }),
-  );
+  const res = await withTimeout(vocabRpc.rpc("get_vocabulary_lesson_counts", { p_level: level }));
   if (res.error) throw new Error(res.error.message);
   return res.data ?? [];
 }
