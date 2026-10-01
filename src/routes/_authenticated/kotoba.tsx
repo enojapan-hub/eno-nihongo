@@ -157,7 +157,7 @@ function kanaToRomaji(input: string) {
       if (tok === "は") return "wa";
       if (tok === "へ") return "e";
       if (tok === "を") return "o";
-      let s = tok.replace(/[ァ-ヶ]/g, (x) => String.fromCharCode(x.charCodeAt(0) - 96)),
+      const s = tok.replace(/[ァ-ヶ]/g, (x) => String.fromCharCode(x.charCodeAt(0) - 96)),
         o = "";
       for (let i = 0; i < s.length; i++) {
         if (s[i] === "っ") {
@@ -196,17 +196,18 @@ function KotobaPage() {
     ready = !levelLoading && !!targetLevel;
   const [lesson, setLesson] = useState<number | null>(null),
     [page, setPage] = useState(0);
-  const { data: lessonCounts = [], isLoading: countsLoading } = useQuery({
+  const { data: lessonCountsData, isLoading: countsLoading } = useQuery({
     queryKey: ["vocab-lessons", level],
     queryFn: () => fetchVocabLessonCounts(level),
     enabled: ready,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+  const lessonCounts = useMemo(() => lessonCountsData ?? [], [lessonCountsData]);
   useEffect(() => {
     setLesson(lessonCounts[0]?.lesson_number ?? null);
     setPage(0);
-  }, [level, lessonCounts.length]);
+  }, [level, lessonCounts]);
   const categoryCount = useQuery({
     queryKey: ["vocab-category-count", level, category],
     queryFn: () => fetchVocabCategoryCount(level, category!),
