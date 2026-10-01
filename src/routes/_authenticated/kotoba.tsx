@@ -8,6 +8,7 @@ import { fetchTargetLevel } from "@/lib/target-level";
 import { fetchVocabById,fetchVocabCategoryCount,fetchVocabCategoryPage,fetchVocabCount,fetchVocabLessonCounts,fetchVocabLessonPage,fetchVocabSenses,pickUsageNote,VOCAB_PAGE_SIZE } from "@/lib/vocab-resilient";
 import { addItemToReview,asExamples,markItemLearned,type Level } from "@/lib/learn-queries";
 import { normalizeRomaji,spaceJapanese } from "@/lib/japanese-spacing";
+import { supabase } from "@/integrations/supabase/client";
 export const Route=createFileRoute("/_authenticated/kotoba")({component:KotobaPage});
 type VocabRow={id:string;term:string;reading:string|null;romaji?:string|null;meaning_id:string|null;meaning_en?:string|null;part_of_speech:string|null;examples?:unknown;level:Level;lesson_number?:number|null;level_labels?:Level[]};
 const extraKey=-1;
