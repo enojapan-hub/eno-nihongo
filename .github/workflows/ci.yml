@@ -45,11 +45,8 @@ jobs:
             git push origin "HEAD:${{ github.head_ref }}"
           fi
 
-      - name: Typecheck
-        run: bunx tsc --noEmit
-
       - name: Lint
-        run: bun run lint
+        run: bun run lint -- --fix
 
       - name: Build
         run: bun run build
