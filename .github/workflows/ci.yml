@@ -21,6 +21,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      # Diagnostic report only; the source tree must remain unchanged.
       - name: Capture lint report
         run: bun run lint -- --format json --output-file eslint-report.json || true
 
