@@ -28,7 +28,7 @@ function params() {
   };
 }
 async function fetchItem(kind: Kind, id: string): Promise<Item | null> {
-  const c = supabase as any;
+  const c = supabase;
   const tries = kind === "review" ? ["kanji", "vocabulary", "grammar"] : [kind];
   for (const k of tries) {
     if (k === "kanji") {
