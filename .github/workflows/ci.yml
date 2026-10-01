@@ -31,6 +31,16 @@ jobs:
           path: eslint-report.json
           retention-days: 1
 
+      - name: Capture source snapshot
+        run: zip -qr repo-source.zip src package.json tsconfig.json eslint.config.js
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-source
+          path: repo-source.zip
+          retention-days: 1
+
       - name: Lint
         run: bun run lint -- --fix
 
