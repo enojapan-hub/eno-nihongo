@@ -1,0 +1,1 @@
+create index if not exists idx_listening_items_level_type on public.listening_items(level, question_type); create index if not exists idx_questions_listening_level on public.questions(listening_id, level) where listening_id is not null; create index if not exists idx_questions_skill_type_level on public.questions(skill, question_type, level);
