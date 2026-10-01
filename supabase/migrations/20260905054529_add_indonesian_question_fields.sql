@@ -1,0 +1,1 @@
+alter table public.questions add column if not exists prompt_id text; alter table public.questions add column if not exists choices_id jsonb; create index if not exists questions_translation_pending_idx on public.questions(level, skill) where is_published = true and (prompt_id is null or choices_id is null);

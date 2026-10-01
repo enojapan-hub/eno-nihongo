@@ -1,0 +1,1 @@
+alter table public.questions add column if not exists prompt_en text; alter table public.questions add column if not exists choices_en jsonb; update public.questions set prompt_en = prompt where prompt_en is null; update public.questions set choices_en = choices where choices_en is null;
