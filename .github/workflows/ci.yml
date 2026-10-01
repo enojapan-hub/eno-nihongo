@@ -22,7 +22,7 @@ jobs:
         run: bun install
 
       - name: Capture lint report
-        run: bun run lint -- --format json --output-file eslint-report.json || true
+        run: bun run lint -- --fix --format json --output-file eslint-report.json || true
 
       - name: Upload lint report
         uses: actions/upload-artifact@v4
@@ -60,7 +60,7 @@ jobs:
           retention-days: 1
 
       - name: Lint
-        run: bun run lint -- --fix
+        run: bun run lint
 
       - name: Build
         run: bun run build
