@@ -66,7 +66,7 @@ function Page() {
       return data ?? [];
     },
   });
-  const data: any[] = Array.isArray(rows.data) ? rows.data : [];
+  const data: any[] = useMemo(() => (Array.isArray(rows.data) ? rows.data : []), [rows.data]);
   const lessons = useMemo(
     () => [...new Set(data.map((x) => Number(x.lesson_number || 1)))].sort((a, b) => a - b),
     [data],
