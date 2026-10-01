@@ -98,6 +98,8 @@ function EditProfilePage() {
     ) {
       setInitialData(data);
     }
+    // Capture only the server-backed baseline; subsequent user edits must not reset it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account.data?.profile, initialMonths, plan]);
   const dirty = initialData !== null && JSON.stringify(data) !== JSON.stringify(initialData);
   const save = async () => {
