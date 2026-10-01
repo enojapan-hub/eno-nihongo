@@ -1,0 +1,1 @@
+alter table public.grammar_points add column if not exists reading_hiragana text, add column if not exists romaji text, add column if not exists usage_id text, add column if not exists wrong_examples jsonb not null default '[]'::jsonb, add column if not exists notes_id text;
