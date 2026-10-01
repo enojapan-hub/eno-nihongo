@@ -1,0 +1,21 @@
+update public.vocabulary_source_items set lesson_title = case lesson_number
+when 1 then 'おはようございます'
+when 2 then 'すみません、よくわかりません'
+when 3 then 'よろしくお願いします'
+when 4 then '東京に住んでいます'
+when 5 then 'うどんが好きです'
+when 6 then 'チーズバーガーください'
+when 7 then '部屋が４つあります'
+when 8 then '山田さんはどこにいますか？'
+when 9 then '12時から1時まで昼休みです'
+when 10 then 'ホチキス貸してください'
+when 11 then 'どんなマンガが好きですか？'
+when 12 then 'いっしょに飲みに行きませんか？'
+when 13 then 'このバスは空港に行きますか？'
+when 14 then '大きな建物ですね'
+when 15 then '電池がほしいんですが…'
+when 16 then 'これ、いくらですか？'
+when 17 then '映画を見に行きました'
+when 18 then '温泉に入りたいです'
+else lesson_title end
+where source_book='Kotoba Irodori A1 Buku Pink.pdf' and lesson_number between 1 and 18;
