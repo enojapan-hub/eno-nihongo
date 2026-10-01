@@ -200,7 +200,7 @@ function ResultPage() {
           if (active) setReviewError("Data pembahasan untuk simulasi ini tidak ditemukan.");
           return;
         }
-        const { data, error } = await (supabase as any).rpc("get_jlpt_simulation_full_review", {
+        const { data, error } = await supabase.rpc("get_jlpt_simulation_full_review", {
           p_full_session_id: fullId,
         });
         if (error) throw error;
