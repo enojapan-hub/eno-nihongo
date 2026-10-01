@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +30,7 @@ function Page() {
   const [q, setQ] = useState<Q[]>([]);
   const [f, setF] = useState<any>(empty);
   const [msg, setMsg] = useState("");
-  async function load() {
+  const load = useCallback(async () => {
     const { data, error } = await (supabase as any)
       .from("eno_monthly_exam_questions")
       .select(
@@ -44,10 +44,10 @@ function Page() {
       setQ(data || []);
       setF((x: any) => ({ ...x, question_no: (data?.length || 0) + 1 }));
     }
-  }
+  }, [examId]);
   useEffect(() => {
     void load();
-  }, [examId]);
+  }, [load]);
   async function save() {
     setMsg("");
     const payload = {
