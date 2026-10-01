@@ -1,23 +1,14 @@
 -- Keep JLPT simulation answer keys server-side.
 -- Authenticated clients read questions through jlpt_simulation_questions_public.
 
-create or replace view public.jlpt_simulation_questions_public
+drop view if exists public.jlpt_simulation_questions_public;
+create view public.jlpt_simulation_questions_public
 with (security_invoker = true)
 as
 select
-  id,
-  level,
-  section,
-  mondai_no,
-  question_no,
-  question_type,
-  instruction_jp,
-  prompt_jp,
-  choices,
-  passage_title,
-  passage_jp,
-  audio_url,
-  transcript_jp
+  id, level, section, mondai_no, question_no, display_question_no,
+  question_type, instruction_jp, prompt_jp, choices,
+  passage_title, passage_jp, audio_url, image_url, transcript_jp
 from public.jlpt_simulation_questions
 where is_published = true;
 
