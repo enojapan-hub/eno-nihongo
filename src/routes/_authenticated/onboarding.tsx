@@ -19,7 +19,7 @@ function plusMonths(months: number) {
 function OnboardingPage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [level, setLevel] = useState("N5");
+  const [level, setLevel] = useState<(typeof LEVELS)[number]>("N5");
   const [targetMonths, setTargetMonths] = useState(3);
   const [country, setCountry] = useState("Indonesia");
   const [saving, setSaving] = useState(false);
@@ -39,20 +39,20 @@ function OnboardingPage() {
         .from("profiles")
         .update({
           display_name: name.trim(),
-          target_level: level as any,
+          target_level: level,
           country,
           onboarding_completed: true,
         })
         .eq("id", auth.user.id);
       if (error) throw error;
       const targetDate = plusMonths(targetMonths);
-      const { error: planError } = await (supabase as any).rpc("create_or_replace_study_plan", {
+      const { error: planError } = await supabase.rpc("create_or_replace_study_plan", {
         p_target_level: level,
         p_target_date: targetDate,
         p_daily_minutes: 45,
       });
       if (planError) throw planError;
-      const { error: taskError } = await (supabase as any).rpc("generate_daily_study_tasks", {});
+      const { error: taskError } = await supabase.rpc("generate_daily_study_tasks", {});
       if (taskError) throw taskError;
       const { error: metaError } = await supabase.auth.updateUser({
         data: {
@@ -99,7 +99,7 @@ function OnboardingPage() {
               <select
                 className="mt-1 h-10 w-full rounded-xl border bg-background px-3 text-[12px]"
                 value={level}
-                onChange={(e) => setLevel(e.target.value)}
+                onChange={(e) => setLevel(e.target.value as (typeof LEVELS)[number])}
               >
                 {LEVELS.map((x) => (
                   <option key={x}>{x}</option>
