@@ -1,0 +1,9 @@
+revoke all on table public.content_sources from anon, authenticated;
+revoke all on table public.grammar_curriculum_n3_rebuild from anon, authenticated;
+revoke all on table public.grammar_form_requirements from anon, authenticated;
+revoke all on table public.verb_form_types from anon, authenticated;
+revoke all on table public.verb_forms from anon, authenticated;
+revoke all on table public.vocabulary_batch_runs from anon, authenticated;
+revoke all on table public.vocabulary_category_links from anon, authenticated;
+revoke all on table public.vocabulary_relations from anon, authenticated;
+revoke all on table public.vocabulary_source_items from anon, authenticated;
