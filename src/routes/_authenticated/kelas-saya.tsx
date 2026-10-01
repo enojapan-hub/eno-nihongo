@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCap, ArrowRight, BookOpenText, CalendarDays, Layers3 } from "lucide-react";
+import { GraduationCap, ArrowRight, BookOpenText, CalendarDays, Layers3, type LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { classroom, result, sessionTime } from "@/lib/classroom";
@@ -151,7 +151,7 @@ function Page() {
   );
 }
 
-function Summary({ icon: Icon, label, value }: { icon: any; label: string; value: number }) {
+function Summary({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
   return (
     <div className="rounded-2xl border bg-background/70 p-3">
       <Icon className="size-4 text-primary" />
