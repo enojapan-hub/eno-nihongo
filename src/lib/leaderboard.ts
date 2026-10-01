@@ -16,7 +16,7 @@ export type LeaderboardUser = {
   totalAnswers: number;
 };
 
-type LeaderboardRow = {
+type CompetitionLeaderboardRow = {\n  rank?: number | null; user_id?: string | null; display_name?: string | null; avatar_url?: string | null; jlpt_level?: string | null; period_xp?: number | null; total_xp?: number | null; total_points?: number | null; current_streak?: number | null;\n};\n\ntype LeaderboardRow = {
   rank: number;
   user_id: string;
   display_name: string | null;
@@ -70,12 +70,12 @@ export async function fetchCompetitionLeaderboard(
   limit = 50,
 ): Promise<CompetitionUser[]> {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
-  const { data, error } = await (supabase as any).rpc("get_competition_leaderboard", {
+  const { data, error } = await supabase.rpc("get_competition_leaderboard", {
     p_period: period,
     p_limit: safeLimit,
   });
   if (error || !data) return [];
-  return (data as any[]).map((row) => ({
+  return (data as CompetitionLeaderboardRow[]).map((row) => ({
     rank: Number(row.rank ?? 0),
     userId: String(row.user_id),
     displayName: String(row.display_name || "Pengguna ENO NIHONGO"),
