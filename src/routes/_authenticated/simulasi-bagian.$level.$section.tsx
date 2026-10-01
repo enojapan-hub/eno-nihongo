@@ -215,7 +215,7 @@ function SectionRunner() {
     enabled: section === "listening",
     staleTime: 30 * 60 * 1000,
   });
-  const questions = q.data ?? [];
+  const questions = useMemo(() => q.data ?? [], [q.data]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<Result | null>(null);
