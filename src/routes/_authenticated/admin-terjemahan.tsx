@@ -14,7 +14,7 @@ async function headers() {
 }
 function Page() {
   const [kind, setKind] = useState<Kind>("vocabulary"),
-    [stats, setStats] = useState<any>({}),
+    [stats, setStats] = useState<Record<string, unknown>>({}),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   const load = useCallback(async () => {
@@ -39,8 +39,8 @@ function Page() {
       if (!r.ok) throw Error(d.error || "Batch gagal");
       setMessage(`${d.processed || 0} item ${kind} berhasil diproses.`);
       await load();
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e: unknown) {
+      setMessage(e instanceof Error ? e.message : "Batch gagal");
     } finally {
       setBusy(false);
     }
