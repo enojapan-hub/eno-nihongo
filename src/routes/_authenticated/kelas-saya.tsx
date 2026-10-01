@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCap, ArrowRight } from "lucide-react";
+import { GraduationCap, ArrowRight, BookOpenText, CalendarDays, Layers3 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { classroom, result, sessionTime } from "@/lib/classroom";
@@ -26,13 +26,18 @@ function Page() {
   );
   return (
     <AppShell title="Kelas Saya" backTo="/kelas">
-      <div className="mx-auto max-w-3xl space-y-4">
-        <div>
-          <h1 className="text-xl font-black">Kelas Saya</h1>
-          <p className="text-sm text-muted-foreground">
-            Buka kelas untuk melihat jadwal, materi, tugas, dan nilai Anda.
-          </p>
-        </div>
+      <div className="mx-auto max-w-4xl space-y-5">
+        <section className="overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/15 via-card to-card p-5 shadow-sm sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Ruang belajar</p><h1 className="mt-1 text-2xl font-black">Kelas Saya</h1><p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Lanjutkan kelas, periksa jadwal, tugas, kuis, dan hasil belajar Anda dari satu tempat.</p></div>
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary"><GraduationCap className="size-5"/></span>
+          </div>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            <Summary icon={Layers3} label="Aktif" value={classes.filter(c=>c.status!=="closed").length}/>
+            <Summary icon={BookOpenText} label="Arsip" value={classes.filter(c=>c.status==="closed").length}/>
+            <Summary icon={CalendarDays} label="Total" value={classes.length}/>
+          </div>
+        </section>
         <nav className="flex gap-2" aria-label="Filter kelas">
           {[
             ["aktif", "Aktif"],
@@ -71,19 +76,13 @@ function Page() {
                 key={c.id}
                 to="/kelas/$classId/workspace"
                 params={{ classId: c.id }}
-                className="flex gap-3 rounded-2xl border bg-card p-3 transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                className="group overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary"
               >
+                <div className="flex gap-3 p-3">
                 {c.banner_url ? (
-                  <img
-                    src={c.banner_url}
-                    alt=""
-                    loading="lazy"
-                    className="size-16 shrink-0 rounded-xl object-cover"
-                  />
+                  <img src={c.banner_url} alt="" loading="lazy" className="h-24 w-28 shrink-0 rounded-xl object-cover" />
                 ) : (
-                  <span className="grid size-16 shrink-0 place-items-center rounded-xl bg-primary/10">
-                    <GraduationCap className="text-primary" />
-                  </span>
+                  <span className="grid h-24 w-28 shrink-0 place-items-center rounded-xl bg-primary/10"><GraduationCap className="text-primary" /></span>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-primary">
@@ -92,15 +91,15 @@ function Page() {
                   <h2 className="line-clamp-2 text-sm font-bold">{c.title}</h2>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {c.status === "closed"
-                      ? "Materi dan riwayat nilai tetap dapat dibuka."
+                      ? "Kelas selesai · materi, tugas, kuis, dan nilai tetap tersedia."
                       : c.starts_at
                         ? "Mulai: " + sessionTime(c.starts_at)
                         : "Jadwal menyusul"}
                   </p>
                   <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary">
-                    Buka Ruang Kelas <ArrowRight className="size-3" />
+                    {c.status === "closed" ? "Lihat Arsip Kelas" : "Lanjutkan Kelas"} <ArrowRight className="size-3" />
                   </span>
-                </div>
+                </div></div>
               </Link>
             ))}
             {!visible.length && (
@@ -123,3 +122,5 @@ function Page() {
     </AppShell>
   );
 }
+
+function Summary({icon:Icon,label,value}:{icon:any;label:string;value:number}){return <div className="rounded-2xl border bg-background/70 p-3"><Icon className="size-4 text-primary"/><p className="mt-2 text-[10px] text-muted-foreground">{label}</p><p className="text-lg font-black">{value}</p></div>}
