@@ -77,3 +77,4 @@ function EditProfilePage(){
   <div className="rounded-2xl border bg-card px-4 py-3"><p className="text-[10px] leading-5 text-muted-foreground">{dirty?"Ada perubahan yang belum disimpan.":"Profil Anda sudah tersimpan."}</p></div>
   <Button className="h-11 w-full rounded-xl" disabled={saving||!dirty||data.display_name.trim().length<2} onClick={()=>void save()}><Save className="mr-2 size-4"/>{saving?"Menyimpan perubahan…":"Simpan Perubahan"}</Button>
  </div></AppShell>;
+}
