@@ -1,6 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
 
+type OpenAIContent = { type?: string; text?: string }
+type OpenAIOutputItem = { content?: OpenAIContent[] }
+type OpenAIResponse = { output?: OpenAIOutputItem[] }
+type GeneratedExample = { jp?: unknown; id?: unknown; reading?: unknown }
+
 const schema = {
   type: 'object', properties: {
     examples: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'object', properties: { jp: { type: 'string' }, id: { type: 'string' }, reading: { type: 'string' } }, required: ['jp','id','reading'], additionalProperties: false } },
@@ -16,12 +21,12 @@ async function generateContent(grammar: Record<string, unknown>) {
     { role: 'user', content: JSON.stringify({ pattern: grammar.pattern, meaning: grammar.meaning_id, structure: grammar.structure, level: grammar.level }) },
   ], text: { format: { type: 'json_schema', name: 'bunpo_content', strict: true, schema } } }) })
   if (!response.ok) throw new Error(`OpenAI ${response.status}: ${(await response.text()).slice(0,500)}`)
-  const data = await response.json()
-  const outputText = data.output?.flatMap((item: any) => item.content ?? [])?.find((item: any) => item.type === 'output_text')?.text
+  const data = (await response.json()) as OpenAIResponse
+  const outputText = data.output?.flatMap((item) => item.content ?? [])?.find((item) => item.type === 'output_text')?.text
   if (!outputText) throw new Error('OpenAI returned no output text')
   const parsed = JSON.parse(outputText)
   if (!Array.isArray(parsed.examples) || parsed.examples.length !== 3) throw new Error('Invalid examples')
-  return { examples: parsed.examples.map((x: any) => ({ jp: String(x.jp), id: String(x.id), reading: String(x.reading) })), synonyms: (parsed.synonyms ?? []).map(String).slice(0,4), antonyms: (parsed.antonyms ?? []).map(String).slice(0,4), explanation: String(parsed.explanation), model }
+  return { examples: parsed.examples.map((x: GeneratedExample) => ({ jp: String(x.jp), id: String(x.id), reading: String(x.reading) })), synonyms: (parsed.synonyms ?? []).map(String).slice(0,4), antonyms: (parsed.antonyms ?? []).map(String).slice(0,4), explanation: String(parsed.explanation), model }
 }
 
 export const Route = createFileRoute('/api/bunpo/examples')({ server: { handlers: { POST: async ({ request }) => {
