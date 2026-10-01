@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/target-tertunda")({
 });
 type Metrics = { dueReviewCount: number; errorReviewCount: number };
 async function fetchMetrics(): Promise<Metrics> {
-  const { data, error } = await (supabase as any).rpc("get_target_page_metrics");
+  const { data, error } = await supabase.rpc("get_target_page_metrics");
   if (error) throw error;
   return {
     dueReviewCount: Number(data?.dueReviewCount ?? 0),
