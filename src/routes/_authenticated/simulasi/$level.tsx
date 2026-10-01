@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -215,7 +215,7 @@ function SimulationRunner() {
     if (started && seconds === 0 && questions.length && !sectionFinished && !finished) {
       void finishSection();
     }
-  }, [seconds, started, questions.length, sectionFinished, finished]);
+  }, [seconds, started, questions.length, sectionFinished, finished, finishSection]);
 
   useEffect(() => {
     window.speechSynthesis?.cancel();
@@ -265,7 +265,7 @@ function SimulationRunner() {
     setSpeaking(false);
   }
 
-  async function finishSection() {
+  const finishSection = useCallback(async () => {
     if (sectionFinished || finished || !questions.length) return;
     setSectionFinished(true);
     stopListening();
@@ -295,7 +295,7 @@ function SimulationRunner() {
     } finally {
       setSaving(false);
     }
-  }
+  }, [answers, finished, level, levelSections, questionSets, questions, section.key, sectionFinished, sectionIndex, seconds]);
 
   function nextSection() {
     setSectionIndex((value) => value + 1);
