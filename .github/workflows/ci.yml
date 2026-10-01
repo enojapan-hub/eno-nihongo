@@ -42,14 +42,15 @@ jobs:
           retention-days: 1
 
       - name: Generate current Supabase types
-        continue-on-error: true
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN || secrets.ACCESS_TOKEN }}
           PROJECT_REF: upxtqsvgppvqpbrjoitz
         run: |
-          if [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
-            bunx supabase@latest gen types typescript --project-id "$PROJECT_REF" --schema public > generated-types.ts
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::warning::Supabase type freshness check skipped because SUPABASE_ACCESS_TOKEN is not configured."
+            exit 0
           fi
+          bunx supabase@latest gen types typescript --project-id "$PROJECT_REF" --schema public > generated-types.ts
 
       - name: Upload generated Supabase types
         if: ${{ hashFiles('generated-types.ts') != '' }}
@@ -58,6 +59,15 @@ jobs:
           name: generated-supabase-types
           path: generated-types.ts
           retention-days: 1
+
+      - name: Verify committed Supabase types are current
+        if: ${{ hashFiles('generated-types.ts') != '' }}
+        run: |
+          if ! cmp -s generated-types.ts src/integrations/supabase/types.ts; then
+            echo "::error::src/integrations/supabase/types.ts is stale. Regenerate it from the live Supabase schema."
+            diff -u src/integrations/supabase/types.ts generated-types.ts || true
+            exit 1
+          fi
 
       - name: Lint
         run: bun run lint
