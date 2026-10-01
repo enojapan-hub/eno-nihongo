@@ -20,7 +20,7 @@ import { PremiumBadge } from "@/components/membership/PremiumBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { EXAM_NUMBERS } from "@/lib/jlpt-simulation-config";
 async function fetchExamNumbers(level: string): Promise<number[]> {
-  const { data, error } = await (supabase as any).rpc("get_simulation_exam_numbers", {
+  const { data, error } = await supabase.rpc("get_simulation_exam_numbers", {
     p_level: level,
   });
   if (error) throw error;
