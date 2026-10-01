@@ -90,6 +90,7 @@ end $$;
 revoke all on function private.notify_class_change() from public,anon,authenticated;
 do $$ declare t text; begin
   foreach t in array array['class_materials','class_assignments','class_quizzes','class_announcements','class_schedule','class_meetings'] loop
+    execute format('drop trigger if exists classroom_notify on public.%I',t);
     execute format('create trigger classroom_notify after insert or update on public.%I for each row execute function private.notify_class_change()',t);
   end loop;
 end $$;
@@ -112,6 +113,7 @@ declare a public.class_assignments; begin
   new.status:='submitted';new.submitted_at:=now();return new;
 end $$;
 revoke all on function private.validate_class_submission() from public,anon,authenticated;
+drop trigger if exists classroom_validate_submission on public.class_assignment_submissions;
 create trigger classroom_validate_submission before insert or update on public.class_assignment_submissions for each row execute function private.validate_class_submission();
 
 create or replace function public.teacher_grade_assignment(p_submission_id uuid,p_score numeric,p_feedback text,p_weakness text)
@@ -164,9 +166,13 @@ declare qid uuid; begin
   if tg_op='DELETE' then return old; end if;return new;
 end $$;
 revoke all on function private.protect_class_work() from public,anon,authenticated;
+drop trigger if exists classroom_protect_question on public.class_quiz_questions;
 create trigger classroom_protect_question before insert or update or delete on public.class_quiz_questions for each row execute function private.protect_class_work();
+drop trigger if exists classroom_protect_quiz on public.class_quizzes;
 create trigger classroom_protect_quiz before delete on public.class_quizzes for each row execute function private.protect_class_work();
+drop trigger if exists classroom_protect_assignment on public.class_assignments;
 create trigger classroom_protect_assignment before insert or update or delete on public.class_assignments for each row execute function private.protect_class_work();
+drop trigger if exists classroom_validate_schedule on public.class_schedule;
 create trigger classroom_validate_schedule before insert or update on public.class_schedule for each row execute function private.protect_class_work();
 
 -- Topic accuracy: one latest attempt per quiz, so repeats do not inflate the summary.
@@ -205,6 +211,7 @@ returns trigger language plpgsql security definer set search_path = '' as $$ beg
   return new;
 end $$;
 revoke all on function private.validate_quiz_publication() from public,anon,authenticated;
+drop trigger if exists classroom_validate_quiz on public.class_quizzes;
 create trigger classroom_validate_quiz before insert or update on public.class_quizzes for each row execute function private.validate_quiz_publication();
 
 create or replace function private.sync_class_session_range()
@@ -218,6 +225,7 @@ declare cid uuid; begin
   end if;return new;
 end $$;
 revoke all on function private.sync_class_session_range() from public,anon,authenticated;
+drop trigger if exists classroom_sync_session on public.class_schedule;
 create trigger classroom_sync_session after insert or update or delete on public.class_schedule for each row execute function private.sync_class_session_range();
 
 create or replace function private.notify_class_grade()
@@ -227,6 +235,7 @@ returns trigger language plpgsql security definer set search_path = '' as $$ beg
   return new;
 end $$;
 revoke all on function private.notify_class_grade() from public,anon,authenticated;
+drop trigger if exists classroom_notify_grade on public.class_grades;
 create trigger classroom_notify_grade after insert or update on public.class_grades for each row execute function private.notify_class_grade();
 
 create or replace function public.get_my_class_topic_insights(p_class_id uuid)
