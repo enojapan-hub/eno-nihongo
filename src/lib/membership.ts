@@ -1,6 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type MembershipPlan = "free" | "premium" | "lifetime";
+type MembershipRpcRow = {
+  plan?: MembershipPlan | null;
+  premium_until?: string | null;
+  allowed?: boolean | null;
+  used_this_month?: number | null;
+  monthly_limit?: number | null;
+  monthly_exam?: boolean | null;
+};
+type MembershipRpcClient = {
+  rpc: (
+    name: "get_my_membership" | "can_start_full_simulation",
+  ) => PromiseLike<{ data: MembershipRpcRow | null; error: { message: string } | null }>;
+};
+const membershipRpc = supabase as unknown as MembershipRpcClient;
 export type Membership = {
   plan: MembershipPlan;
   premiumUntil: string | null;
@@ -16,7 +30,7 @@ export type FullSimulationAccess = {
 };
 
 export async function fetchMembership(): Promise<Membership> {
-  const { data, error } = await (supabase as any).rpc("get_my_membership");
+  const { data, error } = await membershipRpc.rpc("get_my_membership");
   if (error) throw error;
   const plan = (data?.plan ?? "free") as MembershipPlan;
   return { plan, premiumUntil: data?.premium_until ?? null, monthlyExam: plan !== "free" };
@@ -37,7 +51,7 @@ export async function fetchMembershipAccess(): Promise<MembershipAccess> {
 }
 
 export async function fetchFullSimulationAccess(): Promise<FullSimulationAccess> {
-  const { data, error } = await (supabase as any).rpc("can_start_full_simulation");
+  const { data, error } = await membershipRpc.rpc("can_start_full_simulation");
   if (error) throw error;
   return {
     allowed: !!data?.allowed,
