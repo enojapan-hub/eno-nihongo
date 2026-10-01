@@ -92,7 +92,7 @@ export const Route = createFileRoute("/api/bunpo/examples")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         const body = (await request.json().catch(() => null)) as { id?: string } | null;
         if (!body?.id) return Response.json({ error: "Missing grammar id" }, { status: 400 });
-        const { data: grammar, error } = await (supabaseAdmin as any)
+        const { data: grammar, error } = await supabaseAdmin
           .from("grammar_points")
           .select("id, pattern, meaning_id, structure, level, examples, explanation_id")
           .eq("id", body.id)
@@ -101,7 +101,7 @@ export const Route = createFileRoute("/api/bunpo/examples")({
         if (error) return Response.json({ error: error.message }, { status: 500 });
         if (!grammar) return Response.json({ error: "Grammar not found" }, { status: 404 });
 
-        const { data: cached } = await (supabaseAdmin as any)
+        const { data: cached } = await supabaseAdmin
           .from("ai_learning_content")
           .select("examples, synonyms, antonyms, explanation")
           .eq("content_type", "bunpou")
@@ -128,11 +128,11 @@ export const Route = createFileRoute("/api/bunpo/examples")({
           });
         try {
           const content = await generateContent(grammar);
-          await (supabaseAdmin as any)
+          await supabaseAdmin
             .from("grammar_points")
             .update({ examples: content.examples, explanation_id: content.explanation })
             .eq("id", body.id);
-          await (supabaseAdmin as any).from("ai_learning_content").upsert(
+          await supabaseAdmin.from("ai_learning_content").upsert(
             {
               content_type: "bunpou",
               content_id: body.id,
