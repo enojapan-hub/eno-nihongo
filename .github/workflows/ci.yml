@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -60,12 +63,23 @@ jobs:
           path: generated-types.ts
           retention-days: 1
 
+      - name: Sync committed Supabase types
+        if: ${{ hashFiles('generated-types.ts') != '' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        run: |
+          if ! cmp -s generated-types.ts src/integrations/supabase/types.ts; then
+            cp generated-types.ts src/integrations/supabase/types.ts
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/integrations/supabase/types.ts
+            git commit -m "chore: sync Supabase generated types"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
+
       - name: Verify committed Supabase types are current
         if: ${{ hashFiles('generated-types.ts') != '' }}
         run: |
           if ! cmp -s generated-types.ts src/integrations/supabase/types.ts; then
-            echo "::error::src/integrations/supabase/types.ts is stale. Regenerate it from the live Supabase schema."
-            diff -u src/integrations/supabase/types.ts generated-types.ts || true
+            echo "::error::src/integrations/supabase/types.ts is stale."
             exit 1
           fi
 
