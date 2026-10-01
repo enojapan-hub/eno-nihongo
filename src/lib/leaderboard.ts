@@ -16,7 +16,11 @@ export type LeaderboardUser = {
   totalAnswers: number;
 };
 
-type CompetitionLeaderboardRow = {\n  rank?: number | null; user_id?: string | null; display_name?: string | null; avatar_url?: string | null; jlpt_level?: string | null; period_xp?: number | null; total_xp?: number | null; total_points?: number | null; current_streak?: number | null;\n};\n\ntype LeaderboardRow = {
+type CompetitionLeaderboardRow = {
+  rank?: number | null; user_id?: string | null; display_name?: string | null; avatar_url?: string | null; jlpt_level?: string | null; period_xp?: number | null; total_xp?: number | null; total_points?: number | null; current_streak?: number | null;
+};
+
+type LeaderboardRow = {
   rank: number;
   user_id: string;
   display_name: string | null;
