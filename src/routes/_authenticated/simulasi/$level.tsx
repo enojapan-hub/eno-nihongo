@@ -190,7 +190,10 @@ function SimulationRunner() {
     enabled: started,
   });
 
-  const questions = questionSets[section.key] ?? query.data ?? [];
+  const questions = useMemo(
+    () => questionSets[section.key] ?? query.data ?? [],
+    [questionSets, section.key, query.data],
+  );
   const current = questions[index];
   const selected = current ? answers[current.id] : undefined;
 
