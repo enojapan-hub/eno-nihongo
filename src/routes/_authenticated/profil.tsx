@@ -10,6 +10,7 @@ import {
   Sparkles,
   Trophy,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -175,7 +176,7 @@ function ProfilePage() {
     </AppShell>
   );
 }
-function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-2xl border bg-card p-3 text-center">
       <Icon className="mx-auto size-4 text-primary" />
@@ -184,7 +185,7 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
     </div>
   );
 }
-function Row({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Row({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl px-2 py-2">
       <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary">
