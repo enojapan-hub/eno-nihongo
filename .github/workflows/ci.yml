@@ -41,6 +41,24 @@ jobs:
           path: repo-source.zip
           retention-days: 1
 
+      - name: Generate current Supabase types
+        continue-on-error: true
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN || secrets.ACCESS_TOKEN }}
+          PROJECT_REF: upxtqsvgppvqpbrjoitz
+        run: |
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
+            bunx supabase@latest gen types typescript --project-id "$PROJECT_REF" --schema public > generated-types.ts
+          fi
+
+      - name: Upload generated Supabase types
+        if: ${{ hashFiles('generated-types.ts') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-supabase-types
+          path: generated-types.ts
+          retention-days: 1
+
       - name: Lint
         run: bun run lint -- --fix
 
