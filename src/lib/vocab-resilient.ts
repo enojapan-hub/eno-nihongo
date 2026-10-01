@@ -3,6 +3,13 @@ import type { Level } from "@/lib/learn-queries";
 
 const QUERY_TIMEOUT_MS = 8000;
 export const VOCAB_PAGE_SIZE = 60;
+type RpcError = { message: string } | null;
+type RpcResult<T> = { data: T | null; error: RpcError };
+type VocabRpcClient = {
+  rpc: (name: string, args: Record<string, unknown>) => PromiseLike<RpcResult<unknown>>;
+};
+const vocabRpc = supabase as unknown as VocabRpcClient;
+type VocabPageRow = Record<string, unknown>;
 function withTimeout<T>(promise: PromiseLike<T>, ms = QUERY_TIMEOUT_MS): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
@@ -16,16 +23,16 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = QUERY_TIMEOUT_MS): Promise
 }
 
 export async function fetchVocabCount(level: Level): Promise<number> {
-  const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_count_by_level", { p_level: level }),
+  const res = await withTimeout(
+    vocabRpc.rpc("get_vocabulary_count_by_level", { p_level: level }),
   );
   if (res.error) throw new Error(res.error.message);
   return Number(res.data ?? 0);
 }
 
 export async function fetchVocabLessonCounts(level: Level) {
-  const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_lesson_counts", { p_level: level }),
+  const res = await withTimeout(
+    vocabRpc.rpc("get_vocabulary_lesson_counts", { p_level: level }),
   );
   if (res.error) throw new Error(res.error.message);
   return res.data ?? [];
@@ -37,8 +44,8 @@ export async function fetchVocabLessonPage(
   offset = 0,
   limit = VOCAB_PAGE_SIZE,
 ) {
-  const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_page_by_lesson", {
+  const res = await withTimeout(
+    vocabRpc.rpc("get_vocabulary_page_by_lesson", {
       p_level: level,
       p_lesson: lesson,
       p_offset: offset,
@@ -46,7 +53,7 @@ export async function fetchVocabLessonPage(
     }),
   );
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []).map((row: any) => ({
+  return ((res.data ?? []) as VocabPageRow[]).map((row) => ({
     ...row,
     senses: [],
     curriculum: [],
@@ -55,15 +62,15 @@ export async function fetchVocabLessonPage(
 }
 
 export async function fetchVocabPage(level: Level, offset = 0, limit = VOCAB_PAGE_SIZE) {
-  const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_page_by_level", {
+  const res = await withTimeout(
+    vocabRpc.rpc("get_vocabulary_page_by_level", {
       p_level: level,
       p_offset: offset,
       p_limit: limit,
     }),
   );
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []).map((row: any) => ({
+  return ((res.data ?? []) as VocabPageRow[]).map((row) => ({
     ...row,
     senses: [],
     curriculum: [],
@@ -72,7 +79,7 @@ export async function fetchVocabPage(level: Level, offset = 0, limit = VOCAB_PAG
 }
 
 export async function fetchVocabSenses(vocabularyId: string) {
-  const res: any = await withTimeout(
+  const res = await withTimeout(
     supabase
       .from("vocabulary_senses")
       .select("meaning_id, part_of_speech, usage_note_id, examples, source_book")
@@ -104,12 +111,12 @@ export function isUsableUsageNote(value: unknown): value is string {
 // agar tidak bergantung pada urutan baris dari PostgreSQL.
 export function pickUsageNote(
   item: { usage_note_id?: string | null; meaning_id?: string | null },
-  senses: any[],
+  senses: Array<{ meaning_id?: unknown; source_book?: unknown; usage_note_id?: unknown }>,
 ): string | undefined {
   const own = item.usage_note_id?.trim();
   if (own) return own;
   const meaning = (item.meaning_id ?? "").trim().toLowerCase();
-  const rank = (s: any) => ({
+  const rank = (s: { meaning_id?: unknown; source_book?: unknown }) => ({
     meaning:
       String(s.meaning_id ?? "")
         .trim()
@@ -135,15 +142,15 @@ export function pickUsageNote(
 // Kompatibilitas untuk pemanggil lama: memuat bertahap agar tidak mengirim ribuan ID dalam satu query.
 export async function fetchVocabListResilient(level: Level) {
   const total = await fetchVocabCount(level),
-    rows: any[] = [];
+    rows: VocabPageRow[] = [];
   for (let offset = 0; offset < total; offset += 200)
     rows.push(...(await fetchVocabPage(level, offset, 200)));
   return rows;
 }
 
 export async function fetchVocabCategoryCount(level: Level, category: string): Promise<number> {
-  const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_count_by_category", {
+  const res = await withTimeout(
+    vocabRpc.rpc("get_vocabulary_count_by_category", {
       p_level: level,
       p_category_slug: category,
     }),
@@ -158,8 +165,8 @@ export async function fetchVocabCategoryPage(
   offset = 0,
   limit = VOCAB_PAGE_SIZE,
 ) {
-  const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_page_by_category", {
+  const res = await withTimeout(
+    vocabRpc.rpc("get_vocabulary_page_by_category", {
       p_level: level,
       p_category_slug: category,
       p_offset: offset,
@@ -167,7 +174,7 @@ export async function fetchVocabCategoryPage(
     }),
   );
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []).map((row: any) => ({
+  return ((res.data ?? []) as VocabPageRow[]).map((row) => ({
     ...row,
     senses: [],
     curriculum: [],
