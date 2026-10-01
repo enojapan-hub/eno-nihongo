@@ -22,7 +22,7 @@ type Review = MasteryReview & { created_at: string | null };
 async function fetchReviews(level: Level) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return [];
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("flashcard_reviews")
     .select("item_type,item_id,rating,direction,aspect,used_hint,response_ms,created_at")
     .eq("user_id", u.user.id)
