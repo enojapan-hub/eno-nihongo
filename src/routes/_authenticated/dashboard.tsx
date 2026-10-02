@@ -44,7 +44,7 @@ function DashboardPage() {
   const todayLabel = new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
   const quickActions = [
     { label: "Kioku", to: "/kioku", icon: Brain },
-    { label: "Flashcard", to: "/flashcard", icon: Layers3 },
+    { label: "Flashcard", to: "/hafalan", icon: Layers3 },
     { label: "Quiz", to: "/quiz", icon: CheckCircle2 },
     { label: "Simulasi", to: "/simulasi", icon: Trophy },
   ] as const;

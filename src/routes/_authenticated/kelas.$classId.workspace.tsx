@@ -21,9 +21,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { classroom, result, secureUrl, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    preview: search['preview'] === "guru" ? ("guru" as const) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { preview?: "guru" } =>
+    search['preview'] === "guru" ? { preview: "guru" } : {},
   component: Page,
 });
 function Page() {
