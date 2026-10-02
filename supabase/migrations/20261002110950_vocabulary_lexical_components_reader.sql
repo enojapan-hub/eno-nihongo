@@ -14,7 +14,7 @@ WITH edges AS (
 ), active AS (
  SELECT e.source_vocabulary_id FROM edges e
  GROUP BY e.source_vocabulary_id
- HAVING count(*)>=2 AND bool_and(e.target_published)
+ HAVING count(*)>=1 AND bool_and(e.target_published)
 )
 SELECT v.id,v.term,v.reading,v.romaji,v.meaning_id,v.meaning_en,v.part_of_speech,v.examples,v.level,v.sort_order,v.source_book,v.lesson_number,v.lesson_title,v.usage_note_id,v.created_at,v.id,0
 FROM public.vocabulary v
