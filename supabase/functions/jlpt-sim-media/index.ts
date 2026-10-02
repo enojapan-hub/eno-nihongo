@@ -58,7 +58,13 @@ async function tts(key: string, voice: string, input: string): Promise<Uint8Arra
     const r = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: TTS_MODEL, voice, input, instructions: TTS_INSTRUCTIONS, response_format: "mp3" }),
+      body: JSON.stringify({
+        model: TTS_MODEL,
+        voice,
+        input,
+        instructions: TTS_INSTRUCTIONS,
+        response_format: "mp3",
+      }),
     });
     if (r.ok) return new Uint8Array(await r.arrayBuffer());
     if (attempt === 3 || (r.status < 500 && r.status !== 429)) {
@@ -105,7 +111,9 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("SUPABASE_URL") ?? "";
   const key = Deno.env.get("OPENAI_API_KEY") ?? "";
   const db = createClient(url, serviceKey());
-  const { data: ok, error: authError } = await db.rpc("verify_translation_cron_secret", { p_candidate: supplied });
+  const { data: ok, error: authError } = await db.rpc("verify_translation_cron_secret", {
+    p_candidate: supplied,
+  });
   if (authError || ok !== true) return json({ error: "Unauthorized" }, 401);
 
   const body = await req.json().catch(() => ({}));
@@ -117,7 +125,9 @@ Deno.serve(async (req) => {
       try {
         const bytes = await tts(key, "nova", "これはテストです。");
         const path = "probe/tts-test.mp3";
-        const up = await db.storage.from(BUCKET).upload(path, bytes, { contentType: "audio/mpeg", upsert: true });
+        const up = await db.storage
+          .from(BUCKET)
+          .upload(path, bytes, { contentType: "audio/mpeg", upsert: true });
         res.ttsBytes = bytes.length;
         res.uploadError = up.error?.message ?? null;
         res.publicUrl = db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
@@ -153,14 +163,21 @@ Deno.serve(async (req) => {
         const seen = new Map<string, string>();
         const lines = parseScript(String(row.transcript_jp));
         const parts: Uint8Array[] = [];
-        for (const line of lines) parts.push(await tts(key, voiceFor(line.speaker, seen), line.text));
+        for (const line of lines)
+          parts.push(await tts(key, voiceFor(line.speaker, seen), line.text));
         const bytes = concat(parts);
         if (bytes.length < 2000) throw new Error("audio too small");
         const path = `${row.level}/exam${row.exam_no}/${row.id}.mp3`;
-        const up = await db.storage.from(BUCKET).upload(path, bytes, { contentType: "audio/mpeg", upsert: true });
+        const up = await db.storage
+          .from(BUCKET)
+          .upload(path, bytes, { contentType: "audio/mpeg", upsert: true });
         if (up.error) throw up.error;
         const publicUrl = db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-        const { error: e } = await db.from("jlpt_simulation_questions").update({ audio_url: publicUrl }).eq("id", row.id).is("audio_url", null);
+        const { error: e } = await db
+          .from("jlpt_simulation_questions")
+          .update({ audio_url: publicUrl })
+          .eq("id", row.id)
+          .is("audio_url", null);
         if (e) throw e;
         results.push({ id: row.id, ok: true, bytes: bytes.length, lines: lines.length });
       } catch (e) {
@@ -186,10 +203,16 @@ Deno.serve(async (req) => {
       try {
         const bytes = await image(key, String(row.image_prompt));
         const path = `${row.level}/exam${row.exam_no}/img/${row.id}.png`;
-        const up = await db.storage.from(BUCKET).upload(path, bytes, { contentType: "image/png", upsert: true });
+        const up = await db.storage
+          .from(BUCKET)
+          .upload(path, bytes, { contentType: "image/png", upsert: true });
         if (up.error) throw up.error;
         const publicUrl = db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-        const { error: e } = await db.from("jlpt_simulation_questions").update({ image_url: publicUrl }).eq("id", row.id).is("image_url", null);
+        const { error: e } = await db
+          .from("jlpt_simulation_questions")
+          .update({ image_url: publicUrl })
+          .eq("id", row.id)
+          .is("image_url", null);
         if (e) throw e;
         results.push({ id: row.id, ok: true, bytes: bytes.length });
       } catch (e) {

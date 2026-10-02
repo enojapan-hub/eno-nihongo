@@ -70,7 +70,7 @@ export async function fetchCompetitionLeaderboard(
   limit = 50,
 ): Promise<CompetitionUser[]> {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
-  const { data, error } = await (supabase as any).rpc("get_competition_leaderboard", {
+  const { data, error } = await supabase.rpc("get_competition_leaderboard", {
     p_period: period,
     p_limit: safeLimit,
   });

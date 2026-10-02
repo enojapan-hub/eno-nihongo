@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/jlpt-audio")({
           return Response.json({ error: "Missing audio id" }, { status: 400 });
         }
 
-        const { data, error } = await (supabaseAdmin as any)
+        const { data, error } = await supabaseAdmin
           .from("jlpt_simulation_audio_source_map")
           .select("drive_file_id,status,structure_verified,delivery_path")
           .eq("id", id)

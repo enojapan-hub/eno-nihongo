@@ -38,7 +38,7 @@ function Page() {
   const stats = useQuery({
     queryKey: ["ops-stats"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_operations_console");
+      const { data, error } = await supabase.rpc("get_operations_console");
       if (error) throw error;
       return data as any;
     },
@@ -47,7 +47,7 @@ function Page() {
   const reviews = useQuery({
     queryKey: ["content-review-summary"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_content_review_summary");
+      const { data, error } = await supabase.rpc("get_content_review_summary");
       if (error) throw error;
       return data as any;
     },
@@ -63,7 +63,7 @@ function Page() {
           : tab === "pengumuman"
             ? "admin_announcements"
             : "media_library";
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from(table)
         .select("*")
         .order("created_at", { ascending: false })
@@ -97,11 +97,11 @@ function Page() {
   };
   async function add() {
     if (!title.trim() || !body.trim()) return;
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("admin_announcements")
       .insert({ title: title.trim(), body: body.trim(), status: "draft", audience });
     if (error) return alert(error.message);
-    await (supabase as any).rpc("admin_log_event", {
+    await supabase.rpc("admin_log_event", {
       p_action: "create_announcement",
       p_entity_type: "announcement",
       p_metadata: { title: title.trim(), audience },
@@ -112,25 +112,25 @@ function Page() {
     refresh();
   }
   async function publish(id: string) {
-    const { error } = await (supabase as any).rpc("publish_admin_announcement", { p_id: id });
+    const { error } = await supabase.rpc("publish_admin_announcement", { p_id: id });
     if (error) return alert(error.message);
     refresh();
   }
   async function del(id: string) {
     if (!confirm("Hapus pengumuman ini?")) return;
-    const { error } = await (supabase as any).rpc("delete_admin_announcement", { p_id: id });
+    const { error } = await supabase.rpc("delete_admin_announcement", { p_id: id });
     if (error) return alert(error.message);
     refresh();
   }
   async function report(id: string, status: string) {
     const resolution_note =
       status === "resolved" ? prompt("Catatan penyelesaian (opsional):") || null : null;
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("content_reports")
       .update({ status, resolution_note, updated_at: new Date().toISOString() })
       .eq("id", id);
     if (error) return alert(error.message);
-    await (supabase as any).rpc("admin_log_event", {
+    await supabase.rpc("admin_log_event", {
       p_action: "update_report",
       p_entity_type: "content_report",
       p_entity_id: id,

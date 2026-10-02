@@ -47,7 +47,7 @@ function Page() {
   const gate = useQuery({
     queryKey: ["admin-class-gate"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_overview");
+      const { data, error } = await supabase.rpc("get_admin_overview");
       if (error) throw error;
       return data;
     },
@@ -57,7 +57,7 @@ function Page() {
     queryKey: ["admin-classes"],
     enabled: gate.isSuccess,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("classes")
         .select("*")
         .order("created_at", { ascending: false });
@@ -69,7 +69,7 @@ function Page() {
   async function updateStatus(id: string, value: "published" | "rejected") {
     setBusyId(id);
     setMsg("");
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("classes")
       .update({ status: value, updated_at: new Date().toISOString() })
       .eq("id", id)

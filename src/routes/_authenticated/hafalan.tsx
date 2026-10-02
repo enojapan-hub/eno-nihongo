@@ -137,7 +137,7 @@ async function rate(card: Card, level: Level, rating: Rating, usedHint: boolean,
   }
   const aspect = masteryAspect(card);
   const direction = card.reverse ? "reverse" : "forward";
-  const { error: h } = await (supabase as any).from("flashcard_reviews").insert({
+  const { error: h } = await supabase.from("flashcard_reviews").insert({
     user_id: u.user.id,
     item_type: card.kind,
     item_id: card.id,
@@ -411,7 +411,7 @@ function HafalanPage() {
     if (!previous) return;
     setUndoing(true);
     try {
-      const { data, error } = await (supabase as any).rpc("undo_last_flashcard_review", {
+      const { data, error } = await supabase.rpc("undo_last_flashcard_review", {
         p_item_type: previous.kind,
         p_item_id: previous.id,
       });

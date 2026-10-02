@@ -17,7 +17,7 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = QUERY_TIMEOUT_MS): Promise
 
 export async function fetchVocabCount(level: Level): Promise<number> {
   const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_count_by_level", { p_level: level }),
+    supabase.rpc("get_vocabulary_count_by_level", { p_level: level }),
   );
   if (res.error) throw new Error(res.error.message);
   return Number(res.data ?? 0);
@@ -25,7 +25,7 @@ export async function fetchVocabCount(level: Level): Promise<number> {
 
 export async function fetchVocabLessonCounts(level: Level) {
   const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_lesson_counts", { p_level: level }),
+    supabase.rpc("get_vocabulary_lesson_counts", { p_level: level }),
   );
   if (res.error) throw new Error(res.error.message);
   return res.data ?? [];
@@ -38,7 +38,7 @@ export async function fetchVocabLessonPage(
   limit = VOCAB_PAGE_SIZE,
 ) {
   const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_page_by_lesson", {
+    supabase.rpc("get_vocabulary_page_by_lesson", {
       p_level: level,
       p_lesson: lesson,
       p_offset: offset,
@@ -56,7 +56,7 @@ export async function fetchVocabLessonPage(
 
 export async function fetchVocabPage(level: Level, offset = 0, limit = VOCAB_PAGE_SIZE) {
   const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_page_by_level", {
+    supabase.rpc("get_vocabulary_page_by_level", {
       p_level: level,
       p_offset: offset,
       p_limit: limit,
@@ -158,7 +158,7 @@ export async function fetchVocabListResilient(level: Level) {
 
 export async function fetchVocabCategoryCount(level: Level, category: string): Promise<number> {
   const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_count_by_category", {
+    supabase.rpc("get_vocabulary_count_by_category", {
       p_level: level,
       p_category_slug: category,
     }),
@@ -174,7 +174,7 @@ export async function fetchVocabCategoryPage(
   limit = VOCAB_PAGE_SIZE,
 ) {
   const res: any = await withTimeout(
-    (supabase as any).rpc("get_vocabulary_page_by_category", {
+    supabase.rpc("get_vocabulary_page_by_category", {
       p_level: level,
       p_category_slug: category,
       p_offset: offset,

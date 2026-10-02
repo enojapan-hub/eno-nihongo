@@ -58,7 +58,7 @@ const fmt = (s: number) =>
 async function fetchQuestions(level: Level, examNo: number, sections: SimulationSection[]) {
   const results = await Promise.all(
     sections.map(async (section) => {
-      const { data, error } = await (supabase as any).rpc("get_published_simulation_questions", {
+      const { data, error } = await supabase.rpc("get_published_simulation_questions", {
         p_level: level,
         p_section: section,
         p_exam_no: examNo,
@@ -259,7 +259,7 @@ function FullSessionRunner() {
   const ensureServerSession = useCallback(async () => {
     const existing = window.localStorage.getItem(serverKey);
     if (existing) return existing;
-    const { data, error: rpcError } = await (supabase as any).rpc("start_jlpt_simulation_full", {
+    const { data, error: rpcError } = await supabase.rpc("start_jlpt_simulation_full", {
       p_level: level,
       p_exam_no: examNo,
     });
@@ -289,7 +289,7 @@ function FullSessionRunner() {
           .filter((x) => x.section === section)
           .map((x) => ({ question_id: x.id, selected_index: answersRef.current[x.id] }))
           .filter((x) => x.selected_index !== undefined);
-        const { data, error: rpcError } = await (supabase as any).rpc(
+        const { data, error: rpcError } = await supabase.rpc(
           "submit_jlpt_simulation_full_section",
           {
             p_full_session_id: fullId,
@@ -336,7 +336,7 @@ function FullSessionRunner() {
         );
         return;
       }
-      const { data: finalData, error: finalError } = await (supabase as any).rpc(
+      const { data: finalData, error: finalError } = await supabase.rpc(
         "finalize_jlpt_simulation_full",
         { p_full_session_id: fullId },
       );

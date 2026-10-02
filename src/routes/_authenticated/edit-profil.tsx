@@ -68,7 +68,7 @@ function EditProfilePage() {
     void (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) return;
-      const { data: plan } = await (supabase as any)
+      const { data: plan } = await supabase
         .from("study_plans")
         .select("target_level,study_days_per_week")
         .eq("user_id", auth.user.id)

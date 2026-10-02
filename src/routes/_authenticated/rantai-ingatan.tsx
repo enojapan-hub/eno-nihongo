@@ -37,7 +37,7 @@ async function saveChainReview(step: Step, level: Level, correct: boolean, respo
   if (!userData.user) return;
 
   const rating = correct ? 2 : 0;
-  const { error } = await (supabase as any).from("flashcard_reviews").insert({
+  const { error } = await supabase.from("flashcard_reviews").insert({
     user_id: userData.user.id,
     item_type: step.itemType,
     item_id: step.itemId,
@@ -50,7 +50,7 @@ async function saveChainReview(step: Step, level: Level, correct: boolean, respo
   });
   if (error) throw error;
 
-  await (supabase as any).rpc("record_learning_activity", {
+  await supabase.rpc("record_learning_activity", {
     p_activity_type: "flashcard_reviewed",
     p_content_type: step.itemType,
     p_content_id: step.itemId,

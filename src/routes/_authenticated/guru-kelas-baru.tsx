@@ -100,22 +100,19 @@ function Page() {
     setError("");
     try {
       const sessions = makeSessions();
-      const { error: createError } = await (supabase as any).rpc(
-        "teacher_create_class_with_sessions",
-        {
-          p_data: {
-            title: f.title.trim(),
-            level: f.level,
-            description: f.description || null,
-            banner_url: f.banner_url || null,
-            meeting_url: f.meeting_url || null,
-            capacity: Number(f.capacity),
-            price: Number(f.price),
-            status,
-          },
-          p_sessions: sessions,
+      const { error: createError } = await supabase.rpc("teacher_create_class_with_sessions", {
+        p_data: {
+          title: f.title.trim(),
+          level: f.level,
+          description: f.description || null,
+          banner_url: f.banner_url || null,
+          meeting_url: f.meeting_url || null,
+          capacity: Number(f.capacity),
+          price: Number(f.price),
+          status,
         },
-      );
+        p_sessions: sessions,
+      });
       if (createError) throw createError;
       await nav({ to: "/guru" });
     } catch (e: any) {

@@ -16,7 +16,7 @@ function Page() {
   const q = useQuery({
     queryKey: ["platform-settings-admin"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_platform_settings_admin");
+      const { data, error } = await supabase.rpc("get_platform_settings_admin");
       if (error) throw error;
       return data as any;
     },
@@ -28,7 +28,7 @@ function Page() {
   async function save() {
     setBusy(true);
     setMsg("");
-    const { error } = await (supabase as any).rpc("admin_save_platform_settings", {
+    const { error } = await supabase.rpc("admin_save_platform_settings", {
       p_settings: form,
     });
     setBusy(false);

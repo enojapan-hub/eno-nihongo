@@ -31,7 +31,7 @@ function Detail() {
   const classQuery = useQuery({
     queryKey: ["class", classId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_public_class", {
+      const { data, error } = await supabase.rpc("get_public_class", {
         p_class_id: classId,
       });
       if (error) throw error;
@@ -41,7 +41,7 @@ function Detail() {
   const countQuery = useQuery({
     queryKey: ["class-count", classId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_public_class_enrollment_counts");
+      const { data, error } = await supabase.rpc("get_public_class_enrollment_counts");
       if (error) throw error;
       return Number(
         (data ?? []).find((row: any) => row.class_id === classId)?.participant_count ?? 0,
@@ -61,7 +61,7 @@ function Detail() {
   const accessQuery = useQuery({
     queryKey: ["class-access", classId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_class_member_access", {
+      const { data, error } = await supabase.rpc("get_class_member_access", {
         p_class_id: classId,
       });
       if (error) throw error;
@@ -71,7 +71,7 @@ function Detail() {
   async function enroll() {
     setBusy(true);
     setMessage("");
-    const { error } = await (supabase as any).rpc("enroll_in_class", { p_class_id: classId });
+    const { error } = await supabase.rpc("enroll_in_class", { p_class_id: classId });
     if (error) setMessage(error.message);
     else {
       setMessage("Berhasil bergabung ke kelas.");

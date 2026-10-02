@@ -49,7 +49,7 @@ function similarity(a: Item, b: Item) {
 async function history(level: Level) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return [];
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("flashcard_reviews")
     .select("item_type,item_id,rating,direction,used_hint,response_ms,created_at")
     .eq("user_id", u.user.id)
@@ -62,7 +62,7 @@ async function history(level: Level) {
 async function saveTrapReview(item: Item, level: Level, correct: boolean, ms: number) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return;
-  const { error } = await (supabase as any).from("flashcard_reviews").insert({
+  const { error } = await supabase.from("flashcard_reviews").insert({
     user_id: u.user.id,
     item_type: item.kind,
     item_id: item.id,

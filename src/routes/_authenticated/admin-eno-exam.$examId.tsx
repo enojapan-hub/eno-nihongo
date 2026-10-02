@@ -31,7 +31,7 @@ function Page() {
   const [f, setF] = useState<any>(empty);
   const [msg, setMsg] = useState("");
   async function load() {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("eno_monthly_exam_questions")
       .select(
         "id,section,question_no,mondai_no,prompt_jp,choices,correct_index,explanation_indonesian",
@@ -63,7 +63,7 @@ function Page() {
       explanation_indonesian: f.explanation_indonesian,
       sort_order: Number(f.question_no),
     };
-    const { error } = await (supabase as any).from("eno_monthly_exam_questions").insert(payload);
+    const { error } = await supabase.from("eno_monthly_exam_questions").insert(payload);
     if (error) setMsg(error.message);
     else {
       setF({ ...empty, question_no: q.length + 2 });
@@ -72,10 +72,7 @@ function Page() {
   }
   async function del(id: string) {
     if (!confirm("Hapus soal ini?")) return;
-    const { error } = await (supabase as any)
-      .from("eno_monthly_exam_questions")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("eno_monthly_exam_questions").delete().eq("id", id);
     if (error) setMsg(error.message);
     else await load();
   }

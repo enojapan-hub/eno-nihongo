@@ -16,7 +16,7 @@ function Page() {
   const q = useQuery({
     queryKey: ["role-permission-console"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_role_permission_console");
+      const { data, error } = await supabase.rpc("get_role_permission_console");
       if (error) throw error;
       return data as any;
     },
@@ -51,7 +51,7 @@ function Page() {
   }
   async function save() {
     setMsg("");
-    const { error } = await (supabase as any).rpc("admin_save_role", {
+    const { error } = await supabase.rpc("admin_save_role", {
       p_id: edit.id,
       p_name: edit.name,
       p_description: edit.description,

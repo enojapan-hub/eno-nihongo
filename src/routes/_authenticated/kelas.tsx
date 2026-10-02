@@ -37,8 +37,8 @@ function KelasPage() {
     queryKey: ["published-classes"],
     queryFn: async () => {
       const [{ data, error }, { data: counts, error: countError }] = await Promise.all([
-        (supabase as any).rpc("get_public_classes"),
-        (supabase as any).rpc("get_public_class_enrollment_counts"),
+        supabase.rpc("get_public_classes"),
+        supabase.rpc("get_public_class_enrollment_counts"),
       ]);
       if (error) throw error;
       if (countError) throw countError;

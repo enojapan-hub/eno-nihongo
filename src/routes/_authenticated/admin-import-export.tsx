@@ -61,7 +61,7 @@ function Page() {
   const jobs = useQuery({
     queryKey: ["import-jobs"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_import_jobs");
+      const { data, error } = await supabase.rpc("get_admin_import_jobs");
       if (error) throw error;
       return data || [];
     },

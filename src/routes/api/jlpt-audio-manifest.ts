@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/jlpt-audio-manifest")({
           return Response.json({ error: "Invalid JLPT level" }, { status: 400 });
         }
 
-        const { data, error } = await (supabaseAdmin as any)
+        const { data, error } = await supabaseAdmin
           .from("jlpt_simulation_audio_source_map")
           .select("id,level,mondai_no,mapping_scope,delivery_path,status,structure_verified")
           .eq("level", level)
