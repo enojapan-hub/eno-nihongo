@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -41,7 +41,7 @@ type Section = {
   icon: typeof Languages;
 };
 
-const sections: Record<Level, Section[]> = {
+const sections: Record<Level, [Section, ...Section[]]> = {
   N5: [
     { key: "vocabulary", title: "言語知識（文字・語彙）", subtitle: "Bahasa · Kosakata", minutes: 20, group: "vocabulary", icon: Languages },
     { key: "grammar_reading", title: "言語知識（文法）・読解", subtitle: "Bahasa · Tata Bahasa & Membaca", minutes: 40, group: "grammar_reading", icon: BookOpen },
@@ -83,7 +83,7 @@ function SimulationRunner() {
   const levelSections = sections[level];
   const [started, setStarted] = useState(false);
   const [sectionIndex, setSectionIndex] = useState(0);
-  const section = levelSections[sectionIndex];
+  const section = levelSections[sectionIndex] ?? levelSections[0];
   const [questionSets, setQuestionSets] = useState<Record<string, SimulationQuestion[]>>({});
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [index, setIndex] = useState(0);
@@ -117,9 +117,12 @@ function SimulationRunner() {
     return () => window.clearInterval(timerId);
   }, [started, sectionFinished, finished, questions.length, section.key]);
 
+  // finishSection dibuat ulang tiap render; ref menjaga efek tetap hanya bereaksi pada perubahan waktu/status.
+  const finishSectionRef = useRef<() => Promise<void>>(async () => {});
+  finishSectionRef.current = finishSection;
   useEffect(() => {
     if (started && seconds === 0 && questions.length && !sectionFinished && !finished) {
-      void finishSection();
+      void finishSectionRef.current();
     }
   }, [seconds, started, questions.length, sectionFinished, finished]);
 
@@ -323,6 +326,8 @@ function SimulationRunner() {
     );
   }
 
+  if (!current) return null;
+
   const progress = questions.length ? ((index + 1) / questions.length) * 100 : 0;
   const typeLabel = current?.questionType
     ? typeLabels[current.questionType] ?? current.questionType
@@ -416,7 +421,7 @@ function SimulationRunner() {
           <Card className="mt-4 border-primary/20"><CardContent className="p-5">
             <p className="text-sm font-semibold">Bagian selesai</p>
             <p className="mt-1 text-xs text-muted-foreground">Bagian ini sudah dikunci.</p>
-            <Button className="mt-4" onClick={nextSection}>Lanjut ke {levelSections[sectionIndex + 1].subtitle}<ArrowRight className="ml-1 size-4" /></Button>
+            <Button className="mt-4" onClick={nextSection}>Lanjut ke {levelSections[sectionIndex + 1]?.subtitle}<ArrowRight className="ml-1 size-4" /></Button>
           </CardContent></Card>
         )}
       </div>

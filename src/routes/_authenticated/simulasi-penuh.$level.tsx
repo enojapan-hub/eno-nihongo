@@ -11,7 +11,7 @@ import type { Level } from "@/lib/learn-queries";
 export const Route=createFileRoute("/_authenticated/simulasi-penuh/$level")({validateSearch:(search:Record<string,unknown>):{exam?:number|undefined}=>({exam:search["exam"]===undefined?undefined:parseExamNo(search["exam"])}),component:FullSimulationOverview});
 
 function FullSimulationOverview(){
- const{level:rawLevel}=Route.useParams();const level=rawLevel.toUpperCase() as Level;const sessions=jlptSessions[level]??[];const examNo=parseExamNo(Route.useSearch().exam);const storageKey=fullStorageKey(level,examNo);const totalMinutes=sessions.reduce((s,x)=>s+x.minutes,0);const[progress,setProgress]=useState<FullProgress|null>(null);const[confirmStart,setConfirmStart]=useState(false);
+ const{level:rawLevel}=Route.useParams();const level=rawLevel.toUpperCase() as Level;const sessions=useMemo(()=>jlptSessions[level]??[],[level]);const examNo=parseExamNo(Route.useSearch().exam);const storageKey=fullStorageKey(level,examNo);const totalMinutes=sessions.reduce((s,x)=>s+x.minutes,0);const[progress,setProgress]=useState<FullProgress|null>(null);const[confirmStart,setConfirmStart]=useState(false);
  useEffect(()=>{try{const raw=window.localStorage.getItem(storageKey);if(raw)setProgress(JSON.parse(raw))}catch{setProgress(null)}},[storageKey]);
  const active=useMemo(()=>progress?sessions[progress.sessionIndex]??null:null,[progress,sessions]);const finalResult=useMemo(()=>progress&&!active&&progress.results?buildPracticeResult(level,progress):null,[level,progress,active]);
  const clearServerState=()=>{window.localStorage.removeItem(`${storageKey}-server-id`);window.localStorage.removeItem(`${storageKey}-server-result`)};

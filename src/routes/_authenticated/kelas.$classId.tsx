@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   Clock3,
   ExternalLink,
+  GraduationCap,
   Headphones,
   ShieldCheck,
   UserPlus,

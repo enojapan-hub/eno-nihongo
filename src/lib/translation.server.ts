@@ -36,7 +36,7 @@ function extractJsonTranslation(raw: string) {
       try {
         return JSON.parse(`"${match[1]}"`).trim()
       } catch {
-        return match[1].trim()
+        return (match[1] ?? '').trim()
       }
     }
   }
@@ -46,8 +46,8 @@ function extractJsonTranslation(raw: string) {
 const TRANSLATION_SYSTEM = `Anda adalah editor materi pembelajaran bahasa Jepang ENO JAPAN. Terjemahkan ke Bahasa Indonesia yang natural, ringkas, jelas, dan mudah dipahami pelajar JLPT. Untuk arti kanji, gunakan padanan Bahasa Indonesia yang lazim dan mudah dipahami, bukan terjemahan kata-per-kata yang kaku. Pertahankan istilah Jepang, kanji, kana, contoh bahasa Jepang, angka, nama, dan simbol apa adanya jika muncul. Jangan menambahkan informasi yang tidak ada. Kembalikan hanya JSON sesuai schema.`
 
 async function translateWithGemini(text: string, context: string): Promise<TranslationResult> {
-  const apiKey = process.env.GEMINI_API_KEY
-  const model = process.env.GEMINI_TRANSLATION_MODEL || 'gemini-2.5-flash-lite'
+  const apiKey = process.env['GEMINI_API_KEY']
+  const model = process.env['GEMINI_TRANSLATION_MODEL'] || 'gemini-2.5-flash-lite'
   if (!apiKey) throw new Error('Missing GEMINI_API_KEY')
 
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -82,8 +82,8 @@ async function translateWithGemini(text: string, context: string): Promise<Trans
 }
 
 async function translateBatchWithGemini(items: Array<{ id: string; text: string }>, context: string) {
-  const apiKey = process.env.GEMINI_API_KEY
-  const model = process.env.GEMINI_TRANSLATION_MODEL || 'gemini-2.5-flash-lite'
+  const apiKey = process.env['GEMINI_API_KEY']
+  const model = process.env['GEMINI_TRANSLATION_MODEL'] || 'gemini-2.5-flash-lite'
   if (!apiKey) throw new Error('Missing GEMINI_API_KEY')
 
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -196,7 +196,7 @@ export async function runTranslationBatch(sourceType: SourceType, requestedLimit
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const batch = await translateBatchWithGemini(rows.map((row: any) => ({ id: row.id, text: row[sourceColumn] })), context)
-      const byId = new Map(batch.translations.map((item: any) => [String(item.id), String(item.translation || '').trim()]))
+      const byId = new Map<string, string>(batch.translations.map((item: any): [string, string] => [String(item.id), String(item.translation || '').trim()]))
       const results: Array<{ id: string; translation: string; provider: string; model: string }> = []
 
       for (const row of rows) {

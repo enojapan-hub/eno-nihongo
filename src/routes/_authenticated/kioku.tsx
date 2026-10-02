@@ -202,11 +202,12 @@ function KiokuPage() {
   const advanceRef = useRef(advance);
   advanceRef.current = advance;
   const lastCorrect = ex ? session?.results[ex.id] : undefined;
+  const exId = ex?.id;
   useEffect(() => {
-    if (!ex || !isChoice || lastCorrect !== true) return;
+    if (!exId || !isChoice || lastCorrect !== true) return;
     const t = window.setTimeout(() => advanceRef.current(), AUTO_ADVANCE_MS);
     return () => window.clearTimeout(t);
-  }, [ex?.id, isChoice, lastCorrect]);
+  }, [exId, isChoice, lastCorrect]);
 
   // After a wrong answer keep "Lanjut" reachable on short screens (the fixed bottom nav would otherwise cover it).
   const nextRef = useRef<HTMLButtonElement | null>(null);

@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/admin-pengguna")({validateSearch:(s:Record<string,unknown>)=>({view:String(s.view||"users")}), component: Page });
+export const Route = createFileRoute("/_authenticated/admin-pengguna")({validateSearch:(s:Record<string,unknown>)=>({view:String(s['view']||"users")}), component: Page });
 const PAGE=20;
 const fmt=(v?:string|null)=>v?new Intl.DateTimeFormat("id-ID",{dateStyle:"medium",timeZone:"Asia/Tokyo"}).format(new Date(v)):"—";
 const daysLeft=(v?:string|null)=>v?Math.max(0,Math.ceil((new Date(v).getTime()-Date.now())/86400000)):null;

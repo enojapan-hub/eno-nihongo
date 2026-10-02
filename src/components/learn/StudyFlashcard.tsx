@@ -19,8 +19,8 @@ export function StudyFlashcard({index,total,level,title,reading,romaji,meaning,s
  const kanjiQuiz=useMemo(()=>{
    if(!kanjiMode)return null;
    const words=(relatedWords??[]).filter(w=>w.term&&w.meaning).slice(0,8);
-   if(words.length>=2){
-     const target=words[0];
+   const target=words[0];
+   if(target&&words.length>=2){
      const choices=Array.from(new Set(words.map(w=>w.meaning!).filter(Boolean))).slice(0,4);
      if(choices.length>=2)return {prompt:`Apa arti dari ${target.term}?`,choices,correctIndex:choices.indexOf(target.meaning!)};
    }

@@ -6,8 +6,8 @@ export type MasteryCard = {
   kind: MasteryKind;
   front: string;
   back: string;
-  sub?: string;
-  example?: string;
+  sub?: string | undefined;
+  example?: string | undefined;
   aspect: MasteryAspect;
 };
 

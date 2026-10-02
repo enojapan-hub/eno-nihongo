@@ -1,6 +1,6 @@
 import { supabaseAdmin } from './supabase.server'
 
-const MODEL = process.env.GEMINI_TRANSLATION_MODEL || 'gemini-2.5-flash-lite'
+const MODEL = process.env['GEMINI_TRANSLATION_MODEL'] || 'gemini-2.5-flash-lite'
 const SYSTEM = `Anda adalah editor soal JLPT ENO NIHONGO. Terjemahkan hanya bagian berbahasa Inggris ke Bahasa Indonesia yang natural dan ringkas. Pertahankan semua teks Jepang (kanji, hiragana, katakana), nama, angka, simbol, dan struktur soal. Jangan mengubah jawaban benar, urutan pilihan, atau menambah informasi. Pilihan jawaban yang berupa arti bahasa Inggris harus diterjemahkan ke Bahasa Indonesia. Kembalikan JSON sesuai schema.`
 
 type QuestionRow = {
@@ -21,7 +21,7 @@ type Translated = {
 }
 
 export async function runQuestionTranslationBatch(limit = 100) {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey = process.env['GEMINI_API_KEY']
   if (!apiKey) throw new Error('Missing GEMINI_API_KEY')
 
   const { data, error } = await supabaseAdmin
@@ -102,7 +102,7 @@ export async function runQuestionTranslationBatch(limit = 100) {
       prompt: t.prompt_id.trim(),
       choices: translatedChoices,
     }
-    if (typeof t.explanation_id === 'string' && t.explanation_id.trim()) update.explanation_id = t.explanation_id.trim()
+    if (typeof t.explanation_id === 'string' && t.explanation_id.trim()) update['explanation_id'] = t.explanation_id.trim()
     const { error: updateError } = await supabaseAdmin.from('questions').update(update).eq('id', row.id)
     if (!updateError) processed += 1
   }

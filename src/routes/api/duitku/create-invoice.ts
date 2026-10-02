@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/duitku/create-invoice")({
             .eq("id", user.id)
             .maybeSingle();
 
-          const customerName = String(profile?.display_name || user.user_metadata?.full_name || user.email || "Pengguna ENO NIHONGO")
+          const customerName = String(profile?.display_name || user.user_metadata?.['full_name'] || user.email || "Pengguna ENO NIHONGO")
             .trim()
             .slice(0, 100);
           const merchantOrderId = `ENO-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -82,17 +82,17 @@ export const Route = createFileRoute("/api/duitku/create-invoice")({
             body: JSON.stringify(payload),
           });
           const result = await duitkuResponse.json().catch(() => ({})) as Record<string, unknown>;
-          if (!duitkuResponse.ok || result.statusCode !== "00" || typeof result.paymentUrl !== "string" || typeof result.reference !== "string") {
+          if (!duitkuResponse.ok || result['statusCode'] !== "00" || typeof result['paymentUrl'] !== "string" || typeof result['reference'] !== "string") {
             await admin.from("payment_orders").update({ status: "failed", updated_at: new Date().toISOString() }).eq("merchant_order_id", merchantOrderId);
-            throw new Error(String(result.statusMessage || "Duitku belum dapat membuat tagihan. Coba lagi."));
+            throw new Error(String(result['statusMessage'] || "Duitku belum dapat membuat tagihan. Coba lagi."));
           }
 
           await admin.from("payment_orders").update({
-            provider_reference: result.reference,
+            provider_reference: result['reference'],
             updated_at: new Date().toISOString(),
           }).eq("merchant_order_id", merchantOrderId);
 
-          return Response.json({ paymentUrl: result.paymentUrl, merchantOrderId });
+          return Response.json({ paymentUrl: result['paymentUrl'], merchantOrderId });
         } catch (error) {
           return Response.json({ error: error instanceof Error ? error.message : "Gagal membuat tagihan Duitku." }, { status: 502 });
         }

@@ -10,7 +10,7 @@ describe('weakness map mastery dimensions', () => {
     expect(stats).toHaveLength(2);
     expect(stats.map(x => x.label)).toContain('Kanji · Arti');
     expect(stats.map(x => x.label)).toContain('Kotoba · Arti');
-    expect(stats[0].label).toBe('Kotoba · Arti');
+    expect(stats[0]?.label).toBe('Kotoba · Arti');
   });
 
   it('keeps kanji meaning and reading as independent mastery', () => {

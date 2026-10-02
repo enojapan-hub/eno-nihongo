@@ -134,13 +134,13 @@ function Page() {
         </div>
 
         <div className="flex gap-2 overflow-x-auto">
-          {[
+          {([
             ["review", "Menunggu Review"],
             ["published", "Published"],
             ["draft", "Draft"],
             ["rejected", "Ditolak"],
             ["all", "Semua"],
-          ].map(([id, label]) => (
+          ] as const).map(([id, label]) => (
             <Button key={id} size="sm" variant={filter === id ? "default" : "outline"} onClick={() => setFilter(id)}>
               {label}{id !== "all" ? ` (${count(id)})` : ""}
             </Button>

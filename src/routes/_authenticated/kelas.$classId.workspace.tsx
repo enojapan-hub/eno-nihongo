@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { classroom, result, secureUrl, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")({
   validateSearch: (search: Record<string, unknown>) => ({
-    preview: search.preview === "guru" ? ("guru" as const) : undefined,
+    preview: search['preview'] === "guru" ? ("guru" as const) : undefined,
   }),
   component: Page,
 });

@@ -17,7 +17,7 @@ export function analyzeMastery(reviews:MasteryReview[]):MasteryWeakness[]{
     groups.set(key,rows);
   }
   return [...groups].map(([key,rows])=>{
-    const [itemType,aspect]=key.split(":",2);
+    const [itemType="",aspect=""]=key.split(":",2);
     const n=Math.max(1,rows.length);
     const correct=rows.filter(row=>row.rating>=2).length/n;
     const hint=rows.filter(row=>row.used_hint).length/n;

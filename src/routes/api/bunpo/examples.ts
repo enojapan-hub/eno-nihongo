@@ -9,11 +9,11 @@ const schema = {
 } as const
 
 async function generateContent(grammar: Record<string, unknown>) {
-  const apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_TRANSLATION_MODEL
+  const apiKey = process.env['OPENAI_API_KEY'], model = process.env['OPENAI_TRANSLATION_MODEL']
   if (!apiKey || !model) throw new Error('OpenAI configuration is missing')
   const response = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, store: false, input: [
     { role: 'system', content: 'Anda adalah editor materi JLPT ENO JAPAN. Buat tepat 3 contoh kalimat Jepang natural untuk pola tata bahasa, masing-masing dengan reading hiragana seluruh kalimat dan terjemahan Indonesia natural. Explanation harus spesifik terhadap pola: makna, struktur, penggunaan, nuansa, konteks, dan perbedaan dengan pola mirip. Berikan 2-4 sinonim/pola terkait dan 1-4 antonim/pola berlawanan hanya jika benar-benar relevan. Jangan memaksakan relasi yang salah.' },
-    { role: 'user', content: JSON.stringify({ pattern: grammar.pattern, meaning: grammar.meaning_id, structure: grammar.structure, level: grammar.level }) },
+    { role: 'user', content: JSON.stringify({ pattern: grammar['pattern'], meaning: grammar['meaning_id'], structure: grammar['structure'], level: grammar['level'] }) },
   ], text: { format: { type: 'json_schema', name: 'bunpo_content', strict: true, schema } } }) })
   if (!response.ok) throw new Error(`OpenAI ${response.status}: ${(await response.text()).slice(0,500)}`)
   const data = await response.json()

@@ -28,12 +28,12 @@ function EditProfilePage(){
  const[initialMonths,setInitialMonths]=useState<number|null>(null);
  useEffect(()=>{if(account.data?.profile)setData(v=>({...v,display_name:account.data.profile.display_name??"",target_level:account.data.profile.target_level??"N5",ui_language:account.data.profile.ui_language??"id",country:account.data.profile.country??"Indonesia"}))},[account.data]);
  useEffect(()=>{void (async()=>{const{data:auth}=await supabase.auth.getUser();if(!auth.user)return;const{data:plan}=await (supabase as any).from("study_plans").select("target_level,study_days_per_week").eq("user_id",auth.user.id).eq("status","active").order("created_at",{ascending:false}).limit(1).maybeSingle();const days=Number(plan?.study_days_per_week);if(plan)setPlan({level:String(plan.target_level),days:days>=1&&days<=7?days:7});if(days>=1&&days<=7)setData(v=>({...v,study_days:days}))})()},[]);
- useEffect(()=>{void supabase.auth.getUser().then(({data:auth})=>{const months=Number(auth.user?.user_metadata?.study_target_months);setInitialMonths(TARGET_MONTHS.includes(months as any)?months:3);if(TARGET_MONTHS.includes(months as any))setData(v=>({...v,target_months:months}))})},[]);
+ useEffect(()=>{void supabase.auth.getUser().then(({data:auth})=>{const months=Number(auth.user?.user_metadata?.['study_target_months']);setInitialMonths(TARGET_MONTHS.includes(months as any)?months:3);if(TARGET_MONTHS.includes(months as any))setData(v=>({...v,target_months:months}))})},[]);
  const targetDate=plusMonths(data.target_months);
  useEffect(()=>{if(account.data?.profile&&initialMonths!==null&&(!plan||data.study_days===plan.days)){setInitialData(data)}},[account.data?.profile,initialMonths,plan]);
  const dirty=initialData!==null&&JSON.stringify(data)!==JSON.stringify(initialData);
  const save=async()=>{
-  if(data.display_name.trim().length<2)return toast.error("Nama minimal 2 karakter.");
+  if(data.display_name.trim().length<2){toast.error("Nama minimal 2 karakter.");return;}
   const s=account.data?.settings;if(!s)return;
   setSaving(true);
   try{

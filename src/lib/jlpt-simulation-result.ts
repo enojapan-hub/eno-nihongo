@@ -1,7 +1,7 @@
 import type { Level } from "@/lib/learn-queries";
 
 type SectionResult={total_questions:number;correct_count:number;score_percent:number};
-export type FullProgress={sessionIndex:number;sectionIndex:number;startedAt:number;completed:string[];results?:Record<string,SectionResult>};
+export type FullProgress={sessionIndex:number;sectionIndex:number;startedAt:number;completedAt?:number;completed:string[];results?:Record<string,SectionResult>};
 export type ScoreBlock={id:string;label:string;score:number;max:number;passMark:number};
 
 const overallPass:Record<Level,number>={N1:100,N2:90,N3:95,N4:90,N5:80};

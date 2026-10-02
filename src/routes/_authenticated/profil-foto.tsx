@@ -16,12 +16,12 @@ async function fetchPhotoData(): Promise<PhotoData> {
   const { data: auth, error } = await supabase.auth.getUser();
   if (error || !auth.user) throw new Error("Sesi akun tidak ditemukan.");
   const metadata = auth.user.user_metadata ?? {};
-  const google = String(metadata.avatar_url ?? metadata.picture ?? "");
+  const google = String(metadata['avatar_url'] ?? metadata['picture'] ?? "");
   const { data: profile, error: profileError } = await supabase.from("profiles").select("display_name,avatar_url").eq("id", auth.user.id).maybeSingle();
   if (profileError) throw new Error(profileError.message);
   return {
     userId: auth.user.id,
-    name: profile?.display_name?.trim() || String(metadata.full_name ?? metadata.name ?? "Pengguna ENO NIHONGO"),
+    name: profile?.display_name?.trim() || String(metadata['full_name'] ?? metadata['name'] ?? "Pengguna ENO NIHONGO"),
     current: profile?.avatar_url || google,
     google,
   };

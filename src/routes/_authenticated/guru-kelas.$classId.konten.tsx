@@ -199,6 +199,7 @@ function Page() {
           ? classroom.from(tables[tab]).update(row).eq("id", id).eq("class_id", classId)
           : classroom.from(tables[tab]).insert(row),
       );
+      return undefined;
     },
     onSuccess: async (createdQuizId) => {
       reset();

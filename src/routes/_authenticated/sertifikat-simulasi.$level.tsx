@@ -36,7 +36,7 @@ function Certificate() {
     } catch { setProgress(null); }
     void supabase.auth.getUser().then(({ data }) => {
       const meta = data.user?.user_metadata as Record<string, unknown> | undefined;
-      const candidate = String(meta?.full_name ?? meta?.name ?? data.user?.email?.split("@")[0] ?? "").trim();
+      const candidate = String(meta?.['full_name'] ?? meta?.['name'] ?? data.user?.email?.split("@")[0] ?? "").trim();
       if (candidate) setName(candidate);
     }).finally(() => setLoaded(true));
   }, [level, storageKey]);

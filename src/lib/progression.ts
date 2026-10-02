@@ -41,8 +41,8 @@ export type LeagueName = typeof LEAGUES[number]["name"];
 export function getLeague(weeklyXp: number) {
   const xp = Math.max(0, Math.trunc(weeklyXp || 0));
   let index = 0;
-  for (let i = 0; i < LEAGUES.length; i += 1) if (xp >= LEAGUES[i].minWeeklyXp) index = i;
-  const current = LEAGUES[index];
+  for (let i = 0; i < LEAGUES.length; i += 1) if (xp >= (LEAGUES[i]?.minWeeklyXp ?? Infinity)) index = i;
+  const current = LEAGUES[index] ?? LEAGUES[0];
   const next = LEAGUES[index + 1] ?? null;
   return {
     ...current,

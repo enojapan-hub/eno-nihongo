@@ -13,8 +13,8 @@ export function isDuitkuPlanCode(value: unknown): value is DuitkuPlanCode {
 }
 
 export function duitkuConfig() {
-  const merchantCode = process.env.DUITKU_MERCHANT_CODE;
-  const apiKey = process.env.DUITKU_API_KEY;
+  const merchantCode = process.env['DUITKU_MERCHANT_CODE'];
+  const apiKey = process.env['DUITKU_API_KEY'];
   if (!merchantCode || !apiKey) throw new Error("Konfigurasi Duitku belum lengkap.");
   return { merchantCode, apiKey };
 }
@@ -34,5 +34,5 @@ export function isValidCallbackSignature(expected: string, received: string) {
 }
 
 export function applicationOrigin() {
-  return (process.env.APP_URL || "https://enonihongo.com").replace(/\/$/, "");
+  return (process.env['APP_URL'] || "https://enonihongo.com").replace(/\/$/, "");
 }
