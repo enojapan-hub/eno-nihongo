@@ -425,7 +425,8 @@ function Page() {
                     <div>
                       <p className="text-sm font-bold">Soal 1 · Pilihan ganda</p>
                       <p className="text-xs text-muted-foreground">
-                        Isi pertanyaan, pilihan jawaban, lalu tandai kunci yang benar. Nilai peserta dikoreksi otomatis.
+                        Isi pertanyaan, pilihan jawaban, lalu tandai kunci yang benar. Nilai peserta
+                        dikoreksi otomatis.
                       </p>
                     </div>
                     <Field label="Pertanyaan">
@@ -439,14 +440,18 @@ function Page() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-bold">Pilihan jawaban</span>
-                        <span className="text-[10px] text-muted-foreground">Pilih satu kunci benar</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          Pilih satu kunci benar
+                        </span>
                       </div>
                       {quizChoices.map((choice, index) => (
                         <label
                           key={index}
                           className={
                             "flex items-center gap-2 rounded-xl border p-2 " +
-                            (quizCorrect === index ? "border-primary bg-primary/[0.06]" : "border-border/70")
+                            (quizCorrect === index
+                              ? "border-primary bg-primary/[0.06]"
+                              : "border-border/70")
                           }
                         >
                           <input
@@ -581,7 +586,8 @@ function Page() {
                 )}
                 {tab === "quiz" && !id && (
                   <p className="text-xs text-muted-foreground">
-                    Kuis dan soal pertama disimpan sebagai draft. Setelah itu Anda bisa langsung menambah soal berikutnya.
+                    Kuis dan soal pertama disimpan sebagai draft. Setelah itu Anda bisa langsung
+                    menambah soal berikutnya.
                   </p>
                 )}
                 {tab === "pengumuman" && f.is_published && (

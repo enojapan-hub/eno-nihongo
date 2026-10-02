@@ -1,9 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type MembershipPlan = "free" | "premium" | "lifetime";
-export type Membership = { plan: MembershipPlan; premiumUntil: string | null; monthlyExam: boolean };
+export type Membership = {
+  plan: MembershipPlan;
+  premiumUntil: string | null;
+  monthlyExam: boolean;
+};
 export type MembershipAccess = Membership & { hasPremiumAccess: boolean };
-export type FullSimulationAccess = { allowed: boolean; plan: MembershipPlan; usedThisMonth: number; monthlyLimit: number | null; monthlyExam: boolean };
+export type FullSimulationAccess = {
+  allowed: boolean;
+  plan: MembershipPlan;
+  usedThisMonth: number;
+  monthlyLimit: number | null;
+  monthlyExam: boolean;
+};
 
 export async function fetchMembership(): Promise<Membership> {
   const { data, error } = await (supabase as any).rpc("get_my_membership");
@@ -17,7 +27,11 @@ export async function fetchMembershipAccess(): Promise<MembershipAccess> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) return { ...membership, hasPremiumAccess: false };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
   const privileged = ["owner", "admin", "editor", "teacher"].includes(profile?.role ?? "");
   return { ...membership, hasPremiumAccess: privileged || membership.plan !== "free" };
 }

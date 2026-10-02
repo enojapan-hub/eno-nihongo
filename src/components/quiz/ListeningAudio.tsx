@@ -6,10 +6,25 @@ type Props = { audioUrl?: string | null; transcript?: string | null; title?: str
 
 export function ListeningAudio({ audioUrl, transcript, title }: Props) {
   const [speaking, setSpeaking] = useState(false);
-  useEffect(() => () => { if (typeof window !== "undefined") window.speechSynthesis?.cancel(); }, []);
+  useEffect(
+    () => () => {
+      if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+    },
+    [],
+  );
 
   if (audioUrl) {
-    return <div className="mb-5 rounded-xl border bg-muted/30 p-4"><div className="mb-2 flex items-center gap-2 text-xs font-semibold"><Volume2 className="size-4" />{title ?? "Audio Choukai"}</div><audio className="w-full" controls preload="metadata" src={audioUrl}>Browser tidak mendukung pemutar audio.</audio></div>;
+    return (
+      <div className="mb-5 rounded-xl border bg-muted/30 p-4">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold">
+          <Volume2 className="size-4" />
+          {title ?? "Audio Choukai"}
+        </div>
+        <audio className="w-full" controls preload="metadata" src={audioUrl}>
+          Browser tidak mendukung pemutar audio.
+        </audio>
+      </div>
+    );
   }
   if (!transcript) return null;
 
@@ -24,7 +39,27 @@ export function ListeningAudio({ audioUrl, transcript, title }: Props) {
     u.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(u);
   };
-  const stop = () => { window.speechSynthesis?.cancel(); setSpeaking(false); };
+  const stop = () => {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+  };
 
-  return <div className="mb-5 rounded-xl border bg-muted/30 p-4"><div className="mb-3 flex items-center gap-2 text-xs font-semibold"><Volume2 className="size-4" />{title ?? "Audio Choukai"}</div><div className="flex gap-2"><Button type="button" size="sm" onClick={speaking ? stop : play}>{speaking ? <Pause className="mr-1.5 size-4" /> : <Play className="mr-1.5 size-4" />}{speaking ? "Jeda" : "Putar audio"}</Button><Button type="button" size="sm" variant="outline" onClick={play}><RotateCcw className="mr-1.5 size-4" />Ulangi</Button></div></div>;
+  return (
+    <div className="mb-5 rounded-xl border bg-muted/30 p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold">
+        <Volume2 className="size-4" />
+        {title ?? "Audio Choukai"}
+      </div>
+      <div className="flex gap-2">
+        <Button type="button" size="sm" onClick={speaking ? stop : play}>
+          {speaking ? <Pause className="mr-1.5 size-4" /> : <Play className="mr-1.5 size-4" />}
+          {speaking ? "Jeda" : "Putar audio"}
+        </Button>
+        <Button type="button" size="sm" variant="outline" onClick={play}>
+          <RotateCcw className="mr-1.5 size-4" />
+          Ulangi
+        </Button>
+      </div>
+    </div>
+  );
 }

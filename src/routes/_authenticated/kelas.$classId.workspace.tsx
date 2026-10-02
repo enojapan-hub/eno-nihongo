@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { classroom, result, secureUrl, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")({
   validateSearch: (search: Record<string, unknown>): { preview?: "guru" } =>
-    search['preview'] === "guru" ? { preview: "guru" } : {},
+    search["preview"] === "guru" ? { preview: "guru" } : {},
   component: Page,
 });
 function Page() {
@@ -39,72 +39,83 @@ function Page() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Login diperlukan.");
       const canManage = await result(classroom.rpc("can_manage_class", { p_class_id: classId }));
-      if (teacherPreview ? !canManage : !(await result(classroom.rpc("is_class_member", { p_class_id: classId }))))
-        throw new Error(teacherPreview ? "Akses guru diperlukan." : "Anda belum terdaftar di kelas ini.");
-      const [materials, assignments, quizzes, schedule, announcements, grades, meeting, myClasses, managedClass] =
-        await Promise.all([
-          result(
-            classroom
-              .from("class_materials")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("sort_order"),
-          ),
-          result(
-            classroom
-              .from("class_assignments")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("due_at"),
-          ),
-          result(
-            classroom
-              .from("class_quizzes")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("due_at"),
-          ),
-          result(
-            classroom.from("class_schedule").select("*").eq("class_id", classId).order("starts_at"),
-          ),
-          result(
-            classroom
-              .from("class_announcements")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("created_at", { ascending: false }),
-          ),
-          result(
-            classroom
-              .from("class_grades")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("user_id", user.id),
-          ),
-          result(
-            classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle(),
-          ),
-          teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_classes")),
-          teacherPreview
-            ? result(classroom.from("classes").select("*").eq("id", classId).single())
-            : Promise.resolve(null),
-        ]);
-      const submissions = teacherPreview ? [] : assignments.length
-        ? await result(
-            classroom
-              .from("class_assignment_submissions")
-              .select("assignment_id,submitted_at")
-              .eq("user_id", user.id)
-              .in(
-                "assignment_id",
-                assignments.map((a: any) => a.id),
-              ),
-          )
-        : [];
+      if (
+        teacherPreview
+          ? !canManage
+          : !(await result(classroom.rpc("is_class_member", { p_class_id: classId })))
+      )
+        throw new Error(
+          teacherPreview ? "Akses guru diperlukan." : "Anda belum terdaftar di kelas ini.",
+        );
+      const [
+        materials,
+        assignments,
+        quizzes,
+        schedule,
+        announcements,
+        grades,
+        meeting,
+        myClasses,
+        managedClass,
+      ] = await Promise.all([
+        result(
+          classroom
+            .from("class_materials")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("sort_order"),
+        ),
+        result(
+          classroom
+            .from("class_assignments")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("due_at"),
+        ),
+        result(
+          classroom
+            .from("class_quizzes")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("due_at"),
+        ),
+        result(
+          classroom.from("class_schedule").select("*").eq("class_id", classId).order("starts_at"),
+        ),
+        result(
+          classroom
+            .from("class_announcements")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("created_at", { ascending: false }),
+        ),
+        result(
+          classroom.from("class_grades").select("*").eq("class_id", classId).eq("user_id", user.id),
+        ),
+        result(classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle()),
+        teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_classes")),
+        teacherPreview
+          ? result(classroom.from("classes").select("*").eq("id", classId).single())
+          : Promise.resolve(null),
+      ]);
+      const submissions = teacherPreview
+        ? []
+        : assignments.length
+          ? await result(
+              classroom
+                .from("class_assignment_submissions")
+                .select("assignment_id,submitted_at")
+                .eq("user_id", user.id)
+                .in(
+                  "assignment_id",
+                  assignments.map((a: any) => a.id),
+                ),
+            )
+          : [];
       const [attempts, topics] = await Promise.all([
         !teacherPreview && quizzes.length
           ? result(
@@ -119,12 +130,14 @@ function Page() {
                 .order("submitted_at", { ascending: false }),
             )
           : Promise.resolve([]),
-        teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
+        teacherPreview
+          ? Promise.resolve([])
+          : result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
       ]);
       return {
         kelas: teacherPreview
           ? managedClass
-          : myClasses.find((c: any) => c.id === classId) ?? null,
+          : (myClasses.find((c: any) => c.id === classId) ?? null),
         attempts,
         topics,
         materials,
@@ -153,16 +166,36 @@ function Page() {
   const outstanding = d?.assignments.filter(
     (a: any) => !d.submissions.some((s: any) => s.assignment_id === a.id),
   );
-  const pendingQuizzes = d?.quizzes.filter((k: any) => !d.attempts.some((a: any) => a.quiz_id === k.id)) ?? [];
-  const nextAction = [...(outstanding ?? []).map((a:any)=>({type:"tugas",id:a.id,title:a.title,due_at:a.due_at})), ...pendingQuizzes.map((k:any)=>({type:"kuis",id:k.id,title:k.title,due_at:k.due_at}))].sort((a:any,b:any)=>(a.due_at?new Date(a.due_at).getTime():Infinity)-(b.due_at?new Date(b.due_at).getTime():Infinity))[0];
+  const pendingQuizzes =
+    d?.quizzes.filter((k: any) => !d.attempts.some((a: any) => a.quiz_id === k.id)) ?? [];
+  const nextAction = [
+    ...(outstanding ?? []).map((a: any) => ({
+      type: "tugas",
+      id: a.id,
+      title: a.title,
+      due_at: a.due_at,
+    })),
+    ...pendingQuizzes.map((k: any) => ({
+      type: "kuis",
+      id: k.id,
+      title: k.title,
+      due_at: k.due_at,
+    })),
+  ].sort(
+    (a: any, b: any) =>
+      (a.due_at ? new Date(a.due_at).getTime() : Infinity) -
+      (b.due_at ? new Date(b.due_at).getTime() : Infinity),
+  )[0];
   const deadlineLabel = (value?: string | null) => {
     if (!value) return "Tanpa tenggat";
-    const due = new Date(value); const now = new Date();
-    const start = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
-    const target = new Date(due.getFullYear(),due.getMonth(),due.getDate()).getTime();
-    const days = Math.round((target-start)/86400000);
+    const due = new Date(value);
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const target = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+    const days = Math.round((target - start) / 86400000);
     if (due.getTime() < now.getTime()) return "Terlambat";
-    if (days===0) return "Hari ini"; if(days===1) return "Besok";
+    if (days === 0) return "Hari ini";
+    if (days === 1) return "Besok";
     return sessionTime(value);
   };
   const taskStatus = (a: any) =>
@@ -208,11 +241,24 @@ function Page() {
             {a.description && (
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">{a.description}</p>
             )}
-            {a.due_at && (<p className={"flex items-center gap-1 text-xs " + (deadlineLabel(a.due_at)==="Terlambat" ? "font-bold text-destructive" : "text-muted-foreground")}><Clock3 className="size-3.5" /> Batas {deadlineLabel(a.due_at)}</p>)}
+            {a.due_at && (
+              <p
+                className={
+                  "flex items-center gap-1 text-xs " +
+                  (deadlineLabel(a.due_at) === "Terlambat"
+                    ? "font-bold text-destructive"
+                    : "text-muted-foreground")
+                }
+              >
+                <Clock3 className="size-3.5" /> Batas {deadlineLabel(a.due_at)}
+              </p>
+            )}
           </div>
         </div>
         {teacherPreview ? (
-          <Button className="mt-4 w-full sm:w-auto" size="sm" disabled>Pratinjau · pengumpulan dinonaktifkan</Button>
+          <Button className="mt-4 w-full sm:w-auto" size="sm" disabled>
+            Pratinjau · pengumpulan dinonaktifkan
+          </Button>
         ) : (
           <Button className="mt-4 w-full sm:w-auto" size="sm" asChild>
             <Link to="/kelas/$classId/tugas/$assignmentId" params={{ classId, assignmentId: a.id }}>
@@ -245,11 +291,15 @@ function Page() {
     </Card>
   );
   return (
-    <AppShell title={teacherPreview ? "Pratinjau Siswa" : "Ruang Kelas"} backTo={teacherPreview ? "/guru-kelas/" + classId : "/kelas-saya"}>
+    <AppShell
+      title={teacherPreview ? "Pratinjau Siswa" : "Ruang Kelas"}
+      backTo={teacherPreview ? "/guru-kelas/" + classId : "/kelas-saya"}
+    >
       <div className="mx-auto max-w-4xl space-y-5">
         {teacherPreview && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] p-3 text-xs">
-            <b>Mode pratinjau guru.</b> Anda melihat tampilan ruang kelas peserta tanpa menjadi peserta. Aksi pengumpulan tugas dan kuis dinonaktifkan.
+            <b>Mode pratinjau guru.</b> Anda melihat tampilan ruang kelas peserta tanpa menjadi
+            peserta. Aksi pengumpulan tugas dan kuis dinonaktifkan.
           </div>
         )}
         {d?.kelas && (
@@ -274,7 +324,15 @@ function Page() {
                 <GraduationCap className="size-6" />
               </span>
             </div>
-            {d.kelas.status === "closed" && (<div className="relative mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] p-3"><p className="text-xs font-bold text-amber-700">Kelas telah selesai</p><p className="mt-1 text-xs text-muted-foreground">Materi, riwayat tugas, nilai, dan hasil kuis tetap dapat Anda buka sebagai arsip belajar.</p></div>)}
+            {d.kelas.status === "closed" && (
+              <div className="relative mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] p-3">
+                <p className="text-xs font-bold text-amber-700">Kelas telah selesai</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Materi, riwayat tugas, nilai, dan hasil kuis tetap dapat Anda buka sebagai arsip
+                  belajar.
+                </p>
+              </div>
+            )}
           </header>
         )}
         <nav className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Bagian ruang kelas">
@@ -314,19 +372,57 @@ function Page() {
                   <Card className="border-primary/20">
                     <CardContent className="space-y-2 p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <div><p className="text-xs text-muted-foreground">Progress kelas</p><b>{progressPercent}% selesai</b></div>
-                        <span className="text-xs font-bold">{completedAssignments + completedQuizzes}/{totalActivities} aktivitas</span>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Progress kelas</p>
+                          <b>{progressPercent}% selesai</b>
+                        </div>
+                        <span className="text-xs font-bold">
+                          {completedAssignments + completedQuizzes}/{totalActivities} aktivitas
+                        </span>
                       </div>
-                      <progress className="h-2 w-full accent-green-600" max="100" value={progressPercent} />
-                      {d.kelas?.ends_at && <p className="text-xs text-muted-foreground">Kelas berakhir {sessionTime(d.kelas.ends_at)}</p>}
+                      <progress
+                        className="h-2 w-full accent-green-600"
+                        max="100"
+                        value={progressPercent}
+                      />
+                      {d.kelas?.ends_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Kelas berakhir {sessionTime(d.kelas.ends_at)}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 )}
                 {!teacherPreview && nextAction && (
                   <Card className="border-primary/25 bg-primary/[0.05] shadow-sm">
                     <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div><p className="text-[11px] font-bold uppercase tracking-wide text-primary">Kerjakan berikutnya</p><h2 className="mt-1 font-black">{nextAction.title}</h2><p className="mt-1 text-xs text-muted-foreground">{nextAction.type === "tugas" ? "Tugas" : "Kuis"} · {deadlineLabel(nextAction.due_at)}</p></div>
-                      <Button size="sm" asChild>{nextAction.type === "tugas" ? <Link to="/kelas/$classId/tugas/$assignmentId" params={{classId,assignmentId:nextAction.id}}>Kerjakan Sekarang</Link> : <Link to="/kelas/$classId/quiz/$quizId" params={{classId,quizId:nextAction.id}}>Mulai Kuis</Link>}</Button>
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-primary">
+                          Kerjakan berikutnya
+                        </p>
+                        <h2 className="mt-1 font-black">{nextAction.title}</h2>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {nextAction.type === "tugas" ? "Tugas" : "Kuis"} ·{" "}
+                          {deadlineLabel(nextAction.due_at)}
+                        </p>
+                      </div>
+                      <Button size="sm" asChild>
+                        {nextAction.type === "tugas" ? (
+                          <Link
+                            to="/kelas/$classId/tugas/$assignmentId"
+                            params={{ classId, assignmentId: nextAction.id }}
+                          >
+                            Kerjakan Sekarang
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/kelas/$classId/quiz/$quizId"
+                            params={{ classId, quizId: nextAction.id }}
+                          >
+                            Mulai Kuis
+                          </Link>
+                        )}
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
@@ -471,13 +567,30 @@ function Page() {
             )}
             {tab === "tugas" && (
               <>
-                <div className="mt-2 flex items-center gap-2"><ListChecks className="size-4 text-primary"/><h2 className="font-bold">Kuis</h2><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{d.quizzes.length}</span></div>
+                <div className="mt-2 flex items-center gap-2">
+                  <ListChecks className="size-4 text-primary" />
+                  <h2 className="font-bold">Kuis</h2>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                    {d.quizzes.length}
+                  </span>
+                </div>
                 {d.quizzes.map((k: any) => (
                   <Card key={k.id}>
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{k.title}</h2>
                       <p className="text-sm">{k.description}</p>
-                      {k.due_at && <p className={"text-xs " + (deadlineLabel(k.due_at)==="Terlambat" ? "font-bold text-destructive" : "")}>Batas: {deadlineLabel(k.due_at)}</p>}
+                      {k.due_at && (
+                        <p
+                          className={
+                            "text-xs " +
+                            (deadlineLabel(k.due_at) === "Terlambat"
+                              ? "font-bold text-destructive"
+                              : "")
+                          }
+                        >
+                          Batas: {deadlineLabel(k.due_at)}
+                        </p>
+                      )}
                       <p className="text-xs font-bold">
                         {d.attempts.some((a: any) => a.quiz_id === k.id)
                           ? "Sudah dikerjakan"
@@ -486,10 +599,15 @@ function Page() {
                             : "Belum dikerjakan"}
                       </p>
                       {teacherPreview ? (
-                        <Button size="sm" disabled>Pratinjau · pengerjaan dinonaktifkan</Button>
+                        <Button size="sm" disabled>
+                          Pratinjau · pengerjaan dinonaktifkan
+                        </Button>
                       ) : (
                         <Button size="sm" asChild>
-                          <Link to="/kelas/$classId/quiz/$quizId" params={{ classId, quizId: k.id }}>
+                          <Link
+                            to="/kelas/$classId/quiz/$quizId"
+                            params={{ classId, quizId: k.id }}
+                          >
                             Buka Kuis
                           </Link>
                         </Button>
@@ -497,7 +615,9 @@ function Page() {
                     </CardContent>
                   </Card>
                 ))}
-                {!d.quizzes.length && <p className="text-sm text-muted-foreground">Belum ada kuis.</p>}
+                {!d.quizzes.length && (
+                  <p className="text-sm text-muted-foreground">Belum ada kuis.</p>
+                )}
               </>
             )}
             {tab === "jadwal" && (

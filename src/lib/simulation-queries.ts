@@ -37,49 +37,63 @@ const targets: Record<Level, Record<SimulationGroup, number>> = {
 };
 
 function looksLikeLegacyEnglishPrompt(text: string) {
-  return /\b(what is|which|choose|select|meaning of|reading of|correct answer|best answer)\b/i.test(text);
+  return /\b(what is|which|choose|select|meaning of|reading of|correct answer|best answer)\b/i.test(
+    text,
+  );
 }
 
 function normalize(rows: unknown[]): SimulationQuestion[] {
   return (rows as Array<Record<string, unknown>>)
     .map((q) => {
       const listening =
-        q['listening'] && typeof q['listening'] === "object"
-          ? (q['listening'] as Record<string, unknown>)
+        q["listening"] && typeof q["listening"] === "object"
+          ? (q["listening"] as Record<string, unknown>)
           : null;
-      const localizedChoices = Array.isArray(q['choices_id']) ? q['choices_id'].map(String) : [];
-      const localizedPrompt = typeof q['prompt_id'] === "string" ? q['prompt_id'].trim() : "";
-      const hasLocalizedQuestion = localizedPrompt.length > 0 && localizedChoices.length === 4 && localizedChoices.every(Boolean);
-      const sourcePrompt = String(q['prompt'] ?? "");
-      const skill = typeof q['skill'] === "string" ? q['skill'] : null;
-      const isLegacyEnglishLexical = (skill === "kanji" || skill === "vocabulary") && !hasLocalizedQuestion && looksLikeLegacyEnglishPrompt(sourcePrompt);
+      const localizedChoices = Array.isArray(q["choices_id"]) ? q["choices_id"].map(String) : [];
+      const localizedPrompt = typeof q["prompt_id"] === "string" ? q["prompt_id"].trim() : "";
+      const hasLocalizedQuestion =
+        localizedPrompt.length > 0 &&
+        localizedChoices.length === 4 &&
+        localizedChoices.every(Boolean);
+      const sourcePrompt = String(q["prompt"] ?? "");
+      const skill = typeof q["skill"] === "string" ? q["skill"] : null;
+      const isLegacyEnglishLexical =
+        (skill === "kanji" || skill === "vocabulary") &&
+        !hasLocalizedQuestion &&
+        looksLikeLegacyEnglishPrompt(sourcePrompt);
 
       return {
-        id: String(q['id']),
+        id: String(q["id"]),
         prompt: hasLocalizedQuestion ? localizedPrompt : sourcePrompt,
-        prompt_note: typeof q['prompt_note'] === "string" ? q['prompt_note'] : null,
-        choices: hasLocalizedQuestion ? localizedChoices : Array.isArray(q['choices']) ? q['choices'].map(String) : [],
-        correct_index: Number(q['correct_index']),
-        explanation_id: typeof q['explanation_id'] === "string" ? q['explanation_id'] : null,
+        prompt_note: typeof q["prompt_note"] === "string" ? q["prompt_note"] : null,
+        choices: hasLocalizedQuestion
+          ? localizedChoices
+          : Array.isArray(q["choices"])
+            ? q["choices"].map(String)
+            : [],
+        correct_index: Number(q["correct_index"]),
+        explanation_id: typeof q["explanation_id"] === "string" ? q["explanation_id"] : null,
         skill,
-        questionType: typeof q['question_type'] === "string" ? q['question_type'] : null,
+        questionType: typeof q["question_type"] === "string" ? q["question_type"] : null,
         audioUrl:
-          listening && typeof listening['audio_url'] === "string" && listening['audio_url'].trim()
-            ? listening['audio_url']
+          listening && typeof listening["audio_url"] === "string" && listening["audio_url"].trim()
+            ? listening["audio_url"]
             : null,
         audioStartSeconds: null,
         audioEndSeconds: null,
         audioMondai: null,
         transcriptJp:
-          listening && typeof listening['transcript_jp'] === "string"
-            ? listening['transcript_jp']
+          listening && typeof listening["transcript_jp"] === "string"
+            ? listening["transcript_jp"]
             : null,
         listeningId:
-          typeof q['listening_id'] === "string" && q['listening_id'].trim() ? q['listening_id'] : null,
+          typeof q["listening_id"] === "string" && q["listening_id"].trim()
+            ? q["listening_id"]
+            : null,
         listeningTitle:
-          listening && typeof listening['title'] === "string" ? listening['title'] : null,
+          listening && typeof listening["title"] === "string" ? listening["title"] : null,
         listeningSortOrder:
-          listening && typeof listening['sort_order'] === "number" ? listening['sort_order'] : null,
+          listening && typeof listening["sort_order"] === "number" ? listening["sort_order"] : null,
         persistAnswer: true,
         _skipLegacyEnglish: isLegacyEnglishLexical,
       } as SimulationQuestion & { _skipLegacyEnglish: boolean };
@@ -120,7 +134,9 @@ function fillFromDrive(
 ): SimulationQuestion[] {
   if (databaseQuestions.length >= target) return databaseQuestions.slice(0, target);
   const existing = new Set(databaseQuestions.map((q) => q.id));
-  const fallback = shuffle(normalizeDriveFallback(level, skills)).filter((q) => !existing.has(q.id));
+  const fallback = shuffle(normalizeDriveFallback(level, skills)).filter(
+    (q) => !existing.has(q.id),
+  );
   return [...databaseQuestions, ...fallback].slice(0, target);
 }
 
@@ -139,7 +155,10 @@ async function fetchSkill(level: Level, skill: SimulationSkill, limit: number) {
   return normalize(result.data ?? []);
 }
 
-function groupListeningQuestions(items: SimulationQuestion[], target: number): SimulationQuestion[] {
+function groupListeningQuestions(
+  items: SimulationQuestion[],
+  target: number,
+): SimulationQuestion[] {
   const byClip = new Map<string, SimulationQuestion[]>();
   const ungrouped: SimulationQuestion[] = [];
 
@@ -233,7 +252,12 @@ export async function fetchSimulationQuestionSet(
       fetchSkill(level, "reading", readingTarget),
     ]);
 
-    return fillFromDrive(level, skills, shuffle([...vocabulary, ...kanji, ...grammar, ...reading]), target);
+    return fillFromDrive(
+      level,
+      skills,
+      shuffle([...vocabulary, ...kanji, ...grammar, ...reading]),
+      target,
+    );
   }
 
   const listening = await Promise.all(

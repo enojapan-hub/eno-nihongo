@@ -26,7 +26,8 @@ type ClassRow = {
   created_at: string;
 };
 
-const isWaitingForReview = (status: ClassStatus) => status === "review" || status === "pending_review";
+const isWaitingForReview = (status: ClassStatus) =>
+  status === "review" || status === "pending_review";
 const dateTime = (value: string | null) =>
   value
     ? new Intl.DateTimeFormat("id-ID", {
@@ -81,26 +82,39 @@ function Page() {
       return;
     }
 
-    setMsg(value === "published" ? "Pengajuan disetujui dan kelas dipublikasikan." : "Pengajuan kelas ditolak.");
+    setMsg(
+      value === "published"
+        ? "Pengajuan disetujui dan kelas dipublikasikan."
+        : "Pengajuan kelas ditolak.",
+    );
     setReviewId(null);
     await qc.invalidateQueries({ queryKey: ["admin-classes"] });
     setBusyId(null);
   }
 
   if (gate.isLoading) {
-    return <AppShell title="Kelas" backTo="/admin"><p className="p-4 text-xs">Memeriksa akses…</p></AppShell>;
+    return (
+      <AppShell title="Kelas" backTo="/admin">
+        <p className="p-4 text-xs">Memeriksa akses…</p>
+      </AppShell>
+    );
   }
 
   if (gate.isError) {
-    return <AppShell title="Kelas" backTo="/admin"><p className="p-4 text-xs text-destructive">Akses Admin diperlukan.</p></AppShell>;
+    return (
+      <AppShell title="Kelas" backTo="/admin">
+        <p className="p-4 text-xs text-destructive">Akses Admin diperlukan.</p>
+      </AppShell>
+    );
   }
 
   const all = q.data ?? [];
-  const shown = filter === "all"
-    ? all
-    : filter === "review"
-      ? all.filter((item) => isWaitingForReview(item.status))
-      : all.filter((item) => item.status === filter);
+  const shown =
+    filter === "all"
+      ? all
+      : filter === "review"
+        ? all.filter((item) => isWaitingForReview(item.status))
+        : all.filter((item) => item.status === filter);
   const count = (status: string) =>
     status === "review"
       ? all.filter((item) => isWaitingForReview(item.status)).length
@@ -111,7 +125,9 @@ function Page() {
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-black">Kelola Kelas</h1>
-          <p className="text-xs text-muted-foreground">Tinjau detail pengajuan guru sebelum menyetujui atau menolaknya.</p>
+          <p className="text-xs text-muted-foreground">
+            Tinjau detail pengajuan guru sebelum menyetujui atau menolaknya.
+          </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -119,7 +135,9 @@ function Page() {
             <CardContent className="p-4">
               <Image className="mb-2 size-5 text-primary" />
               <p className="font-bold">Banner Halaman Kelas</p>
-              <p className="text-[10px] text-muted-foreground">Banner utama, CTA, periode tayang dan urutan.</p>
+              <p className="text-[10px] text-muted-foreground">
+                Banner utama, CTA, periode tayang dan urutan.
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -134,22 +152,36 @@ function Page() {
         </div>
 
         <div className="flex gap-2 overflow-x-auto">
-          {([
-            ["review", "Menunggu Review"],
-            ["published", "Published"],
-            ["draft", "Draft"],
-            ["rejected", "Ditolak"],
-            ["all", "Semua"],
-          ] as const).map(([id, label]) => (
-            <Button key={id} size="sm" variant={filter === id ? "default" : "outline"} onClick={() => setFilter(id)}>
-              {label}{id !== "all" ? ` (${count(id)})` : ""}
+          {(
+            [
+              ["review", "Menunggu Review"],
+              ["published", "Published"],
+              ["draft", "Draft"],
+              ["rejected", "Ditolak"],
+              ["all", "Semua"],
+            ] as const
+          ).map(([id, label]) => (
+            <Button
+              key={id}
+              size="sm"
+              variant={filter === id ? "default" : "outline"}
+              onClick={() => setFilter(id)}
+            >
+              {label}
+              {id !== "all" ? ` (${count(id)})` : ""}
             </Button>
           ))}
         </div>
 
-        {msg && <p className="rounded-xl bg-muted p-3 text-xs" role="status">{msg}</p>}
+        {msg && (
+          <p className="rounded-xl bg-muted p-3 text-xs" role="status">
+            {msg}
+          </p>
+        )}
         {q.isError && <p className="text-xs text-destructive">Daftar kelas gagal dimuat.</p>}
-        {q.isLoading && <p className="py-6 text-center text-xs text-muted-foreground">Memuat pengajuan kelas…</p>}
+        {q.isLoading && (
+          <p className="py-6 text-center text-xs text-muted-foreground">Memuat pengajuan kelas…</p>
+        )}
 
         <div className="space-y-2">
           {shown.map((c) => {
@@ -159,11 +191,18 @@ function Page() {
               <Card key={c.id}>
                 <CardContent className="space-y-3 p-3">
                   <div className="flex items-center gap-3">
-                    {c.banner_url && <img src={c.banner_url} className="h-14 w-24 rounded-xl object-cover" alt={`Banner ${c.title}`} />}
+                    {c.banner_url && (
+                      <img
+                        src={c.banner_url}
+                        className="h-14 w-24 rounded-xl object-cover"
+                        alt={`Banner ${c.title}`}
+                      />
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold">{c.title}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        {c.level} · {c.status} · {Number(c.price) > 0 ? `${c.currency || "JPY"} ${c.price}` : "Gratis"}
+                        {c.level} · {c.status} ·{" "}
+                        {Number(c.price) > 0 ? `${c.currency || "JPY"} ${c.price}` : "Gratis"}
                       </p>
                     </div>
                     <Button
@@ -172,32 +211,64 @@ function Page() {
                       aria-expanded={isOpen}
                       onClick={() => setReviewId(isOpen ? null : c.id)}
                     >
-                      <Eye className="mr-1 size-3" />{isOpen ? "Tutup Detail" : "Tinjau"}
+                      <Eye className="mr-1 size-3" />
+                      {isOpen ? "Tutup Detail" : "Tinjau"}
                     </Button>
                   </div>
 
                   {isOpen && (
                     <div className="space-y-3 rounded-xl bg-muted/50 p-3 text-xs">
-                      {c.banner_url && <img src={c.banner_url} alt={`Banner kelas ${c.title}`} className="max-h-48 w-full rounded-lg object-cover" />}
+                      {c.banner_url && (
+                        <img
+                          src={c.banner_url}
+                          alt={`Banner kelas ${c.title}`}
+                          className="max-h-48 w-full rounded-lg object-cover"
+                        />
+                      )}
                       <div>
                         <p className="font-bold">Deskripsi kelas</p>
-                        <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{c.description || "Tidak ada deskripsi."}</p>
+                        <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                          {c.description || "Tidak ada deskripsi."}
+                        </p>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        <p><span className="font-bold">Mode:</span> {c.class_mode || "Belum ditentukan"}</p>
-                        <p><span className="font-bold">Kapasitas:</span> {c.capacity ?? "Tidak dibatasi"}</p>
-                        <p className="flex items-center gap-1"><CalendarDays className="size-3" />Mulai: {dateTime(c.starts_at)}</p>
-                        <p className="flex items-center gap-1"><CalendarDays className="size-3" />Selesai: {dateTime(c.ends_at)}</p>
+                        <p>
+                          <span className="font-bold">Mode:</span>{" "}
+                          {c.class_mode || "Belum ditentukan"}
+                        </p>
+                        <p>
+                          <span className="font-bold">Kapasitas:</span>{" "}
+                          {c.capacity ?? "Tidak dibatasi"}
+                        </p>
+                        <p className="flex items-center gap-1">
+                          <CalendarDays className="size-3" />
+                          Mulai: {dateTime(c.starts_at)}
+                        </p>
+                        <p className="flex items-center gap-1">
+                          <CalendarDays className="size-3" />
+                          Selesai: {dateTime(c.ends_at)}
+                        </p>
                       </div>
                       <div className="flex flex-wrap gap-2 border-t pt-3">
                         {c.status !== "published" && (
-                          <Button size="sm" disabled={isBusy} onClick={() => updateStatus(c.id, "published")}>
-                            <CheckCircle2 className="mr-1 size-3" />{isBusy ? "Menyimpan…" : "Setujui & Publikasikan"}
+                          <Button
+                            size="sm"
+                            disabled={isBusy}
+                            onClick={() => updateStatus(c.id, "published")}
+                          >
+                            <CheckCircle2 className="mr-1 size-3" />
+                            {isBusy ? "Menyimpan…" : "Setujui & Publikasikan"}
                           </Button>
                         )}
                         {c.status !== "rejected" && (
-                          <Button size="sm" variant="outline" disabled={isBusy} onClick={() => updateStatus(c.id, "rejected")}>
-                            <XCircle className="mr-1 size-3" />Tolak Pengajuan
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isBusy}
+                            onClick={() => updateStatus(c.id, "rejected")}
+                          >
+                            <XCircle className="mr-1 size-3" />
+                            Tolak Pengajuan
                           </Button>
                         )}
                       </div>
@@ -208,7 +279,9 @@ function Page() {
             );
           })}
           {!q.isLoading && !q.isError && shown.length === 0 && (
-            <p className="rounded-xl bg-muted p-4 text-xs text-muted-foreground">Tidak ada kelas pada status ini.</p>
+            <p className="rounded-xl bg-muted p-4 text-xs text-muted-foreground">
+              Tidak ada kelas pada status ini.
+            </p>
           )}
         </div>
       </div>

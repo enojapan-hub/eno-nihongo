@@ -7,10 +7,17 @@ export const Route = createFileRoute("/_authenticated")({
     const { data, error } = await supabase.auth.getSession();
 
     if (!error && data.session?.user) {
-      const { data: profile } = await supabase.from("profiles").select("suspended_at").eq("id", data.session.user.id).maybeSingle();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("suspended_at")
+        .eq("id", data.session.user.id)
+        .maybeSingle();
       if ((profile as any)?.suspended_at) {
         await supabase.auth.signOut({ scope: "local" });
-        throw redirect({ to: "/auth", search: { error: "Akun Anda sedang dinonaktifkan. Hubungi Admin." } as any });
+        throw redirect({
+          to: "/auth",
+          search: { error: "Akun Anda sedang dinonaktifkan. Hubungi Admin." } as any,
+        });
       }
       return { user: data.session.user };
     }

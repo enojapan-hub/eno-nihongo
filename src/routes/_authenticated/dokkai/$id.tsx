@@ -10,38 +10,524 @@ import { markContentMastered } from "@/lib/progress-actions";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dokkai/$id")({ component: DokkaiDetail });
-type FuriganaPassage = { body_furigana?: string | null; difficulty?: string | null; category?: string | null };
-type PassageQuestion = { id: string; prompt: string; choices: string[]; correct_index: number; explanation_id?: string | null };
-type Annotation={id:string;surface:string;reading?:string|null;romaji?:string|null;meaning_id?:string|null;vocabulary_id?:string|null};
-function renderFurigana(text:string){return text.split(/(\[[^|\]]+\|[^\]]+\])/g).map((part,index)=>{const m=part.match(/^\[([^|\]]+)\|([^\]]+)\]$/);return m?<ruby key={index} className="ruby-reading">{m[1]}<rt className="text-[0.5em] font-semibold tracking-normal text-primary">{m[2]}</rt></ruby>:<span key={index}>{part}</span>})}
-function normalizeBreaks(text:string){return text.replace(/\\r\\n/g,"\n").replace(/\\n/g,"\n").replace(/\r\n/g,"\n")}
-function splitParagraphs(text:string){const normalized=normalizeBreaks(text).trim();if(!normalized)return[];const byBlank=normalized.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);return byBlank.length>1?byBlank:normalized.split(/\n/).map(x=>x.trim()).filter(Boolean)}
-function cleanJapanese(text:string){return normalizeBreaks(text).replace(/\[([^|\]]+)\|[^\]]+\]/g,"$1")}
-function speakJapanese(text:string,onEnd?:()=>void){if(typeof window==="undefined"||!("speechSynthesis" in window))return false;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(cleanJapanese(text));u.lang="ja-JP";u.rate=.86;if(onEnd)u.onend=onEnd;window.speechSynthesis.speak(u);return true}
-function DokkaiDetail(){
- const{id}=Route.useParams();const qc=useQueryClient();const target=useQuery({queryKey:["target-level"],queryFn:fetchTargetLevel,retry:1});const level=target.data;const{data,isLoading,error}=useQuery({queryKey:["passage",id],queryFn:()=>fetchPassageDetail(id)});const all=useQuery({queryKey:["passages",level],queryFn:fetchPassages,enabled:Boolean(level)});const annotationsQ=useQuery({queryKey:["reading-annotations",id],queryFn:async()=>{const r=await supabase.from("reading_vocabulary_annotations").select("id,surface,reading,romaji,meaning_id,vocabulary_id").eq("passage_id",id).order("position_order");if(r.error)throw r.error;return (r.data??[]) as Annotation[]}});const[showFurigana,setShowFurigana]=useState(true);const[fontSize,setFontSize]=useState(1);const[speakingIndex,setSpeakingIndex]=useState<number|null>(null);const[answers,setAnswers]=useState<Record<string,number>>({});const[checked,setChecked]=useState(false);const[completed,setCompleted]=useState(false);const[selectedWord,setSelectedWord]=useState<Annotation|null>(null);const touch=useRef<number|null>(null);
- useEffect(()=>()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()},[]);
- const p=data?.passage;const enriched=p as (typeof p&FuriganaPassage)|null|undefined;const questions=(data?.questions??[]) as PassageQuestion[];const annotations=annotationsQ.data??[];const levelPassages=useMemo(()=>((all.data??[]).filter(x=>x.level===level)),[all.data,level]);const passageIndex=levelPassages.findIndex(x=>x.id===id);const levelMismatch=Boolean(level&&p&&p.level!==level);
- const body=useMemo(()=>normalizeBreaks(String(p?.body_jp??"")),[p?.body_jp]);const furiganaBody=useMemo(()=>normalizeBreaks(String(enriched?.body_furigana??"")),[enriched?.body_furigana]);const paragraphs=useMemo(()=>splitParagraphs(body),[body]);const furiganaParagraphs=useMemo(()=>splitParagraphs(furiganaBody),[furiganaBody]);
- const recordReadingSignals=async()=>{const{data:u}=await supabase.auth.getUser();if(!u.user||!p)return;const rows=questions.filter(q=>answers[q.id]!==undefined).map(q=>({q,selected:answers[q.id],correct:answers[q.id]===Number(q.correct_index)}));if(!rows.length)return;await Promise.all(rows.map(({q,selected,correct})=>supabase.rpc("record_learning_activity",{p_activity_type:"quiz_answered",p_content_type:"reading",p_content_id:q.id,p_points:correct?10:0,p_xp:correct?10:0,p_correct:correct,p_duration_seconds:0,p_metadata:{level:p.level,passage_id:id,selected_index:selected,correct_index:Number(q.correct_index),source:"dokkai"}})));};
- const completeMutation=useMutation({mutationFn:()=>markContentMastered({itemType:"reading",itemId:id,level:String(p?.level??"N5") as Level,durationSeconds:Math.max(60,Number(p?.estimated_minutes??1)*60)}),onSuccess:()=>{setCompleted(true);void qc.invalidateQueries({queryKey:["dashboard-live"]});void qc.invalidateQueries({queryKey:["my-progress"]})}});
- const readParagraph=(text:string,index:number)=>{if(speakingIndex===index){window.speechSynthesis.cancel();setSpeakingIndex(null);return}if(speakJapanese(text,()=>setSpeakingIndex(null)))setSpeakingIndex(index)};const go=(delta:number)=>{const next=levelPassages[passageIndex+delta];if(next)window.location.assign(`/dokkai/${encodeURIComponent(next.id)}`)};const finishSwipe=(x:number)=>{if(touch.current==null)return;const d=x-touch.current;if(Math.abs(d)>45)go(d<0?1:-1);touch.current=null};const checkAnswers=()=>{setChecked(true);void recordReadingSignals();const score=questions.length?questions.filter(q=>answers[q.id]===Number(q.correct_index)).length/questions.length:1;if(score>=.8&&!completeMutation.isPending)completeMutation.mutate()};
- const renderInteractive=(text:string)=>{if(!annotations.length)return renderFurigana(text);const words=[...annotations].sort((a,b)=>b.surface.length-a.surface.length);const pattern=new RegExp(`(${words.map(w=>w.surface.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")})`,`g`);return text.split(pattern).map((part,i)=>{const a=words.find(w=>w.surface===cleanJapanese(part));return a?<button key={i} type="button" onClick={()=>setSelectedWord(a)} className="rounded-sm border-b-2 border-primary bg-primary/10 px-0.5 font-semibold text-primary decoration-primary underline-offset-2 transition hover:bg-primary/20" aria-label={`${a.surface} — ketuk untuk melihat arti`}>{showFurigana?renderFurigana(part):cleanJapanese(part)}</button>:<span key={i}>{showFurigana?renderFurigana(part):cleanJapanese(part)}</span>})};
- if(target.isLoading||isLoading)return <AppShell title="Dokkai"><p className="text-[12px] text-muted-foreground">Memuat bacaan…</p></AppShell>;
- if(target.isError||error||!p)return <AppShell title="Dokkai"><p className="text-[12px] text-destructive">Bacaan tidak ditemukan atau gagal dimuat.</p></AppShell>;
- if(levelMismatch)return <AppShell title={`Dokkai ${level??""}`} backTo="/dokkai" backLabel="Dokkai"><div className="mx-auto max-w-md rounded-xl border p-4 text-[11px] text-muted-foreground">Bacaan ini bukan bagian dari level profil {level}. Kembali ke daftar Dokkai untuk membuka materi yang sesuai level profil.</div></AppShell>;
- return <AppShell title="Dokkai" compact><div className="mx-auto w-full max-w-md pb-8" onTouchStart={e=>touch.current=e.touches[0]?.clientX??0} onTouchEnd={e=>finishSwipe(e.changedTouches[0]?.clientX??0)}>
-  <div className="mb-2 flex items-center justify-between"><a href="/dokkai" className="inline-flex items-center gap-1.5 text-[11px] font-semibold"><ArrowLeft className="size-4"/>Dokkai {level}</a><span className="text-[10px] font-semibold text-muted-foreground">{passageIndex>=0?passageIndex+1:1} / {levelPassages.length||1}</span></div>
-  <p className="mb-2 text-center text-[9px] text-muted-foreground">← Geser ke kiri / kanan untuk pindah bacaan →</p>
-  <div className="mb-2 flex items-start justify-between gap-3"><div className="min-w-0"><h1 lang="ja" className="font-jp text-[21px] font-bold leading-7">{p.title}</h1><p className="mt-1 text-[9px] text-muted-foreground">文章の長さ：{enriched?.difficulty||enriched?.category||"belum tersedia"}</p></div><div className="flex shrink-0 items-center gap-1"><span className="text-[9px] text-muted-foreground">Furigana</span><button type="button" onClick={()=>setShowFurigana(v=>!v)} className={`rounded-full px-2 py-1 text-[9px] font-bold ${showFurigana?"bg-primary text-primary-foreground":"border bg-background"}`}>{showFurigana?"ON":"OFF"}</button></div></div>
-  <div className="mb-3 flex items-center justify-end gap-1"><button onClick={()=>setFontSize(v=>Math.max(.82,Number((v-.1).toFixed(2))))} className="grid size-7 place-items-center rounded-full border text-[9px]">A−</button><button onClick={()=>setFontSize(1)} className="grid size-7 place-items-center rounded-full border text-[9px]">A</button><button onClick={()=>setFontSize(v=>Math.min(1.3,Number((v+.1).toFixed(2))))} className="grid size-7 place-items-center rounded-full border text-[9px]">A+</button></div>
-  <article lang="ja" className="font-jp text-foreground" style={{fontSize:`${fontSize}rem`}}>{paragraphs.length?paragraphs.map((paragraph,index)=>{const reading=showFurigana&&furiganaParagraphs[index]?furiganaParagraphs[index]:paragraph;return <section key={index} className="mb-3 last:mb-0"><div className="flex items-start gap-2"><p className="min-w-0 flex-1 whitespace-pre-wrap break-words leading-[2.15] tracking-[0.01em]">{renderInteractive(reading)}</p><button type="button" aria-label={`Dengarkan paragraf ${index+1}`} onClick={()=>readParagraph(furiganaParagraphs[index]||paragraph,index)} className="mt-1 grid size-7 shrink-0 place-items-center rounded-full text-primary hover:bg-primary/10">{speakingIndex===index?<Pause className="size-3.5"/>:<Volume2 className="size-3.5"/>}</button></div></section>}):<div className="rounded-xl border p-3 text-[11px] text-muted-foreground">Teks bacaan lengkap belum tersedia pada data level {level} ini.</div>}</article>
-  <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] text-muted-foreground"><span><span className="font-semibold text-primary">Furigana</span> tampil di atas Kanji</span><span className="rounded border-b-2 border-primary bg-primary/10 px-1 font-semibold text-primary">Kotoba</span><span>= bisa diketuk</span></div>
-  {selectedWord&&<div className="mt-3 rounded-xl border bg-card p-3 text-[10px]"><div className="flex items-start justify-between gap-3"><div><p lang="ja" className="font-jp text-[15px] font-semibold">{selectedWord.surface}</p>{selectedWord.reading&&<p lang="ja" className="mt-1 text-primary">{selectedWord.reading}</p>}{selectedWord.romaji&&<p className="text-muted-foreground">{selectedWord.romaji}</p>}<p className="mt-1.5">{selectedWord.meaning_id||"Arti Indonesia belum tersedia."}</p></div><button type="button" className="text-muted-foreground" onClick={()=>setSelectedWord(null)}>×</button></div></div>}
-  <div className="mt-5 space-y-2"><details className="group rounded-xl border bg-card px-3 py-2.5"><summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">Arti Seluruh Bagian<ChevronDown className="size-4 transition group-open:rotate-180"/></summary><p className="mt-3 whitespace-pre-wrap break-words text-[11px] leading-6 text-muted-foreground">{normalizeBreaks(String(p.translation_id||`Terjemahan Indonesia belum tersedia pada data ${level}.`))}</p></details>
-  <details className="group rounded-xl border bg-card px-3 py-2.5"><summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">Pertanyaan<ChevronDown className="size-4 transition group-open:rotate-180"/></summary><div className="mt-3 space-y-4">{questions.length===0?<p className="text-[10px] text-muted-foreground">Belum ada soal yang terhubung ke bacaan {level} ini.</p>:questions.map((q,i)=><div key={q.id}><p className="text-[11px] font-semibold">{i+1}. {q.prompt}</p><div className="mt-2 space-y-1.5">{q.choices.map((choice,ci)=><button key={ci} type="button" onClick={()=>{setAnswers(a=>({...a,[q.id]:ci}));setChecked(false)}} className={`w-full rounded-lg border px-3 py-2 text-left text-[10px] ${answers[q.id]===ci?"border-primary bg-primary/5":"bg-background"}`}>{String.fromCharCode(65+ci)}. {choice}</button>)}</div>{checked&&answers[q.id]!==undefined&&<p className="mt-2 text-[9px] text-muted-foreground">{answers[q.id]===Number(q.correct_index)?"Benar.":q.explanation_id||"Belum tepat. Baca kembali bagian terkait."}</p>}</div>)}{questions.length>0&&<Button className="h-9 w-full rounded-full text-[10px]" disabled={Object.keys(answers).length!==questions.length||completeMutation.isPending} onClick={checkAnswers}>{completed?<><Check className="mr-1.5 size-3.5"/>Selesai</>:"Periksa Jawaban"}</Button>}</div></details>
-  <details className="group rounded-xl border bg-card px-3 py-2.5"><summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">Kosakata Penting<ChevronDown className="size-4 transition group-open:rotate-180"/></summary><div className="mt-3 space-y-2">{annotations.length?annotations.map(a=><button key={a.id} type="button" onClick={()=>setSelectedWord(a)} className="block w-full rounded-lg border-l-2 border-primary bg-primary/5 px-2 py-1.5 text-left"><span lang="ja" className="font-jp font-semibold text-primary">{a.surface}{a.reading?` — ${a.reading}`:""}</span>{a.romaji&&<span className="ml-1 text-muted-foreground">({a.romaji})</span>}<div className="text-muted-foreground">{a.meaning_id||"Arti Indonesia belum tersedia."}</div></button>):<p className="text-[10px] leading-5 text-muted-foreground">Kosakata penting belum tersedia sebagai relasi terverifikasi untuk bacaan {level} ini.</p>}</div></details></div>
-  {questions.length===0&&<Button className="mt-4 h-10 w-full rounded-full text-[10px]" disabled={completed||completeMutation.isPending||!paragraphs.length} onClick={()=>completeMutation.mutate()}>{completed?<><Check className="mr-1.5 size-4"/>Selesai dibaca</>:"Tandai selesai membaca · +5 XP"}</Button>}
-  <div className="mt-3 grid grid-cols-2 gap-2"><Button variant="outline" className="h-9 rounded-full text-[10px]" disabled={passageIndex<=0} onClick={()=>go(-1)}>Sebelumnya</Button><Button variant="outline" className="h-9 rounded-full text-[10px]" disabled={passageIndex<0||passageIndex>=levelPassages.length-1} onClick={()=>go(1)}>Selanjutnya</Button></div>
- </div></AppShell>
+type FuriganaPassage = {
+  body_furigana?: string | null;
+  difficulty?: string | null;
+  category?: string | null;
+};
+type PassageQuestion = {
+  id: string;
+  prompt: string;
+  choices: string[];
+  correct_index: number;
+  explanation_id?: string | null;
+};
+type Annotation = {
+  id: string;
+  surface: string;
+  reading?: string | null;
+  romaji?: string | null;
+  meaning_id?: string | null;
+  vocabulary_id?: string | null;
+};
+function renderFurigana(text: string) {
+  return text.split(/(\[[^|\]]+\|[^\]]+\])/g).map((part, index) => {
+    const m = part.match(/^\[([^|\]]+)\|([^\]]+)\]$/);
+    return m ? (
+      <ruby key={index} className="ruby-reading">
+        {m[1]}
+        <rt className="text-[0.5em] font-semibold tracking-normal text-primary">{m[2]}</rt>
+      </ruby>
+    ) : (
+      <span key={index}>{part}</span>
+    );
+  });
+}
+function normalizeBreaks(text: string) {
+  return text
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n");
+}
+function splitParagraphs(text: string) {
+  const normalized = normalizeBreaks(text).trim();
+  if (!normalized) return [];
+  const byBlank = normalized
+    .split(/\n\s*\n/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  return byBlank.length > 1
+    ? byBlank
+    : normalized
+        .split(/\n/)
+        .map((x) => x.trim())
+        .filter(Boolean);
+}
+function cleanJapanese(text: string) {
+  return normalizeBreaks(text).replace(/\[([^|\]]+)\|[^\]]+\]/g, "$1");
+}
+function speakJapanese(text: string, onEnd?: () => void) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(cleanJapanese(text));
+  u.lang = "ja-JP";
+  u.rate = 0.86;
+  if (onEnd) u.onend = onEnd;
+  window.speechSynthesis.speak(u);
+  return true;
+}
+function DokkaiDetail() {
+  const { id } = Route.useParams();
+  const qc = useQueryClient();
+  const target = useQuery({ queryKey: ["target-level"], queryFn: fetchTargetLevel, retry: 1 });
+  const level = target.data;
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["passage", id],
+    queryFn: () => fetchPassageDetail(id),
+  });
+  const all = useQuery({
+    queryKey: ["passages", level],
+    queryFn: fetchPassages,
+    enabled: Boolean(level),
+  });
+  const annotationsQ = useQuery({
+    queryKey: ["reading-annotations", id],
+    queryFn: async () => {
+      const r = await supabase
+        .from("reading_vocabulary_annotations")
+        .select("id,surface,reading,romaji,meaning_id,vocabulary_id")
+        .eq("passage_id", id)
+        .order("position_order");
+      if (r.error) throw r.error;
+      return (r.data ?? []) as Annotation[];
+    },
+  });
+  const [showFurigana, setShowFurigana] = useState(true);
+  const [fontSize, setFontSize] = useState(1);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [checked, setChecked] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [selectedWord, setSelectedWord] = useState<Annotation | null>(null);
+  const touch = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window)
+        window.speechSynthesis.cancel();
+    },
+    [],
+  );
+  const p = data?.passage;
+  const enriched = p as (typeof p & FuriganaPassage) | null | undefined;
+  const questions = (data?.questions ?? []) as PassageQuestion[];
+  const annotations = annotationsQ.data ?? [];
+  const levelPassages = useMemo(
+    () => (all.data ?? []).filter((x) => x.level === level),
+    [all.data, level],
+  );
+  const passageIndex = levelPassages.findIndex((x) => x.id === id);
+  const levelMismatch = Boolean(level && p && p.level !== level);
+  const body = useMemo(() => normalizeBreaks(String(p?.body_jp ?? "")), [p?.body_jp]);
+  const furiganaBody = useMemo(
+    () => normalizeBreaks(String(enriched?.body_furigana ?? "")),
+    [enriched?.body_furigana],
+  );
+  const paragraphs = useMemo(() => splitParagraphs(body), [body]);
+  const furiganaParagraphs = useMemo(() => splitParagraphs(furiganaBody), [furiganaBody]);
+  const recordReadingSignals = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user || !p) return;
+    const rows = questions
+      .filter((q) => answers[q.id] !== undefined)
+      .map((q) => ({
+        q,
+        selected: answers[q.id],
+        correct: answers[q.id] === Number(q.correct_index),
+      }));
+    if (!rows.length) return;
+    await Promise.all(
+      rows.map(({ q, selected, correct }) =>
+        supabase.rpc("record_learning_activity", {
+          p_activity_type: "quiz_answered",
+          p_content_type: "reading",
+          p_content_id: q.id,
+          p_points: correct ? 10 : 0,
+          p_xp: correct ? 10 : 0,
+          p_correct: correct,
+          p_duration_seconds: 0,
+          p_metadata: {
+            level: p.level,
+            passage_id: id,
+            selected_index: selected,
+            correct_index: Number(q.correct_index),
+            source: "dokkai",
+          },
+        }),
+      ),
+    );
+  };
+  const completeMutation = useMutation({
+    mutationFn: () =>
+      markContentMastered({
+        itemType: "reading",
+        itemId: id,
+        level: String(p?.level ?? "N5") as Level,
+        durationSeconds: Math.max(60, Number(p?.estimated_minutes ?? 1) * 60),
+      }),
+    onSuccess: () => {
+      setCompleted(true);
+      void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
+      void qc.invalidateQueries({ queryKey: ["my-progress"] });
+    },
+  });
+  const readParagraph = (text: string, index: number) => {
+    if (speakingIndex === index) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+      return;
+    }
+    if (speakJapanese(text, () => setSpeakingIndex(null))) setSpeakingIndex(index);
+  };
+  const go = (delta: number) => {
+    const next = levelPassages[passageIndex + delta];
+    if (next) window.location.assign(`/dokkai/${encodeURIComponent(next.id)}`);
+  };
+  const finishSwipe = (x: number) => {
+    if (touch.current == null) return;
+    const d = x - touch.current;
+    if (Math.abs(d) > 45) go(d < 0 ? 1 : -1);
+    touch.current = null;
+  };
+  const checkAnswers = () => {
+    setChecked(true);
+    void recordReadingSignals();
+    const score = questions.length
+      ? questions.filter((q) => answers[q.id] === Number(q.correct_index)).length / questions.length
+      : 1;
+    if (score >= 0.8 && !completeMutation.isPending) completeMutation.mutate();
+  };
+  const renderInteractive = (text: string) => {
+    if (!annotations.length) return renderFurigana(text);
+    const words = [...annotations].sort((a, b) => b.surface.length - a.surface.length);
+    const pattern = new RegExp(
+      `(${words.map((w) => w.surface.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+      `g`,
+    );
+    return text.split(pattern).map((part, i) => {
+      const a = words.find((w) => w.surface === cleanJapanese(part));
+      return a ? (
+        <button
+          key={i}
+          type="button"
+          onClick={() => setSelectedWord(a)}
+          className="rounded-sm border-b-2 border-primary bg-primary/10 px-0.5 font-semibold text-primary decoration-primary underline-offset-2 transition hover:bg-primary/20"
+          aria-label={`${a.surface} — ketuk untuk melihat arti`}
+        >
+          {showFurigana ? renderFurigana(part) : cleanJapanese(part)}
+        </button>
+      ) : (
+        <span key={i}>{showFurigana ? renderFurigana(part) : cleanJapanese(part)}</span>
+      );
+    });
+  };
+  if (target.isLoading || isLoading)
+    return (
+      <AppShell title="Dokkai">
+        <p className="text-[12px] text-muted-foreground">Memuat bacaan…</p>
+      </AppShell>
+    );
+  if (target.isError || error || !p)
+    return (
+      <AppShell title="Dokkai">
+        <p className="text-[12px] text-destructive">Bacaan tidak ditemukan atau gagal dimuat.</p>
+      </AppShell>
+    );
+  if (levelMismatch)
+    return (
+      <AppShell title={`Dokkai ${level ?? ""}`} backTo="/dokkai" backLabel="Dokkai">
+        <div className="mx-auto max-w-md rounded-xl border p-4 text-[11px] text-muted-foreground">
+          Bacaan ini bukan bagian dari level profil {level}. Kembali ke daftar Dokkai untuk membuka
+          materi yang sesuai level profil.
+        </div>
+      </AppShell>
+    );
+  return (
+    <AppShell title="Dokkai" compact>
+      <div
+        className="mx-auto w-full max-w-md pb-8"
+        onTouchStart={(e) => (touch.current = e.touches[0]?.clientX ?? 0)}
+        onTouchEnd={(e) => finishSwipe(e.changedTouches[0]?.clientX ?? 0)}
+      >
+        <div className="mb-2 flex items-center justify-between">
+          <a href="/dokkai" className="inline-flex items-center gap-1.5 text-[11px] font-semibold">
+            <ArrowLeft className="size-4" />
+            Dokkai {level}
+          </a>
+          <span className="text-[10px] font-semibold text-muted-foreground">
+            {passageIndex >= 0 ? passageIndex + 1 : 1} / {levelPassages.length || 1}
+          </span>
+        </div>
+        <p className="mb-2 text-center text-[9px] text-muted-foreground">
+          ← Geser ke kiri / kanan untuk pindah bacaan →
+        </p>
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 lang="ja" className="font-jp text-[21px] font-bold leading-7">
+              {p.title}
+            </h1>
+            <p className="mt-1 text-[9px] text-muted-foreground">
+              文章の長さ：{enriched?.difficulty || enriched?.category || "belum tersedia"}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <span className="text-[9px] text-muted-foreground">Furigana</span>
+            <button
+              type="button"
+              onClick={() => setShowFurigana((v) => !v)}
+              className={`rounded-full px-2 py-1 text-[9px] font-bold ${showFurigana ? "bg-primary text-primary-foreground" : "border bg-background"}`}
+            >
+              {showFurigana ? "ON" : "OFF"}
+            </button>
+          </div>
+        </div>
+        <div className="mb-3 flex items-center justify-end gap-1">
+          <button
+            onClick={() => setFontSize((v) => Math.max(0.82, Number((v - 0.1).toFixed(2))))}
+            className="grid size-7 place-items-center rounded-full border text-[9px]"
+          >
+            A−
+          </button>
+          <button
+            onClick={() => setFontSize(1)}
+            className="grid size-7 place-items-center rounded-full border text-[9px]"
+          >
+            A
+          </button>
+          <button
+            onClick={() => setFontSize((v) => Math.min(1.3, Number((v + 0.1).toFixed(2))))}
+            className="grid size-7 place-items-center rounded-full border text-[9px]"
+          >
+            A+
+          </button>
+        </div>
+        <article
+          lang="ja"
+          className="font-jp text-foreground"
+          style={{ fontSize: `${fontSize}rem` }}
+        >
+          {paragraphs.length ? (
+            paragraphs.map((paragraph, index) => {
+              const reading =
+                showFurigana && furiganaParagraphs[index] ? furiganaParagraphs[index] : paragraph;
+              return (
+                <section key={index} className="mb-3 last:mb-0">
+                  <div className="flex items-start gap-2">
+                    <p className="min-w-0 flex-1 whitespace-pre-wrap break-words leading-[2.15] tracking-[0.01em]">
+                      {renderInteractive(reading)}
+                    </p>
+                    <button
+                      type="button"
+                      aria-label={`Dengarkan paragraf ${index + 1}`}
+                      onClick={() => readParagraph(furiganaParagraphs[index] || paragraph, index)}
+                      className="mt-1 grid size-7 shrink-0 place-items-center rounded-full text-primary hover:bg-primary/10"
+                    >
+                      {speakingIndex === index ? (
+                        <Pause className="size-3.5" />
+                      ) : (
+                        <Volume2 className="size-3.5" />
+                      )}
+                    </button>
+                  </div>
+                </section>
+              );
+            })
+          ) : (
+            <div className="rounded-xl border p-3 text-[11px] text-muted-foreground">
+              Teks bacaan lengkap belum tersedia pada data level {level} ini.
+            </div>
+          )}
+        </article>
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] text-muted-foreground">
+          <span>
+            <span className="font-semibold text-primary">Furigana</span> tampil di atas Kanji
+          </span>
+          <span className="rounded border-b-2 border-primary bg-primary/10 px-1 font-semibold text-primary">
+            Kotoba
+          </span>
+          <span>= bisa diketuk</span>
+        </div>
+        {selectedWord && (
+          <div className="mt-3 rounded-xl border bg-card p-3 text-[10px]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p lang="ja" className="font-jp text-[15px] font-semibold">
+                  {selectedWord.surface}
+                </p>
+                {selectedWord.reading && (
+                  <p lang="ja" className="mt-1 text-primary">
+                    {selectedWord.reading}
+                  </p>
+                )}
+                {selectedWord.romaji && (
+                  <p className="text-muted-foreground">{selectedWord.romaji}</p>
+                )}
+                <p className="mt-1.5">
+                  {selectedWord.meaning_id || "Arti Indonesia belum tersedia."}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="text-muted-foreground"
+                onClick={() => setSelectedWord(null)}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="mt-5 space-y-2">
+          <details className="group rounded-xl border bg-card px-3 py-2.5">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">
+              Arti Seluruh Bagian
+              <ChevronDown className="size-4 transition group-open:rotate-180" />
+            </summary>
+            <p className="mt-3 whitespace-pre-wrap break-words text-[11px] leading-6 text-muted-foreground">
+              {normalizeBreaks(
+                String(
+                  p.translation_id || `Terjemahan Indonesia belum tersedia pada data ${level}.`,
+                ),
+              )}
+            </p>
+          </details>
+          <details className="group rounded-xl border bg-card px-3 py-2.5">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">
+              Pertanyaan
+              <ChevronDown className="size-4 transition group-open:rotate-180" />
+            </summary>
+            <div className="mt-3 space-y-4">
+              {questions.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground">
+                  Belum ada soal yang terhubung ke bacaan {level} ini.
+                </p>
+              ) : (
+                questions.map((q, i) => (
+                  <div key={q.id}>
+                    <p className="text-[11px] font-semibold">
+                      {i + 1}. {q.prompt}
+                    </p>
+                    <div className="mt-2 space-y-1.5">
+                      {q.choices.map((choice, ci) => (
+                        <button
+                          key={ci}
+                          type="button"
+                          onClick={() => {
+                            setAnswers((a) => ({ ...a, [q.id]: ci }));
+                            setChecked(false);
+                          }}
+                          className={`w-full rounded-lg border px-3 py-2 text-left text-[10px] ${answers[q.id] === ci ? "border-primary bg-primary/5" : "bg-background"}`}
+                        >
+                          {String.fromCharCode(65 + ci)}. {choice}
+                        </button>
+                      ))}
+                    </div>
+                    {checked && answers[q.id] !== undefined && (
+                      <p className="mt-2 text-[9px] text-muted-foreground">
+                        {answers[q.id] === Number(q.correct_index)
+                          ? "Benar."
+                          : q.explanation_id || "Belum tepat. Baca kembali bagian terkait."}
+                      </p>
+                    )}
+                  </div>
+                ))
+              )}
+              {questions.length > 0 && (
+                <Button
+                  className="h-9 w-full rounded-full text-[10px]"
+                  disabled={
+                    Object.keys(answers).length !== questions.length || completeMutation.isPending
+                  }
+                  onClick={checkAnswers}
+                >
+                  {completed ? (
+                    <>
+                      <Check className="mr-1.5 size-3.5" />
+                      Selesai
+                    </>
+                  ) : (
+                    "Periksa Jawaban"
+                  )}
+                </Button>
+              )}
+            </div>
+          </details>
+          <details className="group rounded-xl border bg-card px-3 py-2.5">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">
+              Kosakata Penting
+              <ChevronDown className="size-4 transition group-open:rotate-180" />
+            </summary>
+            <div className="mt-3 space-y-2">
+              {annotations.length ? (
+                annotations.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setSelectedWord(a)}
+                    className="block w-full rounded-lg border-l-2 border-primary bg-primary/5 px-2 py-1.5 text-left"
+                  >
+                    <span lang="ja" className="font-jp font-semibold text-primary">
+                      {a.surface}
+                      {a.reading ? ` — ${a.reading}` : ""}
+                    </span>
+                    {a.romaji && <span className="ml-1 text-muted-foreground">({a.romaji})</span>}
+                    <div className="text-muted-foreground">
+                      {a.meaning_id || "Arti Indonesia belum tersedia."}
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <p className="text-[10px] leading-5 text-muted-foreground">
+                  Kosakata penting belum tersedia sebagai relasi terverifikasi untuk bacaan {level}{" "}
+                  ini.
+                </p>
+              )}
+            </div>
+          </details>
+        </div>
+        {questions.length === 0 && (
+          <Button
+            className="mt-4 h-10 w-full rounded-full text-[10px]"
+            disabled={completed || completeMutation.isPending || !paragraphs.length}
+            onClick={() => completeMutation.mutate()}
+          >
+            {completed ? (
+              <>
+                <Check className="mr-1.5 size-4" />
+                Selesai dibaca
+              </>
+            ) : (
+              "Tandai selesai membaca · +5 XP"
+            )}
+          </Button>
+        )}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            className="h-9 rounded-full text-[10px]"
+            disabled={passageIndex <= 0}
+            onClick={() => go(-1)}
+          >
+            Sebelumnya
+          </Button>
+          <Button
+            variant="outline"
+            className="h-9 rounded-full text-[10px]"
+            disabled={passageIndex < 0 || passageIndex >= levelPassages.length - 1}
+            onClick={() => go(1)}
+          >
+            Selanjutnya
+          </Button>
+        </div>
+      </div>
+    </AppShell>
+  );
 }

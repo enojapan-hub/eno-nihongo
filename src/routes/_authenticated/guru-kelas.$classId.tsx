@@ -88,7 +88,9 @@ function Page() {
                   {d.kelas.starts_at && (
                     <p className="text-xs text-muted-foreground">
                       Jadwal kelas: {new Date(d.kelas.starts_at).toLocaleString("id-ID")}
-                      {d.kelas.ends_at ? " – " + new Date(d.kelas.ends_at).toLocaleString("id-ID") : ""}
+                      {d.kelas.ends_at
+                        ? " – " + new Date(d.kelas.ends_at).toLocaleString("id-ID")
+                        : ""}
                     </p>
                   )}
                 </div>
@@ -209,8 +211,8 @@ function Page() {
                         <h2 className="font-black">Persiapan mengajar</h2>
                         <p className="text-xs text-muted-foreground">
                           Buka Peserta & Nilai untuk melihat tugas yang tertinggal, koreksi guru,
-                          dan topik yang perlu diulang. Kuis hanya dapat dikumpulkan satu kali oleh setiap
-                          peserta.
+                          dan topik yang perlu diulang. Kuis hanya dapat dikumpulkan satu kali oleh
+                          setiap peserta.
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" onClick={() => setTab("peserta")}>
@@ -258,9 +260,15 @@ function Page() {
                   const topics = d.insights.filter((i: any) => i.user_id === p.user_id);
                   const attempts = d.attempts.filter((a: any) => a.user_id === p.user_id);
                   const quizAverage = attempts.length
-                    ? Math.round(attempts.reduce((n: number, a: any) => n + Number(a.score), 0) / attempts.length)
+                    ? Math.round(
+                        attempts.reduce((n: number, a: any) => n + Number(a.score), 0) /
+                          attempts.length,
+                      )
                     : null;
-                  const needsAttention = missing.length > 0 || (average != null && average < 70) || (quizAverage != null && quizAverage < 70);
+                  const needsAttention =
+                    missing.length > 0 ||
+                    (average != null && average < 70) ||
+                    (quizAverage != null && quizAverage < 70);
                   return (
                     <details
                       key={p.user_id}
@@ -384,9 +392,7 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
   const review = useQuery({
     queryKey: ["teacher-quiz-review", attempt.attempt_id],
     queryFn: () =>
-      result<any[]>(
-        classroom.rpc("get_class_quiz_review", { p_attempt_id: attempt.attempt_id }),
-      ),
+      result<any[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: attempt.attempt_id })),
     staleTime: Infinity,
   });
   const wrong = review.data?.filter((row: any) => !row.is_correct) ?? [];
@@ -411,9 +417,7 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
       </summary>
       <div className="mt-3 space-y-2 border-t pt-3">
         {review.isPending && <p className="text-muted-foreground">Memuat detail jawaban…</p>}
-        {review.isError && (
-          <p className="text-destructive">Detail jawaban gagal dimuat.</p>
-        )}
+        {review.isError && <p className="text-destructive">Detail jawaban gagal dimuat.</p>}
         {review.data?.map((row: any, index: number) => {
           const selected = Number(row.selected_index);
           const correct = Number(row.correct_index);
@@ -422,7 +426,9 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
               key={row.question_id}
               className={
                 "rounded-lg border p-2.5 " +
-                (row.is_correct ? "border-primary/20" : "border-destructive/25 bg-destructive/[0.04]")
+                (row.is_correct
+                  ? "border-primary/20"
+                  : "border-destructive/25 bg-destructive/[0.04]")
               }
             >
               <p className="font-bold">
@@ -430,11 +436,9 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
               </p>
               <p className={row.is_correct ? "text-primary" : "text-destructive"}>
                 {row.is_correct ? "Benar" : "Salah"} · Jawaban peserta:{" "}
-                {selected >= 0 ? row.choices?.[selected] ?? "Tidak valid" : "Tidak dijawab"}
+                {selected >= 0 ? (row.choices?.[selected] ?? "Tidak valid") : "Tidak dijawab"}
               </p>
-              {!row.is_correct && (
-                <p>Jawaban benar: {row.choices?.[correct] ?? "—"}</p>
-              )}
+              {!row.is_correct && <p>Jawaban benar: {row.choices?.[correct] ?? "—"}</p>}
             </div>
           );
         })}
