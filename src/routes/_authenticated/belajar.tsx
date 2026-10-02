@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
-import { fetchVocabListResilient } from "@/lib/vocab-resilient";
+import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -42,26 +42,17 @@ async function fetchExtra(level: Level) {
     .order("sort_order");
   if (error) throw error;
   if (!cats?.length) return [];
-  const { data: links, error: e } = await supabase
-    .from("vocabulary_category_links")
-    .select("category_id,vocabulary:vocabulary_id(id,level,is_published)")
-    .in(
-      "category_id",
-      cats.map((x: any) => x.id),
-    );
-  if (e) throw e;
-  const n = new Map<string, number>();
-  for (const x of links ?? []) {
-    const v: any = (x as any).vocabulary;
-    if (v?.level === level && v?.is_published)
-      n.set((x as any).category_id, (n.get((x as any).category_id) ?? 0) + 1);
-  }
+  // Tabel vocabulary_category_links tidak dapat dibaca langsung oleh pengguna (RLS tanpa policy);
+  // hitungan kategori diambil lewat RPC yang sudah dipakai halaman daftar kategori.
+  const counts = await Promise.all(
+    cats.map((x: any) => fetchVocabCategoryCount(level, String(x.canonical_slug || x.slug))),
+  );
   return cats
-    .map((x: any) => ({
+    .map((x: any, i: number) => ({
       id: x.id,
       slug: x.canonical_slug || x.slug,
       label: x.label_id || x.name_id || x.label_ja || x.slug,
-      count: n.get(x.id) ?? 0,
+      count: counts[i] ?? 0,
     }))
     .filter((x: any) => x.count > 0);
 }
