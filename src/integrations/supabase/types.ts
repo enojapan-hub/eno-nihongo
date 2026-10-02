@@ -4882,6 +4882,28 @@ export type Database = {
           word_count: number
         }[]
       }
+      get_vocabulary_lexical_rows: {
+        Args: { p_level: Database["public"]["Enums"]["jlpt_level"] }
+        Returns: {
+          component_order: number
+          created_at: string
+          examples: Json
+          id: string
+          lesson_number: number
+          lesson_title: string
+          level: Database["public"]["Enums"]["jlpt_level"]
+          meaning_en: string
+          meaning_id: string
+          origin_id: string
+          part_of_speech: string
+          reading: string
+          romaji: string
+          sort_order: number
+          source_book: string
+          term: string
+          usage_note_id: string
+        }[]
+      }
       get_vocabulary_page_by_category: {
         Args: {
           p_category_slug: string
