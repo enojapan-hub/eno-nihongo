@@ -108,6 +108,12 @@ const actionTargets = {
 function isActionKey(key: string): key is keyof typeof actionTargets {
   return key in actionTargets;
 }
+// get_admin_action_queue raises 'forbidden' for accounts without the view permissions; that is an
+// access decision, not a failure, so only other errors are surfaced to the admin.
+function isForbiddenError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : (error as { message?: string })?.message;
+  return typeof message === "string" && message.toLowerCase().includes("forbidden");
+}
 function Page() {
   const actions = useQuery({
     queryKey: ["admin-action-queue"],
@@ -227,6 +233,24 @@ function Page() {
             </div>
             <ChevronRight className="size-5 text-muted-foreground" />
           </Link>
+        )}
+
+        {actions.isError && !isForbiddenError(actions.error) && (
+          <div
+            role="alert"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-3"
+          >
+            <p className="text-xs font-semibold text-destructive">
+              Antrean tindakan gagal dimuat. Data lain di halaman ini tetap akurat.
+            </p>
+            <button
+              type="button"
+              onClick={() => void actions.refetch()}
+              className="shrink-0 rounded-lg border border-destructive/30 px-3 py-1.5 text-[11px] font-bold text-destructive"
+            >
+              Coba lagi
+            </button>
+          </div>
         )}
 
         {actions.isSuccess && actions.data.some((x) => Number(x.count) > 0) && (
