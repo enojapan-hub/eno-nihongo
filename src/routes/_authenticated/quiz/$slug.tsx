@@ -160,17 +160,18 @@ function QuizRunner() {
     [finished, setFinished] = useState(false),
     [startedAt] = useState(() => Date.now()),
     [saving, setSaving] = useState(false),
+    [saveError, setSaveError] = useState<string | null>(null),
     current = questions[index];
   const score = useMemo(
     () => questions.reduce((t, q) => t + (answers[q.id] === q.correct_index ? 1 : 0), 0),
     [questions, answers],
   );
-  async function finish() {
-    if (finished || !questions.length || !level) return;
-    setFinished(true);
+  async function persist() {
+    if (!questions.length || !level) return;
     setSaving(true);
+    setSaveError(null);
     try {
-      await saveAttempt({
+      const saved = await saveAttempt({
         quizId: null,
         level,
         skill,
@@ -183,9 +184,17 @@ function QuizRunner() {
           isCorrect: answers[q.id] === q.correct_index,
         })),
       });
+      if (!saved.ok) setSaveError(saved.message);
+    } catch (caught) {
+      setSaveError(caught instanceof Error ? caught.message : "Hasil tidak dapat disimpan.");
     } finally {
       setSaving(false);
     }
+  }
+  async function finish() {
+    if (finished || !questions.length || !level) return;
+    setFinished(true);
+    await persist();
   }
   if (!validLevel || !validSkill || !level)
     return (
@@ -236,9 +245,25 @@ function QuizRunner() {
                 {score}/{questions.length}
               </div>
               <Badge className="mt-2">{Math.round((score / questions.length) * 100)}%</Badge>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {saving ? "Menyimpan hasil…" : "Hasil tersimpan."}
-              </p>
+              {saveError ? (
+                <div role="alert" className="mt-3 space-y-2">
+                  <p className="text-xs text-destructive">
+                    Hasil belum tersimpan: {saveError}. Skor di layar tetap benar.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={saving}
+                    onClick={() => void persist()}
+                  >
+                    Coba simpan lagi
+                  </Button>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {saving ? "Menyimpan hasil…" : "Hasil tersimpan."}
+                </p>
+              )}
             </CardContent>
           </Card>
           <Button asChild className="w-full">

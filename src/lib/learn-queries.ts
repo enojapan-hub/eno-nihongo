@@ -352,10 +352,10 @@ export async function saveAttempt(input: {
   correct: number;
   durationSeconds: number;
   answers: Array<{ questionId: string; selectedIndex: number; isCorrect: boolean }>;
-}) {
+}): Promise<{ ok: true } | { ok: false; message: string }> {
   const { data: userRes } = await supabase.auth.getUser();
   const userId = userRes.user?.id;
-  if (!userId) return;
+  if (!userId) return { ok: false, message: "Sesi tidak ditemukan. Masuk lagi untuk menyimpan." };
   const score = input.total > 0 ? Math.round((input.correct / input.total) * 10000) / 100 : 0;
   const xpEarned = input.correct * 10;
   const { data: attempt, error } = await supabase
@@ -374,8 +374,11 @@ export async function saveAttempt(input: {
     })
     .select("id")
     .maybeSingle();
-  if (error || !attempt) return;
-  await supabase.from("quiz_answers").insert(
+  if (error || !attempt) {
+    console.error("saveAttempt: quiz_attempts insert failed", error);
+    return { ok: false, message: error?.message || "Hasil tidak dapat disimpan." };
+  }
+  const { error: answersError } = await supabase.from("quiz_answers").insert(
     input.answers.map((a) => ({
       attempt_id: attempt.id,
       user_id: userId,
@@ -384,6 +387,7 @@ export async function saveAttempt(input: {
       is_correct: a.isCorrect,
     })),
   );
+  if (answersError) console.error("saveAttempt: quiz_answers insert failed", answersError);
   await supabase.rpc("record_learning_activity", {
     p_activity_type: "quiz_completed",
     p_content_type: input.skill ?? "quiz",
@@ -405,6 +409,7 @@ export async function saveAttempt(input: {
       p_duration_seconds: 0,
       p_metadata: { quiz_id: input.quizId ?? null, level: input.level ?? null },
     });
+  return { ok: true };
 }
 export type LearnableItemType = "kanji" | "vocabulary" | "grammar" | "reading" | "listening";
 async function currentUserId() {

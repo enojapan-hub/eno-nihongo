@@ -79,6 +79,9 @@ async function fetchQuestions(level: Level, section: string): Promise<Row[]> {
   const { data, error } = await supabase.rpc("get_published_simulation_questions", {
     p_level: level,
     p_section: section,
+    // Explicit exam number (the function's default): with only two arguments PostgREST cannot
+    // choose between the 2- and 3-argument overloads while both exist and answers HTTP 300.
+    p_exam_no: 1,
   });
   if (error) throw error;
   return ((data ?? []) as unknown as Row[]).filter(

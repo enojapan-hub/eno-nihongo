@@ -100,3 +100,22 @@ describe("kontrak tabel internal", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("kontrak get_published_simulation_questions", () => {
+  // Selama overload 2-argumen lama masih ada di database, panggilan tanpa p_exam_no ambigu
+  // (PostgREST HTTP 300) dan halaman simulasi tidak dapat memuat soal.
+  it("setiap pemanggil mengirim p_exam_no secara eksplisit", () => {
+    const offenders: string[] = [];
+    let calls = 0;
+    for (const { file, text } of clientSources) {
+      for (const m of text.matchAll(
+        /rpc\(\s*["'`]get_published_simulation_questions["'`]\s*,\s*\{([\s\S]*?)\}\s*\)/g,
+      )) {
+        calls++;
+        if (!/\bp_exam_no\b/.test(m[1] ?? "")) offenders.push(file);
+      }
+    }
+    expect(calls).toBeGreaterThan(0);
+    expect(offenders).toEqual([]);
+  });
+});

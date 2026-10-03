@@ -182,6 +182,7 @@ function SimulationRunner() {
   const [sectionFinished, setSectionFinished] = useState(false);
   const [finished, setFinished] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
 
   const query = useQuery({
@@ -273,6 +274,7 @@ function SimulationRunner() {
 
     setFinished(true);
     setSaving(true);
+    setSaveError(null);
     try {
       const allQuestions = Object.values({ ...questionSets, [section.key]: questions }).flat();
       const correct = allQuestions.reduce(
@@ -280,7 +282,7 @@ function SimulationRunner() {
         0,
       );
       const persistable = allQuestions.filter((q) => q.persistAnswer);
-      await saveAttempt({
+      const saved = await saveAttempt({
         level,
         skill: null,
         total: allQuestions.length,
@@ -292,6 +294,9 @@ function SimulationRunner() {
           isCorrect: answers[q.id] === q.correct_index,
         })),
       });
+      if (!saved.ok) setSaveError(saved.message);
+    } catch (caught) {
+      setSaveError(caught instanceof Error ? caught.message : "Hasil tidak dapat disimpan.");
     } finally {
       setSaving(false);
     }
@@ -451,7 +456,11 @@ function SimulationRunner() {
                 })}
               </div>
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                {saving ? "Menyimpan hasil…" : "Hasil simulasi tersimpan ke Progress."}
+                {saving
+                  ? "Menyimpan hasil…"
+                  : saveError
+                    ? `Hasil belum tersimpan: ${saveError}. Skor di layar tetap benar.`
+                    : "Hasil simulasi tersimpan ke Progress."}
               </p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                 <Button asChild className="flex-1">
