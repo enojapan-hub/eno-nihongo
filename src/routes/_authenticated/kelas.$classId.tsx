@@ -43,9 +43,7 @@ function Detail() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_public_class_enrollment_counts");
       if (error) throw error;
-      return Number(
-        (data ?? []).find((row: any) => row.class_id === classId)?.participant_count ?? 0,
-      );
+      return Number((data ?? []).find((row) => row.class_id === classId)?.participant_count ?? 0);
     },
   });
   const rateQuery = useQuery({

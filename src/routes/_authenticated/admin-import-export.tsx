@@ -248,7 +248,7 @@ function Page() {
               <History className="size-4 text-primary" />
               <p className="font-black">Riwayat Import</p>
             </div>
-            {(jobs.data || []).slice(0, 8).map((j: any) => (
+            {(jobs.data || []).slice(0, 8).map((j) => (
               <div key={j.id} className="border-t py-2 text-[10px] first:border-0">
                 <b>
                   {types[j.content_type]} · {j.mode === "insert" ? "Tambah" : "Update"}

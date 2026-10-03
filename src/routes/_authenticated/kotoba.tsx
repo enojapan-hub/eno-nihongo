@@ -317,7 +317,7 @@ function KotobaPage() {
     if (!selected) return [];
     const seen = new Set<string>();
     return [...asExamples(selected.examples), ...senses.flatMap((s: any) => asExamples(s.examples))]
-      .filter((e: any) => {
+      .filter((e) => {
         const k = String(e.jp ?? "")
           .replace(/\s/g, "")
           .toLowerCase();
@@ -815,7 +815,7 @@ function Detail({
         <section className="mt-5">
           <h2 className="text-base font-bold">Contoh Kalimat</h2>
           {examples.length ? (
-            examples.map((e: any, i: number) => {
+            examples.map((e, i: number) => {
               const jp = spaceJapanese(e.jp);
               const reading = e.reading?.trim() || "";
               const romaji = e.romaji?.trim() || kanaToRomaji(reading);

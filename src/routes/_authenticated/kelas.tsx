@@ -43,9 +43,9 @@ function KelasPage() {
       if (error) throw error;
       if (countError) throw countError;
       const byClass = new Map(
-        (counts ?? []).map((row: any) => [row.class_id, Number(row.participant_count)] as const),
+        (counts ?? []).map((row) => [row.class_id, Number(row.participant_count)] as const),
       );
-      return (data ?? []).map((row: any) => ({
+      return (data ?? []).map((row) => ({
         ...row,
         participant_count: byClass.get(row.id) ?? 0,
       }));
@@ -56,7 +56,7 @@ function KelasPage() {
   const visibleClasses = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return classes.data ?? [];
-    return (classes.data ?? []).filter((c: any) =>
+    return (classes.data ?? []).filter((c) =>
       [c.title, c.level, c.description].some((value) =>
         String(value ?? "")
           .toLowerCase()
@@ -143,7 +143,7 @@ function KelasPage() {
               </div>
             )}
             <div className="grid gap-3 sm:grid-cols-2">
-              {visibleClasses.map((c: any) => (
+              {visibleClasses.map((c) => (
                 <Link
                   key={c.id}
                   to="/kelas/$classId"

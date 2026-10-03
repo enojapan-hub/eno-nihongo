@@ -116,7 +116,7 @@ function Page() {
                 .eq("user_id", user.id)
                 .in(
                   "assignment_id",
-                  assignments.map((a: any) => a.id),
+                  assignments.map((a) => a.id),
                 ),
             )
           : [];
@@ -129,7 +129,7 @@ function Page() {
                 .eq("user_id", user.id)
                 .in(
                   "quiz_id",
-                  quizzes.map((q: any) => q.id),
+                  quizzes.map((q) => q.id),
                 )
                 .order("submitted_at", { ascending: false }),
             )
@@ -161,9 +161,7 @@ function Page() {
     refetchInterval: 60_000,
   });
   const d = q.data;
-  const next = d?.schedule.find(
-    (s: any) => new Date(s.ends_at || s.starts_at).getTime() > Date.now(),
-  );
+  const next = d?.schedule.find((s) => new Date(s.ends_at || s.starts_at).getTime() > Date.now());
   const completedAssignments = d?.submissions.length ?? 0;
   const completedQuizzes = d?.attempts.length ?? 0;
   const totalActivities = (d?.assignments.length ?? 0) + (d?.quizzes.length ?? 0);
@@ -172,25 +170,25 @@ function Page() {
     ? Math.round(((completedAssignments + completedQuizzes) / totalActivities) * 100)
     : 0;
   const outstanding = d?.assignments.filter(
-    (a: any) => !d.submissions.some((s: any) => s.assignment_id === a.id),
+    (a) => !d.submissions.some((s) => s.assignment_id === a.id),
   );
   const pendingQuizzes =
-    d?.quizzes.filter((k: any) => !d.attempts.some((a: any) => a.quiz_id === k.id)) ?? [];
+    d?.quizzes.filter((k) => !d.attempts.some((a) => a.quiz_id === k.id)) ?? [];
   const nextAction = [
-    ...(outstanding ?? []).map((a: any) => ({
+    ...(outstanding ?? []).map((a) => ({
       type: "tugas",
       id: a.id,
       title: a.title,
       due_at: a.due_at,
     })),
-    ...pendingQuizzes.map((k: any) => ({
+    ...pendingQuizzes.map((k) => ({
       type: "kuis",
       id: k.id,
       title: k.title,
       due_at: k.due_at,
     })),
   ].sort(
-    (a: any, b: any) =>
+    (a, b) =>
       (a.due_at ? new Date(a.due_at).getTime() : Infinity) -
       (b.due_at ? new Date(b.due_at).getTime() : Infinity),
   )[0];
@@ -207,9 +205,9 @@ function Page() {
     return sessionTime(value);
   };
   const taskStatus = (a: any) =>
-    d?.grades.some((g: any) => g.assignment_id === a.id)
+    d?.grades.some((g) => g.assignment_id === a.id)
       ? "dinilai"
-      : d?.submissions.some((s: any) => s.assignment_id === a.id)
+      : d?.submissions.some((s) => s.assignment_id === a.id)
         ? "menunggu"
         : a.due_at && new Date(a.due_at).getTime() < Date.now() && !a.allow_late
           ? "lewat"
@@ -514,7 +512,7 @@ function Page() {
             )}
             {tab === "materi" && (
               <>
-                {d.materials.map((m: any) => (
+                {d.materials.map((m) => (
                   <Card key={m.id}>
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{m.title}</h2>
@@ -553,20 +551,16 @@ function Page() {
                       onClick={() => setTaskFilter(id!)}
                     >
                       {label} (
-                      {
-                        d.assignments.filter((a: any) => id === "semua" || taskStatus(a) === id)
-                          .length
-                      }
-                      )
+                      {d.assignments.filter((a) => id === "semua" || taskStatus(a) === id).length})
                     </Button>
                   ))}
                 </div>
                 {d.assignments
-                  .filter((a: any) => taskFilter === "semua" || taskStatus(a) === taskFilter)
+                  .filter((a) => taskFilter === "semua" || taskStatus(a) === taskFilter)
                   .map(task)}
                 {!!d.assignments.length &&
                   !d.assignments.some(
-                    (a: any) => taskFilter === "semua" || taskStatus(a) === taskFilter,
+                    (a) => taskFilter === "semua" || taskStatus(a) === taskFilter,
                   ) && (
                     <p className="text-sm text-muted-foreground">
                       Tidak ada tugas pada status ini.
@@ -584,7 +578,7 @@ function Page() {
                     {d.quizzes.length}
                   </span>
                 </div>
-                {d.quizzes.map((k: any) => (
+                {d.quizzes.map((k) => (
                   <Card key={k.id}>
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{k.title}</h2>
@@ -602,7 +596,7 @@ function Page() {
                         </p>
                       )}
                       <p className="text-xs font-bold">
-                        {d.attempts.some((a: any) => a.quiz_id === k.id)
+                        {d.attempts.some((a) => a.quiz_id === k.id)
                           ? "Sudah dikerjakan"
                           : k.due_at && new Date(k.due_at).getTime() < Date.now()
                             ? "Batas waktu berakhir"
@@ -632,7 +626,7 @@ function Page() {
             )}
             {tab === "jadwal" && (
               <>
-                {d.schedule.map((s: any) => (
+                {d.schedule.map((s) => (
                   <Card key={s.id}>
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{s.title}</h2>
@@ -653,8 +647,8 @@ function Page() {
             )}
             {tab === "nilai" && (
               <>
-                {d.grades.map((g: any) => {
-                  const a = d.assignments.find((x: any) => x.id === g.assignment_id);
+                {d.grades.map((g) => {
+                  const a = d.assignments.find((x) => x.id === g.assignment_id);
                   return (
                     <Card key={g.id}>
                       <CardContent className="space-y-2 p-4">
@@ -671,7 +665,7 @@ function Page() {
                 })}
                 {!d.grades.length && <p className="text-sm">Belum ada tugas yang dinilai guru.</p>}
                 <h2 className="font-bold">Nilai Kuis</h2>
-                {d.attempts.map((a: any) => (
+                {d.attempts.map((a) => (
                   <Link
                     key={a.id}
                     to="/kelas/$classId/quiz/$quizId"
@@ -680,7 +674,7 @@ function Page() {
                     className="block rounded-xl border p-3 text-sm hover:border-primary"
                   >
                     <strong>
-                      {d.quizzes.find((q: any) => q.id === a.quiz_id)?.title}: {a.score}/100
+                      {d.quizzes.find((q) => q.id === a.quiz_id)?.title}: {a.score}/100
                     </strong>
                     <p className="text-xs text-muted-foreground">{sessionTime(a.submitted_at)}</p>
                     <span className="text-xs text-primary">Lihat Pembahasan</span>
@@ -690,7 +684,7 @@ function Page() {
                   <p className="text-sm text-muted-foreground">Belum ada kuis yang dikerjakan.</p>
                 )}
                 <h2 className="font-bold">Latihan per Topik</h2>
-                {d.topics.map((t: any) => (
+                {d.topics.map((t) => (
                   <div key={t.category + ":" + t.topic} className="space-y-1">
                     <p className="text-xs">
                       {t.category} / {t.topic}: {t.accuracy}% ({t.correct_count}/{t.total_questions}{" "}

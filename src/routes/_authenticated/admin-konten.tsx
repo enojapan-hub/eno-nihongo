@@ -334,7 +334,7 @@ function Page() {
           </Button>
         </div>
         <div className="space-y-2">
-          {shown.map((r: any) => (
+          {shown.map((r) => (
             <Card key={r.id}>
               <CardContent className="flex items-center justify-between gap-3 p-3">
                 <div className="min-w-0">

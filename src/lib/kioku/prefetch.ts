@@ -10,14 +10,14 @@ const arr = (v: unknown) => (Array.isArray(v) ? v.filter(Boolean).join("、") : 
 const exList = (v: unknown): Array<{ ja: string; id: string }> =>
   Array.isArray(v)
     ? v
-        .filter((e: any) => e && typeof e.ja === "string")
-        .map((e: any) => ({ ja: String(e.ja), id: String(e.id ?? "") }))
+        .filter((e) => e && typeof e.ja === "string")
+        .map((e) => ({ ja: String(e.ja), id: String(e.id ?? "") }))
     : [];
 const wrongList = (v: unknown): Array<{ wrong: string; correct: string; reason: string }> =>
   Array.isArray(v)
     ? v
-        .filter((e: any) => e && typeof e.wrong === "string" && typeof e.correct === "string")
-        .map((e: any) => ({
+        .filter((e) => e && typeof e.wrong === "string" && typeof e.correct === "string")
+        .map((e) => ({
           wrong: String(e.wrong),
           correct: String(e.correct),
           reason: String(e.reason_id ?? e.reason ?? ""),
@@ -246,7 +246,7 @@ async function attachContext(content: Map<string, Content>, ids: Record<KiokuIte
       .in("id", vids)
       .eq("is_published", true),
   );
-  const byId = new Map(vocab.map((r: any) => [r.id, map(r)]));
+  const byId = new Map(vocab.map((r) => [r.id, map(r)]));
   for (const [kid, list] of perKanji) {
     const c = content.get(`kanji:${kid}`);
     if (c) c.compounds = list.map((v) => byId.get(v)).filter(Boolean) as Content[];

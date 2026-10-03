@@ -299,7 +299,7 @@ export const Route = createFileRoute("/api/admin-import-export")({
                 .in(c.key, keys.slice(i, i + 500));
               if (error) throw error;
               const exists = new Set((data || []).map((x: any) => String(x[c.key])));
-              keys.slice(i, i + 500).forEach((k: any) => {
+              keys.slice(i, i + 500).forEach((k) => {
                 if (!exists.has(String(k))) {
                   const x = parsed.find((y) => String(y.row[c.key]) === String(k));
                   if (x) errors.push({ row: x.rowNo, error: "Target update tidak ditemukan" });

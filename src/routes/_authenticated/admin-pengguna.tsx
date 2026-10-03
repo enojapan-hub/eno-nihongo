@@ -320,7 +320,7 @@ function Page() {
         {q.isError && <p className="text-xs text-destructive">Akses Admin diperlukan.</p>}
         <Card>
           <CardContent className="divide-y p-3">
-            {rows.map((u: any) => {
+            {rows.map((u) => {
               const left = u.plan === "premium" ? daysLeft(u.premium_until) : null;
               return (
                 <div key={u.id} className="space-y-2 py-3 first:pt-0 last:pb-0">

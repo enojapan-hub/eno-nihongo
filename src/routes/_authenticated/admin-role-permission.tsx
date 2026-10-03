@@ -105,7 +105,7 @@ function Page() {
           )}
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          {roles.map((r: any) => (
+          {roles.map((r) => (
             <Card key={r.id}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2">

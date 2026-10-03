@@ -163,19 +163,19 @@ function Page() {
                       [
                         UsersRound,
                         "Peserta aktif",
-                        d.participants.filter((p: any) => p.status === "active").length,
+                        d.participants.filter((p) => p.status === "active").length,
                         "bg-sky-500/10 text-sky-600",
                       ],
                       [
                         ClipboardList,
                         "Tugas terbit",
-                        d.assignments.filter((a: any) => a.is_published).length,
+                        d.assignments.filter((a) => a.is_published).length,
                         "bg-violet-500/10 text-violet-600",
                       ],
                       [
                         ClipboardCheck,
                         "Perlu dinilai",
-                        d.submissions.filter((s: any) => s.current_score == null).length,
+                        d.submissions.filter((s) => s.current_score == null).length,
                         "bg-amber-500/10 text-amber-600",
                       ],
                       [
@@ -243,28 +243,27 @@ function Page() {
                     <UsersRound className="size-5 text-primary" /> Belum ada peserta.
                   </div>
                 )}
-                {d.participants.map((p: any) => {
-                  const submitted = d.submissions.filter((s: any) => s.user_id === p.user_id);
-                  const published = d.assignments.filter((a: any) => a.is_published);
+                {d.participants.map((p) => {
+                  const submitted = d.submissions.filter((s) => s.user_id === p.user_id);
+                  const published = d.assignments.filter((a) => a.is_published);
                   const missing = published.filter(
-                    (a: any) => !submitted.some((s: any) => s.assignment_id === a.id),
+                    (a) => !submitted.some((s) => s.assignment_id === a.id),
                   );
-                  const scored = submitted.filter((s: any) => s.current_score != null);
+                  const scored = submitted.filter((s) => s.current_score != null);
                   const average = scored.length
                     ? Math.round(
                         scored.reduce(
-                          (n: number, s: any) =>
+                          (n: number, s) =>
                             n + (Number(s.current_score) / Number(s.max_score || 100)) * 100,
                           0,
                         ) / scored.length,
                       )
                     : null;
-                  const topics = d.insights.filter((i: any) => i.user_id === p.user_id);
-                  const attempts = d.attempts.filter((a: any) => a.user_id === p.user_id);
+                  const topics = d.insights.filter((i) => i.user_id === p.user_id);
+                  const attempts = d.attempts.filter((a) => a.user_id === p.user_id);
                   const quizAverage = attempts.length
                     ? Math.round(
-                        attempts.reduce((n: number, a: any) => n + Number(a.score), 0) /
-                          attempts.length,
+                        attempts.reduce((n: number, a) => n + Number(a.score), 0) / attempts.length,
                       )
                     : null;
                   const needsAttention =
@@ -309,10 +308,9 @@ function Page() {
                         <h3 className="flex items-center gap-2 font-bold">
                           <ClipboardCheck className="size-4 text-primary" /> Nilai tugas dan koreksi
                         </h3>
-                        {submitted.map((s: any) => {
+                        {submitted.map((s) => {
                           const grade = d.grades.find(
-                            (g: any) =>
-                              g.assignment_id === s.assignment_id && g.user_id === p.user_id,
+                            (g) => g.assignment_id === s.assignment_id && g.user_id === p.user_id,
                           );
                           return (
                             <div key={s.id} className="rounded-xl border bg-muted/40 p-3">
@@ -328,7 +326,7 @@ function Page() {
                           );
                         })}
                         {missing.length > 0 && (
-                          <p>Belum dikumpulkan: {missing.map((a: any) => a.title).join(", ")}</p>
+                          <p>Belum dikumpulkan: {missing.map((a) => a.title).join(", ")}</p>
                         )}
                         <h3 className="flex items-center gap-2 font-bold">
                           <BarChart3 className="size-4 text-primary" /> Kemampuan per topik
@@ -338,7 +336,7 @@ function Page() {
                             Belum ada jawaban kuis untuk dianalisis.
                           </p>
                         ) : (
-                          topics.map((i: any) => (
+                          topics.map((i) => (
                             <div key={i.category + ":" + i.topic} className="space-y-1">
                               <p>
                                 {i.category} / {i.topic}: {Number(i.accuracy)}% ({i.correct_count}/
@@ -365,9 +363,7 @@ function Page() {
                         {attempts.length === 0 ? (
                           <p className="text-muted-foreground">Belum ada kuis yang dikumpulkan.</p>
                         ) : (
-                          attempts.map((a: any) => (
-                            <TeacherQuizAttempt key={a.attempt_id} attempt={a} />
-                          ))
+                          attempts.map((a) => <TeacherQuizAttempt key={a.attempt_id} attempt={a} />)
                         )}
                       </div>
                     </details>
@@ -397,7 +393,7 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
       result<any[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: attempt.attempt_id })),
     staleTime: Infinity,
   });
-  const wrong = review.data?.filter((row: any) => !row.is_correct) ?? [];
+  const wrong = review.data?.filter((row) => !row.is_correct) ?? [];
   return (
     <details className="rounded-xl border bg-muted/30 p-3">
       <summary className="cursor-pointer list-none">
@@ -420,7 +416,7 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
       <div className="mt-3 space-y-2 border-t pt-3">
         {review.isPending && <p className="text-muted-foreground">Memuat detail jawaban…</p>}
         {review.isError && <p className="text-destructive">Detail jawaban gagal dimuat.</p>}
-        {review.data?.map((row: any, index: number) => {
+        {review.data?.map((row, index: number) => {
           const selected = Number(row.selected_index);
           const correct = Number(row.correct_index);
           return (

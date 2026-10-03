@@ -82,7 +82,7 @@ function Page() {
         category,
         topic: topic || null,
         sort_order: id
-          ? (q.data?.questions.find((x: any) => x.id === id)?.sort_order ?? 0)
+          ? (q.data?.questions.find((x) => x.id === id)?.sort_order ?? 0)
           : (q.data?.questions.length ?? 0),
       };
       await result(

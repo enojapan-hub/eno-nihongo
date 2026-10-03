@@ -40,7 +40,7 @@ function Page() {
   const levels = ["N5", "N4", "N3", "N2", "N1"];
   const daily: any[] = d.daily || [];
   const chart = daily.filter(
-    (_: any, i: number) =>
+    (_, i: number) =>
       daily.length <= 10 || i % Math.ceil(daily.length / 10) === 0 || i === daily.length - 1,
   );
   const max = Math.max(1, ...daily.map((x) => Number(x.sessions || 0)));
@@ -107,7 +107,7 @@ function Page() {
                     gridTemplateColumns: `repeat(${Math.max(chart.length, 1)},minmax(0,1fr))`,
                   }}
                 >
-                  {chart.map((x: any) => (
+                  {chart.map((x) => (
                     <div
                       key={x.activity_date}
                       className="flex min-w-0 flex-col items-center gap-1 overflow-hidden"

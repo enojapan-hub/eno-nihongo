@@ -144,7 +144,7 @@ function Page() {
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          {rows.map((x: any) => (
+          {rows.map((x) => (
             <Card key={x.id}>
               <CardContent className="p-3">
                 <div className="flex gap-3">

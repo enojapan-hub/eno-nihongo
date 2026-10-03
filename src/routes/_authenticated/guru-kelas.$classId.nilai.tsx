@@ -21,10 +21,10 @@ function Page() {
         result(classroom.rpc("get_teacher_class_submissions", { p_class_id: classId })),
         result(classroom.from("class_grades").select("*").eq("class_id", classId)),
       ]);
-      return submissions.map((s: any) => ({
+      return submissions.map((s) => ({
         ...s,
         weakness:
-          grades.find((g: any) => g.assignment_id === s.assignment_id && g.user_id === s.user_id)
+          grades.find((g) => g.assignment_id === s.assignment_id && g.user_id === s.user_id)
             ?.weakness_note || "",
       }));
     },
@@ -55,8 +55,8 @@ function Page() {
           </p>
         )}
         {(q.data ?? [])
-          .filter((s: any) => filter === "all" || s.current_score == null)
-          .map((s: any) => (
+          .filter((s) => filter === "all" || s.current_score == null)
+          .map((s) => (
             <Grade
               key={s.id + ":" + s.current_score + ":" + s.weakness}
               s={s}
@@ -67,7 +67,7 @@ function Page() {
             />
           ))}
         {q.isSuccess &&
-          !(q.data ?? []).some((s: any) => filter === "all" || s.current_score == null) && (
+          !(q.data ?? []).some((s) => filter === "all" || s.current_score == null) && (
             <p className="rounded-xl bg-muted p-4 text-sm">Tidak ada tugas pada daftar ini.</p>
           )}
       </div>
