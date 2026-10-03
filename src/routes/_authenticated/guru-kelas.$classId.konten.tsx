@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -30,6 +30,7 @@ import {
   sessionTime,
   secureUrl,
   type ClassContentTable,
+  type ClassRecord,
 } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/guru-kelas/$classId/konten")({
   validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
@@ -69,6 +70,28 @@ const initial = {
   meeting_id: "",
   passcode: "",
 };
+// Baris gabungan dari tabel konten kelas; tiap tab hanya mengisi sebagian kolom.
+interface ContentRow {
+  id: string;
+  title: string;
+  description?: string | null;
+  body?: string | null;
+  location_label?: string | null;
+  content_url?: string | null;
+  meeting_url?: string | null;
+  due_at?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  category?: string | null;
+  topic?: string | null;
+  max_score?: number | null;
+  duration_minutes?: number | null;
+  submission_type?: string | null;
+  allow_late?: boolean | null;
+  is_published?: boolean | null;
+  meeting_id?: string | null;
+  passcode?: string | null;
+}
 function Page() {
   const { classId } = Route.useParams();
   const search = Route.useSearch();
@@ -83,7 +106,7 @@ function Page() {
   const [quizChoices, setQuizChoices] = useState(["", "", "", ""]);
   const [quizCorrect, setQuizCorrect] = useState(-1);
   const [quizExplanation, setQuizExplanation] = useState("");
-  const set = (key: string, value: any) => setF((x) => ({ ...x, [key]: value }));
+  const set = (key: string, value: string | boolean) => setF((x) => ({ ...x, [key]: value }));
   const access = useQuery({
     queryKey: ["class-manage-access", classId],
     queryFn: () => result(classroom.rpc("can_manage_class", { p_class_id: classId })),
@@ -91,13 +114,13 @@ function Page() {
   const q = useQuery({
     queryKey: ["guru-class-content", classId, tab],
     enabled: access.data === true,
-    queryFn: () =>
-      result(
+    queryFn: async () =>
+      (await result(
         classContentTable(tables[tab])
           .select("*")
           .eq("class_id", classId)
           .order(tab === "jadwal" ? "starts_at" : "created_at", { ascending: tab === "jadwal" }),
-      ),
+      )) as unknown as ContentRow[],
   });
   const reset = () => {
     setId(null);
@@ -130,7 +153,7 @@ function Page() {
           throw new Error("Isi semua pilihan jawaban.");
         if (quizCorrect < 0) throw new Error("Tandai satu pilihan sebagai jawaban benar.");
       }
-      const row: any = { class_id: classId, title: f.title.trim() };
+      const row: ClassRecord = { class_id: classId, title: f.title.trim() };
       if (tab === "materi")
         Object.assign(row, {
           description: f.text,
@@ -220,7 +243,7 @@ function Page() {
     },
   });
   const remove = useMutation({
-    mutationFn: async (row: any) => {
+    mutationFn: async (row: ContentRow) => {
       await result(
         classContentTable(tables[tab]).delete().eq("id", row.id).eq("class_id", classId),
       );
@@ -230,7 +253,7 @@ function Page() {
       await refresh();
     },
   });
-  function edit(row: any, duplicate = false) {
+  function edit(row: ContentRow, duplicate = false) {
     save.reset();
     remove.reset();
     setMessage("");
@@ -657,7 +680,7 @@ function Page() {
                 {q.error.message}
               </p>
             )}
-            {(q.data ?? []).map((row: any) => (
+            {(q.data ?? []).map((row) => (
               <Card key={row.id}>
                 <CardContent className="space-y-2 p-4">
                   <div className="flex items-start justify-between gap-2">
@@ -725,7 +748,7 @@ function Page() {
     </AppShell>
   );
 }
-function Field({ label, children }: { label: string; children: any }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block space-y-1">
       <span className="text-xs font-bold">{label}</span>

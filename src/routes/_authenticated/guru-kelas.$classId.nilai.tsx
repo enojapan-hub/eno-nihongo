@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { classroom, result, openClassAttachment } from "@/lib/classroom";
+import type { Database } from "@/integrations/supabase/types";
+import { classroom, result, openClassAttachment, errorMessage } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/guru-kelas/$classId/nilai")({
   component: Page,
 });
@@ -74,7 +75,12 @@ function Page() {
     </AppShell>
   );
 }
-function Grade({ s, done }: { s: any; done: () => Promise<void> }) {
+type GradeArgs = Database["public"]["Functions"]["teacher_grade_assignment"]["Args"];
+type Submission =
+  Database["public"]["Functions"]["get_teacher_class_submissions"]["Returns"][number] & {
+    weakness: string;
+  };
+function Grade({ s, done }: { s: Submission; done: () => Promise<void> }) {
   const [score, setScore] = useState(s.current_score == null ? "" : String(s.current_score));
   const [feedback, setFeedback] = useState(s.current_feedback || "");
   const [weakness, setWeakness] = useState(s.weakness);
@@ -91,18 +97,18 @@ function Grade({ s, done }: { s: any; done: () => Promise<void> }) {
         Number(score) > Number(s.max_score ?? 100)
       )
         throw new Error("Isi nilai antara 0 dan " + (s.max_score ?? 100) + ".");
-      await result(
-        classroom.rpc("teacher_grade_assignment", {
-          p_submission_id: s.id,
-          p_score: Number(score),
-          p_feedback: feedback || null,
-          p_weakness: weakness || null,
-        }),
-      );
+      // Fungsi database menerima NULL untuk umpan balik/kelemahan kosong; tipe generated menyebutnya string.
+      const args = {
+        p_submission_id: s.id,
+        p_score: Number(score),
+        p_feedback: feedback || null,
+        p_weakness: weakness || null,
+      } as unknown as GradeArgs;
+      await result(classroom.rpc("teacher_grade_assignment", args));
       await done();
       setMessage("Nilai dan koreksi tersimpan.");
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(errorMessage(e));
     } finally {
       setBusy(false);
     }

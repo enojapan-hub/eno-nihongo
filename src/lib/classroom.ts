@@ -38,6 +38,9 @@ type ClassContentTableApi = {
 export function classContentTable(name: ClassContentTable): ClassContentTableApi {
   return supabase.from(name) as unknown as ClassContentTableApi;
 }
+export function errorMessage(error: unknown, fallback = "Terjadi kesalahan.") {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 export function localDateTime(value?: string | null) {
   if (!value) return "";
   const date = new Date(value);

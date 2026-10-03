@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { classroom, result, localDateTime, isoDate } from "@/lib/classroom";
+import type { Database, Tables } from "@/integrations/supabase/types";
+import { classroom, result, localDateTime, isoDate, errorMessage } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/guru-kelas/$classId")({
   component: TeacherClassRoute,
 });
@@ -386,11 +387,19 @@ function Page() {
     </AppShell>
   );
 }
-function TeacherQuizAttempt({ attempt }: { attempt: any }) {
+type QuizAttemptRow =
+  Database["public"]["Functions"]["get_teacher_class_quiz_attempts"]["Returns"][number];
+type QuizReviewRow = Omit<
+  Database["public"]["Functions"]["get_class_quiz_review"]["Returns"][number],
+  "choices"
+> & { choices: string[] | null };
+function TeacherQuizAttempt({ attempt }: { attempt: QuizAttemptRow }) {
   const review = useQuery({
     queryKey: ["teacher-quiz-review", attempt.attempt_id],
     queryFn: () =>
-      result<any[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: attempt.attempt_id })),
+      result<QuizReviewRow[]>(
+        classroom.rpc("get_class_quiz_review", { p_attempt_id: attempt.attempt_id }),
+      ),
     staleTime: Infinity,
   });
   const wrong = review.data?.filter((row) => !row.is_correct) ?? [];
@@ -450,10 +459,10 @@ function Settings({
   refresh,
   leave,
 }: {
-  kelas: any;
-  meeting: any;
-  refresh: () => Promise<any>;
-  leave: () => Promise<any>;
+  kelas: Tables<"classes">;
+  meeting: Tables<"class_meetings"> | null;
+  refresh: () => Promise<unknown>;
+  leave: () => Promise<unknown>;
 }) {
   const [f, setF] = useState({
     title: kelas.title,
@@ -503,8 +512,8 @@ function Settings({
       }
       await refresh();
       setMessage("Perubahan tersimpan.");
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -632,7 +641,7 @@ function Settings({
     </Card>
   );
 }
-function Field({ label, children }: { label: string; children: any }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block space-y-1">
       <span className="text-xs font-bold">{label}</span>
