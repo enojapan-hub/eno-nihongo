@@ -16,6 +16,7 @@ import {
 import { parseMasteryTraining } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
 import { separateSameItemCards } from "@/lib/flashcard-deck";
+import { FitContent } from "@/components/learn/FitContent";
 export const Route = createFileRoute("/_authenticated/hafalan")({
   head: () => ({ meta: [{ title: "Flashcard — ENO NIHONGO" }] }),
   component: HafalanPage,
@@ -207,7 +208,8 @@ function HafalanPage() {
     [quickStarted, setQuickStarted] = useState(false),
     [dragX, setDragX] = useState(0),
     [swiping, setSwiping] = useState(false);
-  const started = useRef(Date.now()),
+  const deckRef = useRef<HTMLDivElement>(null),
+    started = useRef(Date.now()),
     pointerStart = useRef(0),
     dragging = useRef(false);
   const source = useMemo<Card[]>(() => {
@@ -252,6 +254,11 @@ function HafalanPage() {
   }, [source, progress.data, kind, study, limit, retryWrong, wrong, targeted]);
   const card = all[index],
     done = (study === "quick" && quickExpired) || (index >= all.length && all.length > 0);
+  const cardKey = card ? `${card.id}-${card.aspect}` : null;
+  // Kartu + kontrol selalu berada di dalam viewport: gulirkan dek ke bawah header saat kartu berganti.
+  useEffect(() => {
+    if (cardKey) deckRef.current?.scrollIntoView({ block: "start" });
+  }, [cardKey, kind, study]);
   useEffect(() => {
     if (!level || targeted) return;
     try {
@@ -467,7 +474,7 @@ function HafalanPage() {
     );
   return (
     <AppShell compact title="Flashcard">
-      <div className="mx-auto w-full max-w-md space-y-3 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <div className="mx-auto w-full max-w-md space-y-3 pb-[max(calc(11.5rem+env(safe-area-inset-bottom)),calc(100svh-19rem))]">
         <div className="flex gap-2">
           <a
             href="/belajar"
@@ -578,168 +585,180 @@ function HafalanPage() {
           </section>
         ) : card ? (
           <>
-            <div className="flex items-center justify-between text-[9px] text-muted-foreground">
-              <button
-                onClick={undo}
-                disabled={index === 0 || undoing || rating}
-                className="disabled:opacity-30"
-              >
-                <Undo2 className="mr-1 inline size-3" />
-                {undoing ? "Membatalkan…" : "Undo"}
-              </button>
-              <span>
-                {study === "quick" ? `${index + 1} · ${mm}:${ss}` : `${index + 1}/${all.length}`}
-              </span>
-              {study === "quick" ? (
-                <span className="text-[8px]">Tanpa batas kartu</span>
-              ) : (
-                <select
-                  value={limit}
-                  onChange={(e) => reset(kind, Number(e.target.value), study)}
-                  className="rounded-lg border bg-card px-1.5 py-1"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={30}>30</option>
-                </select>
-              )}
-            </div>
-            <div className="relative px-1 pb-3 pt-1 [perspective:1200px]">
-              <div
-                aria-hidden
-                className="absolute inset-x-6 bottom-0 top-5 translate-y-4 rounded-[28px] border bg-muted/35 shadow-sm"
-              />
-              <div
-                aria-hidden
-                className="absolute inset-x-4 bottom-0 top-3 translate-y-2 rounded-[28px] border bg-muted/60 shadow-sm"
-              />
-              <button
-                onClick={() => {
-                  if (Math.abs(dragX) < 8 && !swiping) setRevealed((v) => !v);
-                }}
-                onPointerDown={pointerDown}
-                onPointerMove={pointerMove}
-                onPointerUp={pointerUp}
-                onPointerCancel={() => {
-                  dragging.current = false;
-                  setDragX(0);
-                }}
-                style={{
-                  transform: `translateX(${dragX}px) rotate(${dragX / 22}deg) ${revealed ? "translateY(-2px)" : ""}`,
-                  touchAction: revealed ? "pan-y" : "auto",
-                }}
-                className={`relative h-[clamp(230px,34svh,320px)] w-full select-none overflow-y-auto overflow-x-hidden rounded-[28px] border bg-card px-5 py-5 text-center shadow-[0_18px_45px_-22px_rgba(0,0,0,0.45)] ease-out [transform-style:preserve-3d] ${dragging.current ? "transition-none" : "transition-transform duration-75"} ${swiping ? "pointer-events-none" : ""}`}
-              >
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary/70" />
-                {revealed && (
-                  <>
-                    <span
-                      style={{ opacity: dragX < 0 ? dragOpacity : 0 }}
-                      className="pointer-events-none absolute left-5 top-5 -rotate-6 rounded-lg border-2 border-red-500 px-3 py-1 text-[14px] font-black tracking-wider text-red-500"
-                    >
-                      LUPA
-                    </span>
-                    <span
-                      style={{ opacity: dragX > 0 ? dragOpacity : 0 }}
-                      className="pointer-events-none absolute right-5 top-5 rotate-6 rounded-lg border-2 border-emerald-500 px-3 py-1 text-[14px] font-black tracking-wider text-emerald-600"
-                    >
-                      HAFAL
-                    </span>
-                  </>
-                )}
-                <div key={`${card.id}-${card.aspect}-${revealed ? "back" : "front"}`} className="">
-                  <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-[8px] font-bold uppercase tracking-widest text-primary">
-                    {card.kind === "vocabulary"
-                      ? "Kotoba"
-                      : card.kind === "grammar"
-                        ? "Bunpou"
-                        : "Kanji"}{" "}
-                    · {masteryAspectLabel[masteryAspect(card)]}
-                  </span>
-                  <p
-                    className={`mx-auto mt-5 max-w-[92%] leading-snug ${card.front.includes("＿＿＿") ? "font-jp text-[20px] font-semibold" : "font-jp text-[34px] font-bold"}`}
-                  >
-                    {card.front}
-                  </p>
-                  {!revealed ? (
-                    <>
-                      <p className="mt-6 text-[10px] text-muted-foreground">
-                        Ketuk kartu untuk membuka jawaban
-                      </p>
-                      {hint && (
-                        <p className="mx-auto mt-3 max-w-[90%] text-[10px] font-medium text-amber-700">
-                          Petunjuk:{" "}
-                          {card.back.slice(0, Math.max(1, Math.ceil(card.back.length / 3)))}…
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <div className="mx-auto mt-4 max-w-[92%] border-t pt-4">
-                      <p className="font-jp text-[22px] font-bold leading-relaxed">{card.back}</p>
-                      {card.sub && (
-                        <p className="mt-2 font-jp text-[10px] text-muted-foreground">{card.sub}</p>
-                      )}
-                      {card.example && (
-                        <p className="mx-auto mt-3 max-w-[95%] font-jp text-[10px] leading-[1.7] text-muted-foreground">
-                          {card.example}
-                        </p>
-                      )}
-                      <p className="mt-4 text-[8px] font-medium text-muted-foreground">
-                        ← geser Lupa · geser Hafal →
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </button>
-            </div>
-            {!revealed ? (
-              <div className="relative z-10 space-y-2 rounded-2xl bg-background pt-1">
-                <div className="flex gap-2">
-                  <input
-                    value={typed}
-                    onChange={(e) => setTyped(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") setRevealed(true);
-                    }}
-                    placeholder="Tulis jawaban (opsional)…"
-                    className="h-11 min-w-0 flex-1 rounded-xl border bg-card px-3 text-[11px]"
-                  />
-                  <button
-                    onClick={() => setRevealed(true)}
-                    className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[10px] font-bold text-primary-foreground"
-                  >
-                    Lihat Jawaban
-                  </button>
-                </div>
+            <div ref={deckRef} className="scroll-mt-16 space-y-3">
+              <div className="flex items-center justify-between text-[9px] text-muted-foreground">
                 <button
-                  onClick={() => setHint(true)}
-                  className="mx-auto flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-2 text-[9px] font-semibold text-amber-700"
+                  onClick={undo}
+                  disabled={index === 0 || undoing || rating}
+                  className="disabled:opacity-30"
                 >
-                  <Lightbulb className="size-3" /> Petunjuk bertahap
+                  <Undo2 className="mr-1 inline size-3" />
+                  {undoing ? "Membatalkan…" : "Undo"}
+                </button>
+                <span>
+                  {study === "quick" ? `${index + 1} · ${mm}:${ss}` : `${index + 1}/${all.length}`}
+                </span>
+                {study === "quick" ? (
+                  <span className="text-[8px]">Tanpa batas kartu</span>
+                ) : (
+                  <select
+                    value={limit}
+                    onChange={(e) => reset(kind, Number(e.target.value), study)}
+                    className="rounded-lg border bg-card px-1.5 py-1"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={30}>30</option>
+                  </select>
+                )}
+              </div>
+              <div className="relative px-1 pb-3 pt-1 [perspective:1200px]">
+                <div
+                  aria-hidden
+                  className="absolute inset-x-6 bottom-0 top-5 translate-y-4 rounded-[28px] border bg-muted/35 shadow-sm"
+                />
+                <div
+                  aria-hidden
+                  className="absolute inset-x-4 bottom-0 top-3 translate-y-2 rounded-[28px] border bg-muted/60 shadow-sm"
+                />
+                <button
+                  onClick={() => {
+                    if (Math.abs(dragX) < 8 && !swiping) setRevealed((v) => !v);
+                  }}
+                  onPointerDown={pointerDown}
+                  onPointerMove={pointerMove}
+                  onPointerUp={pointerUp}
+                  onPointerCancel={() => {
+                    dragging.current = false;
+                    setDragX(0);
+                  }}
+                  style={{
+                    transform: `translateX(${dragX}px) rotate(${dragX / 22}deg)`,
+                    touchAction: revealed ? "pan-y" : "auto",
+                  }}
+                  className={`relative h-[clamp(240px,calc(100svh-20.5rem-env(safe-area-inset-bottom)),460px)] w-full select-none overflow-hidden rounded-[28px] border bg-card text-center shadow-[0_18px_45px_-22px_rgba(0,0,0,0.45)] ease-out [transform-style:preserve-3d] ${dragging.current ? "transition-none" : "transition-transform duration-75"} ${swiping ? "pointer-events-none" : ""}`}
+                >
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary/70" />
+                  {revealed && (
+                    <>
+                      <span
+                        style={{ opacity: dragX < 0 ? dragOpacity : 0 }}
+                        className="pointer-events-none absolute left-5 top-5 -rotate-6 rounded-lg border-2 border-red-500 px-3 py-1 text-[14px] font-black tracking-wider text-red-500"
+                      >
+                        LUPA
+                      </span>
+                      <span
+                        style={{ opacity: dragX > 0 ? dragOpacity : 0 }}
+                        className="pointer-events-none absolute right-5 top-5 rotate-6 rounded-lg border-2 border-emerald-500 px-3 py-1 text-[14px] font-black tracking-wider text-emerald-600"
+                      >
+                        HAFAL
+                      </span>
+                    </>
+                  )}
+                  <div className="absolute inset-x-5 bottom-5 top-6">
+                    <FitContent watch={`${card.id}-${card.aspect}-${revealed}-${hint}`}>
+                      <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
+                        {card.kind === "vocabulary"
+                          ? "Kotoba"
+                          : card.kind === "grammar"
+                            ? "Bunpou"
+                            : "Kanji"}{" "}
+                        · {masteryAspectLabel[masteryAspect(card)]}
+                      </span>
+                      <p
+                        className={`mx-auto mt-4 max-w-[94%] leading-snug ${card.front.includes("＿＿＿") ? "font-jp text-[20px] font-semibold" : "font-jp text-[34px] font-bold"}`}
+                      >
+                        {card.front}
+                      </p>
+                      {!revealed ? (
+                        <>
+                          <p className="mt-5 text-[11px] text-muted-foreground">
+                            Ketuk kartu untuk membuka jawaban
+                          </p>
+                          {hint && (
+                            <p className="mx-auto mt-3 max-w-[92%] text-[11px] font-medium text-amber-700">
+                              Petunjuk:{" "}
+                              {card.back.slice(0, Math.max(1, Math.ceil(card.back.length / 3)))}…
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <div className="mx-auto mt-4 max-w-[94%] border-t pt-4">
+                          <p className="font-jp text-[22px] font-bold leading-relaxed">
+                            {card.back}
+                          </p>
+                          {card.sub && (
+                            <p className="mt-2 font-jp text-[12px] text-muted-foreground">
+                              {card.sub}
+                            </p>
+                          )}
+                          {card.example && (
+                            <p className="mx-auto mt-3 max-w-[96%] font-jp text-[12px] leading-[1.7] text-muted-foreground">
+                              {card.example}
+                            </p>
+                          )}
+                          <p className="mt-4 text-[10px] font-medium text-muted-foreground">
+                            ← geser Lupa · geser Hafal →
+                          </p>
+                        </div>
+                      )}
+                    </FitContent>
+                  </div>
                 </button>
               </div>
-            ) : (
-              <>
-                <div className="relative z-10 grid grid-cols-4 gap-1.5 rounded-2xl bg-background pt-1">
-                  {labels.map((x, i) => (
+            </div>
+            <div className="fixed inset-x-0 bottom-[calc(4.15rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 px-3 pb-2 pt-2 backdrop-blur md:bottom-0 md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+              <div className="mx-auto h-[6.25rem] w-full max-w-md">
+                {!revealed ? (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        value={typed}
+                        onChange={(e) => setTyped(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") setRevealed(true);
+                        }}
+                        placeholder="Tulis jawaban (opsional)…"
+                        className="h-11 min-w-0 flex-1 rounded-xl border bg-card px-3 text-[12px]"
+                      />
+                      <button
+                        onClick={() => setRevealed(true)}
+                        className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[11px] font-bold text-primary-foreground"
+                      >
+                        Lihat Jawaban
+                      </button>
+                    </div>
                     <button
-                      key={x}
-                      disabled={rating || undoing || swiping}
-                      onClick={() => choose(i as Rating)}
-                      className="rounded-xl border bg-card py-2.5 text-[9px] font-bold shadow-sm active:scale-95 disabled:opacity-50"
+                      onClick={() => setHint(true)}
+                      className="mx-auto flex min-h-9 items-center gap-1 rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-semibold text-amber-700"
                     >
-                      {rating ? "…" : x}
+                      <Lightbulb className="size-3" /> Petunjuk bertahap
                     </button>
-                  ))}
-                </div>
-                {typed && (
-                  <p className="text-center text-[9px] text-muted-foreground">
-                    Jawabanmu: <b>{typed}</b> · nilai sendiri setelah membandingkan jawaban.
-                  </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {labels.map((x, i) => (
+                        <button
+                          key={x}
+                          disabled={rating || undoing || swiping}
+                          onClick={() => choose(i as Rating)}
+                          className="min-h-11 rounded-xl border bg-card py-2.5 text-[11px] font-bold shadow-sm active:scale-95 disabled:opacity-50"
+                        >
+                          {rating ? "…" : x}
+                        </button>
+                      ))}
+                    </div>
+                    {typed && (
+                      <p className="truncate text-center text-[10px] text-muted-foreground">
+                        Jawabanmu: <b>{typed}</b> · nilai sendiri setelah membandingkan jawaban.
+                      </p>
+                    )}
+                  </div>
                 )}
-              </>
-            )}
+              </div>
+            </div>
           </>
         ) : (
           <p className="rounded-2xl border bg-card p-5 text-center text-[10px] text-muted-foreground">

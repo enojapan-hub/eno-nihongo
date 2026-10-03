@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { authStatus, type AuthStatus } from "@/lib/auth-flow";
 
 export interface AuthState {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  /** loading ≠ unauthenticated: jangan menganggap sesi belum terbaca sebagai logout. */
+  status: AuthStatus;
 }
 
 /**
@@ -37,5 +40,5 @@ export function useAuth(): AuthState {
     };
   }, []);
 
-  return { session, user: session?.user ?? null, loading };
+  return { session, user: session?.user ?? null, loading, status: authStatus(loading, !!session) };
 }

@@ -12,6 +12,15 @@ import {
   Star,
   Volume2,
 } from "lucide-react";
+import {
+  clampFontStep,
+  LIST_FONT_DEFAULT,
+  LIST_FONT_KEY,
+  LIST_FONT_MAX,
+  LIST_FONT_MIN,
+  LIST_FONT_SIZES,
+  readFontStep,
+} from "@/lib/list-font";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { fetchTargetLevel } from "@/lib/target-level";
@@ -115,6 +124,14 @@ function KotobaPage() {
         : (lessonCounts[0]?.lesson_number ?? null),
     );
   }, [level, lessonCounts]);
+  const [fontStep, setFontStep] = useState(() => readFontStep(window.localStorage));
+  useEffect(() => {
+    try {
+      localStorage.setItem(LIST_FONT_KEY, String(fontStep));
+    } catch {
+      /* penyimpanan tidak tersedia: pilihan hanya berlaku di sesi ini */
+    }
+  }, [fontStep]);
   useEffect(() => {
     if (lesson != null) localStorage.setItem(`eno:materi:kotoba:${level}:lesson`, String(lesson));
     localStorage.setItem(`eno:materi:kotoba:${level}:page`, String(page));
@@ -129,6 +146,7 @@ function KotobaPage() {
     enabled: ready && !!category,
     staleTime: 10 * 60 * 1000,
   });
+  const fontSizes = LIST_FONT_SIZES[clampFontStep(fontStep)] ?? LIST_FONT_SIZES[LIST_FONT_DEFAULT]!;
   const currentCount = category
     ? Number(categoryCount.data ?? 0)
     : Number(lessonCounts.find((x) => x.lesson_number === lesson)?.word_count ?? 0);
@@ -443,6 +461,33 @@ function KotobaPage() {
                 <ChevronDown className="pointer-events-none absolute right-3 top-3.5 size-4" />
               </div>
             )}
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold text-muted-foreground">Ukuran huruf</span>
+              <div
+                className="flex items-center gap-1.5"
+                role="group"
+                aria-label="Ukuran huruf daftar"
+              >
+                <button
+                  type="button"
+                  aria-label="Perkecil huruf"
+                  disabled={fontStep <= LIST_FONT_MIN}
+                  onClick={() => setFontStep((v) => clampFontStep(v - 1))}
+                  className="min-h-11 min-w-11 rounded-lg border bg-card px-3 text-[13px] font-bold disabled:opacity-40"
+                >
+                  A−
+                </button>
+                <button
+                  type="button"
+                  aria-label="Perbesar huruf"
+                  disabled={fontStep >= LIST_FONT_MAX}
+                  onClick={() => setFontStep((v) => clampFontStep(v + 1))}
+                  className="min-h-11 min-w-11 rounded-lg border bg-card px-3 text-[13px] font-bold disabled:opacity-40"
+                >
+                  A+
+                </button>
+              </div>
+            </div>
             <div className="mb-3 grid grid-cols-3 gap-2">
               <Toggle label="Kanji" on={showKanji} set={setShowKanji} />
               <Toggle label="Hiragana" on={showKana} set={setShowKana} />
@@ -467,7 +512,7 @@ function KotobaPage() {
               </div>
             ) : (
               <div className="min-w-0 overflow-hidden rounded-2xl border bg-card shadow-sm">
-                <div className="sticky top-0 z-10 grid grid-cols-[.85fr_.95fr_1.65fr_44px] bg-background/95 px-3 py-2.5 text-[11px] font-bold backdrop-blur">
+                <div className="sticky top-0 z-10 grid grid-cols-[.85fr_.95fr_1.65fr_44px] gap-x-2 bg-background/95 px-3 py-2.5 text-[11px] font-bold backdrop-blur">
                   <span>Kanji</span>
                   <span>Hiragana</span>
                   <span>Arti</span>
@@ -478,15 +523,26 @@ function KotobaPage() {
                     type="button"
                     key={w.id}
                     onClick={() => openItem(w)}
-                    className="grid min-h-[52px] w-full grid-cols-[.85fr_.95fr_1.65fr_44px] items-center border-t px-3 py-3 text-left transition-colors hover:bg-primary/[.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary motion-reduce:transition-none"
+                    className="grid min-h-[52px] w-full grid-cols-[.85fr_.95fr_1.65fr_44px] items-center gap-x-2 border-t px-3 py-3 text-left transition-colors hover:bg-primary/[.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary motion-reduce:transition-none"
                   >
-                    <span lang="ja" className="truncate font-jp text-sm font-bold">
+                    <span
+                      lang="ja"
+                      style={{ fontSize: fontSizes.kanji }}
+                      className="min-w-0 break-words font-jp font-bold leading-snug [overflow-wrap:anywhere]"
+                    >
                       {showKanji ? w.term : "•••"}
                     </span>
-                    <span lang="ja" className="truncate font-jp text-xs text-muted-foreground">
+                    <span
+                      lang="ja"
+                      style={{ fontSize: fontSizes.kana }}
+                      className="min-w-0 break-words font-jp leading-snug text-muted-foreground [overflow-wrap:anywhere]"
+                    >
                       {showKana ? w.reading || "—" : "•••"}
                     </span>
-                    <span className="min-w-0 truncate pr-1 text-xs">
+                    <span
+                      style={{ fontSize: fontSizes.meaning }}
+                      className="min-w-0 break-words pr-1 leading-snug [overflow-wrap:anywhere]"
+                    >
                       {showMeaning ? w.meaning_id || "—" : "•••"}
                     </span>
                     {reviewIds.has(w.id) ? (
