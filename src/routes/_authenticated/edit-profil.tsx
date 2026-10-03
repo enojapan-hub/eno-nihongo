@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   Camera,
@@ -90,13 +90,16 @@ function EditProfilePage() {
     });
   }, []);
   const targetDate = plusMonths(data.target_months);
+  // Potret awal formulir diambil sekali saat profil, bulan target, dan rencana siap; data terbaru lewat ref.
+  const dataRef = useRef(data);
+  dataRef.current = data;
   useEffect(() => {
     if (
       account.data?.profile &&
       initialMonths !== null &&
-      (!plan || data.study_days === plan.days)
+      (!plan || dataRef.current.study_days === plan.days)
     ) {
-      setInitialData(data);
+      setInitialData(dataRef.current);
     }
   }, [account.data?.profile, initialMonths, plan]);
   const dirty = initialData !== null && JSON.stringify(data) !== JSON.stringify(initialData);

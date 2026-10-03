@@ -29,6 +29,8 @@ import {
 import { addItemToReview, asExamples, markItemLearned, type Level } from "@/lib/learn-queries";
 import { normalizeRomaji, spaceJapanese } from "@/lib/japanese-spacing";
 import { supabase } from "@/integrations/supabase/client";
+// Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
+const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
   validateSearch: (search: Record<string, unknown>): { category?: string; id?: string } => ({
     ...(typeof search["category"] === "string" ? { category: search["category"] } : {}),
@@ -227,13 +229,14 @@ function KotobaPage() {
     setPage(Number(localStorage.getItem(`eno:materi:kotoba:${targetLevel}:page`) || 0));
     setScrollY(Number(sessionStorage.getItem(`eno:materi:kotoba:${targetLevel}:scroll`) || 0));
   }, [targetLevel]);
-  const { data: lessonCounts = [], isLoading: countsLoading } = useQuery({
+  const { data: lessonCountsData, isLoading: countsLoading } = useQuery({
     queryKey: ["vocab-lessons", level],
     queryFn: () => fetchVocabLessonCounts(level),
     enabled: ready,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+  const lessonCounts = lessonCountsData ?? NO_LESSONS;
   useEffect(() => {
     if (!lessonCounts.length) return;
     setLesson((v) =>
@@ -241,7 +244,7 @@ function KotobaPage() {
         ? v
         : (lessonCounts[0]?.lesson_number ?? null),
     );
-  }, [level, lessonCounts.length]);
+  }, [level, lessonCounts]);
   useEffect(() => {
     if (lesson != null) localStorage.setItem(`eno:materi:kotoba:${level}:lesson`, String(lesson));
     localStorage.setItem(`eno:materi:kotoba:${level}:page`, String(page));
@@ -299,8 +302,11 @@ function KotobaPage() {
   useEffect(() => {
     if (directItem) setSelected(directItem as VocabRow);
   }, [directItem]);
+  // Hanya reaksi pada perubahan level/pelajaran/halaman; directId dibaca terbaru lewat ref.
+  const directIdRef = useRef(directId);
+  directIdRef.current = directId;
   useEffect(() => {
-    if (!directId) setSelected(null);
+    if (!directIdRef.current) setSelected(null);
   }, [level, lesson, page]);
   const {
     data: senses = [],
