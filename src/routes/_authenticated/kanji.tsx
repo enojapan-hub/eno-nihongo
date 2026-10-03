@@ -665,7 +665,7 @@ function KanjiPage() {
                 <section className="mt-4">
                   <h3 className="text-[16px] font-bold">Contoh Kosakata</h3>
                   <div className="mt-2 space-y-2">
-                    {(study?.relatedWords ?? []).slice(0, 4).map((w: any, i: number) => (
+                    {(study?.relatedWords ?? []).slice(0, 4).map((w, i: number) => (
                       <div key={i} className="border-b pb-2 last:border-0">
                         <p lang="ja" className="font-jp text-[15px] font-semibold">
                           {highlight(w.term, item.character)}{" "}

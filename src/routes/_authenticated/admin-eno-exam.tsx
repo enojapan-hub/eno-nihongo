@@ -144,7 +144,7 @@ function Page() {
         </Card>
         <div className="space-y-2">
           {q.isLoading && <p className="text-center text-sm">Memuat…</p>}
-          {(q.data || []).map((e: any) => (
+          {(q.data || []).map((e) => (
             <Card key={e.id}>
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div>

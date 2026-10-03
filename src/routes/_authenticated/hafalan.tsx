@@ -206,11 +206,11 @@ function HafalanPage() {
     dragging = useRef(false);
   const source = useMemo<Card[]>(() => {
     const a: Card[] = [];
-    (kanji.data ?? ([] as any[])).forEach((x: any) => a.push(...buildKanjiMasteryCards(x)));
-    (vocab.data ?? ([] as any[])).forEach((x: any) =>
+    (kanji.data ?? ([] as any[])).forEach((x) => a.push(...buildKanjiMasteryCards(x)));
+    (vocab.data ?? ([] as any[])).forEach((x) =>
       a.push(...buildVocabularyMasteryCards({ ...x, example: ex(x.examples) })),
     );
-    (grammar.data ?? ([] as any[])).forEach((x: any) =>
+    (grammar.data ?? ([] as any[])).forEach((x) =>
       a.push(...buildGrammarMasteryCards({ ...x, example: ex(x.examples) })),
     );
     return a;
@@ -218,7 +218,7 @@ function HafalanPage() {
   const all = useMemo(() => {
     if (retryWrong) return wrong;
     const p = new Map(
-        (progress.data ?? ([] as any[])).map((x: any) => [`${x.item_type}:${x.item_id}`, x]),
+        (progress.data ?? ([] as any[])).map((x) => [`${x.item_type}:${x.item_id}`, x]),
       ),
       now = Date.now();
     let a = source.filter(

@@ -53,7 +53,7 @@ export const getMyAccount = createServerFn({ method: "GET" })
   });
 export const updateMyAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => settingsSchema.parse(data))
+  .validator((data: unknown) => settingsSchema.parse(data))
   .handler(async ({ context, data }) => {
     const { profile } = await readMemberData(context);
     if (!profile) throw new Error("Profil akun belum tersedia.");

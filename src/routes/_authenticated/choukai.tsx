@@ -59,7 +59,7 @@ async function fetchListeningQuestions(level: Level): Promise<Question[]> {
     .eq("skill", "listening")
     .not("listening_id", "is", null);
   if (error) throw new Error(error.message);
-  return (data ?? []).map((q: any) => ({
+  return (data ?? []).map((q) => ({
     ...q,
     prompt: q.prompt_id?.trim() || q.prompt,
     choices:

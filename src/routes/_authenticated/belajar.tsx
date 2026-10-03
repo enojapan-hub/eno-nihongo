@@ -45,16 +45,16 @@ async function fetchExtra(level: Level) {
   // Tabel vocabulary_category_links tidak dapat dibaca langsung oleh pengguna (RLS tanpa policy);
   // hitungan kategori diambil lewat RPC yang sudah dipakai halaman daftar kategori.
   const counts = await Promise.all(
-    cats.map((x: any) => fetchVocabCategoryCount(level, String(x.canonical_slug || x.slug))),
+    cats.map((x) => fetchVocabCategoryCount(level, String(x.canonical_slug || x.slug))),
   );
   return cats
-    .map((x: any, i: number) => ({
+    .map((x, i: number) => ({
       id: x.id,
       slug: x.canonical_slug || x.slug,
       label: x.label_id || x.name_id || x.label_ja || x.slug,
       count: counts[i] ?? 0,
     }))
-    .filter((x: any) => x.count > 0);
+    .filter((x) => x.count > 0);
 }
 function BelajarPage() {
   const [search, setSearch] = useState(() =>
@@ -104,7 +104,7 @@ function BelajarPage() {
   const rows = progress.data?.progress ?? [];
   const learned = (t: string) =>
     rows.filter(
-      (r: any) =>
+      (r) =>
         r.level === level &&
         r.item_type === t &&
         (r.status === "learning" || r.status === "review" || r.status === "mastered"),
@@ -377,7 +377,7 @@ function BelajarPage() {
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 gap-1.5">
-                      {(extra.data ?? []).map((cat: any) => (
+                      {(extra.data ?? []).map((cat) => (
                         <Link
                           key={cat.id}
                           to="/kotoba"

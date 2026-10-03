@@ -64,20 +64,20 @@ async function fetchQuestions(level: Level, examNo: number, sections: Simulation
         p_exam_no: examNo,
       });
       if (error) throw error;
-      return (data ?? []).map((x: any) => ({ ...x, section }));
+      return (data ?? []).map((x) => ({ ...x, section }));
     }),
   );
   const data = results.flat();
   const order = new Map(sections.map((s, i) => [s, i]));
   return (data ?? [])
     .filter(
-      (x: any) =>
+      (x) =>
         x.prompt_jp &&
         Array.isArray(x.choices) &&
         (x.choices.length === 3 || x.choices.length === 4),
     )
     .sort(
-      (a: any, b: any) =>
+      (a, b) =>
         (order.get(a.section) ?? 99) - (order.get(b.section) ?? 99) ||
         a.mondai_no - b.mondai_no ||
         a.question_no - b.question_no,

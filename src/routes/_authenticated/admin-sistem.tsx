@@ -192,7 +192,7 @@ function Page() {
                 variant="outline"
                 onClick={() => {
                   const head = ["waktu", "pelaku", "aksi", "jenis", "target"];
-                  const lines = shown.map((x: any) =>
+                  const lines = shown.map((x) =>
                     [
                       x.created_at,
                       x.actor_name || "Sistem",
@@ -257,7 +257,7 @@ function Page() {
               </select>
             </div>
             <div className="mt-3 space-y-2">
-              {shown.slice(0, 100).map((x: any) => (
+              {shown.slice(0, 100).map((x) => (
                 <div key={x.id} className="rounded-xl border p-3 text-xs">
                   <div className="flex justify-between gap-2">
                     <b>{x.action}</b>

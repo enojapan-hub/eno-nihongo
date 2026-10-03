@@ -198,7 +198,7 @@ function Page() {
           </Link>
         )}
 
-        {actions.isSuccess && actions.data.some((x: any) => Number(x.count) > 0) && (
+        {actions.isSuccess && actions.data.some((x) => Number(x.count) > 0) && (
           <section>
             <div className="mb-3">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
@@ -208,8 +208,8 @@ function Page() {
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {actions.data
-                .filter((x: any) => Number(x.count) > 0)
-                .map((x: any) => (
+                .filter((x) => Number(x.count) > 0)
+                .map((x) => (
                   <Link
                     key={x.key}
                     to={x.href as any}

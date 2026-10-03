@@ -288,7 +288,7 @@ function Page() {
                 <option value="published">Published</option>
               </select>
             </div>
-            {filtered.map((x: any) => (
+            {filtered.map((x) => (
               <Card key={x.id}>
                 <CardContent className="p-3">
                   <p className="text-xs font-bold">{x.title}</p>
@@ -338,7 +338,7 @@ function Page() {
                 <option value="resolved">Selesai</option>
               </select>
             </div>
-            {filtered.map((x: any) => (
+            {filtered.map((x) => (
               <Card key={x.id}>
                 <CardContent className="p-3">
                   <p className="text-xs font-bold">{x.subject}</p>
@@ -380,7 +380,7 @@ function Page() {
                 onChange={(e) => setSearchText(e.target.value)}
               />
             </div>
-            {filtered.map((x: any) => (
+            {filtered.map((x) => (
               <Card key={x.id}>
                 <CardContent className="p-3">
                   <p className="text-xs font-bold">{x.title}</p>
