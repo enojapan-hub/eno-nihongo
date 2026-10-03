@@ -125,10 +125,10 @@ function BelajarPage() {
   const results = useMemo(() => {
     if (!q) return [];
     const out: Array<{ type: string; title: string; sub: string; to: string }> = [];
-    for (const x of (kanji.data ?? []) as any[])
+    for (const x of kanji.data ?? [])
       if ([x.character, x.meaning_id, x.onyomi, x.kunyomi].some((v) => norm(v).includes(q)))
         out.push({ type: "Kanji", title: x.character, sub: x.meaning_id, to: `/kanji?id=${x.id}` });
-    for (const x of (vocab.data ?? []) as any[])
+    for (const x of vocab.data ?? [])
       if ([x.term, x.reading, x.romaji, x.meaning_id].some((v) => norm(v).includes(q)))
         out.push({
           type: "Kosakata",
@@ -136,7 +136,7 @@ function BelajarPage() {
           sub: [x.reading, x.meaning_id].filter(Boolean).join(" · "),
           to: `/kotoba?id=${x.id}`,
         });
-    for (const x of (grammar.data ?? []) as any[])
+    for (const x of grammar.data ?? [])
       if ([x.pattern, x.meaning_id, x.structure].some((v) => norm(v).includes(q)))
         out.push({ type: "Bunpou", title: x.pattern, sub: x.meaning_id, to: `/bunpo?id=${x.id}` });
     return out.slice(0, 30);

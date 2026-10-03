@@ -85,8 +85,9 @@ function EditProfilePage() {
   useEffect(() => {
     void supabase.auth.getUser().then(({ data: auth }) => {
       const months = Number(auth.user?.user_metadata?.["study_target_months"]);
-      setInitialMonths(TARGET_MONTHS.includes(months as any) ? months : 3);
-      if (TARGET_MONTHS.includes(months as any)) setData((v) => ({ ...v, target_months: months }));
+      setInitialMonths((TARGET_MONTHS as readonly number[]).includes(months) ? months : 3);
+      if ((TARGET_MONTHS as readonly number[]).includes(months))
+        setData((v) => ({ ...v, target_months: months }));
     });
   }, []);
   const targetDate = plusMonths(data.target_months);
@@ -115,8 +116,8 @@ function EditProfilePage() {
       await updateMyAccount({
         data: {
           display_name: data.display_name.trim(),
-          target_level: data.target_level as any,
-          ui_language: data.ui_language as any,
+          target_level: data.target_level as (typeof LEVELS)[number],
+          ui_language: data.ui_language as "id" | "en" | "ja",
           country: data.country,
           daily_kanji_target: s.daily_kanji_target ?? 5,
           daily_vocab_target: s.daily_vocab_target ?? 10,
@@ -124,8 +125,8 @@ function EditProfilePage() {
           furigana_enabled: s.furigana_enabled ?? true,
           daily_reminder: s.daily_reminder ?? false,
         },
-      } as any);
-      const client = supabase as any;
+      });
+      const client = supabase;
       const keepPlan =
         Boolean(plan) &&
         initialMonths !== null &&
@@ -138,16 +139,16 @@ function EditProfilePage() {
         if (daysError) throw new Error(`Hari belajar gagal diperbarui: ${daysError.message}`);
       } else {
         const { error: planError } = await client.rpc("create_or_replace_study_plan", {
-          p_target_level: data.target_level,
+          p_target_level: data.target_level as (typeof LEVELS)[number],
           p_target_date: targetDate,
           p_daily_minutes: 45,
           p_study_days: data.study_days,
         });
         if (planError) throw new Error(`Rencana belajar gagal dibuat: ${planError.message}`);
       }
-      const { error: taskError } = await client.rpc("generate_weekly_study_plan", {});
+      const { error: taskError } = await client.rpc("generate_weekly_study_plan");
       if (taskError) throw new Error(`Target harian gagal dibuat: ${taskError.message}`);
-      await client.rpc("sync_daily_study_task_progress", {});
+      await client.rpc("sync_daily_study_task_progress");
       const { error: metaError } = await supabase.auth.updateUser({
         data: keepPlan
           ? {

@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "./supabase.server";
 
-type SourceType = "kanji" | "vocabulary" | "grammar" | "reading";
+export type SourceType = "kanji" | "vocabulary" | "grammar" | "reading";
 
 type TranslationResult = {
   translation: string;

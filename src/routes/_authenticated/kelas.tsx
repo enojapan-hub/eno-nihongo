@@ -217,7 +217,7 @@ function KelasPage() {
   );
 }
 
-function formatPrice(c: any, rate?: number) {
+function formatPrice(c: { price: number | string; currency: string }, rate?: number) {
   if (Number(c.price) <= 0) return "Gratis";
   if (c.currency === "JPY")
     return rate

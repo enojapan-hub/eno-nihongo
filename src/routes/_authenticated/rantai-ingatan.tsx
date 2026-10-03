@@ -82,9 +82,9 @@ function MemoryChainPage() {
   });
 
   const chains = useMemo<Chain[]>(() => {
-    const kanjiRows = (kanji.data ?? []) as any[];
-    const vocabRows = (vocab.data ?? []) as any[];
-    const grammarRows = (grammar.data ?? []) as any[];
+    const kanjiRows = kanji.data ?? [];
+    const vocabRows = vocab.data ?? [];
+    const grammarRows = grammar.data ?? [];
 
     return kanjiRows
       .map((kanjiItem) => {
@@ -93,7 +93,9 @@ function MemoryChainPage() {
           .slice(0, 2);
         if (!related.length) return null;
         const word = related[0];
-        const example = Array.isArray(word.examples) ? word.examples[0] : word.examples;
+        if (!word) return null;
+        const example = (Array.isArray(word.examples) ? word.examples[0] : word.examples) as
+          string | { jp?: unknown; japanese?: unknown; sentence?: unknown } | null | undefined;
         const exampleText =
           typeof example === "string"
             ? example
@@ -149,9 +151,9 @@ function MemoryChainPage() {
         if (grammarHit)
           steps.push({
             label: `${steps.length + 1} · Bunpou`,
-            front: grammarHit.pattern,
+            front: grammarHit.pattern ?? "",
             back: grammarHit.meaning_id,
-            sub: grammarHit.structure,
+            sub: grammarHit.structure ?? "",
             itemId: grammarHit.id,
             itemType: "grammar",
             aspect: "function_context",

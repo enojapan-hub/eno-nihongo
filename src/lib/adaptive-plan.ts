@@ -161,7 +161,7 @@ async function enrichTasksWithSuggestions(
     weakest = w.weakest;
   const levelIds = new Set(rows.map((r) => `${r.item_type}:${r.item_id}`));
   const kiokuRows = memory.filter((r) => levelIds.has(`${r.item_type}:${r.item_id}`));
-  const kiokuEventCount = reviews.filter((r) => (r.meta as any)?.source === "kioku").length;
+  const kiokuEventCount = reviews.filter((r) => r.meta?.["source"] === "kioku").length;
   const weakLabel = weakest
     ? `${materialLabel[weakest.itemType] || weakest.itemType} · ${aspectLabel[weakest.aspect] || weakest.aspect}`
     : null;

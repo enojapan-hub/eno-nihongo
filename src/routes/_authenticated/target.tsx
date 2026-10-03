@@ -57,22 +57,23 @@ const fallback: Partial<Record<AdaptiveTaskType, string>> = {
   listening: "/listening",
 };
 
-async function fetchWeakness(level: string) {
+async function fetchWeakness(level: Level) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return [];
   const [{ data: reviews, error }, { data: reading, error: readingError }] = await Promise.all([
-    (supabase as any)
+    supabase
       .from("flashcard_reviews")
       .select("item_type,item_id,rating,direction,aspect,used_hint,response_ms")
       .eq("user_id", u.user.id)
       .eq("level", level)
       .order("created_at", { ascending: false })
       .limit(500),
-    (supabase as any)
+    supabase
       .from("learning_activity")
-      .select("content_id,correct,metadata")
+      .select("metadata")
       .eq("user_id", u.user.id)
-      .eq("content_type", "reading")
+      // content_id/correct/content_type tersimpan di kolom metadata (jsonb), bukan kolom tersendiri.
+      .eq("metadata->>content_type", "reading")
       .eq("activity_type", "quiz_answered")
       .order("created_at", { ascending: false })
       .limit(200),
@@ -81,11 +82,14 @@ async function fetchWeakness(level: string) {
   const base = (reviews ?? []) as MasteryReview[];
   if (readingError) return analyzeMastery(base);
   const dokkai: MasteryReview[] = (reading ?? [])
-    .filter((r: any) => String(r.metadata?.level ?? "") === level)
-    .map((r: any) => ({
+    .map((r) =>
+      r.metadata && typeof r.metadata === "object" && !Array.isArray(r.metadata) ? r.metadata : {},
+    )
+    .filter((m) => String(m["level"] ?? "") === level)
+    .map((m) => ({
       item_type: "reading",
-      item_id: r.content_id,
-      rating: r.correct ? 2 : 0,
+      item_id: String(m["content_id"]),
+      rating: m["correct"] ? 2 : 0,
       aspect: "context",
       direction: null,
       used_hint: false,
@@ -265,25 +269,25 @@ function TargetPage() {
       label: "Kanji",
       description: "Arti & pemahaman",
       icon: Type,
-      to: `/quiz/latihan-${slug}-kanji`,
+      quizSlug: `latihan-${slug}-kanji`,
     },
     {
       label: "Kotoba",
       description: "Arti & penggunaan",
       icon: Languages,
-      to: `/quiz/latihan-${slug}-vocabulary`,
+      quizSlug: `latihan-${slug}-vocabulary`,
     },
     {
       label: "Bunpou",
       description: "Pola tata bahasa",
       icon: BookOpenCheck,
-      to: `/quiz/latihan-${slug}-grammar`,
+      quizSlug: `latihan-${slug}-grammar`,
     },
     {
       label: "Campuran",
       description: "Berbagai kategori",
       icon: Shuffle,
-      to: `/quiz/latihan-${slug}`,
+      quizSlug: `latihan-${slug}`,
     },
   ];
   const weeklyMap = new Map((weekly.data?.rows ?? []).map((r) => [r.taskType, r]));
@@ -688,10 +692,11 @@ function TargetPage() {
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {quickPractice.map(({ label, description, icon: Icon, to }) => (
+                    {quickPractice.map(({ label, description, icon: Icon, quizSlug }) => (
                       <Link
                         key={label}
-                        to={to as any}
+                        to="/quiz/$slug"
+                        params={{ slug: quizSlug }}
                         className="group rounded-2xl border bg-card p-3 transition hover:border-primary/30 hover:bg-primary/[.025] active:scale-[.99]"
                       >
                         <div className="flex items-start justify-between">

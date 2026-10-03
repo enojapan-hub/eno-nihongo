@@ -9,7 +9,7 @@ function LegacyKanjiDetailRedirect() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   useEffect(() => {
-    void navigate({ to: "/kanji", search: { id }, replace: true } as any);
+    void navigate({ to: "/kanji", search: { id }, replace: true });
   }, [id, navigate]);
   return null;
 }

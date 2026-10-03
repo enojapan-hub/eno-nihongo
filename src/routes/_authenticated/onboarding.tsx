@@ -42,20 +42,20 @@ function OnboardingPage() {
         .from("profiles")
         .update({
           display_name: name.trim(),
-          target_level: level as any,
+          target_level: level as "N5" | "N4" | "N3" | "N2" | "N1",
           country,
           onboarding_completed: true,
         })
         .eq("id", auth.user.id);
       if (error) throw error;
       const targetDate = plusMonths(targetMonths);
-      const { error: planError } = await (supabase as any).rpc("create_or_replace_study_plan", {
-        p_target_level: level,
+      const { error: planError } = await supabase.rpc("create_or_replace_study_plan", {
+        p_target_level: level as "N5" | "N4" | "N3" | "N2" | "N1",
         p_target_date: targetDate,
         p_daily_minutes: 45,
       });
       if (planError) throw planError;
-      const { error: taskError } = await (supabase as any).rpc("generate_daily_study_tasks", {});
+      const { error: taskError } = await supabase.rpc("generate_daily_study_tasks");
       if (taskError) throw taskError;
       const { error: metaError } = await supabase.auth.updateUser({
         data: {

@@ -170,11 +170,11 @@ function SectionReviewPage() {
     let active = true;
     (async () => {
       try {
-        const { data, error } = await (supabase as any).rpc("get_jlpt_simulation_attempt_review", {
+        const { data, error } = await supabase.rpc("get_jlpt_simulation_attempt_review", {
           p_attempt_id: attemptId,
         });
         if (error) throw error;
-        if (active) setItems(Array.isArray(data) ? data : []);
+        if (active) setItems(Array.isArray(data) ? (data as unknown as Item[]) : []);
       } catch (e) {
         console.error(e);
         if (active)

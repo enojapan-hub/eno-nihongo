@@ -125,21 +125,21 @@ function Page() {
   const started = useRef(Date.now());
   const items = useMemo<Item[]>(
     () => [
-      ...(k.data ?? ([] as any[])).map((x) => ({
+      ...(k.data ?? []).map((x) => ({
         id: x.id,
         kind: "kanji" as const,
         term: x.character,
         reading: [x.onyomi, x.kunyomi].filter(Boolean).join(" "),
         meaning: x.meaning_id || "",
       })),
-      ...(v.data ?? ([] as any[])).map((x) => ({
+      ...(v.data ?? []).map((x) => ({
         id: x.id,
         kind: "vocabulary" as const,
         term: x.term,
         reading: x.reading || "",
         meaning: x.meaning_id || "",
       })),
-      ...(g.data ?? ([] as any[])).map((x) => ({
+      ...(g.data ?? []).map((x) => ({
         id: x.id,
         kind: "grammar" as const,
         term: x.pattern,

@@ -3,6 +3,7 @@ import {
   authorizeTranslationRequest,
   getTranslationStats,
   runTranslationBatch,
+  type SourceType,
 } from "@/lib/translation.server";
 import { supabaseAdmin } from "@/lib/supabase.server";
 async function userId(request: Request) {
@@ -37,7 +38,9 @@ export const Route = createFileRoute("/api/admin-translation")({
           const source = String(body.sourceType || "vocabulary");
           if (!["kanji", "vocabulary", "grammar", "reading"].includes(source))
             throw Error("sourceType tidak valid");
-          return Response.json(await runTranslationBatch(source as any, Number(body.limit) || 10));
+          return Response.json(
+            await runTranslationBatch(source as SourceType, Number(body.limit) || 10),
+          );
         } catch (e) {
           return Response.json(
             { error: e instanceof Error ? e.message : String(e) },

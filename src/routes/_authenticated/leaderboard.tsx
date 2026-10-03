@@ -107,14 +107,16 @@ function LeaderboardPage() {
         {tab === "ranking" ? (
           <>
             <div className="grid grid-cols-3 gap-1 rounded-2xl bg-muted/60 p-1">
-              {[
-                ["weekly", "Mingguan"],
-                ["monthly", "Bulanan"],
-                ["all", "Sepanjang Masa"],
-              ].map(([id, label]) => (
+              {(
+                [
+                  ["weekly", "Mingguan"],
+                  ["monthly", "Bulanan"],
+                  ["all", "Sepanjang Masa"],
+                ] as const
+              ).map(([id, label]) => (
                 <button
                   key={id}
-                  onClick={() => setPeriod(id as any)}
+                  onClick={() => setPeriod(id)}
                   className={
                     "rounded-xl px-1 py-2.5 text-[9px] font-bold " +
                     (period === id

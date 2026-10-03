@@ -24,7 +24,11 @@ import {
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/kanji")({ component: KanjiPage });
+export const Route = createFileRoute("/_authenticated/kanji")({
+  validateSearch: (search: Record<string, unknown>): { id?: string } =>
+    typeof search["id"] === "string" ? { id: search["id"] } : {},
+  component: KanjiPage,
+});
 type KanjiRow = {
   id: string;
   character: string;

@@ -12,11 +12,11 @@ export const Route = createFileRoute("/_authenticated")({
         .select("suspended_at")
         .eq("id", data.session.user.id)
         .maybeSingle();
-      if ((profile as any)?.suspended_at) {
+      if (profile?.suspended_at) {
         await supabase.auth.signOut({ scope: "local" });
         throw redirect({
           to: "/auth",
-          search: { error: "Akun Anda sedang dinonaktifkan. Hubungi Admin." } as any,
+          search: { error: "Akun Anda sedang dinonaktifkan. Hubungi Admin." },
         });
       }
       return { user: data.session.user };

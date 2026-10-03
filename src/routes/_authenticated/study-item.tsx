@@ -28,7 +28,7 @@ function params() {
   };
 }
 async function fetchItem(kind: Kind, id: string): Promise<Item | null> {
-  const c = supabase as any;
+  const c = supabase;
   const tries = kind === "review" ? ["kanji", "vocabulary", "grammar"] : [kind];
   for (const k of tries) {
     if (k === "kanji") {
@@ -87,7 +87,7 @@ async function fetchItem(kind: Kind, id: string): Promise<Item | null> {
     if (k === "reading") {
       const { data } = await c
         .from("reading_passages")
-        .select("id,title,content,level")
+        .select("id,title,body_jp,level")
         .eq("id", id)
         .eq("is_published", true)
         .maybeSingle();
@@ -96,14 +96,14 @@ async function fetchItem(kind: Kind, id: string): Promise<Item | null> {
           id: data.id,
           kind: "reading",
           title: data.title,
-          meaning: data.content,
+          meaning: data.body_jp,
           level: data.level,
         };
     }
     if (k === "listening") {
       const { data } = await c
         .from("listening_items")
-        .select("id,title,transcript,audio_url,level")
+        .select("id,title,transcript_jp,audio_url,level")
         .eq("id", id)
         .eq("is_published", true)
         .maybeSingle();
@@ -112,7 +112,7 @@ async function fetchItem(kind: Kind, id: string): Promise<Item | null> {
           id: data.id,
           kind: "listening",
           title: data.title,
-          meaning: data.transcript,
+          meaning: data.transcript_jp,
           audio: data.audio_url,
           level: data.level,
         };

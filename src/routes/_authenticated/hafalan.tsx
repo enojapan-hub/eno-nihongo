@@ -40,7 +40,8 @@ const SESSION_KEY = "eno-hafalan-session-v5",
 function ex(v: unknown) {
   if (!v) return "";
   if (Array.isArray(v)) {
-    const a = v[0] as any;
+    const a = v[0] as
+      string | { jp?: unknown; japanese?: unknown; sentence?: unknown } | null | undefined;
     return typeof a === "string" ? a : String(a?.jp ?? a?.japanese ?? a?.sentence ?? "");
   }
   if (typeof v === "string") {
@@ -206,20 +207,18 @@ function HafalanPage() {
     dragging = useRef(false);
   const source = useMemo<Card[]>(() => {
     const a: Card[] = [];
-    (kanji.data ?? ([] as any[])).forEach((x) => a.push(...buildKanjiMasteryCards(x)));
-    (vocab.data ?? ([] as any[])).forEach((x) =>
+    (kanji.data ?? []).forEach((x) => a.push(...buildKanjiMasteryCards(x)));
+    (vocab.data ?? []).forEach((x) =>
       a.push(...buildVocabularyMasteryCards({ ...x, example: ex(x.examples) })),
     );
-    (grammar.data ?? ([] as any[])).forEach((x) =>
+    (grammar.data ?? []).forEach((x) =>
       a.push(...buildGrammarMasteryCards({ ...x, example: ex(x.examples) })),
     );
     return a;
   }, [kanji.data, vocab.data, grammar.data]);
   const all = useMemo(() => {
     if (retryWrong) return wrong;
-    const p = new Map(
-        (progress.data ?? ([] as any[])).map((x) => [`${x.item_type}:${x.item_id}`, x]),
-      ),
+    const p = new Map((progress.data ?? []).map((x) => [`${x.item_type}:${x.item_id}`, x])),
       now = Date.now();
     let a = source.filter(
       (x) =>
@@ -228,12 +227,12 @@ function HafalanPage() {
     );
     if (study === "weak" && !targeted)
       a = a.filter((x) => {
-        const z: any = p.get(`${x.kind}:${x.id}`);
+        const z = p.get(`${x.kind}:${x.id}`);
         return z && Number(z.ease_factor ?? 2.5) < 2.3;
       });
     a = a.sort((x, y) => {
-      const px: any = p.get(`${x.kind}:${x.id}`),
-        py: any = p.get(`${y.kind}:${y.id}`);
+      const px = p.get(`${x.kind}:${x.id}`),
+        py = p.get(`${y.kind}:${y.id}`);
       const sx = !px ? 1 : new Date(px.due_at ?? 0).getTime() <= now ? 0 : 2,
         sy = !py ? 1 : new Date(py.due_at ?? 0).getTime() <= now ? 0 : 2;
       return (

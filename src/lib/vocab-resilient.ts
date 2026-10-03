@@ -151,7 +151,7 @@ export function pickUsageNote(
 // Kompatibilitas untuk pemanggil lama: memuat bertahap agar tidak mengirim ribuan ID dalam satu query.
 export async function fetchVocabListResilient(level: Level) {
   const total = await fetchVocabCount(level),
-    rows: any[] = [];
+    rows: Awaited<ReturnType<typeof fetchVocabPage>> = [];
   for (let offset = 0; offset < total; offset += 200)
     rows.push(...(await fetchVocabPage(level, offset, 200)));
   return rows;

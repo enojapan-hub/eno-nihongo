@@ -26,7 +26,13 @@ import {
   pickUsageNote,
   VOCAB_PAGE_SIZE,
 } from "@/lib/vocab-resilient";
-import { addItemToReview, asExamples, markItemLearned, type Level } from "@/lib/learn-queries";
+import {
+  addItemToReview,
+  asExamples,
+  markItemLearned,
+  type Example,
+  type Level,
+} from "@/lib/learn-queries";
 import { normalizeRomaji, spaceJapanese } from "@/lib/japanese-spacing";
 import { supabase } from "@/integrations/supabase/client";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
@@ -704,8 +710,8 @@ function Detail({
   onSpeak,
 }: {
   item: VocabRow;
-  senses: any[];
-  examples: any[];
+  senses: Awaited<ReturnType<typeof fetchVocabSenses>>;
+  examples: Example[];
   canPrev: boolean;
   canNext: boolean;
   onPrev: () => void;
@@ -846,7 +852,7 @@ function Detail({
                   <button
                     type="button"
                     aria-label="Putar contoh kalimat"
-                    onClick={() => onSpeak(e.jp)}
+                    onClick={() => onSpeak(e.jp ?? "")}
                     className="absolute right-2 top-2 grid size-11 place-items-center rounded-full text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <Volume2 className="size-5" />

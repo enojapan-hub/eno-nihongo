@@ -6,6 +6,8 @@ export type Example = {
   jp?: string | undefined;
   id?: string | undefined;
   reading?: string | undefined;
+  // Belum diisi oleh asExamples: tampilan contoh menghitung romaji dari kana (lihat kotoba.tsx).
+  romaji?: string | undefined;
 };
 export type RelatedWord = { term: string; reading?: string | null; meaning?: string | null };
 export type VocabSense = {
