@@ -57,6 +57,7 @@ function Page() {
         meeting,
         myClasses,
         managedClass,
+        classEnds,
       ] = await Promise.all([
         result(
           classroom
@@ -101,6 +102,9 @@ function Page() {
         teacherPreview
           ? result(classroom.from("classes").select("*").eq("id", classId).single())
           : Promise.resolve(null),
+        teacherPreview
+          ? Promise.resolve(null)
+          : result(classroom.from("classes").select("ends_at").eq("id", classId).maybeSingle()),
       ]);
       const submissions = teacherPreview
         ? []
@@ -135,9 +139,13 @@ function Page() {
           : result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
       ]);
       return {
+        // get_my_classes tidak mengembalikan ends_at, jadi diambil terpisah dari tabel classes.
         kelas: teacherPreview
           ? managedClass
-          : (myClasses.find((c: any) => c.id === classId) ?? null),
+          : (() => {
+              const mine = myClasses.find((c) => c.id === classId);
+              return mine ? { ...mine, ends_at: classEnds?.ends_at ?? null } : null;
+            })(),
         attempts,
         topics,
         materials,
@@ -427,12 +435,14 @@ function Page() {
                   </Card>
                 )}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {[
-                    [BookOpenText, "Materi", d.materials.length],
-                    [ClipboardList, "Tugas", d.assignments.length],
-                    [ListChecks, "Kuis", d.quizzes.length],
-                    [CalendarDays, "Sesi", d.schedule.length],
-                  ].map(([Icon, label, value]) => (
+                  {(
+                    [
+                      [BookOpenText, "Materi", d.materials.length],
+                      [ClipboardList, "Tugas", d.assignments.length],
+                      [ListChecks, "Kuis", d.quizzes.length],
+                      [CalendarDays, "Sesi", d.schedule.length],
+                    ] as const
+                  ).map(([Icon, label, value]) => (
                     <Card key={label as string} className="border-border/70 shadow-sm">
                       <CardContent className="flex items-center gap-2.5 p-3">
                         <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary">

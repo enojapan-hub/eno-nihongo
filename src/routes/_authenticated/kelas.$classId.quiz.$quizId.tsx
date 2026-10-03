@@ -154,7 +154,7 @@ function Quiz({
     queryKey: ["student-quiz-review", userId, selected],
     enabled: !!current,
     queryFn: () =>
-      result<Review[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: selected })),
+      result<Review[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: selected ?? "" })),
   });
   async function submit() {
     if (busy || expired || completed || Object.keys(answers).length !== questions.length) return;

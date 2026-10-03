@@ -158,32 +158,34 @@ function Page() {
             {tab === "ringkasan" && (
               <>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {[
+                  {(
                     [
-                      UsersRound,
-                      "Peserta aktif",
-                      d.participants.filter((p: any) => p.status === "active").length,
-                      "bg-sky-500/10 text-sky-600",
-                    ],
-                    [
-                      ClipboardList,
-                      "Tugas terbit",
-                      d.assignments.filter((a: any) => a.is_published).length,
-                      "bg-violet-500/10 text-violet-600",
-                    ],
-                    [
-                      ClipboardCheck,
-                      "Perlu dinilai",
-                      d.submissions.filter((s: any) => s.current_score == null).length,
-                      "bg-amber-500/10 text-amber-600",
-                    ],
-                    [
-                      BarChart3,
-                      "Topik dianalisis",
-                      d.insights.length,
-                      "bg-primary/10 text-primary",
-                    ],
-                  ].map(([Icon, label, value, tone]) => (
+                      [
+                        UsersRound,
+                        "Peserta aktif",
+                        d.participants.filter((p: any) => p.status === "active").length,
+                        "bg-sky-500/10 text-sky-600",
+                      ],
+                      [
+                        ClipboardList,
+                        "Tugas terbit",
+                        d.assignments.filter((a: any) => a.is_published).length,
+                        "bg-violet-500/10 text-violet-600",
+                      ],
+                      [
+                        ClipboardCheck,
+                        "Perlu dinilai",
+                        d.submissions.filter((s: any) => s.current_score == null).length,
+                        "bg-amber-500/10 text-amber-600",
+                      ],
+                      [
+                        BarChart3,
+                        "Topik dianalisis",
+                        d.insights.length,
+                        "bg-primary/10 text-primary",
+                      ],
+                    ] as const
+                  ).map(([Icon, label, value, tone]) => (
                     <Card key={label as string} className="border-border/70 shadow-sm">
                       <CardContent className="flex items-center gap-2.5 p-3">
                         <span

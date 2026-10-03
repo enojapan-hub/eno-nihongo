@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  classContentTable,
   classroom,
   result,
   categories,
@@ -28,6 +29,7 @@ import {
   isoDate,
   sessionTime,
   secureUrl,
+  type ClassContentTable,
 } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/guru-kelas/$classId/konten")({
   validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
@@ -37,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/guru-kelas/$classId/konten
   component: Page,
 });
 type Tab = "materi" | "tugas" | "quiz" | "jadwal" | "pengumuman";
-const tables = {
+const tables: Record<Tab, ClassContentTable> = {
   materi: "class_materials",
   tugas: "class_assignments",
   quiz: "class_quizzes",
@@ -91,8 +93,7 @@ function Page() {
     enabled: access.data === true,
     queryFn: () =>
       result(
-        classroom
-          .from(tables[tab])
+        classContentTable(tables[tab])
           .select("*")
           .eq("class_id", classId)
           .order(tab === "jadwal" ? "starts_at" : "created_at", { ascending: tab === "jadwal" }),
@@ -196,8 +197,8 @@ function Page() {
       }
       await result(
         id
-          ? classroom.from(tables[tab]).update(row).eq("id", id).eq("class_id", classId)
-          : classroom.from(tables[tab]).insert(row),
+          ? classContentTable(tables[tab]).update(row).eq("id", id).eq("class_id", classId)
+          : classContentTable(tables[tab]).insert(row),
       );
       return undefined;
     },
@@ -220,7 +221,9 @@ function Page() {
   });
   const remove = useMutation({
     mutationFn: async (row: any) => {
-      await result(classroom.from(tables[tab]).delete().eq("id", row.id).eq("class_id", classId));
+      await result(
+        classContentTable(tables[tab]).delete().eq("id", row.id).eq("class_id", classId),
+      );
     },
     onSuccess: async () => {
       reset();
