@@ -99,8 +99,10 @@ export async function runQuestionTranslationBatch(limit = 100) {
     throw new Error(`Gemini ${response.status}: ${body.slice(0, 500)}`);
   }
 
-  const json = await response.json();
-  const raw = json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text || "").join("") || "";
+  const json = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const raw = json?.candidates?.[0]?.content?.parts?.map((p) => p?.text || "").join("") || "";
   const parsed = JSON.parse(raw);
   const translated = (Array.isArray(parsed?.questions) ? parsed.questions : []) as Translated[];
   const byId = new Map(translated.map((q) => [q.id, q]));

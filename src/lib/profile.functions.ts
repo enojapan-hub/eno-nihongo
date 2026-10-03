@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -22,13 +24,13 @@ const DEFAULT_SETTINGS = {
   daily_reminder: false,
 };
 
-async function readMemberData(context: { supabase: any; userId: string }) {
+async function readMemberData(context: { supabase: SupabaseClient<Database>; userId: string }) {
   const [{ data: profile, error: profileError }, { data: settings, error: settingsError }] =
     await Promise.all([
       context.supabase
         .from("profiles")
         .select(
-          "id,display_name,avatar_url,ui_language,target_level,country,onboarding_completed,plan,premium_until,created_at,role",
+          "id,display_name,avatar_url,ui_language,target_level,country,onboarding_completed,plan,premium_until,created_at,role,referral_code,referral_points",
         )
         .eq("id", context.userId)
         .maybeSingle(),
@@ -57,7 +59,7 @@ export const updateMyAccount = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { profile } = await readMemberData(context);
     if (!profile) throw new Error("Profil akun belum tersedia.");
-    const update: any = {
+    const update: Database["public"]["Tables"]["profiles"]["Update"] = {
       display_name: data.display_name,
       target_level: data.target_level,
       ui_language: data.ui_language,

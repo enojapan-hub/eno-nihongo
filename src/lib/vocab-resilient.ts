@@ -16,17 +16,13 @@ function withTimeout<T>(promise: PromiseLike<T>, ms = QUERY_TIMEOUT_MS): Promise
 }
 
 export async function fetchVocabCount(level: Level): Promise<number> {
-  const res: any = await withTimeout(
-    supabase.rpc("get_vocabulary_count_by_level", { p_level: level }),
-  );
+  const res = await withTimeout(supabase.rpc("get_vocabulary_count_by_level", { p_level: level }));
   if (res.error) throw new Error(res.error.message);
   return Number(res.data ?? 0);
 }
 
 export async function fetchVocabLessonCounts(level: Level) {
-  const res: any = await withTimeout(
-    supabase.rpc("get_vocabulary_lesson_counts", { p_level: level }),
-  );
+  const res = await withTimeout(supabase.rpc("get_vocabulary_lesson_counts", { p_level: level }));
   if (res.error) throw new Error(res.error.message);
   return res.data ?? [];
 }
@@ -37,7 +33,7 @@ export async function fetchVocabLessonPage(
   offset = 0,
   limit = VOCAB_PAGE_SIZE,
 ) {
-  const res: any = await withTimeout(
+  const res = await withTimeout(
     supabase.rpc("get_vocabulary_page_by_lesson", {
       p_level: level,
       p_lesson: lesson,
@@ -46,7 +42,7 @@ export async function fetchVocabLessonPage(
     }),
   );
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []).map((row: any) => ({
+  return (res.data ?? []).map((row) => ({
     ...row,
     senses: [],
     curriculum: [],
@@ -55,7 +51,7 @@ export async function fetchVocabLessonPage(
 }
 
 export async function fetchVocabPage(level: Level, offset = 0, limit = VOCAB_PAGE_SIZE) {
-  const res: any = await withTimeout(
+  const res = await withTimeout(
     supabase.rpc("get_vocabulary_page_by_level", {
       p_level: level,
       p_offset: offset,
@@ -63,7 +59,7 @@ export async function fetchVocabPage(level: Level, offset = 0, limit = VOCAB_PAG
     }),
   );
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []).map((row: any) => ({
+  return (res.data ?? []).map((row) => ({
     ...row,
     senses: [],
     curriculum: [],
@@ -72,7 +68,7 @@ export async function fetchVocabPage(level: Level, offset = 0, limit = VOCAB_PAG
 }
 
 export async function fetchVocabById(id: string) {
-  const res: any = await withTimeout(
+  const res = await withTimeout(
     supabase
       .from("vocabulary")
       .select(
@@ -87,7 +83,7 @@ export async function fetchVocabById(id: string) {
 }
 
 export async function fetchVocabSenses(vocabularyId: string) {
-  const res: any = await withTimeout(
+  const res = await withTimeout(
     supabase
       .from("vocabulary_senses")
       .select("meaning_id, part_of_speech, usage_note_id, examples, source_book")
@@ -117,14 +113,19 @@ export function isUsableUsageNote(value: unknown): value is string {
 // Sumber utama: vocabulary.usage_note_id. Fallback transisi ke senses: abaikan usage kosong/buruk,
 // lalu pilih secara deterministik (arti sama dengan kosakata, bukan canonical-merge, lalu urutan teks)
 // agar tidak bergantung pada urutan baris dari PostgreSQL.
+type UsageSense = {
+  usage_note_id?: string | null;
+  meaning_id?: string | null;
+  source_book?: string | null;
+};
 export function pickUsageNote(
   item: { usage_note_id?: string | null; meaning_id?: string | null },
-  senses: any[],
+  senses: UsageSense[],
 ): string | undefined {
   const own = item.usage_note_id?.trim();
   if (own) return own;
   const meaning = (item.meaning_id ?? "").trim().toLowerCase();
-  const rank = (s: any) => ({
+  const rank = (s: UsageSense) => ({
     meaning:
       String(s.meaning_id ?? "")
         .trim()
@@ -134,7 +135,7 @@ export function pickUsageNote(
     merge: String(s.source_book ?? "").startsWith("canonical-merge") ? 1 : 0,
   });
   const candidates = senses
-    .filter((s) => isUsableUsageNote(s?.usage_note_id))
+    .filter((s): s is UsageSense & { usage_note_id: string } => isUsableUsageNote(s?.usage_note_id))
     .sort((a, b) => {
       const ra = rank(a),
         rb = rank(b);
@@ -157,7 +158,7 @@ export async function fetchVocabListResilient(level: Level) {
 }
 
 export async function fetchVocabCategoryCount(level: Level, category: string): Promise<number> {
-  const res: any = await withTimeout(
+  const res = await withTimeout(
     supabase.rpc("get_vocabulary_count_by_category", {
       p_level: level,
       p_category_slug: category,
@@ -173,7 +174,7 @@ export async function fetchVocabCategoryPage(
   offset = 0,
   limit = VOCAB_PAGE_SIZE,
 ) {
-  const res: any = await withTimeout(
+  const res = await withTimeout(
     supabase.rpc("get_vocabulary_page_by_category", {
       p_level: level,
       p_category_slug: category,
@@ -182,7 +183,7 @@ export async function fetchVocabCategoryPage(
     }),
   );
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []).map((row: any) => ({
+  return (res.data ?? []).map((row) => ({
     ...row,
     senses: [],
     curriculum: [],

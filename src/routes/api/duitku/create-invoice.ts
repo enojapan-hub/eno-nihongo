@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/duitku/create-invoice")({
           const planCode = body.plan;
           const plan = DUITKU_PLANS[planCode];
           const { merchantCode, apiKey } = duitkuConfig();
-          const admin = supabaseAdmin as any;
+          const admin = supabaseAdmin;
           const { data: profile } = await admin
             .from("profiles")
             .select("display_name")

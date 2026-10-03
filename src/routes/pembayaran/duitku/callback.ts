@@ -7,6 +7,14 @@ import {
   isValidCallbackSignature,
 } from "@/lib/duitku.server";
 
+type FinalizeDuitkuArgs = {
+  p_merchant_order_id: string;
+  p_provider_reference: string | null;
+  p_payment_method: string | null;
+  p_event_key: string;
+  p_payload: Record<string, string>;
+};
+
 export const Route = createFileRoute("/pembayaran/duitku/callback")({
   server: {
     handlers: {
@@ -35,7 +43,7 @@ export const Route = createFileRoute("/pembayaran/duitku/callback")({
             return new Response("Invalid payment callback signature", { status: 401 });
           }
 
-          const admin = supabaseAdmin as any;
+          const admin = supabaseAdmin;
           const { data: order, error: orderError } = await admin
             .from("payment_orders")
             .select("id,plan,amount_idr,status")
@@ -50,7 +58,8 @@ export const Route = createFileRoute("/pembayaran/duitku/callback")({
             return new Response("Payment order not found", { status: 404 });
           }
 
-          const callbackPayload = Object.fromEntries(form.entries());
+          // Callback Duitku berupa form urlencoded, jadi semua nilai bertipe string.
+          const callbackPayload = Object.fromEntries(form.entries()) as Record<string, string>;
           if (resultCode !== "00") {
             const eventKey = `${merchantOrderId}:${resultCode}:${reference || "none"}`;
             await admin.from("payment_webhook_events").upsert(
@@ -76,7 +85,15 @@ export const Route = createFileRoute("/pembayaran/duitku/callback")({
           }
 
           const eventKey = `${merchantOrderId}:00:${reference || "paid"}`;
-          const { error: finalizeError } = await admin.rpc("finalize_duitku_payment", {
+          // Argumen referensi/metode boleh null di fungsi database; tipe generated menyebutnya string.
+          const { error: finalizeError } = await (
+            admin as unknown as {
+              rpc(
+                name: "finalize_duitku_payment",
+                args: FinalizeDuitkuArgs,
+              ): PromiseLike<{ error: { message: string } | null }>;
+            }
+          ).rpc("finalize_duitku_payment", {
             p_merchant_order_id: merchantOrderId,
             p_provider_reference: reference || null,
             p_payment_method: paymentCode || null,

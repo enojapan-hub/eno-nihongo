@@ -1,11 +1,12 @@
 import { buildSignals, partnerFor, seenContexts, toReviewEvents, type Signals } from "./signals";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+import { dynamicTable, type DbRecord } from "@/lib/dynamic-db";
 import { buildSession, type Content, SESSION_SIZE } from "./session";
 import type { KiokuSession } from "./session-types";
 import { rankCandidates, toLearned } from "./selector";
 import type { KiokuEvent, KiokuItemType, MemoryStateRow } from "./types";
 
-const db = supabase as any;
 const arr = (v: unknown) => (Array.isArray(v) ? v.filter(Boolean).join("、") : v ? String(v) : "");
 const exList = (v: unknown): Array<{ ja: string; id: string }> =>
   Array.isArray(v)
@@ -26,18 +27,18 @@ const wrongList = (v: unknown): Array<{ wrong: string; correct: string; reason: 
 
 const TABLE: Record<
   KiokuItemType,
-  { table: string; cols: string; extra?: string; map: (r: any) => Content }
+  { table: string; cols: string; extra?: string; map: (r: DbRecord) => Content }
 > = {
   kanji: {
     table: "kanji",
     cols: "id,character,onyomi,kunyomi,meaning_id,level",
     map: (r) => ({
-      id: r.id,
+      id: String(r["id"]),
       type: "kanji",
-      level: r.level,
-      surface: String(r.character ?? ""),
-      reading: [arr(r.onyomi), arr(r.kunyomi)].filter(Boolean).join(" / "),
-      meaning: String(r.meaning_id ?? ""),
+      level: String(r["level"]),
+      surface: String(r["character"] ?? ""),
+      reading: [arr(r["onyomi"]), arr(r["kunyomi"])].filter(Boolean).join(" / "),
+      meaning: String(r["meaning_id"] ?? ""),
     }),
   },
   vocabulary: {
@@ -45,13 +46,13 @@ const TABLE: Record<
     cols: "id,term,reading,meaning_id,level",
     extra: ",examples",
     map: (r) => ({
-      id: r.id,
+      id: String(r["id"]),
       type: "vocabulary",
-      level: r.level,
-      surface: String(r.term ?? ""),
-      reading: String(r.reading ?? ""),
-      meaning: String(r.meaning_id ?? ""),
-      examples: exList(r.examples),
+      level: String(r["level"]),
+      surface: String(r["term"] ?? ""),
+      reading: String(r["reading"] ?? ""),
+      meaning: String(r["meaning_id"] ?? ""),
+      examples: exList(r["examples"]),
     }),
   },
   grammar: {
@@ -59,14 +60,14 @@ const TABLE: Record<
     cols: "id,pattern,meaning_id,level",
     extra: ",examples,wrong_examples",
     map: (r) => ({
-      id: r.id,
+      id: String(r["id"]),
       type: "grammar",
-      level: r.level,
-      surface: String(r.pattern ?? ""),
+      level: String(r["level"]),
+      surface: String(r["pattern"] ?? ""),
       reading: "",
-      meaning: String(r.meaning_id ?? ""),
-      examples: exList(r.examples),
-      wrong: wrongList(r.wrong_examples),
+      meaning: String(r["meaning_id"] ?? ""),
+      examples: exList(r["examples"]),
+      wrong: wrongList(r["wrong_examples"]),
     }),
   },
 };
@@ -90,12 +91,11 @@ async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
     const list = [...ids].slice(0, 40);
     if (!list.length) return;
     const inList = `(${list.join(",")})`;
-    const r = await db
-      .from(table)
+    const r = await dynamicTable(table)
       .select(`${a},${b}`)
       .or(`${a}.in.${inList},${b}.in.${inList}`)
       .limit(200);
-    for (const row of r.data ?? []) out.push({ type, a: row[a], b: row[b] });
+    for (const row of r.data ?? []) out.push({ type, a: String(row[a]), b: String(row[b]) });
   };
   await Promise.all([
     run(kanji, "kanji_relations", "kanji_id", "related_kanji_id", "kanji").catch(() => undefined),
@@ -109,20 +109,20 @@ async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
  */
 export async function prefetchSession(userId: string, now = Date.now()): Promise<KiokuSession> {
   const [prog, st, evs] = await Promise.all([
-    db
+    supabase
       .from("user_item_progress")
       .select("item_type,item_id,level,status,due_at,last_reviewed_at")
       .eq("user_id", userId)
       .neq("status", "new")
       .limit(2000),
-    db
+    supabase
       .from("memory_state")
       .select(
         "item_type,item_id,aspect,direction,stage,stability,due_at,last_tested_at,lapses,success_count,failure_count,overconfident_wrong,last_error_type",
       )
       .eq("user_id", userId)
       .limit(5000),
-    db
+    supabase
       .from("flashcard_reviews")
       .select("item_type,item_id,aspect,direction,rating,created_at,meta")
       .eq("user_id", userId)
@@ -170,20 +170,18 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
       if (!ids[t].length) return [];
       const { table, cols, map } = TABLE[t];
       return [
-        db
-          .from(table)
+        dynamicTable(table)
           .select(cols + (TABLE[t].extra ?? ""))
           .in("id", ids[t])
-          .then((r: any) => {
-            for (const row of r.data ?? []) content.set(`${t}:${row.id}`, map(row));
+          .then((r) => {
+            for (const row of r.data ?? []) content.set(`${t}:${row["id"]}`, map(row));
           }),
-        db
-          .from(table)
+        dynamicTable(table)
           .select(cols)
           .in("level", [...levels[t]])
           .eq("is_published", true)
           .limit(300)
-          .then((r: any) => {
+          .then((r) => {
             for (const row of r.data ?? []) pool.push(map(row));
           }),
       ];
@@ -207,16 +205,16 @@ async function attachContext(content: Map<string, Content>, ids: Record<KiokuIte
   };
   const [senses, links] = await Promise.all([
     ids.vocabulary.length
-      ? ok<any>(
-          db
+      ? ok(
+          supabase
             .from("vocabulary_senses")
             .select("vocabulary_id,meaning_id,examples")
             .in("vocabulary_id", ids.vocabulary),
         )
       : [],
     ids.kanji.length
-      ? ok<any>(
-          db
+      ? ok(
+          supabase
             .from("kanji_vocabulary_examples")
             .select("kanji_id,vocabulary_id,sort_order")
             .in("kanji_id", ids.kanji)
@@ -239,14 +237,13 @@ async function attachContext(content: Map<string, Content>, ids: Record<KiokuIte
   const vids = [...new Set([...perKanji.values()].flat())];
   if (!vids.length) return;
   const { table, cols, extra, map } = TABLE.vocabulary;
-  const vocab = await ok<any>(
-    db
-      .from(table)
+  const vocab = await ok(
+    dynamicTable(table)
       .select(cols + (extra ?? ""))
       .in("id", vids)
       .eq("is_published", true),
   );
-  const byId = new Map(vocab.map((r) => [r.id, map(r)]));
+  const byId = new Map(vocab.map((r) => [String(r["id"]), map(r)]));
   for (const [kid, list] of perKanji) {
     const c = content.get(`kanji:${kid}`);
     if (c) c.compounds = list.map((v) => byId.get(v)).filter(Boolean) as Content[];
@@ -255,6 +252,8 @@ async function attachContext(content: Map<string, Content>, ids: Record<KiokuIte
 
 /** Batch persistence path used by the outbox. */
 export async function sendEvents(batch: KiokuEvent[]): Promise<void> {
-  const { error } = await db.rpc("kioku_record_events", { p_events: batch });
+  const { error } = await supabase.rpc("kioku_record_events", {
+    p_events: batch as unknown as Json,
+  });
   if (error) throw error;
 }

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { dynamicTable } from "@/lib/dynamic-db";
 import type { Level } from "@/lib/learn-queries";
 
 export type HubKind = "kanji" | "vocabulary" | "grammar";
@@ -30,8 +31,11 @@ export type TargetMetrics = {
 };
 
 export async function fetchTargetMetrics(): Promise<TargetMetrics> {
-  const { data, error } = await (supabase as any).rpc("get_target_page_metrics");
+  const { data: raw, error } = await supabase.rpc("get_target_page_metrics");
   if (error) throw error;
+  const data = raw as Partial<
+    Record<keyof TargetMetrics | "xpToday", number | string | null>
+  > | null;
   return {
     streak: Number(data?.streak ?? 0),
     xpToday: Number(data?.xpToday ?? 0),
@@ -42,16 +46,21 @@ export async function fetchTargetMetrics(): Promise<TargetMetrics> {
 }
 
 async function countPublished(kind: MasteryKind, level: Level) {
-  const { count } = await (supabase as any)
-    .from(tables[kind].table)
+  const { count } = await dynamicTable(tables[kind].table)
     .select("id", { count: "exact", head: true })
     .eq("level", level)
     .eq("is_published", true);
   return Number(count ?? 0);
 }
 
-async function countProgress(userId: string, kind: MasteryKind, level: Level, statuses: string[]) {
-  const { count } = await (supabase as any)
+type ProgressStatus = "new" | "learning" | "review" | "mastered";
+async function countProgress(
+  userId: string,
+  kind: MasteryKind,
+  level: Level,
+  statuses: ProgressStatus[],
+) {
+  const { count } = await supabase
     .from("user_item_progress")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
@@ -78,7 +87,7 @@ export async function fetchContinueLearning(level: Level): Promise<ContinueItem 
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth.user?.id;
   if (!userId) return null;
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("learning_activity")
     .select("metadata,created_at")
     .eq("user_id", userId)
@@ -103,8 +112,7 @@ export async function fetchContinueLearning(level: Level): Promise<ContinueItem 
   for (const row of candidates) {
     const kind = row.metadata?.["content_type"] as HubKind;
     const id = String(row.metadata?.["content_id"]);
-    const { data: item } = await (supabase as any)
-      .from(tables[kind].table)
+    const { data: item } = await dynamicTable(tables[kind].table)
       .select(`id,${tables[kind].title},meaning_id`)
       .eq("id", id)
       .maybeSingle();
@@ -117,7 +125,7 @@ export async function fetchContinueLearning(level: Level): Promise<ContinueItem 
       kind,
       id,
       title: String(item[tables[kind].title] ?? kindLabel[kind]),
-      sub: String(item.meaning_id ?? ""),
+      sub: String(item["meaning_id"] ?? ""),
       href: `/study-item?kind=${kind}&id=${encodeURIComponent(id)}`,
       learned,
       total,
@@ -159,7 +167,7 @@ export async function fetchLatestSimulation(level: Level): Promise<SimulationSum
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth.user?.id;
   if (!userId) return null;
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("jlpt_simulation_full_sessions")
     .select("total_score,passed,exam_no,completed_at")
     .eq("user_id", userId)
@@ -245,7 +253,7 @@ export async function fetchWeeklyPlan(
   const userId = auth.user?.id;
   if (!userId || !planId) return empty;
   const end = days[6]?.date ?? start;
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("daily_study_tasks")
     .select("study_date,task_type,target_count,completed_count")
     .eq("user_id", userId)

@@ -15,9 +15,20 @@ export type FullSimulationAccess = {
   monthlyExam: boolean;
 };
 
+// Bentuk JSON yang dikembalikan RPC (tipe generated hanya menyebutnya Json).
+type MembershipRpc = { plan?: string | null; premium_until?: string | null } | null;
+type FullSimulationRpc = {
+  allowed?: boolean | null;
+  plan?: string | null;
+  used_this_month?: number | string | null;
+  monthly_limit?: number | string | null;
+  monthly_exam?: boolean | null;
+} | null;
+
 export async function fetchMembership(): Promise<Membership> {
-  const { data, error } = await (supabase as any).rpc("get_my_membership");
+  const { data: raw, error } = await supabase.rpc("get_my_membership");
   if (error) throw error;
+  const data = raw as MembershipRpc;
   const plan = (data?.plan ?? "free") as MembershipPlan;
   return { plan, premiumUntil: data?.premium_until ?? null, monthlyExam: plan !== "free" };
 }
@@ -37,8 +48,9 @@ export async function fetchMembershipAccess(): Promise<MembershipAccess> {
 }
 
 export async function fetchFullSimulationAccess(): Promise<FullSimulationAccess> {
-  const { data, error } = await (supabase as any).rpc("can_start_full_simulation");
+  const { data: raw, error } = await supabase.rpc("can_start_full_simulation");
   if (error) throw error;
+  const data = raw as FullSimulationRpc;
   return {
     allowed: !!data?.allowed,
     plan: (data?.plan ?? "free") as MembershipPlan,

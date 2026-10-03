@@ -75,7 +75,7 @@ export async function fetchCompetitionLeaderboard(
     p_limit: safeLimit,
   });
   if (error || !data) return [];
-  return (data as any[]).map((row) => ({
+  return data.map((row) => ({
     rank: Number(row.rank ?? 0),
     userId: String(row.user_id),
     displayName: String(row.display_name || "Pengguna ENO NIHONGO"),

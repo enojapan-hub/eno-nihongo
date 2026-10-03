@@ -88,16 +88,23 @@ async function translateWithGemini(text: string, context: string): Promise<Trans
     throw new Error(`Gemini ${response.status}: ${body.slice(0, 500)}`);
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as GeminiResponse;
   const raw =
     data?.candidates?.[0]?.content?.parts
-      ?.map((part: any) => part?.text || "")
+      ?.map((part) => part?.text || "")
       .filter(Boolean)
       .join("") || "";
   const translation = extractJsonTranslation(raw);
   if (!translation) throw new Error("Gemini returned empty translation");
   return { translation, provider: "gemini", model };
 }
+
+type GeminiResponse = {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+};
+type BatchTranslation = { id: unknown; translation?: unknown };
+type WorkRow = { id: string } & Record<string, string | null | undefined>;
+type PendingWork = { id: string; source_text: string | null; target_text: string | null };
 
 async function translateBatchWithGemini(
   items: Array<{ id: string; text: string }>,
@@ -155,10 +162,10 @@ async function translateBatchWithGemini(
     throw new Error(`Gemini ${response.status}: ${body.slice(0, 500)}`);
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as GeminiResponse;
   const raw =
     data?.candidates?.[0]?.content?.parts
-      ?.map((part: any) => part?.text || "")
+      ?.map((part) => part?.text || "")
       .filter(Boolean)
       .join("") || "";
   const cleaned = raw
@@ -167,7 +174,9 @@ async function translateBatchWithGemini(
     .replace(/\s*```$/i, "")
     .trim();
   const parsed = JSON.parse(cleaned);
-  const translations = Array.isArray(parsed?.translations) ? parsed.translations : [];
+  const translations: BatchTranslation[] = Array.isArray(parsed?.translations)
+    ? parsed.translations
+    : [];
   if (!translations.length) throw new Error("Gemini returned no batch translations");
   return { translations, model };
 }
@@ -231,14 +240,14 @@ async function discoverWork(sourceType: SourceType, limit: number) {
     p_limit: Math.min(Math.max(limit, 1), DISCOVERY_PAGE_SIZE),
   });
   if (error) throw error;
-  return (data || []).map((row: any) => ({
+  return ((data || []) as unknown as PendingWork[]).map((row) => ({
     id: row.id,
     [sourceColumn]: row.source_text,
     [targetColumn]: row.target_text,
   }));
 }
 
-async function translateOne(sourceType: SourceType, row: any): Promise<TranslationResult> {
+async function translateOne(sourceType: SourceType, row: WorkRow): Promise<TranslationResult> {
   const table =
     sourceType === "kanji"
       ? "kanji"
@@ -257,7 +266,7 @@ async function translateOne(sourceType: SourceType, row: any): Promise<Translati
         : sourceType === "grammar"
           ? "Bunpou JLPT"
           : "Dokkai JLPT";
-  const result = await translateNaturalIndonesian(row[sourceColumn], context);
+  const result = await translateNaturalIndonesian(row[sourceColumn] as string, context);
   const { error } = await supabaseAdmin
     .from(table)
     .update({ [targetColumn]: result.translation })
@@ -294,11 +303,11 @@ export async function runTranslationBatch(sourceType: SourceType, requestedLimit
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const batch = await translateBatchWithGemini(
-        rows.map((row: any) => ({ id: row.id, text: row[sourceColumn] })),
+        rows.map((row) => ({ id: row.id, text: row[sourceColumn] as string })),
         context,
       );
       const byId = new Map<string, string>(
-        batch.translations.map((item: any): [string, string] => [
+        batch.translations.map((item): [string, string] => [
           String(item.id),
           String(item.translation || "").trim(),
         ]),

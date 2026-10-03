@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { dynamicFrom } from "@/lib/dynamic-db";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const routeSchema = {
@@ -22,6 +23,11 @@ const routeSchema = {
   required: ["examples", "synonyms", "antonyms", "explanation"],
   additionalProperties: false,
 } as const;
+
+type OpenAiResponse = {
+  output?: Array<{ content?: Array<{ type?: string; text?: string }> }>;
+};
+type RawExample = { jp?: unknown; id?: unknown; reading?: unknown };
 
 async function generateContent(vocab: Record<string, unknown>) {
   const apiKey = process.env["OPENAI_API_KEY"];
@@ -59,10 +65,10 @@ async function generateContent(vocab: Record<string, unknown>) {
   });
   if (!response.ok)
     throw new Error(`OpenAI ${response.status}: ${(await response.text()).slice(0, 500)}`);
-  const data = await response.json();
+  const data = (await response.json()) as OpenAiResponse;
   const outputText = data.output
-    ?.flatMap((item: any) => item.content ?? [])
-    ?.find((item: any) => item.type === "output_text")?.text;
+    ?.flatMap((item) => item.content ?? [])
+    ?.find((item) => item.type === "output_text")?.text;
   if (!outputText) throw new Error("OpenAI returned no output text");
   const parsed = JSON.parse(outputText);
   if (
@@ -75,7 +81,7 @@ async function generateContent(vocab: Record<string, unknown>) {
     throw new Error("Invalid Kotoba response");
   return {
     model,
-    examples: parsed.examples.map((x: any) => ({
+    examples: parsed.examples.map((x: RawExample) => ({
       jp: String(x.jp),
       id: String(x.id),
       reading: String(x.reading),
@@ -98,8 +104,7 @@ export const Route = createFileRoute("/api/kotoba/examples")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         const body = (await request.json().catch(() => null)) as { id?: string } | null;
         if (!body?.id) return Response.json({ error: "Missing vocabulary id" }, { status: 400 });
-        const { data: vocab, error } = await (supabaseAdmin as any)
-          .from("vocabulary")
+        const { data: vocab, error } = await dynamicFrom(supabaseAdmin, "vocabulary")
           .select("id, term, reading, meaning_id, part_of_speech, level, examples, explanation")
           .eq("id", body.id)
           .eq("is_published", true)
@@ -107,39 +112,37 @@ export const Route = createFileRoute("/api/kotoba/examples")({
         if (error) return Response.json({ error: error.message }, { status: 500 });
         if (!vocab) return Response.json({ error: "Vocabulary not found" }, { status: 404 });
 
-        const { data: cached } = await (supabaseAdmin as any)
-          .from("ai_learning_content")
+        const { data: cached } = await dynamicFrom(supabaseAdmin, "ai_learning_content")
           .select("examples, synonyms, antonyms, explanation")
           .eq("content_type", "kotoba")
           .eq("content_id", body.id)
           .eq("language", "id")
           .maybeSingle();
-        if (cached && Array.isArray(cached.examples) && cached.examples.length >= 3)
+        if (cached && Array.isArray(cached["examples"]) && cached["examples"].length >= 3)
           return Response.json({
-            examples: cached.examples.slice(0, 3),
-            synonyms: cached.synonyms ?? [],
-            antonyms: cached.antonyms ?? [],
-            explanation: cached.explanation ?? vocab.explanation ?? "",
+            examples: cached["examples"].slice(0, 3),
+            synonyms: cached["synonyms"] ?? [],
+            antonyms: cached["antonyms"] ?? [],
+            explanation: cached["explanation"] ?? vocab["explanation"] ?? "",
             generated: false,
           });
 
-        const existing = Array.isArray(vocab.examples) ? vocab.examples : [];
-        if (existing.length >= 3 && vocab.explanation)
+        const existing = Array.isArray(vocab["examples"]) ? vocab["examples"] : [];
+        if (existing.length >= 3 && vocab["explanation"])
           return Response.json({
             examples: existing.slice(0, 3),
             synonyms: [],
             antonyms: [],
-            explanation: vocab.explanation,
+            explanation: vocab["explanation"],
             generated: false,
           });
 
         try {
           const { model, ...content } = await generateContent(vocab);
-          await (supabaseAdmin as any)
-            .from("vocabulary")
+          await dynamicFrom(supabaseAdmin, "vocabulary")
             .update({ examples: content.examples, explanation: content.explanation })
             .eq("id", body.id);
-          await (supabaseAdmin as any).from("ai_learning_content").upsert(
+          await dynamicFrom(supabaseAdmin, "ai_learning_content").upsert(
             {
               content_type: "kotoba",
               content_id: body.id,

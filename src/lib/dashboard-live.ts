@@ -82,9 +82,22 @@ function normalizeDashboardMetrics(value: unknown): DashboardMetrics {
   };
 }
 
+// Tabel dipilih saat runtime dari peta konfigurasi di bawah, jadi permukaan query dinyatakan eksplisit.
+type ContinueRow = Record<string, unknown>;
+type ContinueClient = {
+  from(table: string): {
+    select(columns: string): {
+      eq(
+        column: string,
+        value: string,
+      ): { maybeSingle(): PromiseLike<{ data: ContinueRow | null }> };
+    };
+  };
+};
+
 export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   try {
-    const { data, error } = await (supabase as any).rpc("get_my_dashboard_metrics", {});
+    const { data, error } = await supabase.rpc("get_my_dashboard_metrics");
     if (error || !data) return empty;
     return normalizeDashboardMetrics(data);
   } catch (error) {
@@ -140,7 +153,7 @@ export async function resolveContinueLesson(
   const cfg = map[last.type];
   if (!cfg) return null;
   try {
-    const { data } = await (supabase as any)
+    const { data } = await (supabase as unknown as ContinueClient)
       .from(cfg.table)
       .select(cfg.select)
       .eq("id", last.id)

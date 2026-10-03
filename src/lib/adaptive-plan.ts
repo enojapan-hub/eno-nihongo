@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Level } from "@/lib/learn-queries";
 import {
   analyzePlannerWeakness,
   reviewMatchesWeakness,
@@ -76,7 +77,7 @@ const materialLabel: Record<string, string> = {
 };
 
 async function itemSuggestion(
-  client: any,
+  client: typeof supabase,
   r: { item_type: string; item_id: string },
   weak = false,
   weakLabel?: string,
@@ -129,10 +130,10 @@ async function itemSuggestion(
 
 async function enrichTasksWithSuggestions(
   userId: string,
-  level: string,
+  level: Level,
   tasks: AdaptiveTask[],
 ): Promise<AdaptiveTask[]> {
-  const client = supabase as any;
+  const client = supabase;
   const [{ data: progress }, { data: reviewData }, { data: kiokuState }] = await Promise.all([
     client
       .from("user_item_progress")
@@ -384,14 +385,14 @@ async function enrichTasksWithSuggestions(
 export async function fetchAdaptivePlan(): Promise<AdaptivePlan> {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) return emptyPlan;
-  const client = supabase as any;
+  const client = supabase;
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Tokyo",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-  await client.rpc("ensure_active_study_plan", {});
+  await client.rpc("ensure_active_study_plan");
   await client.rpc("generate_weekly_study_plan", { p_date: today });
   await client.rpc("sync_daily_study_task_progress", { p_study_date: today });
   const [{ data: plans }, { data: tasks }] = await Promise.all([
@@ -414,8 +415,8 @@ export async function fetchAdaptivePlan(): Promise<AdaptivePlan> {
   const taskRows = [
     ...(await enrichTasksWithSuggestions(
       auth.user.id,
-      String(plan.target_level ?? "N5"),
-      (tasks ?? []).filter((task: any) => task.plan_id === plan.id) as AdaptiveTask[],
+      plan.target_level ?? "N5",
+      (tasks ?? []).filter((task) => task.plan_id === plan.id) as unknown as AdaptiveTask[],
     )),
   ].sort((a, b) => b.priority - a.priority);
   const target = taskRows.reduce((s, t) => s + Number(t.target_count || 0), 0),

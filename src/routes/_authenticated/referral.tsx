@@ -29,9 +29,9 @@ function ReferralPage() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const profile = data?.profile;
-  const points = (profile as any)?.referral_points ?? 0;
-  const plan = (profile as any)?.plan ?? "free";
-  const premiumUntil = (profile as any)?.premium_until;
+  const points = profile?.referral_points ?? 0;
+  const plan = profile?.plan ?? "free";
+  const premiumUntil = profile?.premium_until;
   const referralCode = profile?.referral_code ?? "";
   const shareUrl = `${window.location.origin}/auth?ref=${referralCode}`;
 
