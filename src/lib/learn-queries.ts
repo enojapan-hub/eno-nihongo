@@ -344,72 +344,39 @@ export async function fetchSimulationQuestions(level: Level, group: SimSkillGrou
   );
   return toRunnerQuestions(rows as unknown[]);
 }
-export async function saveAttempt(input: {
-  quizId?: string | null;
-  level?: Level | null;
-  skill?: "kanji" | "vocabulary" | "grammar" | "reading" | "listening" | null;
-  total: number;
-  correct: number;
+/**
+ * Saves a practice quiz. The server grades the answers against the published question bank and
+ * decides score and XP; the client only reports which option was picked for each question.
+ */
+export async function submitPracticeQuiz(input: {
+  level: Level;
+  skill: "kanji" | "vocabulary" | "grammar" | "reading" | "listening" | null;
   durationSeconds: number;
-  answers: Array<{ questionId: string; selectedIndex: number; isCorrect: boolean }>;
-}): Promise<{ ok: true } | { ok: false; message: string }> {
-  const { data: userRes } = await supabase.auth.getUser();
-  const userId = userRes.user?.id;
-  if (!userId) return { ok: false, message: "Sesi tidak ditemukan. Masuk lagi untuk menyimpan." };
-  const score = input.total > 0 ? Math.round((input.correct / input.total) * 10000) / 100 : 0;
-  const xpEarned = input.correct * 10;
-  const { data: attempt, error } = await supabase
-    .from("quiz_attempts")
-    .insert({
-      user_id: userId,
-      quiz_id: input.quizId ?? null,
-      level: input.level ?? null,
-      skill: input.skill ?? null,
-      total_questions: input.total,
-      correct_count: input.correct,
-      score,
-      xp_earned: xpEarned,
-      duration_seconds: input.durationSeconds,
-      completed_at: new Date().toISOString(),
-    })
-    .select("id")
-    .maybeSingle();
-  if (error || !attempt) {
-    console.error("saveAttempt: quiz_attempts insert failed", error);
+  answers: Array<{ questionId: string; selectedIndex: number }>;
+}): Promise<
+  | { ok: true; correct: number; total: number; score: number; xp: number }
+  | { ok: false; message: string }
+> {
+  const { data, error } = await supabase.rpc("submit_practice_quiz", {
+    p_level: input.level,
+    p_skill: input.skill,
+    p_duration_seconds: Math.max(0, Math.round(input.durationSeconds)),
+    p_answers: input.answers.map((a) => ({
+      questionId: a.questionId,
+      selectedIndex: a.selectedIndex,
+    })),
+  });
+  if (error || !data) {
+    console.error("submitPracticeQuiz failed", error);
     return { ok: false, message: error?.message || "Hasil tidak dapat disimpan." };
   }
-  const { error: answersError } = await supabase.from("quiz_answers").insert(
-    input.answers.map((a) => ({
-      attempt_id: attempt.id,
-      user_id: userId,
-      question_id: a.questionId,
-      selected_index: a.selectedIndex,
-      is_correct: a.isCorrect,
-    })),
-  );
-  if (answersError) console.error("saveAttempt: quiz_answers insert failed", answersError);
-  await supabase.rpc("record_learning_activity", {
-    p_activity_type: "quiz_completed",
-    p_content_type: input.skill ?? "quiz",
-    p_content_id: input.quizId ?? null,
-    p_points: xpEarned,
-    p_xp: xpEarned,
-    p_correct: null,
-    p_duration_seconds: input.durationSeconds,
-    p_metadata: { level: input.level ?? null, total: input.total, correct: input.correct, score },
-  });
-  for (const answer of input.answers)
-    await supabase.rpc("record_learning_activity", {
-      p_activity_type: "quiz_answered",
-      p_content_type: input.skill ?? "quiz",
-      p_content_id: answer.questionId,
-      p_points: answer.isCorrect ? 10 : 0,
-      p_xp: answer.isCorrect ? 10 : 0,
-      p_correct: answer.isCorrect,
-      p_duration_seconds: 0,
-      p_metadata: { quiz_id: input.quizId ?? null, level: input.level ?? null },
-    });
-  return { ok: true };
+  return {
+    ok: true,
+    correct: data.correct_count,
+    total: data.total_questions,
+    score: Number(data.score),
+    xp: data.xp_earned,
+  };
 }
 export type LearnableItemType = "kanji" | "vocabulary" | "grammar" | "reading" | "listening";
 async function currentUserId() {

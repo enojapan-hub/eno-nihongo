@@ -5262,6 +5262,35 @@ export type Database = {
           total_questions: number
         }[]
       }
+      submit_practice_quiz: {
+        Args: {
+          p_answers: Json
+          p_duration_seconds?: number
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+          p_skill: Database["public"]["Enums"]["content_skill"] | null
+        }
+        Returns: {
+          attempt_kind: string
+          completed_at: string
+          correct_count: number
+          created_at: string
+          duration_seconds: number
+          id: string
+          level: Database["public"]["Enums"]["jlpt_level"] | null
+          quiz_id: string | null
+          score: number
+          skill: Database["public"]["Enums"]["content_skill"] | null
+          total_questions: number
+          user_id: string
+          xp_earned: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quiz_attempts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       submit_quiz_attempt: {
         Args: {
           p_answers: Json

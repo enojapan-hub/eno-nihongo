@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { saveAttempt, type Level, type RunnerQuestion } from "@/lib/learn-queries";
+import { submitPracticeQuiz, type Level, type RunnerQuestion } from "@/lib/learn-queries";
 export const Route = createFileRoute("/_authenticated/quiz/$slug")({ component: QuizRunner });
 type Skill = "kanji" | "vocabulary" | "grammar" | "reading" | "listening";
 type PracticeQuestion = RunnerQuestion & {
@@ -171,17 +171,13 @@ function QuizRunner() {
     setSaving(true);
     setSaveError(null);
     try {
-      const saved = await saveAttempt({
-        quizId: null,
+      const saved = await submitPracticeQuiz({
         level,
         skill,
-        total: questions.length,
-        correct: score,
-        durationSeconds: Math.round((Date.now() - startedAt) / 1000),
+        durationSeconds: (Date.now() - startedAt) / 1000,
         answers: questions.map((q) => ({
           questionId: q.id,
           selectedIndex: answers[q.id] ?? -1,
-          isCorrect: answers[q.id] === q.correct_index,
         })),
       });
       if (!saved.ok) setSaveError(saved.message);
