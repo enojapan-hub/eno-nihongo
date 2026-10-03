@@ -134,13 +134,22 @@ export function AppShell({
                 </Link>
               </>
             )}
-            <Button variant="ghost" size="icon" className="size-9 rounded-xl" onClick={toggleTheme}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-9 rounded-xl"
+              onClick={toggleTheme}
+              aria-label={darkMode ? "Gunakan mode terang" : "Gunakan mode gelap"}
+              title={darkMode ? "Mode terang" : "Mode gelap"}
+            >
               {darkMode ? <Sun className="size-[17px]" /> : <Moon className="size-[17px]" />}
             </Button>
             {!backTo && (
               <Link
                 to="/pengaturan"
                 className="grid size-9 place-items-center rounded-xl text-muted-foreground"
+                aria-label="Pengaturan"
+                title="Pengaturan"
               >
                 <Settings className="size-[17px]" />
               </Link>
