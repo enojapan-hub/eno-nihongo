@@ -7,7 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { addItemToReview, markItemLearned, type Level } from "@/lib/learn-queries";
 import { fetchTargetLevel } from "@/lib/target-level";
-import { spaceJapanese, normalizeRomaji } from "@/lib/japanese-spacing";
+import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacing";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/bunpo")({ component: BunpoPage });
@@ -76,11 +76,11 @@ function parseWrong(value: unknown): WrongExample[] {
   return objects(value)
     .map((x) => ({
       wrong: str(x["wrong_japanese"], x["wrong"], x["jp"], x["ja"], x["japanese"]),
-      wrong_hiragana: str(x["wrong_hiragana"], x["hiragana"], x["reading"]),
+      wrong_hiragana: str(x["wrong_hiragana"], x["wrong_reading"], x["hiragana"], x["reading"]),
       wrong_romaji: str(x["wrong_romaji"], x["romaji"]),
       reason_id: str(x["reason_id"], x["reason"], x["why_wrong"]),
       correct: str(x["correct_japanese"], x["correct"], x["corrected_japanese"], x["correct_jp"]),
-      correct_hiragana: str(x["correct_hiragana"], x["corrected_hiragana"]),
+      correct_hiragana: str(x["correct_hiragana"], x["correct_reading"], x["corrected_hiragana"]),
       correct_romaji: str(x["correct_romaji"], x["corrected_romaji"]),
       id: str(
         x["meaning_id"],
@@ -128,12 +128,14 @@ function grammarTargets(pattern: string) {
   ].sort((a, b) => b.length - a.length);
 }
 function highlightGrammar(text: string, pattern: string): ReactNode {
-  if (!text || !pattern) return spaceJapanese(text);
-  const spaced = spaceJapanese(text);
+  if (!text || !pattern) return normalizeJapaneseSpacing(text);
+  const spaced = normalizeJapaneseSpacing(text);
   const targets = grammarTargets(pattern);
   let nodes: ReactNode[] = [spaced];
   for (const target of targets) {
-    const variants = [target, spaceJapanese(target)].filter((x, i, a) => x && a.indexOf(x) === i);
+    const variants = [target, normalizeJapaneseSpacing(target)].filter(
+      (x, i, a) => x && a.indexOf(x) === i,
+    );
     for (const variant of variants) {
       nodes = nodes.flatMap((node, ni): ReactNode[] => {
         if (typeof node !== "string") return [node];
@@ -493,7 +495,7 @@ function BunpoPage() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <div lang="ja" className="font-jp text-[14px] font-bold">
-                          {spaceJapanese(g.pattern)}
+                          {normalizeJapaneseSpacing(g.pattern)}
                           <Reading
                             pattern={g.pattern}
                             reading={g.reading_hiragana}
@@ -616,7 +618,7 @@ function BunpoPage() {
                         </p>
                         {e.reading && (
                           <p className="text-muted-foreground">
-                            Hiragana: {spaceJapanese(e.reading)}
+                            Hiragana: {normalizeJapaneseSpacing(e.reading)}
                           </p>
                         )}
                         {e.romaji && (
@@ -639,12 +641,12 @@ function BunpoPage() {
                       <div key={i} className={i ? "mt-3" : ""}>
                         {e.wrong && (
                           <p lang="ja" className="font-jp">
-                            ❌ {spaceJapanese(e.wrong)}
+                            ❌ {normalizeJapaneseSpacing(e.wrong)}
                           </p>
                         )}
                         {e.wrong_hiragana && (
                           <p className="text-muted-foreground">
-                            Hiragana: {spaceJapanese(e.wrong_hiragana)}
+                            Hiragana: {normalizeJapaneseSpacing(e.wrong_hiragana)}
                           </p>
                         )}
                         {e.wrong_romaji && (
@@ -662,11 +664,11 @@ function BunpoPage() {
                           <div className="mt-2">
                             <p className="font-semibold text-primary">✓ Perbaikan:</p>
                             <p lang="ja" className="font-jp">
-                              {spaceJapanese(e.correct)}
+                              {normalizeJapaneseSpacing(e.correct)}
                             </p>
                             {e.correct_hiragana && (
                               <p className="text-muted-foreground">
-                                Hiragana: {spaceJapanese(e.correct_hiragana)}
+                                Hiragana: {normalizeJapaneseSpacing(e.correct_hiragana)}
                               </p>
                             )}
                             {e.correct_romaji && (
