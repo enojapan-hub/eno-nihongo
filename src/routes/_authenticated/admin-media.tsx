@@ -30,7 +30,7 @@ function Page() {
   });
   const rows = useMemo(
     () =>
-      ((q.data || []) as any[]).filter(
+      (q.data || []).filter(
         (x) =>
           !search ||
           String(x.title || "")
@@ -57,11 +57,12 @@ function Page() {
     }
     const { data: url } = supabase.storage.from("admin-media").getPublicUrl(path);
     const type = file.type.startsWith("audio/") ? "audio" : "image";
-    const { error: r } = await (supabase as any).rpc("admin_register_media", {
+    const { error: r } = await supabase.rpc("admin_register_media", {
       p_title: title.trim(),
       p_url: url.publicUrl,
       p_media_type: type,
-      p_mime_type: file.type || null,
+      // p_mime_type bernilai NULL secara default di database; cukup dihilangkan bila kosong.
+      ...(file.type ? { p_mime_type: file.type } : {}),
     });
     if (r) {
       await supabase.storage.from("admin-media").remove([path]);
@@ -75,7 +76,7 @@ function Page() {
     setMsg("Media berhasil diunggah.");
     qc.invalidateQueries({ queryKey: ["admin-media-library"] });
   }
-  async function del(x: any) {
+  async function del(x: { id: string; url: string }) {
     if (!confirm("Hapus media ini? Sistem akan menolak jika masih digunakan konten.")) return;
     setBusy(true);
     setMsg("");

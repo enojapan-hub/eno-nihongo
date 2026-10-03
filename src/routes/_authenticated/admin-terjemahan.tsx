@@ -12,9 +12,10 @@ async function headers() {
   if (!token) throw Error("Sesi login tidak ditemukan.");
   return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 }
+type TranslationStats = Partial<Record<"kanji" | "vocabulary" | "grammar" | "reading", number>>;
 function Page() {
   const [kind, setKind] = useState<Kind>("vocabulary"),
-    [stats, setStats] = useState<any>({}),
+    [stats, setStats] = useState<TranslationStats>({}),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   const load = useCallback(async () => {
@@ -39,8 +40,8 @@ function Page() {
       if (!r.ok) throw Error(d.error || "Batch gagal");
       setMessage(`${d.processed || 0} item ${kind} berhasil diproses.`);
       await load();
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Batch gagal");
     } finally {
       setBusy(false);
     }

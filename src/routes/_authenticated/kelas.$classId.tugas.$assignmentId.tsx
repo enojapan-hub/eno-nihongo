@@ -5,7 +5,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { classroom, result, openClassAttachment } from "@/lib/classroom";
+import { classroom, result, openClassAttachment, errorMessage } from "@/lib/classroom";
+import type { Tables } from "@/integrations/supabase/types";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/tugas/$assignmentId")({
   component: Page,
 });
@@ -88,11 +89,11 @@ function Editor({
   userId,
   refresh,
 }: {
-  assignment: any;
-  submission: any;
-  grade: any;
+  assignment: Tables<"class_assignments">;
+  submission: Tables<"class_assignment_submissions"> | null;
+  grade: Tables<"class_grades"> | null;
   userId: string;
-  refresh: () => Promise<any>;
+  refresh: () => Promise<unknown>;
 }) {
   const [text, setText] = useState(submission?.answer_text || "");
   const [attachment, setAttachment] = useState(submission?.attachment_url || "");
@@ -148,8 +149,8 @@ function Editor({
         supabase.storage.from("class-submissions").upload(path, file, { upsert: false }),
       );
       setAttachment(path);
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(errorMessage(e));
     } finally {
       setUploading(false);
     }
@@ -176,8 +177,8 @@ function Editor({
         setDraftAvailable(false);
       }
       await refresh();
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(errorMessage(e));
     } finally {
       setBusy(false);
     }

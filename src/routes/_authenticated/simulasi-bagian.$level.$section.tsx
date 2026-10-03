@@ -76,13 +76,13 @@ type AudioManifestItem = {
 };
 
 async function fetchQuestions(level: Level, section: string): Promise<Row[]> {
-  const { data, error } = await (supabase as any).rpc("get_published_simulation_questions", {
+  const { data, error } = await supabase.rpc("get_published_simulation_questions", {
     p_level: level,
     p_section: section,
   });
   if (error) throw error;
-  return (data ?? []).filter(
-    (x: any) =>
+  return ((data ?? []) as unknown as Row[]).filter(
+    (x) =>
       x.prompt_jp && Array.isArray(x.choices) && (x.choices.length === 3 || x.choices.length === 4),
   );
 }

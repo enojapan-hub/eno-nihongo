@@ -77,13 +77,44 @@ function formatNumber(value: unknown) {
   return Number(value || 0).toLocaleString("id-ID");
 }
 
+interface ActionItem {
+  key: string;
+  label: string;
+  count: number | string;
+  severity?: string;
+}
+interface AdminOverview {
+  users?: number;
+  premium_users?: number;
+  lifetime_users?: number;
+  classes?: number;
+  classes_published?: number;
+  classes_review?: number;
+  quiz_attempts?: number;
+  kanji?: number;
+  vocabulary?: number;
+  grammar?: number;
+  reading?: number;
+  listening?: number;
+}
+// Tujuan tiap antrean aksi. Href dari database memuat query string, sehingga dipetakan ke route bertipe.
+const actionTargets = {
+  classes: { to: "/admin-kelas" },
+  reports: { to: "/admin-operasional", search: { tab: "laporan" } },
+  content_fix: { to: "/admin-operasional", search: { tab: "review" } },
+  payments: { to: "/admin-keuangan" },
+  imports: { to: "/admin-import-export" },
+} as const;
+function isActionKey(key: string): key is keyof typeof actionTargets {
+  return key in actionTargets;
+}
 function Page() {
   const actions = useQuery({
     queryKey: ["admin-action-queue"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_action_queue");
       if (error) throw error;
-      return (data || []) as any[];
+      return (data || []) as unknown as ActionItem[];
     },
     retry: false,
   });
@@ -92,7 +123,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_overview");
       if (error) throw error;
-      return data as any;
+      return data as unknown as AdminOverview;
     },
     retry: false,
   });
@@ -121,7 +152,7 @@ function Page() {
       </AppShell>
     );
 
-  const o = q.data || {};
+  const o: AdminOverview = q.data || {};
   const contentTotal =
     Number(o.kanji || 0) +
     Number(o.vocabulary || 0) +
@@ -208,11 +239,11 @@ function Page() {
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {actions.data
-                .filter((x) => Number(x.count) > 0)
+                .filter((x) => Number(x.count) > 0 && isActionKey(x.key))
                 .map((x) => (
                   <Link
                     key={x.key}
-                    to={x.href}
+                    {...actionTargets[x.key as keyof typeof actionTargets]}
                     className="flex items-center gap-3 rounded-2xl border p-3 transition hover:border-primary/30"
                   >
                     <span

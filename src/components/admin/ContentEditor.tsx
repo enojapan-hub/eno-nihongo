@@ -1,11 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 type Kind = "kanji" | "vocabulary" | "grammar" | "reading" | "listening" | "questions";
 type Props = { kind: Kind; id?: string | null; onClose: () => void; onSaved: () => void };
 type F = { key: string; label: string; type?: "textarea" | "json" | "array" | "number" };
+// Bentuk data tiap jenis konten berbeda; nilai dari input teks dikonversi saat disimpan.
+interface ItemData {
+  level?: unknown;
+  sort_order?: unknown;
+  source_book?: unknown;
+  lesson_number?: unknown;
+  lesson_title?: unknown;
+  is_published?: unknown;
+  [key: string]: unknown;
+}
+const show = (v: unknown): string | number =>
+  typeof v === "string" || typeof v === "number" ? v : v == null ? "" : String(v);
+// Argumen p_id bernilai NULL saat membuat item baru; tipe generated menyebutnya string.
+type SaveRpc = (
+  name: "admin_save_question_item" | "admin_save_content_item",
+  args: { p_kind?: Kind; p_id: string | null; p_data: Json },
+) => PromiseLike<{ data: string | null; error: { message: string } | null }>;
 const fields: Record<Kind, F[]> = {
   kanji: [
     { key: "character", label: "Kanji" },
@@ -96,7 +114,7 @@ const blank = (kind: Kind) => ({
     : {}),
 });
 export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
-  const [data, setData] = useState<any>(blank(kind));
+  const [data, setData] = useState<ItemData>(blank(kind));
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -115,27 +133,28 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
       });
       if (!active) return;
       if (e) setError(e.message);
-      else setData(d);
+      else setData(d as unknown as ItemData);
       setLoading(false);
     })();
     return () => {
       active = false;
     };
   }, [kind, id]);
-  const set = (k: string, v: any) => setData((d: any) => ({ ...d, [k]: v }));
+  const set = (k: string, v: unknown) => setData((d) => ({ ...d, [k]: v }));
   const save = async () => {
     setSaving(true);
     setError("");
-    const payload = { ...data };
+    const payload: ItemData = { ...data };
     for (const f of fields[kind]) {
-      if (f.type === "array" && typeof payload[f.key] === "string")
-        payload[f.key] = payload[f.key]
+      const raw = payload[f.key];
+      if (f.type === "array" && typeof raw === "string")
+        payload[f.key] = raw
           .split(",")
-          .map((x: string) => x.trim())
+          .map((x) => x.trim())
           .filter(Boolean);
-      if (f.type === "json" && typeof payload[f.key] === "string") {
+      if (f.type === "json" && typeof raw === "string") {
         try {
-          payload[f.key] = JSON.parse(payload[f.key] || "[]");
+          payload[f.key] = JSON.parse(raw || "[]");
         } catch {
           setError(`${f.label}: JSON tidak valid`);
           setSaving(false);
@@ -144,11 +163,15 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
       }
     }
     const rpc = kind === "questions" ? "admin_save_question_item" : "admin_save_content_item";
+    const p_data = payload as Json;
     const args =
       kind === "questions"
-        ? { p_id: id ?? null, p_data: payload }
-        : { p_kind: kind, p_id: id ?? null, p_data: payload };
-    const { data: savedId, error: e } = await (supabase as any).rpc(rpc, args);
+        ? { p_id: id ?? null, p_data }
+        : { p_kind: kind, p_id: id ?? null, p_data };
+    const { data: savedId, error: e } = await (supabase as unknown as { rpc: SaveRpc }).rpc(
+      rpc,
+      args,
+    );
     if (e) {
       setSaving(false);
       setError(e.message);
@@ -156,7 +179,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
     }
     const { error: auditError } = await supabase.rpc("admin_audit_content_save", {
       p_kind: kind,
-      p_id: savedId,
+      p_id: savedId ?? id ?? "",
       p_created: !id,
     });
     setSaving(false);
@@ -210,7 +233,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
                 <Field label="Level">
                   <select
                     className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                    value={data.level || "N5"}
+                    value={show(data.level) || "N5"}
                     onChange={(e) => set("level", e.target.value)}
                   >
                     {["N5", "N4", "N3", "N2", "N1"].map((x) => (
@@ -223,7 +246,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
                     <input
                       className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                       type="number"
-                      value={data.sort_order ?? 0}
+                      value={show(data.sort_order ?? 0)}
                       onChange={(e) => set("sort_order", e.target.value)}
                     />
                   </Field>
@@ -237,7 +260,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
                       value={
                         f.type === "json" && typeof data[f.key] !== "string"
                           ? JSON.stringify(data[f.key] ?? [], null, 2)
-                          : (data[f.key] ?? "")
+                          : show(data[f.key])
                       }
                       onChange={(e) => set(f.key, e.target.value)}
                     />
@@ -247,8 +270,8 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
                       type={f.type === "number" ? "number" : "text"}
                       value={
                         f.type === "array" && Array.isArray(data[f.key])
-                          ? data[f.key].join(", ")
-                          : (data[f.key] ?? "")
+                          ? (data[f.key] as unknown[]).join(", ")
+                          : show(data[f.key])
                       }
                       onChange={(e) => set(f.key, e.target.value)}
                     />
@@ -260,7 +283,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
                   <Field label="Sumber">
                     <input
                       className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                      value={data.source_book ?? ""}
+                      value={show(data.source_book)}
                       onChange={(e) => set("source_book", e.target.value)}
                     />
                   </Field>
@@ -268,14 +291,14 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
                     <input
                       className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                       type="number"
-                      value={data.lesson_number ?? ""}
+                      value={show(data.lesson_number)}
                       onChange={(e) => set("lesson_number", e.target.value)}
                     />
                   </Field>
                   <Field label="Judul pelajaran">
                     <input
                       className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                      value={data.lesson_title ?? ""}
+                      value={show(data.lesson_title)}
                       onChange={(e) => set("lesson_title", e.target.value)}
                     />
                   </Field>
@@ -313,7 +336,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
     </div>
   );
 }
-function Field({ label, children }: { label: string; children: any }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[10px] font-bold text-muted-foreground">{label}</span>

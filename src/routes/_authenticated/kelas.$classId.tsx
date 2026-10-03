@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   UserPlus,
   UsersRound,
+  type LucideIcon,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -77,7 +78,7 @@ function Detail() {
     }
     setBusy(false);
   }
-  const c: any = classQuery.data;
+  const c = classQuery.data;
   if (classQuery.isLoading)
     return (
       <AppShell title="Kelas" backTo="/kelas">
@@ -265,7 +266,7 @@ function Detail() {
   );
 }
 
-function Benefit({ icon: Icon, title, text }: { icon: any; title: string; text: string }) {
+function Benefit({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
   return (
     <div className="flex gap-3 rounded-2xl border bg-card p-3.5 shadow-sm">
       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -283,7 +284,7 @@ function Feature({
   color,
   text,
 }: {
-  icon: any;
+  icon: LucideIcon;
   color: "orange" | "pink" | "violet";
   text: string;
 }) {
@@ -300,7 +301,7 @@ function Feature({
   );
 }
 
-function formatPrice(c: any, rate?: number) {
+function formatPrice(c: { price: number | string; currency: string }, rate?: number) {
   if (Number(c.price) <= 0) return "Gratis";
   if (c.currency === "JPY")
     return rate

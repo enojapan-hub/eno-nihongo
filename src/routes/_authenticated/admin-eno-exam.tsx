@@ -18,6 +18,17 @@ const initial = {
   passing_score: 60,
   status: "draft",
 };
+interface ExamAdminRow {
+  id: string;
+  title: string;
+  level: string;
+  exam_month: string;
+  duration_minutes: number;
+  passing_score: number;
+  status: string;
+  participants?: number;
+  submitted?: number;
+}
 function Page() {
   const qc = useQueryClient();
   const [f, setF] = useState(initial);
@@ -26,13 +37,12 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_eno_monthly_exam_admin");
       if (error) throw error;
-      return (data || []) as any[];
+      return (data || []) as unknown as ExamAdminRow[];
     },
   });
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await (supabase as any).rpc("save_eno_monthly_exam", {
-        p_id: null,
+      const { error } = await supabase.rpc("save_eno_monthly_exam", {
         p_title: f.title,
         p_level: f.level,
         p_exam_month: f.exam_month + "-01",

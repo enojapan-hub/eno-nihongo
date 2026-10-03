@@ -12,11 +12,21 @@ type Q = {
   question_no: number;
   mondai_no: number;
   prompt_jp: string;
-  choices: any;
+  choices: string[] | null;
   correct_index: number;
   explanation_indonesian: string | null;
 };
-const empty = {
+// Field angka diisi dari <input>, sehingga dapat bertipe string sampai disimpan (dikonversi dengan Number).
+interface QuestionForm {
+  section: string;
+  question_no: number | string;
+  mondai_no: number | string;
+  prompt_jp: string;
+  choices: string[];
+  correct_index: number | string;
+  explanation_indonesian: string;
+}
+const empty: QuestionForm = {
   section: "moji_goi",
   question_no: 1,
   mondai_no: 1,
@@ -28,7 +38,7 @@ const empty = {
 function Page() {
   const { examId } = Route.useParams();
   const [q, setQ] = useState<Q[]>([]);
-  const [f, setF] = useState<any>(empty);
+  const [f, setF] = useState<QuestionForm>(empty);
   const [msg, setMsg] = useState("");
   async function load() {
     const { data, error } = await supabase
@@ -41,8 +51,8 @@ function Page() {
       .order("question_no");
     if (error) setMsg(error.message);
     else {
-      setQ(data || []);
-      setF((x: any) => ({ ...x, question_no: (data?.length || 0) + 1 }));
+      setQ((data || []).map((row) => ({ ...row, choices: row.choices as string[] | null })));
+      setF((x) => ({ ...x, question_no: (data?.length || 0) + 1 }));
     }
   }
   const loadRef = useRef(load);

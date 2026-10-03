@@ -18,6 +18,7 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { classroom, result, secureUrl, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")({
@@ -204,7 +205,7 @@ function Page() {
     if (days === 1) return "Besok";
     return sessionTime(value);
   };
-  const taskStatus = (a: any) =>
+  const taskStatus = (a: Tables<"class_assignments">) =>
     d?.grades.some((g) => g.assignment_id === a.id)
       ? "dinilai"
       : d?.submissions.some((s) => s.assignment_id === a.id)
@@ -226,7 +227,7 @@ function Page() {
     { id: "pengumuman", label: "Pengumuman", icon: Megaphone },
     { id: "nilai", label: "Nilai", icon: Award },
   ] as const;
-  const task = (a: any) => (
+  const task = (a: Tables<"class_assignments">) => (
     <Card key={a.id} className="overflow-hidden border-border/70 shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -275,7 +276,7 @@ function Page() {
       </CardContent>
     </Card>
   );
-  const notice = (a: any) => (
+  const notice = (a: Tables<"class_announcements">) => (
     <Card key={a.id} className="border-amber-500/20 bg-amber-500/[0.06] shadow-sm">
       <CardContent className="flex gap-3 p-4">
         <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-500/15 text-amber-600">
@@ -720,7 +721,12 @@ function Empty() {
     </div>
   );
 }
-function Live({ meeting }: { meeting: any }) {
+interface LiveMeeting {
+  meeting_url?: string | null;
+  meeting_id?: string | null;
+  passcode?: string | null;
+}
+function Live({ meeting }: { meeting?: LiveMeeting | null }) {
   const [message, setMessage] = useState("");
   const url = secureUrl(meeting?.meeting_url);
   if (!url)
@@ -745,18 +751,18 @@ function Live({ meeting }: { meeting: any }) {
           Masuk Kelas Live
         </a>
       </Button>
-      {meeting.meeting_id && (
+      {meeting?.meeting_id && (
         <p className="text-xs">
           Meeting ID: {meeting.meeting_id}{" "}
-          <button className="text-primary underline" onClick={() => copy(meeting.meeting_id)}>
+          <button className="text-primary underline" onClick={() => copy(meeting.meeting_id ?? "")}>
             Salin
           </button>
         </p>
       )}
-      {meeting.passcode && (
+      {meeting?.passcode && (
         <p className="text-xs">
           Passcode: {meeting.passcode}{" "}
-          <button className="text-primary underline" onClick={() => copy(meeting.passcode)}>
+          <button className="text-primary underline" onClick={() => copy(meeting.passcode ?? "")}>
             Salin
           </button>
         </p>

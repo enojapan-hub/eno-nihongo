@@ -27,10 +27,12 @@ function Page() {
   const gate = useQuery({
     queryKey: ["editor-gate"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_content_staff_access");
+      const { data, error } = await supabase.rpc("get_content_staff_access");
       if (error) throw error;
-      if (!["editor", "admin", "owner"].includes(data?.role)) throw Error("content staff only");
-      return data;
+      const access = data as unknown as { role?: string } | null;
+      if (!["editor", "admin", "owner"].includes(access?.role ?? ""))
+        throw Error("content staff only");
+      return access;
     },
     retry: false,
   });

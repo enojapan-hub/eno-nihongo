@@ -7,10 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 export const Route = createFileRoute("/_authenticated/admin-pengaturan")({ component: Page });
+interface PlatformSettings {
+  registration_enabled?: boolean;
+  class_creation_enabled?: boolean;
+  maintenance_mode?: boolean;
+  max_upload_mb?: number;
+  [key: string]: unknown;
+}
 function Page() {
   const qc = useQueryClient(),
-    [form, setForm] = useState<any>(null),
+    [form, setForm] = useState<PlatformSettings | null>(null),
     [msg, setMsg] = useState(""),
     [busy, setBusy] = useState(false);
   const q = useQuery({
@@ -18,7 +26,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_platform_settings_admin");
       if (error) throw error;
-      return data;
+      return data as unknown as PlatformSettings;
     },
     retry: false,
   });
@@ -29,7 +37,7 @@ function Page() {
     setBusy(true);
     setMsg("");
     const { error } = await supabase.rpc("admin_save_platform_settings", {
-      p_settings: form,
+      p_settings: form as unknown as Json,
     });
     setBusy(false);
     setMsg(error ? error.message : "Pengaturan platform disimpan.");
