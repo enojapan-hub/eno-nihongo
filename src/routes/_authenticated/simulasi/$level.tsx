@@ -459,7 +459,7 @@ function SimulationRunner() {
                 {saving
                   ? "Menyimpan hasil…"
                   : saveError
-                    ? `Hasil belum tersimpan: ${saveError}. Skor di layar tetap benar.`
+                    ? `Hasil belum tersimpan: ${saveError.replace(/[.\s]+$/, "")}. Skor di layar tetap benar.`
                     : "Hasil simulasi tersimpan ke Progress."}
               </p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">

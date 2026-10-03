@@ -248,7 +248,8 @@ function QuizRunner() {
               {saveError ? (
                 <div role="alert" className="mt-3 space-y-2">
                   <p className="text-xs text-destructive">
-                    Hasil belum tersimpan: {saveError}. Skor di layar tetap benar.
+                    Hasil belum tersimpan: {saveError.replace(/[.\s]+$/, "")}. Skor di layar tetap
+                    benar.
                   </p>
                   <Button
                     size="sm"
