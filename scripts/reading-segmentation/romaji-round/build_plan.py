@@ -93,11 +93,14 @@ ART={
 ('6d0601d6',0):'Bertanya, mendengar, mengunjungi (bentuk merendah dari ききます, いきます).',('8f44b0b3',0):'Bertengkar.',
 ('906613fb',0):'Membubuhi.',('b5b45727',1):'Terlambat.',('d6733540',0):'Menghadiri.',('ef58892c',0):'Memakai, menggunakan.',
 ('f83202ab',0):'Mengirim (telegram).',('ffbdfbab',0):'Meninggal.',
+('26d0c885',0):'Misalnya, untuk menerima paket kurir, hanko tidak diperlukan.',
+('78da75c8',0):'Adik laki-laki saya lahir pada tahun shio harimau yang sama dengan kakek kami, jadi selisih usia mereka bukan dua belas tahun.',
+('db46736d',0):'Saya memperhatikan pola makan agar gizinya seimbang.',
 ('6f797513',0):'Saya membeli 2 kok bulu tangkis di toko perlengkapan olahraga.',
 }
 for (o,i),nv in ART.items():
     (r,)=by8[(o,i)]; old=r['e'].get('id')
-    cat='placeholder/template arti' if (old or '').startswith('Contoh penggunaan') else 'wrong arti (JA mismatch)'
+    cat='placeholder/template arti' if (old or '').startswith('Contoh penggunaan') else ('wrong arti (negation lost / double negation / other sentence)' if (o,i) in (('26d0c885',0),('78da75c8',0),('db46736d',0)) else 'wrong arti (JA mismatch)')
     put(K(r),'id',old,nv,cat,'template prefix removed / meaning corrected from Japanese','Japanese sentence + ENO entry gloss','high')
 A6={('27d5e3fd',0):'Apa itu penangkal petir?',('71e2edc4',0):'Apa itu penangkal petir?',('c7bda101',0):'Ini hari Sabtu.',('d501fdd8',1):'Ini hari Sabtu.',('dbd0fd3f',0):'Itu benar-benar pasti.',('e153a83b',0):'Apakah kamu memakai sarung tangan?'}
 for (o,i),nv in A6.items():
