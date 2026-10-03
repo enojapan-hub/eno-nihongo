@@ -344,6 +344,12 @@ export async function fetchSimulationQuestions(level: Level, group: SimSkillGrou
   );
   return toRunnerQuestions(rows as unknown[]);
 }
+type PracticeQuizRow = {
+  correct_count: number;
+  total_questions: number;
+  score: number;
+  xp_earned: number;
+};
 /**
  * Saves a practice quiz. The server grades the answers against the published question bank and
  * decides score and XP; the client only reports which option was picked for each question.
@@ -357,7 +363,13 @@ export async function submitPracticeQuiz(input: {
   | { ok: true; correct: number; total: number; score: number; xp: number }
   | { ok: false; message: string }
 > {
-  const { data, error } = await supabase.rpc("submit_practice_quiz", {
+  // submit_practice_quiz is typed locally: src/integrations/supabase/types.ts is regenerated from the
+  // live database by CI, so it only knows the function once the migration has been applied.
+  const rpc = supabase.rpc.bind(supabase) as unknown as (
+    fn: "submit_practice_quiz",
+    args: Record<string, unknown>,
+  ) => Promise<{ data: PracticeQuizRow | null; error: { message: string } | null }>;
+  const { data, error } = await rpc("submit_practice_quiz", {
     p_level: input.level,
     p_skill: input.skill,
     p_duration_seconds: Math.max(0, Math.round(input.durationSeconds)),
