@@ -78,3 +78,8 @@ the working directory; those data exports are not committed.
 - 3 source-corrupt rows with a *provable* fix (raw digits in `reading`, kana known from `romaji` or a
   twin row) were repaired in a separate guarded batch; the other 7 (digits with no recorded reading,
   stray annotations such as `（が）`, `ja` typos) are reported, not changed.
+
+## Romaji / missing-Reading / Arti round
+
+See `romaji-round/README.md` — audit of all four example fields, recovery of the 404 missing
+Readings, Indonesian meaning repairs, guarded write batches and the round-2 validators.
