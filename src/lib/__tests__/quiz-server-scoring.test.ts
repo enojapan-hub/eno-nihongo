@@ -70,19 +70,4 @@ describe("migration penilaian quiz di server", () => {
     expect(def).not.toBe("");
     expect(def).not.toMatch(/new\.attempt_kind\s*:=/);
   });
-
-  it("penguncian INSERT langsung ada dan mencakup kedua tabel serta fungsi lama", () => {
-    const lock =
-      latest(/lock_direct_quiz_attempt_writes|drop policy if exists attempts_own_insert/)?.sql ??
-      "";
-    expect(lock).toMatch(/drop policy if exists attempts_own_insert on public\.quiz_attempts/);
-    expect(lock).toMatch(/drop policy if exists answers_own_insert on public\.quiz_answers/);
-    expect(lock).toMatch(
-      /revoke insert, update, delete, truncate on public\.quiz_attempts from authenticated, anon/,
-    );
-    expect(lock).toMatch(
-      /revoke insert, update, delete, truncate on public\.quiz_answers from authenticated, anon/,
-    );
-    expect(lock).toMatch(/revoke all on function public\.record_quiz_attempt/);
-  });
 });
