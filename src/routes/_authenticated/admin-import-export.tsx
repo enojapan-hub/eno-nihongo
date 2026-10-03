@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Download, FileCheck2, FileUp, History, Languages, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin-import-export")({ component: Page });
-const types: any = {
+const types: Record<string, string> = {
   kanji: "Kanji",
   vocabulary: "Kosakata",
   grammar: "Bunpou",
@@ -46,7 +46,17 @@ function csv(text: string) {
     return Object.fromEntries(head.map((h, i) => [h, vals[i] ?? ""]));
   });
 }
-function esc(v: any) {
+type CsvRow = Record<string, string>;
+interface ImportResult {
+  error?: string;
+  dryRun?: boolean;
+  total?: number;
+  valid?: number;
+  success?: number;
+  failed?: number;
+  errors?: Array<{ row: number; error: string }>;
+}
+function esc(v: unknown) {
   const s = typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "");
   return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
@@ -54,9 +64,9 @@ function Page() {
   const [type, setType] = useState("vocabulary"),
     [level, setLevel] = useState("all"),
     [mode, setMode] = useState("insert"),
-    [rows, setRows] = useState<any[]>([]),
+    [rows, setRows] = useState<CsvRow[]>([]),
     [file, setFile] = useState(""),
-    [result, setResult] = useState<any>(null),
+    [result, setResult] = useState<ImportResult | null>(null),
     [busy, setBusy] = useState(false);
   const jobs = useQuery({
     queryKey: ["import-jobs"],
@@ -66,7 +76,7 @@ function Page() {
       return data || [];
     },
   });
-  async function pick(e: any) {
+  async function pick(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!f.name.toLowerCase().endsWith(".csv")) return alert("Saat ini gunakan template CSV.");
@@ -82,7 +92,7 @@ function Page() {
         headers: await hdr(),
         body: JSON.stringify({ type, mode, rows, dryRun, fileName: file }),
       }),
-      d = await r.json();
+      d = (await r.json()) as ImportResult;
     setResult(d);
     setBusy(false);
     if (!dryRun && !d.error) jobs.refetch();
@@ -101,7 +111,9 @@ function Page() {
         fields.join(","),
         ...(template
           ? []
-          : (d.rows || []).map((x: any) => fields.map((k: string) => esc(x[k])).join(","))),
+          : ((d.rows || []) as Array<Record<string, unknown>>).map((x) =>
+              fields.map((k: string) => esc(x[k])).join(","),
+            )),
       ].join("\n"),
       a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + out], { type: "text/csv;charset=utf-8" }));
@@ -120,7 +132,7 @@ function Page() {
           </p>
         </section>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {Object.entries(types).map(([id, l]: any) => (
+          {Object.entries(types).map(([id, l]) => (
             <button
               key={id}
               onClick={() => {
@@ -187,7 +199,7 @@ function Page() {
                     Dry-run
                   </Button>
                   <Button
-                    disabled={busy || !result?.dryRun || result.failed > 0}
+                    disabled={busy || !result?.dryRun || (result.failed ?? 0) > 0}
                     size="sm"
                     onClick={() => confirm("Import data yang sudah lolos validasi?") && run(false)}
                   >
@@ -207,7 +219,7 @@ function Page() {
                   Total {result.total || 0} · Valid/Berhasil {result.valid ?? result.success ?? 0} ·
                   Gagal {result.failed || 0}
                 </p>
-                {(result.errors || []).slice(0, 5).map((e: any, i: number) => (
+                {(result.errors || []).slice(0, 5).map((e, i) => (
                   <p key={i} className="mt-1 text-destructive">
                     Baris {e.row}: {e.error}
                   </p>

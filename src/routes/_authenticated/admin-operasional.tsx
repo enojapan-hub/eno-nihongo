@@ -25,6 +25,30 @@ export const Route = createFileRoute("/_authenticated/admin-operasional")({
   }),
   component: Page,
 });
+interface OpsStats {
+  reports_open?: number;
+  media?: number;
+}
+interface ReviewSummary {
+  pending?: number;
+  approved?: number;
+  needs_fix?: number;
+  reports_open?: number;
+}
+// Baris gabungan dari content_reports, admin_announcements, dan media_library.
+interface OpsRow {
+  id: string;
+  title?: string | null;
+  subject?: string | null;
+  description?: string | null;
+  body?: string | null;
+  status?: string | null;
+  audience?: string | null;
+  category?: string | null;
+  priority?: string | null;
+  media_type?: string | null;
+  url?: string | null;
+}
 function Page() {
   const qc = useQueryClient(),
     navigate = useNavigate({ from: "/admin-operasional" }),
@@ -40,7 +64,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_operations_console");
       if (error) throw error;
-      return data as any;
+      return data as unknown as OpsStats;
     },
     retry: false,
   });
@@ -49,7 +73,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_content_review_summary");
       if (error) throw error;
-      return data as any;
+      return data as unknown as ReviewSummary;
     },
     retry: false,
   });
@@ -69,12 +93,12 @@ function Page() {
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as OpsRow[];
     },
   });
   const filtered = useMemo(
     () =>
-      ((list.data || []) as any[]).filter((x) => {
+      (list.data || []).filter((x) => {
         const q = searchText.toLowerCase();
         if (
           q &&
@@ -150,7 +174,7 @@ function Page() {
         <p className="p-4 text-xs text-destructive">Akses staf konten diperlukan.</p>
       </AppShell>
     );
-  const s = stats.data || {};
+  const s: OpsStats = stats.data || {};
   return (
     <AppShell title="Operasional" backTo="/admin">
       <div className="mx-auto w-full max-w-5xl space-y-4 pb-8">
@@ -165,12 +189,14 @@ function Page() {
           </p>
         </section>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[
-            ["Perlu Review", reviews.data?.pending, ShieldCheck],
-            ["Perlu Perbaikan", reviews.data?.needs_fix, FileWarning],
-            ["Laporan Aktif", reviews.data?.reports_open ?? s.reports_open, MessageSquareWarning],
-            ["Media", s.media, Image],
-          ].map(([a, b, I]: any) => (
+          {(
+            [
+              ["Perlu Review", reviews.data?.pending, ShieldCheck],
+              ["Perlu Perbaikan", reviews.data?.needs_fix, FileWarning],
+              ["Laporan Aktif", reviews.data?.reports_open ?? s.reports_open, MessageSquareWarning],
+              ["Media", s.media, Image],
+            ] as const
+          ).map(([a, b, I]) => (
             <Card key={a} className="overflow-hidden">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
@@ -183,12 +209,14 @@ function Page() {
           ))}
         </div>
         <div className="grid grid-cols-4 gap-1 rounded-2xl bg-muted/60 p-1">
-          {[
-            ["review", "Review", ShieldCheck],
-            ["laporan", "Laporan", MessageSquareWarning],
-            ["pengumuman", "Pengumuman", Megaphone],
-            ["media", "Media", Image],
-          ].map(([id, l, I]: any) => (
+          {(
+            [
+              ["review", "Review", ShieldCheck],
+              ["laporan", "Laporan", MessageSquareWarning],
+              ["pengumuman", "Pengumuman", Megaphone],
+              ["media", "Media", Image],
+            ] as const
+          ).map(([id, l, I]) => (
             <button
               key={id}
               onClick={() => navigate({ search: { tab: id }, replace: true })}
@@ -387,7 +415,7 @@ function Page() {
                   <p className="text-[10px] text-muted-foreground">{x.media_type}</p>
                   <a
                     className="text-[10px] text-primary"
-                    href={x.url}
+                    href={x.url ?? undefined}
                     target="_blank"
                     rel="noreferrer"
                   >

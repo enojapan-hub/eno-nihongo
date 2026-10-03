@@ -16,6 +16,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin-sistem")({ component: Page });
+interface CronJob {
+  jobid?: number | string;
+  label?: string;
+  schedule?: string;
+  active?: boolean;
+  last_status?: string | null;
+  last_start?: string | null;
+}
+interface SystemHealth {
+  profiles?: number;
+  sessions?: number;
+  audit_events?: number;
+  expired_premium?: number;
+  import_failures?: number;
+  import_jobs?: number;
+  payment_pending?: number;
+  review_needs_fix?: number;
+  reports_open?: number;
+  cron_jobs?: CronJob[];
+}
 function Page() {
   const [search, setSearch] = useState(""),
     [action, setAction] = useState("all"),
@@ -25,7 +45,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_system_console");
       if (error) throw error;
-      return data as any;
+      return data as unknown as SystemHealth;
     },
     retry: false,
   });
@@ -33,17 +53,12 @@ function Page() {
     queryKey: ["audit-v2"],
     enabled: health.isSuccess,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_audit_events", {
-        p_limit: 200,
-        p_search: null,
-        p_action: null,
-        p_entity_type: null,
-      });
+      const { data, error } = await supabase.rpc("get_admin_audit_events", { p_limit: 200 });
       if (error) throw error;
       return data || [];
     },
   });
-  const rows: any[] = useMemo(() => audit.data || [], [audit.data]),
+  const rows = useMemo(() => audit.data || [], [audit.data]),
     actions = useMemo(() => [...new Set(rows.map((x) => x.action).filter(Boolean))], [rows]),
     entities = useMemo(() => [...new Set(rows.map((x) => x.entity_type).filter(Boolean))], [rows]),
     shown = rows.filter(
@@ -63,8 +78,8 @@ function Page() {
         <p className="p-4 text-xs text-destructive">Khusus Admin/Owner.</p>
       </AppShell>
     );
-  const h = health.data || {},
-    crons: any[] = h.cron_jobs || [],
+  const h: SystemHealth = health.data || {},
+    crons = h.cron_jobs || [],
     critical = h.expired_premium || 0,
     warning =
       (h.import_failures || 0) +
@@ -90,12 +105,14 @@ function Page() {
           </div>
         </section>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[
-            [Users, "Pengguna", h.profiles],
-            [Activity, "Sesi Belajar", h.sessions],
-            [FileClock, "Audit Event", h.audit_events],
-            [AlertTriangle, "Peringatan", warnings],
-          ].map(([I, l, v]: any) => (
+          {(
+            [
+              [Users, "Pengguna", h.profiles],
+              [Activity, "Sesi Belajar", h.sessions],
+              [FileClock, "Audit Event", h.audit_events],
+              [AlertTriangle, "Peringatan", warnings],
+            ] as const
+          ).map(([I, l, v]) => (
             <Card key={l}>
               <CardContent className="p-3">
                 <I className="mb-2 size-4 text-primary" />
