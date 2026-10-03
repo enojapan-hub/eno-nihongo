@@ -12,6 +12,8 @@ const COMPOUND_PARTICLES: Record<string, readonly string[]> = {
   から: ["は", "も", "の"],
   まで: ["は", "も", "の", "に"],
   より: ["は", "も", "の"],
+  か: ["も"],
+  ど: ["も"],
 };
 const TOKEN_END = `(?=[${GLUE}${CLOSE_BRACKETS}]|$)`;
 

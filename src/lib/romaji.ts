@@ -171,6 +171,9 @@ const COMPOUND_PARTICLES: Record<string, string> = {
   よりは: "yori wa",
   よりも: "yori mo",
   よりの: "yori no",
+  では: "de wa",
+  での: "de no",
+  かも: "ka mo",
 };
 // Words in which は is read "wa" although it is not a particle in the modern sense.
 const FIXED_WA = new Set(["こんにちは", "こんばんは"]);
