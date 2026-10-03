@@ -10,6 +10,17 @@ import { passagePosition } from "@/lib/passage-position";
 import { ExamExitDialog, ExamHeader, ExamPausedScreen } from "@/components/simulation/ExamFocus";
 import { useExamLeaveGuard } from "@/lib/exam-focus";
 import { ListeningAudioNotice } from "@/components/simulation/ListeningAudioNotice";
+import {
+  ChokaiStartGate,
+  ContinuousChokaiAudio,
+  type ChokaiAudioHandle,
+} from "@/components/simulation/ContinuousChokai";
+import {
+  forwardOnly,
+  isValidTimeline,
+  readChokaiProgress,
+  type TimelineEntry,
+} from "@/lib/chokai-timeline";
 import { supabase } from "@/integrations/supabase/client";
 import {
   examQuery,
@@ -51,6 +62,7 @@ type AudioManifestItem = {
   mondai_no: number | null;
   mapping_scope: "mondai" | "session";
   delivery_path: string;
+  timeline?: TimelineEntry[] | null;
 };
 const fmt = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -83,8 +95,10 @@ async function fetchQuestions(level: Level, examNo: number, sections: Simulation
         a.question_no - b.question_no,
     ) as Row[];
 }
-async function fetchAudioManifest(level: Level): Promise<AudioManifestItem[]> {
-  const response = await fetch(`/api/jlpt-audio-manifest?level=${encodeURIComponent(level)}`);
+async function fetchAudioManifest(level: Level, examNo: number): Promise<AudioManifestItem[]> {
+  const response = await fetch(
+    `/api/jlpt-audio-manifest?level=${encodeURIComponent(level)}&exam=${examNo}`,
+  );
   if (!response.ok) throw new Error("Grouped listening audio manifest unavailable");
   const payload = await response.json();
   return Array.isArray(payload?.items) ? payload.items : [];
@@ -176,9 +190,9 @@ function FullSessionRunner() {
     enabled: !!session,
   });
   const manifestQuery = useQuery({
-    queryKey: ["simulation-audio-manifest", level],
-    queryFn: () => fetchAudioManifest(level),
-    enabled: !!session && sections.includes("listening") && examNo === 1,
+    queryKey: ["simulation-audio-manifest", level, examNo],
+    queryFn: () => fetchAudioManifest(level, examNo),
+    enabled: !!session && sections.includes("listening"),
     staleTime: 30 * 60 * 1000,
   });
   const questions = useMemo(() => q.data ?? [], [q.data]);
@@ -242,7 +256,7 @@ function FullSessionRunner() {
     }
   }, [answers, answerKey]);
   const groupedAudio = useMemo(() => {
-    if (!current || current.section !== "listening" || examNo !== 1) return null;
+    if (!current || current.section !== "listening") return null;
     const items = manifestQuery.data ?? [];
     const mondaiSource = items.find(
       (item) => item.mapping_scope === "mondai" && item.mondai_no === current.mondai_no,
@@ -253,9 +267,63 @@ function FullSessionRunner() {
     return sessionSource
       ? { url: sessionSource.delivery_path, label: "聴解セッション共通音声" }
       : null;
-  }, [current, manifestQuery.data, examNo]);
+  }, [current, manifestQuery.data]);
   const activeAudioUrl = current?.audio_url ?? groupedAudio?.url ?? null;
   const activeAudioLabel = current?.audio_url ? null : (groupedAudio?.label ?? null);
+  // Chōkai penuh berkelanjutan: hanya bila sesi murni listening dan manifest membawa timeline
+  // valid untuk seluruh soal. Tanpa timeline valid, sesi memakai pemutar lama (tidak ditebak).
+  const listeningIdx = useMemo(
+    () => questions.flatMap((x, i) => (x.section === "listening" ? [i] : [])),
+    [questions],
+  );
+  const continuous = useMemo(() => {
+    if (!sections.length || !sections.every((x) => x === "listening")) return null;
+    const source = (manifestQuery.data ?? []).find(
+      (x) =>
+        x.mapping_scope === "session" && isValidTimeline(x.timeline ?? null, listeningIdx.length),
+    );
+    return source && source.timeline
+      ? { url: source.delivery_path, timeline: source.timeline }
+      : null;
+  }, [sections, manifestQuery.data, listeningIdx.length]);
+  const chokaiKey = `${storageKey}-session-${sessionIndex}-chokai`;
+  const chokaiHandle = useRef<ChokaiAudioHandle | null>(null);
+  const [chokaiPhase, setChokaiPhase] = useState<"gate" | "playing" | "finished">("gate");
+  const [chokaiResuming, setChokaiResuming] = useState(false);
+  useEffect(() => {
+    const saved = readChokaiProgress(window.localStorage, chokaiKey);
+    setChokaiPhase(saved?.finished ? "finished" : "gate");
+    setChokaiResuming(Boolean(saved && !saved.finished && saved.t > 0));
+  }, [chokaiKey]);
+  const onChokaiPosition = useCallback(
+    (position: number) => {
+      const target = listeningIdx[position];
+      if (target !== undefined) setIndex((i) => forwardOnly(i, target));
+    },
+    [listeningIdx],
+  );
+  const onChokaiEnded = useCallback(() => {
+    setChokaiPhase("finished");
+    const last = listeningIdx[listeningIdx.length - 1];
+    if (last !== undefined) setIndex(last);
+  }, [listeningIdx]);
+  const startChokai = async () => {
+    try {
+      if (!chokaiResuming && session) {
+        const deadline = Date.now() + session.minutes * 60000;
+        window.localStorage.setItem(deadlineKey, String(deadline));
+        setRemaining(session.minutes * 60);
+      }
+      await chokaiHandle.current?.start();
+      setChokaiPhase("playing");
+    } catch (e) {
+      console.warn("Audio Chōkai belum dapat dimulai", e);
+      setError(
+        "Audio belum dapat diputar. Periksa koneksi/izin audio lalu tekan Mulai Chōkai lagi.",
+      );
+    }
+  };
+  const chokaiLocked = Boolean(continuous);
   const ensureServerSession = useCallback(async () => {
     const existing = window.localStorage.getItem(serverKey);
     if (existing) return existing;
@@ -329,6 +397,7 @@ function FullSessionRunner() {
       window.localStorage.removeItem(deadlineKey);
       window.localStorage.removeItem(indexKey);
       window.localStorage.removeItem(pauseKey);
+      window.localStorage.removeItem(chokaiKey);
       allowLeave.current = true;
       if (nextIndex < sessions.length) {
         window.location.replace(
@@ -366,11 +435,12 @@ function FullSessionRunner() {
     deadlineKey,
     indexKey,
     pauseKey,
+    chokaiKey,
     sessions.length,
     ensureServerSession,
   ]);
   useEffect(() => {
-    if (!session || saving || paused) return;
+    if (!session || saving || paused || (continuous && chokaiPhase === "gate")) return;
     const tick = () => {
       const deadline =
         Number(window.localStorage.getItem(deadlineKey)) || Date.now() + session.minutes * 60000;
@@ -381,7 +451,7 @@ function FullSessionRunner() {
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
-  }, [session, deadlineKey, finish, saving, paused]);
+  }, [session, deadlineKey, finish, saving, paused, continuous, chokaiPhase]);
   const pauseExam = () => {
     try {
       window.localStorage.setItem(pauseKey, String(Date.now()));
@@ -427,7 +497,7 @@ function FullSessionRunner() {
         <p className="py-10 text-center text-sm">Sesi tidak ditemukan.</p>
       </AppShell>
     );
-  if (q.isLoading)
+  if (q.isLoading || manifestQuery.isLoading)
     return (
       <AppShell title={`JLPT ${level}`}>
         <p className="py-10 text-center text-xs text-muted-foreground">問題を読み込んでいます…</p>
@@ -455,18 +525,30 @@ function FullSessionRunner() {
       : "mondai";
   return (
     <AppShell title={`JLPT ${level} · 第${sessionIndex + 1}セッション`} focus>
+      {continuous && (
+        <ContinuousChokaiAudio
+          ref={chokaiHandle}
+          url={continuous.url}
+          timeline={continuous.timeline}
+          progressKey={chokaiKey}
+          onPosition={onChokaiPosition}
+          onEnded={onChokaiEnded}
+        />
+      )}
       <ExamHeader title={session.labelJp} remaining={remaining} onExit={() => setExitOpen(true)}>
-        <div className="flex gap-1 overflow-x-auto">
-          {sectionNav.map((x) => (
-            <button
-              key={x.section}
-              onClick={() => setIndex(x.first)}
-              className={`shrink-0 rounded-lg border px-3 py-1.5 text-[10px] font-semibold ${current.section === x.section ? "border-primary bg-primary text-primary-foreground" : ""}`}
-            >
-              {sectionLabels[x.section]} {x.done}/{x.count}
-            </button>
-          ))}
-        </div>
+        {!chokaiLocked && (
+          <div className="flex gap-1 overflow-x-auto">
+            {sectionNav.map((x) => (
+              <button
+                key={x.section}
+                onClick={() => setIndex(x.first)}
+                className={`shrink-0 rounded-lg border px-3 py-1.5 text-[10px] font-semibold ${current.section === x.section ? "border-primary bg-primary text-primary-foreground" : ""}`}
+              >
+                {sectionLabels[x.section]} {x.done}/{x.count}
+              </button>
+            ))}
+          </div>
+        )}
       </ExamHeader>
       <div className="mx-auto max-w-2xl space-y-3 pt-3">
         {paused ? (
@@ -475,6 +557,13 @@ function FullSessionRunner() {
             onResume={resumeExam}
             onExit={() => setExitOpen(true)}
           />
+        ) : continuous && chokaiPhase === "gate" ? (
+          <>
+            <ChokaiStartGate onStart={() => void startChokai()} resuming={chokaiResuming} />
+            {error && (
+              <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{error}</p>
+            )}
+          </>
         ) : (
           <>
             <Card>
@@ -495,7 +584,14 @@ function FullSessionRunner() {
             {current.section === "listening" && (
               <Card>
                 <CardContent className="space-y-3 p-4">
-                  <ListeningAudioNotice scope={audioScope} />
+                  {!chokaiLocked && <ListeningAudioNotice scope={audioScope} />}
+                  {chokaiLocked && (
+                    <p className="text-center text-[11px] font-semibold text-muted-foreground">
+                      {chokaiPhase === "finished"
+                        ? "Audio Chōkai selesai."
+                        : `Audio berjalan · soal ${listeningIdx.indexOf(index) + 1} dari ${listeningIdx.length}`}
+                    </p>
+                  )}
                   {current.image_url && (
                     <img
                       src={current.image_url}
@@ -504,7 +600,7 @@ function FullSessionRunner() {
                       loading="eager"
                     />
                   )}
-                  <Audio url={activeAudioUrl} groupedLabel={activeAudioLabel} />
+                  {!chokaiLocked && <Audio url={activeAudioUrl} groupedLabel={activeAudioLabel} />}
                 </CardContent>
               </Card>
             )}
@@ -518,15 +614,28 @@ function FullSessionRunner() {
               <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{error}</p>
             )}
             <div className="flex justify-between gap-2">
-              <Button
-                variant="outline"
-                disabled={index === 0 || saving}
-                onClick={() => setIndex((i) => i - 1)}
-              >
-                <ArrowLeft className="mr-1 size-4" />
-                前へ
-              </Button>
-              {index === questions.length - 1 ? (
+              {!chokaiLocked && (
+                <Button
+                  variant="outline"
+                  disabled={index === 0 || saving}
+                  onClick={() => setIndex((i) => i - 1)}
+                >
+                  <ArrowLeft className="mr-1 size-4" />
+                  前へ
+                </Button>
+              )}
+              {chokaiLocked ? (
+                chokaiPhase === "finished" ? (
+                  <Button className="ml-auto" disabled={saving} onClick={() => void finish()}>
+                    <Check className="mr-1 size-4" />
+                    {saving ? "送信中…" : "セッション終了"}
+                  </Button>
+                ) : (
+                  <p className="w-full text-center text-[11px] text-muted-foreground">
+                    Soal berganti otomatis mengikuti audio.
+                  </p>
+                )
+              ) : index === questions.length - 1 ? (
                 <Button disabled={saving} onClick={() => void finish()}>
                   <Check className="mr-1 size-4" />
                   {saving ? "送信中…" : "セッション終了"}
@@ -551,7 +660,7 @@ function FullSessionRunner() {
           void finish();
           if (leaveGuard.status === "blocked") leaveGuard.reset();
         }}
-        onPause={paused ? undefined : pauseExam}
+        onPause={paused || (continuous && chokaiPhase !== "gate") ? undefined : pauseExam}
       />
     </AppShell>
   );
