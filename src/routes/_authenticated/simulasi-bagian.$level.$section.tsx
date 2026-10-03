@@ -298,7 +298,7 @@ function SectionRunner() {
         question_id,
         selected_index,
       }));
-      const { data, error } = await (supabase as any).rpc("submit_jlpt_simulation_section", {
+      const { data, error } = await supabase.rpc("submit_jlpt_simulation_section", {
         p_level: level,
         p_section: section,
         p_duration_seconds: duration,
@@ -369,7 +369,7 @@ function SectionRunner() {
         void navigate({ to: "/simulasi-bagian/$level/$section", params: { level, section: next } });
       else void navigate({ to: "/simulasi-penuh/$level", params: { level } });
     } catch {
-      void navigate({ to: "/simulasi", params: {} } as any);
+      void navigate({ to: "/simulasi", params: {} });
     }
   };
 

@@ -91,7 +91,7 @@ function Page() {
 
   async function setRole(id: string, value: string) {
     setMsg("");
-    const { error } = await (supabase as any).rpc("admin_set_user_role", {
+    const { error } = await supabase.rpc("admin_set_user_role", {
       p_user_id: id,
       p_role: value,
     });
@@ -105,7 +105,7 @@ function Page() {
       return;
     }
     setBusy(id);
-    const { error } = await (supabase as any).rpc("admin_set_user_premium", {
+    const { error } = await supabase.rpc("admin_set_user_premium", {
       p_user_id: id,
       p_duration_days: d,
     });
@@ -119,7 +119,7 @@ function Page() {
   async function free(id: string) {
     if (!confirm("Akhiri Premium dan ubah akun menjadi Free?")) return;
     setBusy(id);
-    const { error } = await (supabase as any).rpc("admin_set_user_free", { p_user_id: id });
+    const { error } = await supabase.rpc("admin_set_user_free", { p_user_id: id });
     setBusy(null);
     setMsg(error ? error.message : "Akun menjadi Free.");
     if (!error) refresh();

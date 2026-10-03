@@ -36,7 +36,7 @@ function Page() {
   const overview = useQuery({
     queryKey: ["admin-overview"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_overview");
+      const { data, error } = await supabase.rpc("get_admin_overview");
       if (error) throw error;
       return data || {};
     },

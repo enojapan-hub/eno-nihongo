@@ -69,7 +69,7 @@ function Page() {
                 </span>
                 <h2 className="mt-3 text-sm font-black">{label}</h2>
                 <p className="mt-1 min-h-8 text-[10px] text-muted-foreground">{desc}</p>
-                <Link to={to as any} className="mt-3 inline-block text-xs font-bold text-primary">
+                <Link to={to} className="mt-3 inline-block text-xs font-bold text-primary">
                   Buka →
                 </Link>
               </CardContent>

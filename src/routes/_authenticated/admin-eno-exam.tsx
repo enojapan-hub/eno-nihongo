@@ -24,7 +24,7 @@ function Page() {
   const q = useQuery({
     queryKey: ["eno-monthly-admin"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_eno_monthly_exam_admin");
+      const { data, error } = await supabase.rpc("get_eno_monthly_exam_admin");
       if (error) throw error;
       return (data || []) as any[];
     },

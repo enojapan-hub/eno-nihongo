@@ -212,7 +212,7 @@ function Page() {
                 .map((x) => (
                   <Link
                     key={x.key}
-                    to={x.href as any}
+                    to={x.href}
                     className="flex items-center gap-3 rounded-2xl border p-3 transition hover:border-primary/30"
                   >
                     <span
@@ -300,7 +300,7 @@ function Page() {
                   </Card>
                 );
                 return to ? (
-                  <Link key={label} to={to as any} className="block">
+                  <Link key={label} to={to} className="block">
                     {body}
                   </Link>
                 ) : (

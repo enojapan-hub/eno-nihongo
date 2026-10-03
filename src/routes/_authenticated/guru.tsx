@@ -34,9 +34,9 @@ function Page() {
   const access = useQuery({
     queryKey: ["teacher-access"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_teacher_console_data");
+      const { data, error } = await supabase.rpc("get_teacher_console_data");
       if (error) throw error;
-      return data as any;
+      return data;
     },
     retry: false,
   });
@@ -47,7 +47,7 @@ function Page() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw Error();
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("classes")
         .select("*")
         .eq("teacher_id", user.id)
@@ -72,7 +72,7 @@ function Page() {
   async function toggle(r: any) {
     setBusyId(r.id);
     const next = !(r.published ?? r.is_published ?? false);
-    const { error } = await (supabase as any).rpc("teacher_set_content_published", {
+    const { error } = await supabase.rpc("teacher_set_content_published", {
       p_kind: kind,
       p_id: r.id,
       p_published: next,

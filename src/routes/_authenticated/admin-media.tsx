@@ -18,7 +18,7 @@ function Page() {
   const q = useQuery({
     queryKey: ["admin-media-library"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("media_library")
         .select("*")
         .order("created_at", { ascending: false })
@@ -79,7 +79,7 @@ function Page() {
     if (!confirm("Hapus media ini? Sistem akan menolak jika masih digunakan konten.")) return;
     setBusy(true);
     setMsg("");
-    const { error } = await (supabase as any).rpc("admin_delete_media", { p_id: x.id });
+    const { error } = await supabase.rpc("admin_delete_media", { p_id: x.id });
     if (error) {
       setBusy(false);
       setMsg(error.message);

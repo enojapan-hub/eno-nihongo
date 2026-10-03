@@ -18,7 +18,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_platform_settings_admin");
       if (error) throw error;
-      return data as any;
+      return data;
     },
     retry: false,
   });

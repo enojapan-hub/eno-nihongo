@@ -38,7 +38,7 @@ function Page() {
   const gate = useQuery({
     queryKey: ["content-staff-gate"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_content_staff_access");
+      const { data, error } = await supabase.rpc("get_content_staff_access");
       if (error) throw error;
       return data as any;
     },
@@ -49,7 +49,7 @@ function Page() {
     queryKey: ["content-review-summary"],
     enabled: gate.isSuccess,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_content_review_summary");
+      const { data, error } = await supabase.rpc("get_content_review_summary");
       if (error) throw error;
       return data as any;
     },
@@ -58,7 +58,7 @@ function Page() {
     queryKey: ["admin-content", kind, level],
     enabled: gate.isSuccess && mode !== "menu",
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_console_data", {
+      const { data, error } = await supabase.rpc("get_admin_console_data", {
         p_section: kind,
         p_level: level,
       });
@@ -106,7 +106,7 @@ function Page() {
     queryKey: ["content-reviews", kind, shown.map((x) => x.id).join(",")],
     enabled: shown.length > 0,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_content_review_statuses", {
+      const { data, error } = await supabase.rpc("get_content_review_statuses", {
         p_type: kind,
         p_ids: shown.map((x) => x.id),
       });

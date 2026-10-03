@@ -72,30 +72,29 @@ const fields: Record<Kind, F[]> = {
     { key: "source_kind", label: "Jenis sumber" },
   ],
 };
-const blank = (kind: Kind) =>
-  ({
-    level: "N5",
-    is_published: false,
-    sort_order: 0,
-    source_book: "",
-    lesson_number: 1,
-    lesson_title: "",
-    ...(kind === "kanji" ? { onyomi: [], kunyomi: [] } : {}),
-    ...(["vocabulary", "grammar"].includes(kind) ? { examples: [] } : {}),
-    ...(kind === "grammar" ? { wrong_examples: [] } : {}),
-    ...(kind === "questions"
-      ? {
-          choices: ["", "", "", ""],
-          correct_index: 0,
-          mondai_no: 1,
-          question_no: 1,
-          exam_no: 1,
-          session_no: 1,
-          test_type: "full",
-          source_kind: "eno_original",
-        }
-      : {}),
-  }) as any;
+const blank = (kind: Kind) => ({
+  level: "N5",
+  is_published: false,
+  sort_order: 0,
+  source_book: "",
+  lesson_number: 1,
+  lesson_title: "",
+  ...(kind === "kanji" ? { onyomi: [], kunyomi: [] } : {}),
+  ...(["vocabulary", "grammar"].includes(kind) ? { examples: [] } : {}),
+  ...(kind === "grammar" ? { wrong_examples: [] } : {}),
+  ...(kind === "questions"
+    ? {
+        choices: ["", "", "", ""],
+        correct_index: 0,
+        mondai_no: 1,
+        question_no: 1,
+        exam_no: 1,
+        session_no: 1,
+        test_type: "full",
+        source_kind: "eno_original",
+      }
+    : {}),
+});
 export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
   const [data, setData] = useState<any>(blank(kind));
   const [loading, setLoading] = useState(!!id);
@@ -110,7 +109,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
     }
     setLoading(true);
     (async () => {
-      const { data: d, error: e } = await (supabase as any).rpc("admin_get_content_item", {
+      const { data: d, error: e } = await supabase.rpc("admin_get_content_item", {
         p_kind: kind,
         p_id: id,
       });
@@ -155,7 +154,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
       setError(e.message);
       return;
     }
-    const { error: auditError } = await (supabase as any).rpc("admin_audit_content_save", {
+    const { error: auditError } = await supabase.rpc("admin_audit_content_save", {
       p_kind: kind,
       p_id: savedId,
       p_created: !id,
@@ -172,7 +171,7 @@ export function ContentEditor({ kind, id, onClose, onSaved }: Props) {
   const del = async () => {
     if (!id || !window.confirm("Hapus materi ini secara permanen?")) return;
     setSaving(true);
-    const { error: e } = await (supabase as any).rpc("admin_delete_content_item", {
+    const { error: e } = await supabase.rpc("admin_delete_content_item", {
       p_kind: kind,
       p_id: id,
     });

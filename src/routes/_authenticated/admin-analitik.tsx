@@ -22,7 +22,7 @@ function Page() {
   const q = useQuery({
     queryKey: ["admin-analytics", days],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_analytics", { p_days: days });
+      const { data, error } = await supabase.rpc("get_admin_analytics", { p_days: days });
       if (error) throw error;
       return data as any;
     },

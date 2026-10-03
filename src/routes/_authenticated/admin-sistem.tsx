@@ -23,7 +23,7 @@ function Page() {
   const health = useQuery({
     queryKey: ["system-console-v2"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_system_console");
+      const { data, error } = await supabase.rpc("get_system_console");
       if (error) throw error;
       return data as any;
     },
