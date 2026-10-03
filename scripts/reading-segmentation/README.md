@@ -7,7 +7,7 @@ normalises display (`src/lib/japanese-spacing.ts`) and validates structure
 
 ```
 pip install -r requirements.txt
-python segmenter.py "この本には、くわしい説明は書かれていません。" "このほんには、くわしいせつめいはかかれていません。"
+python seg2.py "この本には、くわしい説明は書かれていません。" "このほんには、くわしいせつめいはかかれていません。"
 # → この ほん には、くわしい せつめい は かかれて いません。
 ```
 
@@ -36,5 +36,43 @@ wakachi rules and bunka.go.jp (kokugo council) notes:
 - punctuation never takes a space on either side (`らいねん、かぞく に あう。`);
 - fixed expressions stay whole (`ありがとうございます`, `とともに`, `ものともせず`).
 
-`overrides.py` holds the few rows (Latin letters, source typos) that were resolved by hand.
+`overrides.py` holds the rows (Latin letters, source typos, rare kanji, ambiguous readings) that were
+resolved by hand (27 sentences, all pinned as `manual correction` fixtures).
 Inputs: `vocab_terms.json` ([{term, reading}] from `vocabulary`) and `all.json` (examples with owner/idx) are exports of the live data; `alt.json` is produced by `buildalt.py`.
+
+## Learner-oriented segmenter (`seg2.py`, current)
+
+`seg2.py` supersedes `segmenter.py` (kept only for history). It adds, on top of the steps above:
+
+- `eno_lex.py` builds a lexicon from the ENO vocabulary (`eno_lex.json`, regenerate with
+  `vocab_full.json`) so lexicalised units (suru-verb nouns, compound nouns, fixed expressions such as
+  `にさいして`, `ありがとう`) stay whole;
+- `conj.py` is a conjugation engine (Group 1/2/3, irregular `くる`/`する`/`いく`/`ある`, adjectives,
+  ます/て/ない/普通形, passive/causative) that *predicts* the expected stem of every verb/adjective and
+  checks it against the stored reading, so a conjugated form is never cut (`かかれて`, `おこなわれます`);
+- `final2.py` turns the segmenter output into write candidates (`final2.json`), classifying rows as
+  already-correct, `C-unsegmented`, `C-invalid-split` or `B` (style) and excluding source-corrupt rows
+  into `source_corrupt.json` (never auto-fixed).
+
+### Applying to the database (guarded, idempotent)
+
+`apply/plan_write.py` + `apply/tmpl.sql` generate per-table batches of 400 elements. Each row carries a
+6-char md5 guard of the *old* value and base62 segment lengths; the server rebuilds the spaced string
+from the space-stripped old value, so a batch can only add spaces, only where the old value is
+unchanged, and re-running it is a no-op. No DELETE, no RLS/permission change.
+
+`apply/fetch_pre.py` / `fetch_now.py` snapshot the live elements (needs `E2E_EMAIL`/`E2E_PASSWORD`,
+the public Supabase URL and publishable key), `apply/vfy.py` classifies every element as
+`unchanged` / `as-planned` / `UNEXPECTED` and lists remaining planned rows, and `apply/post.py` checks the
+whole dataset (non-target fields unchanged, chars unchanged, no double-space, no space after 、 or before
+。). These scripts expect their input/output JSON files (`final2.json`, `write_plan.json`, `snap/`) in
+the working directory; those data exports are not committed.
+
+### Result of the run on the live data (19,653 example elements)
+
+- 17,277 elements re-segmented (15,326 unsegmented, 487 invalid split, 1,464 style), 2,376 untouched.
+- Post-write: 17,277/17,277 as planned, 0 unexpected, `ja`/`romaji`/`id` unchanged everywhere,
+  characters unchanged (spacing only), 0 double-space, 0 space after 、, 0 space before 。.
+- 3 source-corrupt rows with a *provable* fix (raw digits in `reading`, kana known from `romaji` or a
+  twin row) were repaired in a separate guarded batch; the other 7 (digits with no recorded reading,
+  stray annotations such as `（が）`, `ja` typos) are reported, not changed.

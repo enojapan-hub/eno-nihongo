@@ -154,5 +154,263 @@
     "ja": "行われます。",
     "unspaced": "おこなわれます。",
     "expected": "おこなわれます。"
+  },
+  {
+    "category": "matrix: particles (wo/ni/de/to)",
+    "ja": "家族と夕飯を食べます。",
+    "unspaced": "かぞくとゆうはんをたべます。",
+    "expected": "かぞく と ゆうはん を たべます。"
+  },
+  {
+    "category": "matrix: Group 1 verb polite (ます)",
+    "ja": "ノートに名前を書きます。",
+    "unspaced": "のーとになまえをかきます。",
+    "expected": "のーと に なまえ を かきます。"
+  },
+  {
+    "category": "matrix: Group 2 verb polite (ます)",
+    "ja": "毎朝六時に起きます。",
+    "unspaced": "まいあさろくじにおきます。",
+    "expected": "まいあさ ろくじ に おきます。"
+  },
+  {
+    "category": "matrix: Group 3 kuru (て+ください)",
+    "ja": "旅行には歩きやすい格好で来てください。",
+    "unspaced": "りょこうにはあるきやすいかっこうできてください。",
+    "expected": "りょこう には あるきやすい かっこう で きて ください。"
+  },
+  {
+    "category": "matrix: Group 3 suru / suru verb (ます)",
+    "ja": "二つの商品の違いを説明します。",
+    "unspaced": "ふたつのしょうひんのちがいをせつめいします。",
+    "expected": "ふたつ の しょうひん の ちがい を せつめいします。"
+  },
+  {
+    "category": "matrix: te-form + supplementary verb",
+    "ja": "薬局へ行って薬を買う。",
+    "unspaced": "やっきょくへいってくすりをかう。",
+    "expected": "やっきょく へ いって くすり を かう。"
+  },
+  {
+    "category": "matrix: negative (ません) copula-like",
+    "ja": "自然に境界はありません。",
+    "unspaced": "しぜんにきょうかいはありません。",
+    "expected": "しぜん に きょうかい は ありません。"
+  },
+  {
+    "category": "matrix: plain form (futsukei) irregular iku",
+    "ja": "買い物のついでに銀行へ行く。",
+    "unspaced": "かいもののついでにぎんこうへいく。",
+    "expected": "かいもの の ついでに ぎんこう へ いく。"
+  },
+  {
+    "category": "matrix: passive (れる/られる)",
+    "ja": "この数字は縁起が悪いと言われています。",
+    "unspaced": "このすうじはえんぎがわるいといわれています。",
+    "expected": "この すうじ は えんぎ が わるい と いわれて います。"
+  },
+  {
+    "category": "matrix: causative-like compound verb (あわせる)",
+    "ja": "締め切りに間に合わせるために急ぎました。",
+    "unspaced": "しめきりにまにあわせるためにいそぎました。",
+    "expected": "しめきり に まにあわせる ため に いそぎました。"
+  },
+  {
+    "category": "matrix: irregular aru + suru verb noun",
+    "ja": "この問題を解決する策を考える必要がある。",
+    "unspaced": "このもんだいをかいけつするさくをかんがえるひつようがある。",
+    "expected": "この もんだい を かいけつする さく を かんがえる ひつよう が ある。"
+  },
+  {
+    "category": "matrix: suru verb in tai-form",
+    "ja": "仕事が落ち着いたら旅行したいです。",
+    "unspaced": "しごとがおちついたらりょこうしたいです。",
+    "expected": "しごと が おちついたら りょこうしたい です。"
+  },
+  {
+    "category": "matrix: compound noun (shinbunsha)",
+    "ja": "兄は新聞社で働いています。",
+    "unspaced": "あにはしんぶんしゃではたらいています。",
+    "expected": "あに は しんぶんしゃ で はたらいて います。"
+  },
+  {
+    "category": "matrix: katakana loanwords",
+    "ja": "パソコンをインターネットにつないでください。",
+    "unspaced": "パソコンをインターネットにつないでください。",
+    "expected": "パソコン を インターネット に つないで ください。"
+  },
+  {
+    "category": "matrix: fixed expression (arigatou)",
+    "ja": "わざわざ来てくれてありがとう。",
+    "unspaced": "わざわざきてくれてありがとう。",
+    "expected": "わざわざ きて くれて ありがとう。"
+  },
+  {
+    "category": "matrix: punctuation 、 and ？",
+    "ja": "そういえば、そこへは何時に行くの？",
+    "unspaced": "そういえば、そこへはなんじにいくの？",
+    "expected": "そういえば、そこ へは なんじ に いく の？"
+  },
+  {
+    "category": "manual correction",
+    "ja": "私は毎朝朝食前にランニングをする。",
+    "unspaced": "わたしはまいあさちょうしょくまえにランニングをする。",
+    "expected": "わたし は まいあさ ちょうしょくまえ に ランニング を する。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "店は満席だったので少し待ちました。",
+    "unspaced": "みせはまんせきだったのでしばらくまちました。",
+    "expected": "みせ は まんせき だった ので しばらく まちました。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "その子は時々生意気なことを言います。",
+    "unspaced": "そのこはときどきなまいきなことをいいます。",
+    "expected": "その こ は ときどき なまいき な こと を いいます。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "こんな大事な場面で不山戯るな。",
+    "unspaced": "こんなだいじなばめんでふざけるな。",
+    "expected": "こんな だいじ な ばめん で ふざけるな。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "原点を中心とする半径2の円と、直線 y = x − 1 の交点を求めよ。",
+    "unspaced": "げんてんをちゅうしんとするはんけいにのえんと、ちょくせんワイイコールエックスマイナスいちのこうてんをもとめよ。",
+    "expected": "げんてん を ちゅうしん と する はんけい に の えん と、ちょくせん ワイイコールエックスマイナスいち の こうてん を もとめよ。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "原点を中心とする半径2の円と，直線 y = x − 1 の交点を求めよ。",
+    "unspaced": "げんてんをちゅうしんとするはんけいにのえんと，ちょくせんワイイコールエックスマイナスいちのこうてんをもとめよ。",
+    "expected": "げんてん を ちゅうしん と する はんけい に の えん と，ちょくせん ワイイコールエックスマイナスいち の こうてん を もとめよ。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "先々月、日本へ来ました。",
+    "unspaced": "せんせんげつ、にほんへきました。",
+    "expected": "せんせんげつ、にほん へ きました。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "駐車するとき、車が壁を少し擦って傷が付いてしまいました。",
+    "unspaced": "ちゅうしゃするとき、くるまがかべをすこしかすってきずがついてしまいました。",
+    "expected": "ちゅうしゃする とき、くるま が かべ を すこし かすって きず が ついて しまいました。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "分数b/aは1/aをb倍した数を意味する。",
+    "unspaced": "ぶんすうビーわるエーはいちわるエーをビーばいしたかずをいみする。",
+    "expected": "ぶんすう ビーわるエー は いちわるエー を ビーばい した かず を いみする。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "彼は文質彬彬たる人物として知られている。",
+    "unspaced": "かれはぶんしつひんぴんたるじんぶつとしてしられている。",
+    "expected": "かれ は ぶんしつひんぴんたる じんぶつ として しられて いる。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "この部屋は2LDKです。",
+    "unspaced": "このへやはツーエルディーケーです。",
+    "expected": "この へや は ツーエルディーケー です。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "お申し込みに際しては、写真が必要となります。",
+    "unspaced": "おもうしこみにさいしては、しゃしんがひつようとなります。",
+    "expected": "おもうしこみ にさいしては、しゃしん が ひつよう と なります。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "一年に一回国へ帰ります。",
+    "unspaced": "いちねんにいっかいくにへかえります。",
+    "expected": "いちねん に いっかい くに へ かえります。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "連絡したりもしないで、勝手に来た。",
+    "unspaced": "れんらくしたりもしないで、かってにきた。",
+    "expected": "れんらく したり も しないで、かって に きた。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "忙しいだの疲れただの、言い訳ばかりだ。",
+    "unspaced": "いそがしいだのつかれただの、いいわけばかりだ。",
+    "expected": "いそがしい だの つかれた だの、いいわけ ばかり だ。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "A：ここにあったチョコレートは？ B：あ、食べちゃった。",
+    "unspaced": "A：ここにあったちょこれーとは？B：あ、たべちゃった。",
+    "expected": "A：ここ に あった ちょこれーと は？B：あ、たべちゃった。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "彼の危険を思うと、寝てはいられない。",
+    "unspaced": "かれのきけんをおもうと、ねてはいられない。",
+    "expected": "かれ の きけん を おもう と、ねて は いられない。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "これが愛でなくてなんであろう。",
+    "unspaced": "これがあいでなくてなんであろう。",
+    "expected": "これ が あい で なくて なん で あろう。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "会議は何時からだっけ？",
+    "unspaced": "かいぎはなんじからだっけ？",
+    "expected": "かいぎ は なんじ から だっけ？"
+  },
+  {
+    "category": "manual correction",
+    "ja": "お金はいりません。無料ということです。",
+    "unspaced": "おかねはいりません。むりょうということです。",
+    "expected": "おかね は いりません。むりょう と いう こと です。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "こんな所出よう！",
+    "unspaced": "こんなところでよう！",
+    "expected": "こんな ところ でよう！"
+  },
+  {
+    "category": "manual correction",
+    "ja": "彼女は涙ながらに語った。",
+    "unspaced": "かのじょはなみだながらにかたった。",
+    "expected": "かのじょ は なみだながら に かたった。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "目を強く擦らないでください。",
+    "unspaced": "めをつよくこすらないでください。",
+    "expected": "め を つよく こすらないで ください。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "説明が諄くて分かりにくい。",
+    "unspaced": "せつめいがくどくてわかりにくい。",
+    "expected": "せつめい が くどくて わかりにくい。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "彼は凜々しい姿で壇上に立った。",
+    "unspaced": "かれはりりしいすがたでだんじょうにたった。",
+    "expected": "かれ は りりしい すがた で だんじょう に たった。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "永い年月を離れて過ごしたあと、二人はようやく再会できた。",
+    "unspaced": "ながいねんげつをはなれてすごしたあと、ふたりはようやくさいかいできた。",
+    "expected": "ながい ねんげつ を はなれて すごした あと、ふたり は ようやく さいかいできた。"
+  },
+  {
+    "category": "manual correction",
+    "ja": "そこを退いてください。",
+    "unspaced": "そこをどいてください。",
+    "expected": "そこ を どいて ください。"
   }
 ]

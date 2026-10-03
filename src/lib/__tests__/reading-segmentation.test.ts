@@ -32,6 +32,15 @@ describe("reading segmentation contract", () => {
       "compound particle",
       "suru verb",
       "conjugated verb",
+      "matrix: Group 1",
+      "matrix: Group 2",
+      "matrix: Group 3",
+      "matrix: te-form",
+      "matrix: plain form",
+      "matrix: irregular",
+      "matrix: compound noun",
+      "matrix: punctuation",
+      "manual correction",
     ]) {
       expect(categories).toContain(needle);
     }
