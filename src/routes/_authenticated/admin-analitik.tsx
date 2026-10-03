@@ -17,6 +17,31 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin-analitik")({ component: Page });
+type AnalyticsData = {
+  users_total?: number;
+  users_new?: number;
+  active_users?: number;
+  sessions?: number;
+  study_seconds?: number | string;
+  avg_streak?: number | string;
+  daily?: Array<{ activity_date: string; sessions?: number | string }>;
+  level_distribution?: Record<string, number>;
+  simulation_by_level?: Array<{
+    level: string;
+    accuracy: number | string;
+    participants: number | string;
+    attempts: number | string;
+  }>;
+  activity_types?: Array<{ activity_type: string; cnt: number | string }>;
+  hardest_simulation_questions?: Array<{
+    id: string;
+    prompt_jp?: string | null;
+    wrong_rate: number | string;
+    level: string;
+    section: string;
+    answers: number | string;
+  }>;
+};
 function Page() {
   const [days, setDays] = useState(30);
   const q = useQuery({
@@ -24,11 +49,11 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_admin_analytics", { p_days: days });
       if (error) throw error;
-      return data as any;
+      return data as unknown as AnalyticsData;
     },
     retry: false,
   });
-  const d = q.data || {};
+  const d: AnalyticsData = q.data || {};
   const stats = [
     ["Total Pengguna", d.users_total, Users],
     ["Pengguna Baru", d.users_new, UserPlus],
@@ -38,7 +63,8 @@ function Page() {
     ["Rata-rata Streak", d.avg_streak, Flame],
   ] as const;
   const levels = ["N5", "N4", "N3", "N2", "N1"];
-  const daily: any[] = d.daily || [];
+  const notChosenLevel = d.level_distribution?.["Belum dipilih"] ?? 0;
+  const daily = d.daily || [];
   const chart = daily.filter(
     (_, i: number) =>
       daily.length <= 10 || i % Math.ceil(daily.length / 10) === 0 || i === daily.length - 1,
@@ -58,12 +84,14 @@ function Page() {
           </p>
         </section>
         <div className="flex gap-1 overflow-x-auto">
-          {[
-            [7, "7 hari"],
-            [30, "30 hari"],
-            [90, "90 hari"],
-            [365, "1 tahun"],
-          ].map(([v, l]: any) => (
+          {(
+            [
+              [7, "7 hari"],
+              [30, "30 hari"],
+              [90, "90 hari"],
+              [365, "1 tahun"],
+            ] as const
+          ).map(([v, l]) => (
             <button
               key={v}
               onClick={() => setDays(v)}
@@ -139,9 +167,9 @@ function Page() {
                   </Card>
                 ))}
               </div>
-              {d.level_distribution?.["Belum dipilih"] > 0 && (
+              {notChosenLevel > 0 && (
                 <p className="mt-2 text-[10px] text-muted-foreground">
-                  Belum memilih level: {d.level_distribution["Belum dipilih"]}
+                  Belum memilih level: {notChosenLevel}
                 </p>
               )}
             </section>
@@ -155,7 +183,7 @@ function Page() {
                     </CardContent>
                   </Card>
                 ) : (
-                  (d.simulation_by_level || []).map((x: any) => (
+                  (d.simulation_by_level || []).map((x) => (
                     <Card key={x.level}>
                       <CardContent className="p-3">
                         <div className="flex justify-between">
@@ -178,7 +206,7 @@ function Page() {
                   {(d.activity_types || []).length === 0 ? (
                     <p className="text-xs text-muted-foreground">Belum ada aktivitas.</p>
                   ) : (
-                    (d.activity_types || []).map((x: any) => (
+                    (d.activity_types || []).map((x) => (
                       <div
                         key={x.activity_type}
                         className="flex justify-between border-b py-2 text-xs last:border-0"
@@ -198,7 +226,7 @@ function Page() {
                   {(d.hardest_simulation_questions || []).length === 0 ? (
                     <p className="text-xs text-muted-foreground">Belum cukup data jawaban.</p>
                   ) : (
-                    (d.hardest_simulation_questions || []).map((x: any) => (
+                    (d.hardest_simulation_questions || []).map((x) => (
                       <div key={x.id} className="border-b py-2 last:border-0">
                         <div className="flex justify-between gap-3">
                           <p className="line-clamp-1 text-xs font-bold">

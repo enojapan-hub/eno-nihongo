@@ -16,6 +16,7 @@ export interface DynamicQuery extends PromiseLike<DbResponse<DbRecord[]>> {
   in(column: string, values: readonly unknown[]): DynamicQuery;
   order(column: string, options?: { ascending?: boolean }): DynamicQuery;
   limit(count: number): DynamicQuery;
+  range(from: number, to: number): DynamicQuery;
   maybeSingle(): PromiseLike<DbResponse<DbRecord | null>>;
   insert(rows: DbRecord | DbRecord[]): DynamicQuery;
   update(row: DbRecord): DynamicQuery;

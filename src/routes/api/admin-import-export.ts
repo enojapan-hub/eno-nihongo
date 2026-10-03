@@ -1,10 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authorizeTranslationRequest } from "@/lib/translation.server";
 import { supabaseAdmin } from "@/lib/supabase.server";
+import type { Json } from "@/integrations/supabase/types";
+import { dynamicFrom, type DbRecord } from "@/lib/dynamic-db";
 // Tabel dipilih dinamis dari konfigurasi impor/ekspor, jadi tipe tabel generated tidak dapat dipakai.
-const dataTable = (name: string) =>
-  (supabaseAdmin as unknown as { from: (table: string) => any }).from(name);
-const cfg: any = {
+const dataTable = (name: string) => dynamicFrom(supabaseAdmin, name);
+type TableConfig = { table: string; key: string; required: string[]; fields: string[] };
+type RowIssue = { row: number; error: string };
+const messageOf = (e: unknown) =>
+  typeof e === "object" && e !== null && "message" in e
+    ? String((e as { message: unknown }).message)
+    : String(e);
+const cfg: Record<string, TableConfig> = {
   kanji: {
     table: "kanji",
     key: "character",
@@ -183,8 +190,8 @@ async function auth(r: Request) {
   await authorizeTranslationRequest(data.user.id);
   return data.user.id;
 }
-function clean(raw: any, c: any, rowNo: number) {
-  const o: any = {},
+function clean(raw: DbRecord, c: TableConfig, rowNo: number) {
+  const o: DbRecord = {},
     errors: string[] = [];
   for (const k of c.fields)
     if (raw[k] !== undefined && raw[k] !== "" && k !== "created_at") o[k] = raw[k];
@@ -194,36 +201,42 @@ function clean(raw: any, c: any, rowNo: number) {
       if (!Number.isFinite(n)) errors.push(k + " harus angka valid");
       else o[k] = n;
     }
-  if (o.is_published != null) {
-    const s = String(o.is_published).toLowerCase();
-    if (!["true", "false", "1", "0"].includes(s) && typeof o.is_published !== "boolean")
+  if (o["is_published"] != null) {
+    const s = String(o["is_published"]).toLowerCase();
+    if (!["true", "false", "1", "0"].includes(s) && typeof o["is_published"] !== "boolean")
       errors.push("is_published harus true/false");
-    o.is_published = o.is_published === true || s === "true" || s === "1";
+    o["is_published"] = o["is_published"] === true || s === "true" || s === "1";
   }
-  for (const k of jsons)
-    if (typeof o[k] === "string")
+  for (const k of jsons) {
+    const v = o[k];
+    if (typeof v === "string")
       try {
-        o[k] = JSON.parse(o[k]);
+        o[k] = JSON.parse(v);
       } catch {
         errors.push(k + " JSON tidak valid");
       }
-  for (const k of ["onyomi", "kunyomi"])
-    if (typeof o[k] === "string")
-      o[k] = o[k]
+  }
+  for (const k of ["onyomi", "kunyomi"]) {
+    const v = o[k];
+    if (typeof v === "string")
+      o[k] = v
         .split("|")
         .map((x: string) => x.trim())
         .filter(Boolean);
-  if (o.level && !["N5", "N4", "N3", "N2", "N1"].includes(o.level))
+  }
+  if (o["level"] && !["N5", "N4", "N3", "N2", "N1"].includes(String(o["level"])))
     errors.push("level tidak valid");
+  const choices = o["choices"];
+  const correct = o["correct_index"];
   if (
-    Array.isArray(o.choices) &&
-    o.correct_index != null &&
-    (o.correct_index < 0 || o.correct_index >= o.choices.length)
+    Array.isArray(choices) &&
+    correct != null &&
+    (Number(correct) < 0 || Number(correct) >= choices.length)
   )
     errors.push("correct_index di luar pilihan jawaban");
   return { row: o, rowNo, errors };
 }
-function safeCsv(v: any) {
+function safeCsv(v: unknown) {
   const s = typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "");
   return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
@@ -238,9 +251,9 @@ export const Route = createFileRoute("/api/admin-import-export")({
             level = u.searchParams.get("level"),
             c = cfg[type];
           if (!c) throw Error("Jenis tidak valid");
-          const all: any[] = [];
+          const all: DbRecord[] = [];
           for (let from = 0; ; from += 1000) {
-            let q: any = dataTable(c.table)
+            let q = dataTable(c.table)
               .select(c.fields.join(","))
               .range(from, from + 999);
             if (level && level !== "all" && level !== "none") q = q.eq("level", level);
@@ -256,8 +269,8 @@ export const Route = createFileRoute("/api/admin-import-export")({
               Object.fromEntries(Object.entries(r).map(([k, v]) => [k, safeCsv(v)])),
             ),
           });
-        } catch (e: any) {
-          return Response.json({ error: e.message }, { status: 400 });
+        } catch (e) {
+          return Response.json({ error: messageOf(e) }, { status: 400 });
         }
       },
       POST: async ({ request }) => {
@@ -270,12 +283,12 @@ export const Route = createFileRoute("/api/admin-import-export")({
           const input = Array.isArray(b.rows) ? b.rows : [];
           if (!input.length) throw Error("CSV kosong");
           if (input.length > 5000) throw Error("Maksimal 5.000 baris per import");
-          const parsed: Array<ReturnType<typeof clean>> = input.map((r: any, i: number) =>
+          const parsed: Array<ReturnType<typeof clean>> = input.map((r: DbRecord, i: number) =>
               clean(r, c, i + 2),
             ),
-            errors: any[] = [];
+            errors: RowIssue[] = [];
           for (const x of parsed) {
-            const miss = c.required.filter((k: string) => x.row[k] == null || x.row[k] === "");
+            const miss = c.required.filter((k) => x.row[k] == null || x.row[k] === "");
             if (miss.length) x.errors.push("Field wajib: " + miss.join(", "));
             if (b.mode === "update" && !x.row[c.key]) x.errors.push("Update membutuhkan " + c.key);
             for (const e of x.errors) errors.push({ row: x.rowNo, error: e });
@@ -298,7 +311,7 @@ export const Route = createFileRoute("/api/admin-import-export")({
                 .select(c.key)
                 .in(c.key, keys.slice(i, i + 500));
               if (error) throw error;
-              const exists = new Set((data || []).map((x: any) => String(x[c.key])));
+              const exists = new Set((data || []).map((x) => String(x[c.key])));
               keys.slice(i, i + 500).forEach((k) => {
                 if (!exists.has(String(k))) {
                   const x = parsed.find((y) => String(y.row[c.key]) === String(k));
@@ -318,7 +331,7 @@ export const Route = createFileRoute("/api/admin-import-export")({
             });
           if (b.mode === "update") {
             const keys = parsed.map((x) => x.row[c.key]);
-            const snapshot: any[] = [];
+            const snapshot: DbRecord[] = [];
             for (let i = 0; i < keys.length; i += 500) {
               const { data, error } = await dataTable(c.table)
                 .select(c.fields.join(","))
@@ -331,16 +344,16 @@ export const Route = createFileRoute("/api/admin-import-export")({
               content_type: b.type,
               key_field: c.key,
               source_file: b.fileName || null,
-              rows: snapshot,
+              rows: snapshot as unknown as Json,
               row_count: snapshot.length,
             });
             if (backupError)
               throw Error("Import dibatalkan karena snapshot gagal: " + backupError.message);
           }
           let success = 0;
-          const writeErrors: any[] = [];
+          const writeErrors: RowIssue[] = [];
           for (const x of parsed) {
-            let error: any = null;
+            let error: { message: string } | null = null;
             if (b.mode === "update") {
               const key = x.row[c.key],
                 payload = { ...x.row };
@@ -375,8 +388,8 @@ export const Route = createFileRoute("/api/admin-import-export")({
             },
           });
           return Response.json({ total: parsed.length, success, failed, errors: writeErrors });
-        } catch (e: any) {
-          return Response.json({ error: e.message }, { status: 400 });
+        } catch (e) {
+          return Response.json({ error: messageOf(e) }, { status: 400 });
         }
       },
     },

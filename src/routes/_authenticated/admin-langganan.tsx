@@ -19,17 +19,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin-langganan")({ component: Page });
-const rupiah = (n: any) => "Rp" + Number(n || 0).toLocaleString("id-ID");
+type SubscriptionPlan = {
+  id: string;
+  name: string;
+  lifetime?: boolean | null;
+  duration_days?: number | null;
+  price?: number | string | null;
+  is_active?: boolean | null;
+};
+type AdminOverview = { premium_users?: number; lifetime_users?: number; free_users?: number };
+const rupiah = (n: unknown) => "Rp" + Number(n || 0).toLocaleString("id-ID");
 function Page() {
   const qc = useQueryClient();
-  const [edit, setEdit] = useState<any | null>(null);
+  const [edit, setEdit] = useState<SubscriptionPlan | null>(null);
   const [price, setPrice] = useState("");
   const plans = useQuery({
     queryKey: ["plans-admin"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_subscription_plans");
+      const { data, error } = await supabase.rpc("get_admin_subscription_plans");
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as SubscriptionPlan[];
     },
     retry: false,
   });
@@ -44,25 +53,25 @@ function Page() {
   async function savePrice() {
     const n = Number(price);
     if (!edit || !Number.isFinite(n) || n < 0) return alert("Harga tidak valid");
-    const { error } = await (supabase as any).rpc("admin_update_subscription_plan", {
+    // p_is_active dihilangkan: default fungsi database adalah NULL (tidak mengubah status).
+    const { error } = await supabase.rpc("admin_update_subscription_plan", {
       p_plan_id: edit.id,
       p_price: n,
-      p_is_active: null,
     });
     if (error) return alert(error.message);
     setEdit(null);
     qc.invalidateQueries({ queryKey: ["plans-admin"] });
   }
-  async function toggle(x: any) {
-    const { error } = await (supabase as any).rpc("admin_update_subscription_plan", {
+  async function toggle(x: SubscriptionPlan) {
+    // p_price dihilangkan: default fungsi database adalah NULL (tidak mengubah harga).
+    const { error } = await supabase.rpc("admin_update_subscription_plan", {
       p_plan_id: x.id,
-      p_price: null,
       p_is_active: !x.is_active,
     });
     if (error) return alert(error.message);
     qc.invalidateQueries({ queryKey: ["plans-admin"] });
   }
-  const o: any = overview.data || {};
+  const o = (overview.data || {}) as AdminOverview;
   const metrics = [
     ["Premium Aktif", o.premium_users || 0, Crown],
     ["Lifetime", o.lifetime_users || 0, BadgeCheck],
@@ -121,7 +130,7 @@ function Page() {
             {plans.isError ? (
               <p className="text-xs text-destructive">Khusus Admin/Owner.</p>
             ) : (
-              (plans.data || []).map((x: any) => (
+              (plans.data || []).map((x) => (
                 <Card key={x.id}>
                   <CardContent className="flex items-center justify-between gap-3 p-4">
                     <div className="flex gap-3">

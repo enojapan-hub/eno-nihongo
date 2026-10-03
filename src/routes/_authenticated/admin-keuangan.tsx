@@ -21,8 +21,27 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin-keuangan")({ component: Page });
-const rp = (n: any) => "Rp" + Number(n || 0).toLocaleString("id-ID");
-const paid = (s: string) => ["paid", "success", "completed"].includes(s);
+type FinanceOrder = {
+  merchant_order_id: string;
+  status?: string | null;
+  product_type?: string | null;
+  plan?: string | null;
+  amount_idr?: number | string | null;
+  paid_at?: string | null;
+  created_at?: string | null;
+};
+type FinanceOverview = {
+  gross_revenue?: number | string | null;
+  pending_amount?: number | string | null;
+  subscription_revenue?: number | string | null;
+  lifetime_revenue?: number | string | null;
+  exam_revenue?: number | string | null;
+  class_revenue?: number | string | null;
+  recent_paid?: FinanceOrder[];
+  recent_orders?: FinanceOrder[];
+};
+const rp = (n: unknown) => "Rp" + Number(n || 0).toLocaleString("id-ID");
+const paid = (s?: string | null) => ["paid", "success", "completed"].includes(s as string);
 function Page() {
   const [period, setPeriod] = useState("all");
   const q = useQuery({
@@ -34,7 +53,7 @@ function Page() {
     },
     retry: false,
   });
-  const d: any = q.data || {};
+  const d = (q.data || {}) as FinanceOverview;
   const cutoff =
     period === "today"
       ? Date.now() - 86400000
@@ -44,10 +63,11 @@ function Page() {
           ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()
           : 0;
   const paidRows = (d.recent_paid || []).filter(
-    (x: any) => !cutoff || new Date(x.paid_at).getTime() >= cutoff,
+    (x) => !cutoff || new Date(x.paid_at as string).getTime() >= cutoff,
   );
   const pendingRows = (d.recent_orders || []).filter(
-    (x: any) => x.status === "pending" && (!cutoff || new Date(x.created_at).getTime() >= cutoff),
+    (x) =>
+      x.status === "pending" && (!cutoff || new Date(x.created_at as string).getTime() >= cutoff),
   );
   const items = [
     ["Pendapatan Kotor", rp(d.gross_revenue), Banknote],
@@ -160,7 +180,7 @@ function Page() {
               ) : paidRows.length === 0 ? (
                 <p className="p-4 text-xs text-muted-foreground">Belum ada transaksi.</p>
               ) : (
-                paidRows.map((x: any) => (
+                paidRows.map((x) => (
                   <div
                     key={x.merchant_order_id}
                     className="flex items-center gap-3 border-b p-3 last:border-0"
@@ -206,7 +226,7 @@ function Page() {
                   Tidak ada order pending pada periode ini.
                 </p>
               ) : (
-                pendingRows.map((x: any) => (
+                pendingRows.map((x) => (
                   <div
                     key={x.merchant_order_id}
                     className="flex items-center gap-3 border-b p-3 last:border-0"
@@ -229,13 +249,15 @@ function Page() {
           </Card>
         </section>
         <div className="grid gap-2 sm:grid-cols-2">
-          {[
-            [WalletCards, "Komisi & Saldo Guru", "Pembagian omzet kelas dan saldo guru."],
-            [CreditCard, "Penarikan Guru", "Pending, diproses, selesai dan ditolak."],
-            [RefreshCcw, "Refund & Gagal", "Refund, pembayaran gagal dan pembatalan."],
-            [Search, "Rekonsiliasi", "Order dan pembayaran yang perlu diperiksa."],
-            [Download, "Laporan Keuangan", "Ringkasan dan export laporan bulanan."],
-          ].map(([I, t, s]: any) => (
+          {(
+            [
+              [WalletCards, "Komisi & Saldo Guru", "Pembagian omzet kelas dan saldo guru."],
+              [CreditCard, "Penarikan Guru", "Pending, diproses, selesai dan ditolak."],
+              [RefreshCcw, "Refund & Gagal", "Refund, pembayaran gagal dan pembatalan."],
+              [Search, "Rekonsiliasi", "Order dan pembayaran yang perlu diperiksa."],
+              [Download, "Laporan Keuangan", "Ringkasan dan export laporan bulanan."],
+            ] as const
+          ).map(([I, t, s]) => (
             <Card key={t}>
               <CardContent className="p-4">
                 <span className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">

@@ -25,6 +25,32 @@ const materialKinds: [Kind, string][] = [
   ["reading", "Dokkai"],
   ["listening", "Chōkai"],
 ];
+interface ContentRow {
+  id: string;
+  lesson_number?: number | null;
+  test_type?: string | null;
+  exam_no?: number | null;
+  session_no?: number | null;
+  display_question_no?: number | null;
+  question_no?: number | null;
+  character?: string | null;
+  term?: string | null;
+  pattern?: string | null;
+  title?: string | null;
+  section?: string | null;
+  mondai_no?: number | null;
+  is_published?: boolean | null;
+}
+interface ReviewSummary {
+  pending?: number;
+  needs_fix?: number;
+  approved?: number;
+  reports_open?: number;
+}
+interface ReviewStatusRow {
+  content_id: string;
+  status?: string;
+}
 function Page() {
   const qc = useQueryClient();
   const [mode, setMode] = useState<"menu" | "materi" | "simulasi">("menu");
@@ -40,7 +66,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_content_staff_access");
       if (error) throw error;
-      return data as any;
+      return data as unknown as { role?: string };
     },
     retry: false,
   });
@@ -51,7 +77,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_content_review_summary");
       if (error) throw error;
-      return data as any;
+      return data as unknown as ReviewSummary;
     },
   });
   const rows = useQuery({
@@ -66,7 +92,10 @@ function Page() {
       return data ?? [];
     },
   });
-  const data: any[] = useMemo(() => (Array.isArray(rows.data) ? rows.data : []), [rows.data]);
+  const data = useMemo(
+    () => (Array.isArray(rows.data) ? (rows.data as unknown as ContentRow[]) : []),
+    [rows.data],
+  );
   const lessons = useMemo(
     () => [...new Set(data.map((x) => Number(x.lesson_number || 1)))].sort((a, b) => a - b),
     [data],
@@ -111,17 +140,20 @@ function Page() {
         p_ids: shown.map((x) => x.id),
       });
       if (error) throw error;
-      return Object.fromEntries((data || []).map((x: any) => [x.content_id, x]));
+      return Object.fromEntries(
+        (data || []).map((x: ReviewStatusRow) => [x.content_id, x]),
+      ) as Record<string, ReviewStatusRow | undefined>;
     },
   });
   async function review(id: string, status: string) {
     const note = status === "needs_fix" ? prompt("Catatan perbaikan:") || null : null;
-    const { error } = await (supabase as any).rpc("set_content_review_status", {
+    const { error } = await supabase.rpc("set_content_review_status", {
       p_type: kind,
       p_id: id,
       p_status: status,
-      p_severity: status === "needs_fix" ? "major" : null,
-      p_note: note,
+      // Argumen opsional bernilai NULL di database; cukup dihilangkan.
+      ...(status === "needs_fix" ? { p_severity: "major" } : {}),
+      ...(note ? { p_note: note } : {}),
     });
     if (error) return alert(error.message);
     qc.invalidateQueries({ queryKey: ["content-reviews"] });

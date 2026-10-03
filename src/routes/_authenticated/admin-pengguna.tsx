@@ -8,6 +8,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
+type AdminUser = {
+  id: string;
+  email?: string | null;
+  display_name?: string | null;
+  plan?: string | null;
+  role?: string | null;
+  target_level?: string | null;
+  premium_until?: string | null;
+  suspended_at?: string | null;
+  admin_note?: string | null;
+  last_sign_in_at?: string | null;
+  last_learning_at?: string | null;
+  created_at?: string | null;
+};
+type AuditEntry = { action: string; created_at: string };
+
 export const Route = createFileRoute("/_authenticated/admin-pengguna")({
   validateSearch: (s: Record<string, unknown>) => ({ view: String(s["view"] || "users") }),
   component: Page,
@@ -33,7 +49,7 @@ function Page() {
   const [page, setPage] = useState(1),
     [msg, setMsg] = useState(""),
     [busy, setBusy] = useState<string | null>(null),
-    [detail, setDetail] = useState<any | null>(null);
+    [detail, setDetail] = useState<AdminUser | null>(null);
   const [premiumId, setPremiumId] = useState<string | null>(null),
     [days, setDays] = useState("30"),
     [showInvite, setShowInvite] = useState(false);
@@ -42,9 +58,9 @@ function Page() {
   const q = useQuery({
     queryKey: ["admin-users-v2"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_users");
+      const { data, error } = await supabase.rpc("get_admin_users");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as AdminUser[];
     },
     retry: false,
   });
@@ -52,17 +68,17 @@ function Page() {
     queryKey: ["admin-user-audit", detail?.id],
     enabled: !!detail?.id,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_user_audit", {
-        p_user_id: detail.id,
+      const { data, error } = await supabase.rpc("get_admin_user_audit", {
+        p_user_id: detail?.id ?? "",
       });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as AuditEntry[];
     },
   });
 
   const filtered = useMemo(
     () =>
-      ((q.data ?? []) as any[]).filter((u) => {
+      (q.data ?? []).filter((u) => {
         const term = search.toLowerCase();
         if (
           term &&
@@ -124,7 +140,7 @@ function Page() {
     setMsg(error ? error.message : "Akun menjadi Free.");
     if (!error) refresh();
   }
-  async function suspend(u: any) {
+  async function suspend(u: AdminUser) {
     const next = !u.suspended_at;
     const note = next ? prompt("Catatan/alasan suspend (opsional):", "") : "";
     if (next && note === null) return;
@@ -137,10 +153,11 @@ function Page() {
     )
       return;
     setBusy(u.id);
-    const { error } = await (supabase as any).rpc("admin_set_user_suspended", {
+    // p_note dihilangkan bila kosong: default fungsi database adalah NULL.
+    const { error } = await supabase.rpc("admin_set_user_suspended", {
       p_user_id: u.id,
       p_suspended: next,
-      p_note: note || null,
+      ...(note ? { p_note: note } : {}),
     });
     setBusy(null);
     setMsg(error ? error.message : next ? "Akun disuspend." : "Akun diaktifkan kembali.");
@@ -149,11 +166,12 @@ function Page() {
   async function sendInvite() {
     const d = Number(invite.days);
     setBusy("invite");
-    const { error } = await (supabase as any).rpc("admin_invite_user", {
+    // p_duration_days hanya dikirim untuk Premium: default fungsi database adalah NULL.
+    const { error } = await supabase.rpc("admin_invite_user", {
       p_email: invite.email,
       p_role: invite.role,
       p_plan: invite.plan,
-      p_duration_days: invite.plan === "premium" ? d : null,
+      ...(invite.plan === "premium" ? { p_duration_days: d } : {}),
     });
     setBusy(null);
     setMsg(
@@ -360,7 +378,7 @@ function Page() {
                       </span>
                     ) : (
                       <select
-                        value={u.role}
+                        value={u.role ?? undefined}
                         onChange={(e) => setRole(u.id, e.target.value)}
                         className="h-fit rounded-lg border bg-background p-2 text-xs"
                       >
@@ -498,7 +516,7 @@ function Page() {
                   <p className="text-xs text-muted-foreground">Belum ada riwayat.</p>
                 ) : (
                   <div className="space-y-1">
-                    {(audit.data ?? []).map((a: any, i: number) => (
+                    {(audit.data ?? []).map((a, i) => (
                       <p key={i} className="text-[10px]">
                         <b>{a.action}</b> · {fmt(a.created_at)}
                       </p>
