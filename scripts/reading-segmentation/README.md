@@ -73,6 +73,8 @@ the working directory; those data exports are not committed.
 - 17,277 elements re-segmented (15,326 unsegmented, 487 invalid split, 1,464 style), 2,376 untouched.
 - Post-write: 17,277/17,277 as planned, 0 unexpected, `ja`/`romaji`/`id` unchanged everywhere,
   characters unchanged (spacing only), 0 double-space, 0 space after 、, 0 space before 。.
+- Final live validation (`apply/final_validate.py`, 19,249 elements with a reading; 404 `vocabulary_senses` elements have no reading field): 0 unexpected DB changes, 0 invalid splits, 0 unsegmented/particle errors, 0 punctuation/double-space errors; 94 conjugation flags are predictor default-reading limits (e.g. 引っ→ひっ, 止める→やめる/とどめる, 来まい→こまい), each checked against Sudachi / the ENO entry reading.
+- Second review pass (Exa-assisted) repaired 6 more rows: `かお っと` (っと is a final particle), `イコール きょうかい`, `に たす に イコール よん`, `ゼロカロリー`, plus spacing of two rows whose reading matches their `ja`. Three `（が）/（に）/（を）` rows are intentional usage annotations and stay unresolved/untouched.
 - 3 source-corrupt rows with a *provable* fix (raw digits in `reading`, kana known from `romaji` or a
   twin row) were repaired in a separate guarded batch; the other 7 (digits with no recorded reading,
   stray annotations such as `（が）`, `ja` typos) are reported, not changed.

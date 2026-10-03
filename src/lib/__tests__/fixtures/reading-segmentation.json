@@ -412,5 +412,23 @@
     "ja": "そこを退いてください。",
     "unspaced": "そこをどいてください。",
     "expected": "そこ を どいて ください。"
+  },
+  {
+    "category": "final review: sentence-final particle っと",
+    "ja": "私用の新しい傘を買おっと。",
+    "unspaced": "しようのあたらしいかさをかおっと。",
+    "expected": "しよう の あたらしい かさ を かお っと。"
+  },
+  {
+    "category": "final review: イコール is a separate word + math reading",
+    "ja": "誰でも２足す２イコール４であることを知っている。",
+    "unspaced": "だれでもにたすにイコールよんであることをしっている。",
+    "expected": "だれ でも に たす に イコール よん で ある こと を しって いる。"
+  },
+  {
+    "category": "final review: ０カロリー reads ゼロカロリー",
+    "ja": "水は０カロリーです。",
+    "unspaced": "みずはゼロカロリーです。",
+    "expected": "みず は ゼロカロリー です。"
   }
 ]
