@@ -150,14 +150,12 @@ async function rate(card: Card, level: Level, rating: Rating, usedHint: boolean,
   });
   if (h) throw h;
   await supabase.rpc("record_learning_activity", {
-    p_activity_type: "flashcard_reviewed",
+    p_activity_type: "quiz_answered",
     p_content_type: card.kind,
     p_content_id: card.id,
-    p_points: rating >= 2 ? 5 : 1,
-    p_xp: rating >= 2 ? 5 : 1,
     p_correct: rating >= 2,
     p_duration_seconds: Math.max(1, Math.round(ms / 1000)),
-    p_metadata: { level, rating, used_hint: usedHint, direction, aspect },
+    p_metadata: { mode: "flashcard", level, rating, used_hint: usedHint, direction, aspect },
   });
 }
 function HafalanPage() {

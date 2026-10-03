@@ -72,12 +72,12 @@ const TABLE: Record<
 };
 
 async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
+  // vocabulary_relations sengaja tertutup untuk klien (internal, tanpa policy/grant) dan hanya berisi
+  // relasi komponen leksikal, jadi pasangan kosakata tidak diambil dari sana; hanya kanji_relations.
   const kanji = new Set<string>();
-  const vocab = new Set<string>();
   for (const k of sig.unresolved.keys()) {
     const [t, id] = k.split(":");
     if (t === "kanji" && id) kanji.add(id);
-    if (t === "vocabulary" && id) vocab.add(id);
   }
   const out: Signals["relations"] = [];
   const run = async (
@@ -99,13 +99,6 @@ async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
   };
   await Promise.all([
     run(kanji, "kanji_relations", "kanji_id", "related_kanji_id", "kanji").catch(() => undefined),
-    run(
-      vocab,
-      "vocabulary_relations",
-      "source_vocabulary_id",
-      "target_vocabulary_id",
-      "vocabulary",
-    ).catch(() => undefined),
   ]);
   return out;
 }

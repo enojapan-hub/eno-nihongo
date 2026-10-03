@@ -51,11 +51,9 @@ async function saveChainReview(step: Step, level: Level, correct: boolean, respo
   if (error) throw error;
 
   await supabase.rpc("record_learning_activity", {
-    p_activity_type: "flashcard_reviewed",
+    p_activity_type: "quiz_answered",
     p_content_type: step.itemType,
     p_content_id: step.itemId,
-    p_points: correct ? 5 : 1,
-    p_xp: correct ? 5 : 1,
     p_correct: correct,
     p_duration_seconds: Math.max(1, Math.round(responseMs / 1000)),
     p_metadata: { level, rating, direction: "chain", mode: "memory_chain", aspect: step.aspect },

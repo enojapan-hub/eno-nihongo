@@ -80,11 +80,9 @@ async function saveTrapReview(item: Item, level: Level, correct: boolean, ms: nu
   });
   if (error) throw error;
   await supabase.rpc("record_learning_activity", {
-    p_activity_type: "flashcard_reviewed",
+    p_activity_type: "quiz_answered",
     p_content_type: item.kind,
     p_content_id: item.id,
-    p_points: correct ? 5 : 1,
-    p_xp: correct ? 5 : 1,
     p_correct: correct,
     p_duration_seconds: Math.max(1, Math.round(ms / 1000)),
     p_metadata: {
