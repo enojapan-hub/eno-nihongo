@@ -4700,45 +4700,26 @@ export type Database = {
           title: string
         }[]
       }
-      get_published_simulation_questions:
-        | {
-            Args: { p_level: string; p_section: string }
-            Returns: {
-              audio_url: string
-              choices: Json
-              display_question_no: number
-              id: string
-              image_url: string
-              instruction_jp: string
-              mondai_no: number
-              passage_jp: string
-              passage_title: string
-              prompt_jp: string
-              question_no: number
-              question_type: string
-              transcript_jp: string
-            }[]
-          }
-        | {
-            Args: { p_exam_no?: number; p_level: string; p_section: string }
-            Returns: {
-              audio_url: string
-              choices: Json
-              display_question_no: number
-              id: string
-              image_url: string
-              instruction_jp: string
-              mondai_no: number
-              passage_jp: string
-              passage_title: string
-              prompt_jp: string
-              question_no: number
-              question_type: string
-              target_occurrence: number
-              target_text: string
-              transcript_jp: string
-            }[]
-          }
+      get_published_simulation_questions: {
+        Args: { p_exam_no?: number; p_level: string; p_section: string }
+        Returns: {
+          audio_url: string
+          choices: Json
+          display_question_no: number
+          id: string
+          image_url: string
+          instruction_jp: string
+          mondai_no: number
+          passage_jp: string
+          passage_title: string
+          prompt_jp: string
+          question_no: number
+          question_type: string
+          target_occurrence: number
+          target_text: string
+          transcript_jp: string
+        }[]
+      }
       get_quiz_questions: {
         Args: {
           p_level: Database["public"]["Enums"]["jlpt_level"]
@@ -5261,6 +5242,35 @@ export type Database = {
           score_percent: number
           total_questions: number
         }[]
+      }
+      submit_practice_quiz: {
+        Args: {
+          p_answers: Json
+          p_duration_seconds?: number
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+          p_skill: Database["public"]["Enums"]["content_skill"]
+        }
+        Returns: {
+          attempt_kind: string
+          completed_at: string
+          correct_count: number
+          created_at: string
+          duration_seconds: number
+          id: string
+          level: Database["public"]["Enums"]["jlpt_level"] | null
+          quiz_id: string | null
+          score: number
+          skill: Database["public"]["Enums"]["content_skill"] | null
+          total_questions: number
+          user_id: string
+          xp_earned: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quiz_attempts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       submit_quiz_attempt: {
         Args: {
