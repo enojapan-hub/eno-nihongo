@@ -2,13 +2,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Level = "N5" | "N4" | "N3" | "N2" | "N1";
 export const LEVELS: Level[] = ["N5", "N4", "N3", "N2", "N1"];
-export type Example = {
-  jp?: string | undefined;
-  id?: string | undefined;
-  reading?: string | undefined;
-  // Belum diisi oleh asExamples: tampilan contoh menghitung romaji dari kana (lihat kotoba.tsx).
-  romaji?: string | undefined;
-};
+import { asExamples, type Example } from "./examples";
+
+export { asExamples };
+export type { Example };
 export type RelatedWord = { term: string; reading?: string | null; meaning?: string | null };
 export type VocabSense = {
   meaning_id: string;
@@ -25,36 +22,6 @@ export type VocabCurriculum = {
   source_reading?: string | null;
   source_meaning_id?: string | null;
 };
-export function asExamples(value: unknown): Example[] {
-  if (!value) return [];
-  const raw = Array.isArray(value)
-    ? value
-    : typeof value === "string"
-      ? (() => {
-          try {
-            return JSON.parse(value);
-          } catch {
-            return [value];
-          }
-        })()
-      : [];
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      if (typeof item === "string") return { jp: item };
-      if (!item || typeof item !== "object") return {};
-      const x = item as Record<string, unknown>;
-      const jp = x["jp"] ?? x["japanese"] ?? x["ja"] ?? x["sentence"] ?? x["example"];
-      const id = x["id"] ?? x["indonesian"] ?? x["idn"] ?? x["translation_id"];
-      const reading = x["reading"] ?? x["hiragana"];
-      return {
-        jp: typeof jp === "string" && jp.trim() ? jp : undefined,
-        id: typeof id === "string" && id.trim() ? id : undefined,
-        reading: typeof reading === "string" && reading.trim() ? reading : undefined,
-      };
-    })
-    .filter((x) => x.jp || x.id);
-}
 function must<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(res.error.message);
   return (res.data ?? []) as T;

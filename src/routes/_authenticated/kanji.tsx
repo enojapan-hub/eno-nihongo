@@ -22,6 +22,8 @@ import {
   type Level,
 } from "@/lib/learn-queries";
 import { fetchTargetLevel } from "@/lib/target-level";
+import { normalizeJapaneseSpacing } from "@/lib/japanese-spacing";
+import { exampleRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/kanji")({
@@ -60,140 +62,6 @@ function highlight(text: string, target: string): ReactNode {
 function lessonLabel(level: Level, n: number) {
   return level === "N4" ? n + 25 : n;
 }
-function kanaToRomaji(input: string) {
-  const map: Record<string, string> = {
-    きゃ: "kya",
-    きゅ: "kyu",
-    きょ: "kyo",
-    しゃ: "sha",
-    しゅ: "shu",
-    しょ: "sho",
-    ちゃ: "cha",
-    ちゅ: "chu",
-    ちょ: "cho",
-    にゃ: "nya",
-    にゅ: "nyu",
-    にょ: "nyo",
-    ひゃ: "hya",
-    ひゅ: "hyu",
-    ひょ: "hyo",
-    みゃ: "mya",
-    みゅ: "myu",
-    みょ: "myo",
-    りゃ: "rya",
-    りゅ: "ryu",
-    りょ: "ryo",
-    ぎゃ: "gya",
-    ぎゅ: "gyu",
-    ぎょ: "gyo",
-    じゃ: "ja",
-    じゅ: "ju",
-    じょ: "jo",
-    びゃ: "bya",
-    びゅ: "byu",
-    びょ: "byo",
-    ぴゃ: "pya",
-    ぴゅ: "pyu",
-    ぴょ: "pyo",
-    あ: "a",
-    い: "i",
-    う: "u",
-    え: "e",
-    お: "o",
-    か: "ka",
-    き: "ki",
-    く: "ku",
-    け: "ke",
-    こ: "ko",
-    さ: "sa",
-    し: "shi",
-    す: "su",
-    せ: "se",
-    そ: "so",
-    た: "ta",
-    ち: "chi",
-    つ: "tsu",
-    て: "te",
-    と: "to",
-    な: "na",
-    に: "ni",
-    ぬ: "nu",
-    ね: "ne",
-    の: "no",
-    は: "ha",
-    ひ: "hi",
-    ふ: "fu",
-    へ: "he",
-    ほ: "ho",
-    ま: "ma",
-    み: "mi",
-    む: "mu",
-    め: "me",
-    も: "mo",
-    や: "ya",
-    ゆ: "yu",
-    よ: "yo",
-    ら: "ra",
-    り: "ri",
-    る: "ru",
-    れ: "re",
-    ろ: "ro",
-    わ: "wa",
-    を: "o",
-    ん: "n",
-    が: "ga",
-    ぎ: "gi",
-    ぐ: "gu",
-    げ: "ge",
-    ご: "go",
-    ざ: "za",
-    じ: "ji",
-    ず: "zu",
-    ぜ: "ze",
-    ぞ: "zo",
-    だ: "da",
-    ぢ: "ji",
-    づ: "zu",
-    で: "de",
-    ど: "do",
-    ば: "ba",
-    び: "bi",
-    ぶ: "bu",
-    べ: "be",
-    ぼ: "bo",
-    ぱ: "pa",
-    ぴ: "pi",
-    ぷ: "pu",
-    ぺ: "pe",
-    ぽ: "po",
-  };
-  const s = input.replace(/[\s。、！？]/g, " ");
-  let out = "",
-    gem = false;
-  for (let i = 0; i < s.length; i++) {
-    const c = s[i] ?? "";
-    if (c === "っ") {
-      gem = true;
-      continue;
-    }
-    const pair = s.slice(i, i + 2);
-    let r = map[pair];
-    if (r) {
-      i++;
-    } else r = map[c];
-    if (!r) {
-      out += c;
-      continue;
-    }
-    if (gem) {
-      r = (r[0] ?? "") + r;
-      gem = false;
-    }
-    out += r;
-  }
-  return out.replace(/\s+/g, " ").trim();
-}
-
 function KanjiPage() {
   const {
     data: targetLevel,
@@ -691,11 +559,8 @@ function KanjiPage() {
                   {asExamples(study?.examples)
                     .slice(0, 1)
                     .map((e, i) => {
-                      const reading = e.reading || "";
-                      const romaji =
-                        reading && /^[ぁ-ゖァ-ヺー\s。、！？]+$/.test(reading)
-                          ? kanaToRomaji(reading)
-                          : "";
+                      const reading = normalizeJapaneseSpacing(e.reading);
+                      const romaji = exampleRomaji({ romaji: e.romaji, reading });
                       return (
                         <div key={i} className="mt-2 rounded-lg bg-muted/35 p-2.5">
                           <p
