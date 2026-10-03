@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { classroom, result, categories } from "@/lib/classroom";
+import { classroom, result, categories, errorMessage } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/guru-kelas/$classId/quiz/$quizId")({
   component: Page,
 });
@@ -82,7 +82,7 @@ function Page() {
         category,
         topic: topic || null,
         sort_order: id
-          ? (q.data?.questions.find((x: any) => x.id === id)?.sort_order ?? 0)
+          ? (q.data?.questions.find((x) => x.id === id)?.sort_order ?? 0)
           : (q.data?.questions.length ?? 0),
       };
       await result(
@@ -97,8 +97,8 @@ function Page() {
       reset();
       await qc.invalidateQueries({ queryKey: ["teacher-quiz-editor", quizId] });
       setMessage("Soal tersimpan.");
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -126,7 +126,7 @@ function Page() {
       setBusy(false);
     }
   }
-  async function remove(row: any) {
+  async function remove(row: { id: string }) {
     if (!window.confirm("Hapus soal ini?")) return;
     setBusy(true);
     setMessage("");
@@ -136,8 +136,8 @@ function Page() {
       );
       reset();
       await qc.invalidateQueries({ queryKey: ["teacher-quiz-editor", quizId] });
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -309,7 +309,7 @@ function Page() {
             {message}
           </p>
         )}
-        {q.data?.questions.map((row: any, index: number) => (
+        {q.data?.questions.map((row, index) => (
           <Card key={row.id} className="border-border/70 shadow-sm">
             <CardContent className="space-y-3 p-4">
               <div className="flex items-start gap-3">
@@ -324,7 +324,7 @@ function Page() {
                 </div>
               </div>
               <div className="grid gap-1.5">
-                {row.choices.map((c: string, i: number) => (
+                {(row.choices as string[]).map((c, i) => (
                   <p
                     key={i}
                     className={
@@ -353,7 +353,7 @@ function Page() {
                     onClick={() => {
                       setId(row.id);
                       setQuestion(row.question);
-                      setChoices(row.choices);
+                      setChoices(row.choices as string[]);
                       setCorrect(row.correct_index);
                       setExplanation(row.explanation || "");
                       setCategory(row.category || "Umum");

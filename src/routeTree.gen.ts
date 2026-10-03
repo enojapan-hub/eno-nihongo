@@ -13,17 +13,25 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as KebijakanPembayaranRouteImport } from './routes/kebijakan-pembayaran'
+import { Route as KebijakanPrivasiRouteImport } from './routes/kebijakan-privasi'
 import { Route as PaketRouteImport } from './routes/paket'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SyaratKetentuanRouteImport } from './routes/syarat-ketentuan'
 import { Route as TentangRouteImport } from './routes/tentang'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminAnalitikRouteImport } from './routes/_authenticated/admin-analitik'
 import { Route as AuthenticatedAdminEnoExamRouteImport } from './routes/_authenticated/admin-eno-exam'
+import { Route as AuthenticatedAdminImportExportRouteImport } from './routes/_authenticated/admin-import-export'
 import { Route as AuthenticatedAdminKelasRouteImport } from './routes/_authenticated/admin-kelas'
+import { Route as AuthenticatedAdminKeuanganRouteImport } from './routes/_authenticated/admin-keuangan'
 import { Route as AuthenticatedAdminKontenRouteImport } from './routes/_authenticated/admin-konten'
 import { Route as AuthenticatedAdminLanggananRouteImport } from './routes/_authenticated/admin-langganan'
+import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin-media'
 import { Route as AuthenticatedAdminOperasionalRouteImport } from './routes/_authenticated/admin-operasional'
+import { Route as AuthenticatedAdminPengaturanRouteImport } from './routes/_authenticated/admin-pengaturan'
 import { Route as AuthenticatedAdminPenggunaRouteImport } from './routes/_authenticated/admin-pengguna'
+import { Route as AuthenticatedAdminRolePermissionRouteImport } from './routes/_authenticated/admin-role-permission'
 import { Route as AuthenticatedAdminSistemRouteImport } from './routes/_authenticated/admin-sistem'
 import { Route as AuthenticatedAdminTerjemahanRouteImport } from './routes/_authenticated/admin-terjemahan'
 import { Route as AuthenticatedBelajarRouteImport } from './routes/_authenticated/belajar'
@@ -62,6 +70,7 @@ import { Route as AuthenticatedSimulasiRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStudyItemRouteImport } from './routes/_authenticated/study-item'
 import { Route as AuthenticatedTargetRouteImport } from './routes/_authenticated/target'
 import { Route as AuthenticatedTargetTertundaRouteImport } from './routes/_authenticated/target-tertunda'
+import { Route as ApiAdminImportExportRouteImport } from './routes/api/admin-import-export'
 import { Route as ApiAdminTranslationRouteImport } from './routes/api/admin-translation'
 import { Route as ApiJlptAudioRouteImport } from './routes/api/jlpt-audio'
 import { Route as ApiJlptAudioManifestRouteImport } from './routes/api/jlpt-audio-manifest'
@@ -115,6 +124,16 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KebijakanPembayaranRoute = KebijakanPembayaranRouteImport.update({
+  id: '/kebijakan-pembayaran',
+  path: '/kebijakan-pembayaran',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KebijakanPrivasiRoute = KebijakanPrivasiRouteImport.update({
+  id: '/kebijakan-privasi',
+  path: '/kebijakan-privasi',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaketRoute = PaketRouteImport.update({
   id: '/paket',
   path: '/paket',
@@ -123,6 +142,11 @@ const PaketRoute = PaketRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SyaratKetentuanRoute = SyaratKetentuanRouteImport.update({
+  id: '/syarat-ketentuan',
+  path: '/syarat-ketentuan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TentangRoute = TentangRouteImport.update({
@@ -147,11 +171,23 @@ const AuthenticatedAdminEnoExamRoute =
     path: '/admin-eno-exam',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminImportExportRoute =
+  AuthenticatedAdminImportExportRouteImport.update({
+    id: '/admin-import-export',
+    path: '/admin-import-export',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminKelasRoute = AuthenticatedAdminKelasRouteImport.update({
   id: '/admin-kelas',
   path: '/admin-kelas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminKeuanganRoute =
+  AuthenticatedAdminKeuanganRouteImport.update({
+    id: '/admin-keuangan',
+    path: '/admin-keuangan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminKontenRoute =
   AuthenticatedAdminKontenRouteImport.update({
     id: '/admin-konten',
@@ -164,16 +200,33 @@ const AuthenticatedAdminLanggananRoute =
     path: '/admin-langganan',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminMediaRoute = AuthenticatedAdminMediaRouteImport.update({
+  id: '/admin-media',
+  path: '/admin-media',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminOperasionalRoute =
   AuthenticatedAdminOperasionalRouteImport.update({
     id: '/admin-operasional',
     path: '/admin-operasional',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPengaturanRoute =
+  AuthenticatedAdminPengaturanRouteImport.update({
+    id: '/admin-pengaturan',
+    path: '/admin-pengaturan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPenggunaRoute =
   AuthenticatedAdminPenggunaRouteImport.update({
     id: '/admin-pengguna',
     path: '/admin-pengguna',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRolePermissionRoute =
+  AuthenticatedAdminRolePermissionRouteImport.update({
+    id: '/admin-role-permission',
+    path: '/admin-role-permission',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminSistemRoute =
@@ -375,6 +428,11 @@ const AuthenticatedTargetTertundaRoute =
     path: '/target-tertunda',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiAdminImportExportRoute = ApiAdminImportExportRouteImport.update({
+  id: '/api/admin-import-export',
+  path: '/api/admin-import-export',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminTranslationRoute = ApiAdminTranslationRouteImport.update({
   id: '/api/admin-translation',
   path: '/api/admin-translation',
@@ -566,17 +624,25 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/faq': typeof FaqRoute
+  '/kebijakan-pembayaran': typeof KebijakanPembayaranRoute
+  '/kebijakan-privasi': typeof KebijakanPrivasiRoute
   '/paket': typeof PaketRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/syarat-ketentuan': typeof SyaratKetentuanRoute
   '/tentang': typeof TentangRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-analitik': typeof AuthenticatedAdminAnalitikRoute
   '/admin-eno-exam': typeof AuthenticatedAdminEnoExamRouteWithChildren
+  '/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/admin-kelas': typeof AuthenticatedAdminKelasRoute
+  '/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
   '/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
+  '/admin-media': typeof AuthenticatedAdminMediaRoute
   '/admin-operasional': typeof AuthenticatedAdminOperasionalRoute
+  '/admin-pengaturan': typeof AuthenticatedAdminPengaturanRoute
   '/admin-pengguna': typeof AuthenticatedAdminPenggunaRoute
+  '/admin-role-permission': typeof AuthenticatedAdminRolePermissionRoute
   '/admin-sistem': typeof AuthenticatedAdminSistemRoute
   '/admin-terjemahan': typeof AuthenticatedAdminTerjemahanRoute
   '/belajar': typeof AuthenticatedBelajarRoute
@@ -615,6 +681,7 @@ export interface FileRoutesByFullPath {
   '/study-item': typeof AuthenticatedStudyItemRoute
   '/target': typeof AuthenticatedTargetRoute
   '/target-tertunda': typeof AuthenticatedTargetTertundaRoute
+  '/api/admin-import-export': typeof ApiAdminImportExportRoute
   '/api/admin-translation': typeof ApiAdminTranslationRoute
   '/api/jlpt-audio': typeof ApiJlptAudioRoute
   '/api/jlpt-audio-manifest': typeof ApiJlptAudioManifestRoute
@@ -653,17 +720,25 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/faq': typeof FaqRoute
+  '/kebijakan-pembayaran': typeof KebijakanPembayaranRoute
+  '/kebijakan-privasi': typeof KebijakanPrivasiRoute
   '/paket': typeof PaketRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/syarat-ketentuan': typeof SyaratKetentuanRoute
   '/tentang': typeof TentangRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-analitik': typeof AuthenticatedAdminAnalitikRoute
   '/admin-eno-exam': typeof AuthenticatedAdminEnoExamRouteWithChildren
+  '/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/admin-kelas': typeof AuthenticatedAdminKelasRoute
+  '/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
   '/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
+  '/admin-media': typeof AuthenticatedAdminMediaRoute
   '/admin-operasional': typeof AuthenticatedAdminOperasionalRoute
+  '/admin-pengaturan': typeof AuthenticatedAdminPengaturanRoute
   '/admin-pengguna': typeof AuthenticatedAdminPenggunaRoute
+  '/admin-role-permission': typeof AuthenticatedAdminRolePermissionRoute
   '/admin-sistem': typeof AuthenticatedAdminSistemRoute
   '/admin-terjemahan': typeof AuthenticatedAdminTerjemahanRoute
   '/belajar': typeof AuthenticatedBelajarRoute
@@ -702,6 +777,7 @@ export interface FileRoutesByTo {
   '/study-item': typeof AuthenticatedStudyItemRoute
   '/target': typeof AuthenticatedTargetRoute
   '/target-tertunda': typeof AuthenticatedTargetTertundaRoute
+  '/api/admin-import-export': typeof ApiAdminImportExportRoute
   '/api/admin-translation': typeof ApiAdminTranslationRoute
   '/api/jlpt-audio': typeof ApiJlptAudioRoute
   '/api/jlpt-audio-manifest': typeof ApiJlptAudioManifestRoute
@@ -742,17 +818,25 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/faq': typeof FaqRoute
+  '/kebijakan-pembayaran': typeof KebijakanPembayaranRoute
+  '/kebijakan-privasi': typeof KebijakanPrivasiRoute
   '/paket': typeof PaketRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/syarat-ketentuan': typeof SyaratKetentuanRoute
   '/tentang': typeof TentangRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-analitik': typeof AuthenticatedAdminAnalitikRoute
   '/_authenticated/admin-eno-exam': typeof AuthenticatedAdminEnoExamRouteWithChildren
+  '/_authenticated/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/_authenticated/admin-kelas': typeof AuthenticatedAdminKelasRoute
+  '/_authenticated/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
   '/_authenticated/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/_authenticated/admin-langganan': typeof AuthenticatedAdminLanggananRoute
+  '/_authenticated/admin-media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin-operasional': typeof AuthenticatedAdminOperasionalRoute
+  '/_authenticated/admin-pengaturan': typeof AuthenticatedAdminPengaturanRoute
   '/_authenticated/admin-pengguna': typeof AuthenticatedAdminPenggunaRoute
+  '/_authenticated/admin-role-permission': typeof AuthenticatedAdminRolePermissionRoute
   '/_authenticated/admin-sistem': typeof AuthenticatedAdminSistemRoute
   '/_authenticated/admin-terjemahan': typeof AuthenticatedAdminTerjemahanRoute
   '/_authenticated/belajar': typeof AuthenticatedBelajarRoute
@@ -791,6 +875,7 @@ export interface FileRoutesById {
   '/_authenticated/study-item': typeof AuthenticatedStudyItemRoute
   '/_authenticated/target': typeof AuthenticatedTargetRoute
   '/_authenticated/target-tertunda': typeof AuthenticatedTargetTertundaRoute
+  '/api/admin-import-export': typeof ApiAdminImportExportRoute
   '/api/admin-translation': typeof ApiAdminTranslationRoute
   '/api/jlpt-audio': typeof ApiJlptAudioRoute
   '/api/jlpt-audio-manifest': typeof ApiJlptAudioManifestRoute
@@ -831,17 +916,25 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/faq'
+    | '/kebijakan-pembayaran'
+    | '/kebijakan-privasi'
     | '/paket'
     | '/reset-password'
+    | '/syarat-ketentuan'
     | '/tentang'
     | '/admin'
     | '/admin-analitik'
     | '/admin-eno-exam'
+    | '/admin-import-export'
     | '/admin-kelas'
+    | '/admin-keuangan'
     | '/admin-konten'
     | '/admin-langganan'
+    | '/admin-media'
     | '/admin-operasional'
+    | '/admin-pengaturan'
     | '/admin-pengguna'
+    | '/admin-role-permission'
     | '/admin-sistem'
     | '/admin-terjemahan'
     | '/belajar'
@@ -880,6 +973,7 @@ export interface FileRouteTypes {
     | '/study-item'
     | '/target'
     | '/target-tertunda'
+    | '/api/admin-import-export'
     | '/api/admin-translation'
     | '/api/jlpt-audio'
     | '/api/jlpt-audio-manifest'
@@ -918,17 +1012,25 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/faq'
+    | '/kebijakan-pembayaran'
+    | '/kebijakan-privasi'
     | '/paket'
     | '/reset-password'
+    | '/syarat-ketentuan'
     | '/tentang'
     | '/admin'
     | '/admin-analitik'
     | '/admin-eno-exam'
+    | '/admin-import-export'
     | '/admin-kelas'
+    | '/admin-keuangan'
     | '/admin-konten'
     | '/admin-langganan'
+    | '/admin-media'
     | '/admin-operasional'
+    | '/admin-pengaturan'
     | '/admin-pengguna'
+    | '/admin-role-permission'
     | '/admin-sistem'
     | '/admin-terjemahan'
     | '/belajar'
@@ -967,6 +1069,7 @@ export interface FileRouteTypes {
     | '/study-item'
     | '/target'
     | '/target-tertunda'
+    | '/api/admin-import-export'
     | '/api/admin-translation'
     | '/api/jlpt-audio'
     | '/api/jlpt-audio-manifest'
@@ -1006,17 +1109,25 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/faq'
+    | '/kebijakan-pembayaran'
+    | '/kebijakan-privasi'
     | '/paket'
     | '/reset-password'
+    | '/syarat-ketentuan'
     | '/tentang'
     | '/_authenticated/admin'
     | '/_authenticated/admin-analitik'
     | '/_authenticated/admin-eno-exam'
+    | '/_authenticated/admin-import-export'
     | '/_authenticated/admin-kelas'
+    | '/_authenticated/admin-keuangan'
     | '/_authenticated/admin-konten'
     | '/_authenticated/admin-langganan'
+    | '/_authenticated/admin-media'
     | '/_authenticated/admin-operasional'
+    | '/_authenticated/admin-pengaturan'
     | '/_authenticated/admin-pengguna'
+    | '/_authenticated/admin-role-permission'
     | '/_authenticated/admin-sistem'
     | '/_authenticated/admin-terjemahan'
     | '/_authenticated/belajar'
@@ -1055,6 +1166,7 @@ export interface FileRouteTypes {
     | '/_authenticated/study-item'
     | '/_authenticated/target'
     | '/_authenticated/target-tertunda'
+    | '/api/admin-import-export'
     | '/api/admin-translation'
     | '/api/jlpt-audio'
     | '/api/jlpt-audio-manifest'
@@ -1095,9 +1207,13 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   FaqRoute: typeof FaqRoute
+  KebijakanPembayaranRoute: typeof KebijakanPembayaranRoute
+  KebijakanPrivasiRoute: typeof KebijakanPrivasiRoute
   PaketRoute: typeof PaketRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SyaratKetentuanRoute: typeof SyaratKetentuanRoute
   TentangRoute: typeof TentangRoute
+  ApiAdminImportExportRoute: typeof ApiAdminImportExportRoute
   ApiAdminTranslationRoute: typeof ApiAdminTranslationRoute
   ApiJlptAudioRoute: typeof ApiJlptAudioRoute
   ApiJlptAudioManifestRoute: typeof ApiJlptAudioManifestRoute
@@ -1140,6 +1256,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kebijakan-pembayaran': {
+      id: '/kebijakan-pembayaran'
+      path: '/kebijakan-pembayaran'
+      fullPath: '/kebijakan-pembayaran'
+      preLoaderRoute: typeof KebijakanPembayaranRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kebijakan-privasi': {
+      id: '/kebijakan-privasi'
+      path: '/kebijakan-privasi'
+      fullPath: '/kebijakan-privasi'
+      preLoaderRoute: typeof KebijakanPrivasiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/paket': {
       id: '/paket'
       path: '/paket'
@@ -1152,6 +1282,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/syarat-ketentuan': {
+      id: '/syarat-ketentuan'
+      path: '/syarat-ketentuan'
+      fullPath: '/syarat-ketentuan'
+      preLoaderRoute: typeof SyaratKetentuanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tentang': {
@@ -1182,11 +1319,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEnoExamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin-import-export': {
+      id: '/_authenticated/admin-import-export'
+      path: '/admin-import-export'
+      fullPath: '/admin-import-export'
+      preLoaderRoute: typeof AuthenticatedAdminImportExportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin-kelas': {
       id: '/_authenticated/admin-kelas'
       path: '/admin-kelas'
       fullPath: '/admin-kelas'
       preLoaderRoute: typeof AuthenticatedAdminKelasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-keuangan': {
+      id: '/_authenticated/admin-keuangan'
+      path: '/admin-keuangan'
+      fullPath: '/admin-keuangan'
+      preLoaderRoute: typeof AuthenticatedAdminKeuanganRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin-konten': {
@@ -1203,6 +1354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminLanggananRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin-media': {
+      id: '/_authenticated/admin-media'
+      path: '/admin-media'
+      fullPath: '/admin-media'
+      preLoaderRoute: typeof AuthenticatedAdminMediaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin-operasional': {
       id: '/_authenticated/admin-operasional'
       path: '/admin-operasional'
@@ -1210,11 +1368,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminOperasionalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin-pengaturan': {
+      id: '/_authenticated/admin-pengaturan'
+      path: '/admin-pengaturan'
+      fullPath: '/admin-pengaturan'
+      preLoaderRoute: typeof AuthenticatedAdminPengaturanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin-pengguna': {
       id: '/_authenticated/admin-pengguna'
       path: '/admin-pengguna'
       fullPath: '/admin-pengguna'
       preLoaderRoute: typeof AuthenticatedAdminPenggunaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-role-permission': {
+      id: '/_authenticated/admin-role-permission'
+      path: '/admin-role-permission'
+      fullPath: '/admin-role-permission'
+      preLoaderRoute: typeof AuthenticatedAdminRolePermissionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin-sistem': {
@@ -1482,6 +1654,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/target-tertunda'
       preLoaderRoute: typeof AuthenticatedTargetTertundaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/admin-import-export': {
+      id: '/api/admin-import-export'
+      path: '/api/admin-import-export'
+      fullPath: '/api/admin-import-export'
+      preLoaderRoute: typeof ApiAdminImportExportRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/admin-translation': {
       id: '/api/admin-translation'
@@ -1874,11 +2053,16 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdminAnalitikRoute: typeof AuthenticatedAdminAnalitikRoute
   AuthenticatedAdminEnoExamRoute: typeof AuthenticatedAdminEnoExamRouteWithChildren
+  AuthenticatedAdminImportExportRoute: typeof AuthenticatedAdminImportExportRoute
   AuthenticatedAdminKelasRoute: typeof AuthenticatedAdminKelasRoute
+  AuthenticatedAdminKeuanganRoute: typeof AuthenticatedAdminKeuanganRoute
   AuthenticatedAdminKontenRoute: typeof AuthenticatedAdminKontenRoute
   AuthenticatedAdminLanggananRoute: typeof AuthenticatedAdminLanggananRoute
+  AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminOperasionalRoute: typeof AuthenticatedAdminOperasionalRoute
+  AuthenticatedAdminPengaturanRoute: typeof AuthenticatedAdminPengaturanRoute
   AuthenticatedAdminPenggunaRoute: typeof AuthenticatedAdminPenggunaRoute
+  AuthenticatedAdminRolePermissionRoute: typeof AuthenticatedAdminRolePermissionRoute
   AuthenticatedAdminSistemRoute: typeof AuthenticatedAdminSistemRoute
   AuthenticatedAdminTerjemahanRoute: typeof AuthenticatedAdminTerjemahanRoute
   AuthenticatedBelajarRoute: typeof AuthenticatedBelajarRoute
@@ -1931,11 +2115,16 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAdminAnalitikRoute: AuthenticatedAdminAnalitikRoute,
   AuthenticatedAdminEnoExamRoute: AuthenticatedAdminEnoExamRouteWithChildren,
+  AuthenticatedAdminImportExportRoute: AuthenticatedAdminImportExportRoute,
   AuthenticatedAdminKelasRoute: AuthenticatedAdminKelasRoute,
+  AuthenticatedAdminKeuanganRoute: AuthenticatedAdminKeuanganRoute,
   AuthenticatedAdminKontenRoute: AuthenticatedAdminKontenRoute,
   AuthenticatedAdminLanggananRoute: AuthenticatedAdminLanggananRoute,
+  AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminOperasionalRoute: AuthenticatedAdminOperasionalRoute,
+  AuthenticatedAdminPengaturanRoute: AuthenticatedAdminPengaturanRoute,
   AuthenticatedAdminPenggunaRoute: AuthenticatedAdminPenggunaRoute,
+  AuthenticatedAdminRolePermissionRoute: AuthenticatedAdminRolePermissionRoute,
   AuthenticatedAdminSistemRoute: AuthenticatedAdminSistemRoute,
   AuthenticatedAdminTerjemahanRoute: AuthenticatedAdminTerjemahanRoute,
   AuthenticatedBelajarRoute: AuthenticatedBelajarRoute,
@@ -1998,9 +2187,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   FaqRoute: FaqRoute,
+  KebijakanPembayaranRoute: KebijakanPembayaranRoute,
+  KebijakanPrivasiRoute: KebijakanPrivasiRoute,
   PaketRoute: PaketRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SyaratKetentuanRoute: SyaratKetentuanRoute,
   TentangRoute: TentangRoute,
+  ApiAdminImportExportRoute: ApiAdminImportExportRoute,
   ApiAdminTranslationRoute: ApiAdminTranslationRoute,
   ApiJlptAudioRoute: ApiJlptAudioRoute,
   ApiJlptAudioManifestRoute: ApiJlptAudioManifestRoute,

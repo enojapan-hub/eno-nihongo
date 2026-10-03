@@ -37,7 +37,7 @@ async function saveChainReview(step: Step, level: Level, correct: boolean, respo
   if (!userData.user) return;
 
   const rating = correct ? 2 : 0;
-  const { error } = await (supabase as any).from("flashcard_reviews").insert({
+  const { error } = await supabase.from("flashcard_reviews").insert({
     user_id: userData.user.id,
     item_type: step.itemType,
     item_id: step.itemId,
@@ -50,12 +50,10 @@ async function saveChainReview(step: Step, level: Level, correct: boolean, respo
   });
   if (error) throw error;
 
-  await (supabase as any).rpc("record_learning_activity", {
-    p_activity_type: "flashcard_reviewed",
+  await supabase.rpc("record_learning_activity", {
+    p_activity_type: "quiz_answered",
     p_content_type: step.itemType,
     p_content_id: step.itemId,
-    p_points: correct ? 5 : 1,
-    p_xp: correct ? 5 : 1,
     p_correct: correct,
     p_duration_seconds: Math.max(1, Math.round(responseMs / 1000)),
     p_metadata: { level, rating, direction: "chain", mode: "memory_chain", aspect: step.aspect },
@@ -84,9 +82,9 @@ function MemoryChainPage() {
   });
 
   const chains = useMemo<Chain[]>(() => {
-    const kanjiRows = (kanji.data ?? []) as any[];
-    const vocabRows = (vocab.data ?? []) as any[];
-    const grammarRows = (grammar.data ?? []) as any[];
+    const kanjiRows = kanji.data ?? [];
+    const vocabRows = vocab.data ?? [];
+    const grammarRows = grammar.data ?? [];
 
     return kanjiRows
       .map((kanjiItem) => {
@@ -95,7 +93,9 @@ function MemoryChainPage() {
           .slice(0, 2);
         if (!related.length) return null;
         const word = related[0];
-        const example = Array.isArray(word.examples) ? word.examples[0] : word.examples;
+        if (!word) return null;
+        const example = (Array.isArray(word.examples) ? word.examples[0] : word.examples) as
+          string | { jp?: unknown; japanese?: unknown; sentence?: unknown } | null | undefined;
         const exampleText =
           typeof example === "string"
             ? example
@@ -151,9 +151,9 @@ function MemoryChainPage() {
         if (grammarHit)
           steps.push({
             label: `${steps.length + 1} · Bunpou`,
-            front: grammarHit.pattern,
+            front: grammarHit.pattern ?? "",
             back: grammarHit.meaning_id,
-            sub: grammarHit.structure,
+            sub: grammarHit.structure ?? "",
             itemId: grammarHit.id,
             itemType: "grammar",
             aspect: "function_context",

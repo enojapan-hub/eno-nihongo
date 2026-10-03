@@ -6,7 +6,10 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  {
+    // File yang dibuat ulang oleh generator (Supabase CLI di CI) tidak diformat/di-lint manual.
+    ignores: ["dist", ".output", ".vinxi", "src/integrations/supabase/types.ts"],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

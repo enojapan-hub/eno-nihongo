@@ -42,6 +42,12 @@ export const comboKey = (t: string, id: string, aspect: string, dir: string) =>
 export const pairKey = (t: string, a: string, b: string) =>
   a < b ? `${t}:${a}|${b}` : `${t}:${b}|${a}`;
 
+// meta berasal dari kolom jsonb (tipe generated: Json); hanya objek yang dibaca, selainnya dianggap kosong.
+const metaOf = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+
 export function toReviewEvents(
   rows: Array<{
     item_type: string;
@@ -50,22 +56,22 @@ export function toReviewEvents(
     direction: string;
     rating: number;
     created_at: string;
-    meta: Record<string, any> | null;
+    meta: unknown;
   }>,
 ): ReviewEvent[] {
   return rows
-    .filter((r) => r.meta?.["source"] === "kioku")
-    .map((r) => ({
+    .map((r) => ({ r, meta: metaOf(r.meta) }))
+    .filter(({ meta }) => meta?.["source"] === "kioku")
+    .map(({ r, meta }) => ({
       item_type: r.item_type,
       item_id: r.item_id,
       aspect: r.aspect,
       direction: r.direction,
-      correct:
-        typeof r.meta?.["correct"] === "boolean" ? (r.meta["correct"] as boolean) : r.rating >= 2,
-      error_type: (r.meta?.["error_type"] as string | undefined) ?? null,
-      selected_item_id: (r.meta?.["selected_item_id"] as string | undefined) ?? null,
-      variant: (r.meta?.["variant"] as string | undefined) ?? null,
-      context_ref: (r.meta?.["context_ref"] as string | undefined) ?? null,
+      correct: typeof meta?.["correct"] === "boolean" ? meta["correct"] : r.rating >= 2,
+      error_type: (meta?.["error_type"] as string | undefined) ?? null,
+      selected_item_id: (meta?.["selected_item_id"] as string | undefined) ?? null,
+      variant: (meta?.["variant"] as string | undefined) ?? null,
+      context_ref: (meta?.["context_ref"] as string | undefined) ?? null,
       created_at: r.created_at,
     }));
 }

@@ -7,10 +7,12 @@ import {
   ChevronLeft,
   Clock3,
   ExternalLink,
+  GraduationCap,
   Headphones,
   ShieldCheck,
   UserPlus,
   UsersRound,
+  type LucideIcon,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -30,7 +32,7 @@ function Detail() {
   const classQuery = useQuery({
     queryKey: ["class", classId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_public_class", {
+      const { data, error } = await supabase.rpc("get_public_class", {
         p_class_id: classId,
       });
       if (error) throw error;
@@ -40,11 +42,9 @@ function Detail() {
   const countQuery = useQuery({
     queryKey: ["class-count", classId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_public_class_enrollment_counts");
+      const { data, error } = await supabase.rpc("get_public_class_enrollment_counts");
       if (error) throw error;
-      return Number(
-        (data ?? []).find((row: any) => row.class_id === classId)?.participant_count ?? 0,
-      );
+      return Number((data ?? []).find((row) => row.class_id === classId)?.participant_count ?? 0);
     },
   });
   const rateQuery = useQuery({
@@ -60,7 +60,7 @@ function Detail() {
   const accessQuery = useQuery({
     queryKey: ["class-access", classId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_class_member_access", {
+      const { data, error } = await supabase.rpc("get_class_member_access", {
         p_class_id: classId,
       });
       if (error) throw error;
@@ -70,7 +70,7 @@ function Detail() {
   async function enroll() {
     setBusy(true);
     setMessage("");
-    const { error } = await (supabase as any).rpc("enroll_in_class", { p_class_id: classId });
+    const { error } = await supabase.rpc("enroll_in_class", { p_class_id: classId });
     if (error) setMessage(error.message);
     else {
       setMessage("Berhasil bergabung ke kelas.");
@@ -78,7 +78,7 @@ function Detail() {
     }
     setBusy(false);
   }
-  const c: any = classQuery.data;
+  const c = classQuery.data;
   if (classQuery.isLoading)
     return (
       <AppShell title="Kelas" backTo="/kelas">
@@ -129,7 +129,14 @@ function Detail() {
             />
           )}
           <div>
-            <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">JLPT {c.level}</span><span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold">{modeLabel}</span></div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">
+                JLPT {c.level}
+              </span>
+              <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold">
+                {modeLabel}
+              </span>
+            </div>
             <h2 className="mt-1 text-[22px] font-black leading-tight">{c.title}</h2>
             <p className="mt-2 text-[13px] leading-5 text-[#697578] dark:text-muted-foreground">
               {c.description || "Belajar terarah bersama guru ENO NIHONGO."}
@@ -159,12 +166,30 @@ function Detail() {
             </div>
           </section>
           <section aria-labelledby="course-list">
-            <h2 id="course-list" className="text-[20px] font-black">Yang Anda dapatkan</h2>
+            <h2 id="course-list" className="text-[20px] font-black">
+              Yang Anda dapatkan
+            </h2>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <Benefit icon={BookOpenText} title="Materi kelas" text="Materi pembelajaran tersusun di ruang kelas." />
-              <Benefit icon={Clock3} title="Jadwal terpusat" text="Jadwal pertemuan dan sesi live mudah diperiksa." />
-              <Benefit icon={ShieldCheck} title="Tugas & kuis" text="Kerjakan aktivitas dan pantau status pengumpulan." />
-              <Benefit icon={GraduationCap} title="Hasil belajar" text="Nilai dan umpan balik guru tersedia dalam kelas." />
+              <Benefit
+                icon={BookOpenText}
+                title="Materi kelas"
+                text="Materi pembelajaran tersusun di ruang kelas."
+              />
+              <Benefit
+                icon={Clock3}
+                title="Jadwal terpusat"
+                text="Jadwal pertemuan dan sesi live mudah diperiksa."
+              />
+              <Benefit
+                icon={ShieldCheck}
+                title="Tugas & kuis"
+                text="Kerjakan aktivitas dan pantau status pengumpulan."
+              />
+              <Benefit
+                icon={GraduationCap}
+                title="Hasil belajar"
+                text="Nilai dan umpan balik guru tersedia dalam kelas."
+              />
             </div>
           </section>
           {member ? (
@@ -241,13 +266,25 @@ function Detail() {
   );
 }
 
-function Benefit({icon:Icon,title,text}:{icon:any;title:string;text:string}){return <div className="flex gap-3 rounded-2xl border bg-card p-3.5 shadow-sm"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-4"/></span><div><p className="text-sm font-bold">{title}</p><p className="mt-0.5 text-xs leading-5 text-muted-foreground">{text}</p></div></div>}
+function Benefit({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
+  return (
+    <div className="flex gap-3 rounded-2xl border bg-card p-3.5 shadow-sm">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+        <Icon className="size-4" />
+      </span>
+      <div>
+        <p className="text-sm font-bold">{title}</p>
+        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{text}</p>
+      </div>
+    </div>
+  );
+}
 function Feature({
   icon: Icon,
   color,
   text,
 }: {
-  icon: any;
+  icon: LucideIcon;
   color: "orange" | "pink" | "violet";
   text: string;
 }) {
@@ -264,7 +301,7 @@ function Feature({
   );
 }
 
-function formatPrice(c: any, rate?: number) {
+function formatPrice(c: { price: number | string; currency: string }, rate?: number) {
   if (Number(c.price) <= 0) return "Gratis";
   if (c.currency === "JPY")
     return rate

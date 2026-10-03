@@ -23,22 +23,32 @@ export const Route = createFileRoute("/api/duitku/create-invoice")({
       POST: async ({ request }) => {
         try {
           const user = await getAuthenticatedUser(request);
-          if (!user) return Response.json({ error: "Sesi tidak ditemukan. Silakan masuk kembali." }, { status: 401 });
+          if (!user)
+            return Response.json(
+              { error: "Sesi tidak ditemukan. Silakan masuk kembali." },
+              { status: 401 },
+            );
 
-          const body = await request.json().catch(() => null) as { plan?: unknown } | null;
-          if (!isDuitkuPlanCode(body?.plan)) return Response.json({ error: "Paket tidak valid." }, { status: 400 });
+          const body = (await request.json().catch(() => null)) as { plan?: unknown } | null;
+          if (!isDuitkuPlanCode(body?.plan))
+            return Response.json({ error: "Paket tidak valid." }, { status: 400 });
 
           const planCode = body.plan;
           const plan = DUITKU_PLANS[planCode];
           const { merchantCode, apiKey } = duitkuConfig();
-          const admin = supabaseAdmin as any;
+          const admin = supabaseAdmin;
           const { data: profile } = await admin
             .from("profiles")
             .select("display_name")
             .eq("id", user.id)
             .maybeSingle();
 
-          const customerName = String(profile?.display_name || user.user_metadata?.full_name || user.email || "Pengguna ENO NIHONGO")
+          const customerName = String(
+            profile?.display_name ||
+              user.user_metadata?.["full_name"] ||
+              user.email ||
+              "Pengguna ENO NIHONGO",
+          )
             .trim()
             .slice(0, 100);
           const merchantOrderId = `ENO-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -71,30 +81,49 @@ export const Route = createFileRoute("/api/duitku/create-invoice")({
             returnUrl: `${origin}/pembayaran/duitku/selesai?order=${encodeURIComponent(merchantOrderId)}`,
             expiryPeriod: 60,
           };
-          const duitkuResponse = await fetch("https://api-sandbox.duitku.com/api/merchant/createInvoice", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-duitku-timestamp": timestamp,
-              "x-duitku-merchantcode": merchantCode,
-              "x-duitku-signature": createInvoiceSignature(merchantCode, timestamp, apiKey),
+          const duitkuResponse = await fetch(
+            "https://api-sandbox.duitku.com/api/merchant/createInvoice",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-duitku-timestamp": timestamp,
+                "x-duitku-merchantcode": merchantCode,
+                "x-duitku-signature": createInvoiceSignature(merchantCode, timestamp, apiKey),
+              },
+              body: JSON.stringify(payload),
             },
-            body: JSON.stringify(payload),
-          });
-          const result = await duitkuResponse.json().catch(() => ({})) as Record<string, unknown>;
-          if (!duitkuResponse.ok || result.statusCode !== "00" || typeof result.paymentUrl !== "string" || typeof result.reference !== "string") {
-            await admin.from("payment_orders").update({ status: "failed", updated_at: new Date().toISOString() }).eq("merchant_order_id", merchantOrderId);
-            throw new Error(String(result.statusMessage || "Duitku belum dapat membuat tagihan. Coba lagi."));
+          );
+          const result = (await duitkuResponse.json().catch(() => ({}))) as Record<string, unknown>;
+          if (
+            !duitkuResponse.ok ||
+            result["statusCode"] !== "00" ||
+            typeof result["paymentUrl"] !== "string" ||
+            typeof result["reference"] !== "string"
+          ) {
+            await admin
+              .from("payment_orders")
+              .update({ status: "failed", updated_at: new Date().toISOString() })
+              .eq("merchant_order_id", merchantOrderId);
+            throw new Error(
+              String(result["statusMessage"] || "Duitku belum dapat membuat tagihan. Coba lagi."),
+            );
           }
 
-          await admin.from("payment_orders").update({
-            provider_reference: result.reference,
-            updated_at: new Date().toISOString(),
-          }).eq("merchant_order_id", merchantOrderId);
+          await admin
+            .from("payment_orders")
+            .update({
+              provider_reference: result["reference"],
+              updated_at: new Date().toISOString(),
+            })
+            .eq("merchant_order_id", merchantOrderId);
 
-          return Response.json({ paymentUrl: result.paymentUrl, merchantOrderId });
+          return Response.json({ paymentUrl: result["paymentUrl"], merchantOrderId });
         } catch (error) {
-          return Response.json({ error: error instanceof Error ? error.message : "Gagal membuat tagihan Duitku." }, { status: 502 });
+          return Response.json(
+            { error: error instanceof Error ? error.message : "Gagal membuat tagihan Duitku." },
+            { status: 502 },
+          );
         }
       },
     },

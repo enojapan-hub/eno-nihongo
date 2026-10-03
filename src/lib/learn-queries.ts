@@ -2,30 +2,575 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Level = "N5" | "N4" | "N3" | "N2" | "N1";
 export const LEVELS: Level[] = ["N5", "N4", "N3", "N2", "N1"];
-export type Example = { jp?: string; id?: string; reading?: string };
+export type Example = {
+  jp?: string | undefined;
+  id?: string | undefined;
+  reading?: string | undefined;
+  // Belum diisi oleh asExamples: tampilan contoh menghitung romaji dari kana (lihat kotoba.tsx).
+  romaji?: string | undefined;
+};
 export type RelatedWord = { term: string; reading?: string | null; meaning?: string | null };
-export type VocabSense = { meaning_id: string; part_of_speech?: string | null; usage_note_id?: string | null; examples?: unknown; source_book?: string | null };
-export type VocabCurriculum = { source_book: string; lesson_number?: number | null; lesson_title?: string | null; source_term?: string | null; source_reading?: string | null; source_meaning_id?: string | null };
-export function asExamples(value: unknown): Example[] { if (!value) return []; const raw=Array.isArray(value)?value:typeof value==="string"?(()=>{try{return JSON.parse(value)}catch{return [value]}})():[]; if(!Array.isArray(raw))return []; return raw.map((item)=>{if(typeof item==="string")return {jp:item};if(!item||typeof item!=="object")return {};const x=item as Record<string,unknown>;const jp=x.jp??x.japanese??x.ja??x.sentence??x.example;const id=x.id??x.indonesian??x.idn??x.translation_id;const reading=x.reading??x.hiragana;return {jp:typeof jp==="string"&&jp.trim()?jp:undefined,id:typeof id==="string"&&id.trim()?id:undefined,reading:typeof reading==="string"&&reading.trim()?reading:undefined}}).filter(x=>x.jp||x.id); }
-function must<T>(res:{data:T|null;error:{message:string}|null}):T{if(res.error)throw new Error(res.error.message);return (res.data??[]) as T;}
-export async function fetchKanjiList(level:Level){return must(await supabase.from("kanji").select("id, character, level, onyomi, kunyomi, meaning_id, stroke_count, sort_order, source_book, lesson_number, lesson_title").eq("level",level).eq("is_published",true).order("lesson_number",{ascending:true,nullsFirst:false}).order("sort_order",{ascending:true}));}
-export async function fetchKanjiDetail(id:string){const kanji=must(await supabase.from("kanji").select("*").eq("id",id).eq("is_published",true).limit(1));const relations=must(await supabase.from("kanji_relations").select("id, note_id, sort_order, related:related_kanji_id (id, character, meaning_id, level)").eq("kanji_id",id).order("sort_order"));return {kanji:kanji[0]??null,relations};}
-export async function fetchKanjiStudy(id:string){const kanjiRows=must(await supabase.from("kanji").select("*").eq("id",id).eq("is_published",true).limit(1));const kanji=kanjiRows[0]??null;if(!kanji)return {kanji:null,examples:[] as Example[],relatedWords:[] as RelatedWord[]};const char=String(kanji.character??"");const vocabRows=must(await supabase.from("vocabulary").select("term, reading, meaning_id, examples").eq("is_published",true).ilike("term",`%${char}%`).limit(8));const relatedWords:RelatedWord[]=[];const examples:Example[]=[];for(const v of vocabRows as Array<Record<string,unknown>>){relatedWords.push({term:String(v.term??""),reading:v.reading?String(v.reading):null,meaning:v.meaning_id?String(v.meaning_id):null});examples.push(...asExamples(v.examples));}return {kanji,examples:examples.slice(0,5),relatedWords:relatedWords.filter(v=>v.term)};}
-export async function fetchVocabList(level:Level){const masters=must(await supabase.from("vocabulary").select("id, term, reading, romaji, meaning_id, part_of_speech, examples, level, sort_order, source_book, lesson_number, lesson_title").eq("level",level).eq("is_published",true).order("sort_order",{ascending:true})) as Array<Record<string,unknown>>;if(!masters.length)return [];const masterIds=masters.map(v=>String(v.id));const [mergeRes,curriculumRes,sensesRes]=await Promise.all([supabase.from("vocabulary_merge_map").select("duplicate_id").in("duplicate_id",masterIds),supabase.from("vocabulary_curriculum").select("vocabulary_id, source_book, lesson_number, lesson_title, source_term, source_reading, source_meaning_id").in("vocabulary_id",masterIds).order("lesson_number",{ascending:true,nullsFirst:false}),supabase.from("vocabulary_senses").select("vocabulary_id, meaning_id, part_of_speech, usage_note_id, examples, source_book").in("vocabulary_id",masterIds)]);const hiddenIds=new Set((must(mergeRes) as Array<Record<string,unknown>>).map(row=>String(row.duplicate_id)));const visibleMasters=masters.filter(row=>!hiddenIds.has(String(row.id)));const curriculum=must(curriculumRes) as Array<Record<string,unknown>>;const senses=must(sensesRes) as Array<Record<string,unknown>>;const byCurriculum=new Map<string,VocabCurriculum[]>();const bySense=new Map<string,VocabSense[]>();for(const row of curriculum){const key=String(row.vocabulary_id);const list=byCurriculum.get(key)??[];list.push({source_book:String(row.source_book??""),lesson_number:typeof row.lesson_number==="number"?row.lesson_number:null,lesson_title:row.lesson_title?String(row.lesson_title):null,source_term:row.source_term?String(row.source_term):null,source_reading:row.source_reading?String(row.source_reading):null,source_meaning_id:row.source_meaning_id?String(row.source_meaning_id):null});byCurriculum.set(key,list);}for(const row of senses){const key=String(row.vocabulary_id);const list=bySense.get(key)??[];list.push({meaning_id:String(row.meaning_id??""),part_of_speech:row.part_of_speech?String(row.part_of_speech):null,usage_note_id:row.usage_note_id?String(row.usage_note_id):null,examples:row.examples,source_book:row.source_book?String(row.source_book):null});bySense.set(key,list);}return visibleMasters.flatMap(v=>{const id=String(v.id);const links=byCurriculum.get(id)??[];const row={...v,senses:bySense.get(id)??[],curriculum:links};if(!links.length)return [row];return links.map(link=>({...row,source_book:link.source_book||v.source_book,lesson_number:link.lesson_number,lesson_title:link.lesson_title,source_term:link.source_term,source_reading:link.source_reading,source_meaning_id:link.source_meaning_id}));});}
-export async function fetchGrammarList(level:Level){return must(await supabase.from("grammar_points").select("id, pattern, meaning_id, structure, explanation_id, examples, level, sort_order, source_book, lesson_number, lesson_title").eq("level",level).eq("is_published",true).order("lesson_number",{ascending:true,nullsFirst:false}).order("sort_order",{ascending:true}));}
-export async function fetchPassages(){return must(await supabase.from("reading_passages").select("id, title, level, body_jp, translation_id, estimated_minutes, sort_order, source_book, lesson_number, lesson_title").eq("is_published",true).order("level").order("lesson_number",{ascending:true,nullsFirst:false}).order("sort_order",{ascending:true}));}
-export async function fetchPassageDetail(id:string){const passages=must(await supabase.from("reading_passages").select("*").eq("id",id).eq("is_published",true).limit(1));const questions=must(await supabase.from("questions").select("id, prompt, prompt_note, choices, correct_index, explanation_id").eq("passage_id",id).eq("is_published",true));return {passage:passages[0]??null,questions};}
-export async function fetchListeningList(){return must(await supabase.from("listening_items").select("id, title, level, duration_seconds, sort_order, audio_url, source, source_book, lesson_number, lesson_title").eq("is_published",true).not("audio_url","is",null).order("level").order("lesson_number",{ascending:true,nullsFirst:false}).order("sort_order",{ascending:true}));}
-export async function fetchListeningDetail(id:string){const items=must(await supabase.from("listening_items").select("*").eq("id",id).eq("is_published",true).not("audio_url","is",null).limit(1));const questions=must(await supabase.from("questions").select("id, prompt, choices, correct_index, explanation_id").eq("listening_id",id).eq("is_published",true));return {item:items[0]??null,questions};}
-export async function fetchQuizzes(){return must(await supabase.from("quizzes").select("id, slug, title, description, level, skill, question_count, time_limit_seconds, sort_order").eq("is_published",true).order("level").order("sort_order"));}
-export type RunnerQuestion={id:string;prompt:string;prompt_note:string|null;choices:string[];correct_index:number;explanation_id:string|null};function toRunnerQuestions(rows:unknown[]):RunnerQuestion[]{return (rows as Array<Record<string,unknown>>).map(q=>({id:String(q.id),prompt:String(q.prompt),prompt_note:(q.prompt_note as string|null)??null,choices:Array.isArray(q.choices)?(q.choices as string[]).map(String):[],correct_index:Number(q.correct_index),explanation_id:(q.explanation_id as string|null)??null}));}
-export async function fetchQuizBySlug(slug:string){const quizzes=must(await supabase.from("quizzes").select("*").eq("slug",slug).eq("is_published",true).limit(1));const quiz=quizzes[0]??null;if(!quiz)return {quiz:null,questions:[] as RunnerQuestion[]};const rows=must(await supabase.from("quiz_questions").select("sort_order, question:question_id (id, prompt, prompt_note, choices, correct_index, explanation_id, is_published)").eq("quiz_id",quiz.id).order("sort_order")) as Array<{question:Record<string,unknown>|null}>;return {quiz,questions:toRunnerQuestions(rows.map(r=>r.question).filter((q):q is Record<string,unknown>=>!!q&&q.is_published===true))};}
-export type SimSkillGroup="vocabulary_grammar"|"reading"|"listening";export async function fetchSimulationQuestions(level:Level,group:SimSkillGroup){const skills=group==="vocabulary_grammar"?["vocabulary","grammar","kanji"]:group==="reading"?["reading"]:["listening"];const rows=must(await supabase.from("questions").select("id, prompt, prompt_note, choices, correct_index, explanation_id, level, skill").eq("is_published",true).eq("level",level).in("skill",skills).limit(12));return toRunnerQuestions(rows as unknown[]);}
-export async function saveAttempt(input:{quizId?:string|null;level?:Level|null;skill?:"kanji"|"vocabulary"|"grammar"|"reading"|"listening"|null;total:number;correct:number;durationSeconds:number;answers:Array<{questionId:string;selectedIndex:number;isCorrect:boolean}>}){const {data:userRes}=await supabase.auth.getUser();const userId=userRes.user?.id;if(!userId)return;const score=input.total>0?Math.round(input.correct/input.total*10000)/100:0;const xpEarned=input.correct*10;const {data:attempt,error}=await supabase.from("quiz_attempts").insert({user_id:userId,quiz_id:input.quizId??null,level:input.level??null,skill:input.skill??null,total_questions:input.total,correct_count:input.correct,score,xp_earned:xpEarned,duration_seconds:input.durationSeconds,completed_at:new Date().toISOString()}).select("id").maybeSingle();if(error||!attempt)return;await supabase.from("quiz_answers").insert(input.answers.map(a=>({attempt_id:attempt.id,user_id:userId,question_id:a.questionId,selected_index:a.selectedIndex,is_correct:a.isCorrect})));await supabase.rpc("record_learning_activity",{p_activity_type:"quiz_completed",p_content_type:input.skill??"quiz",p_content_id:input.quizId??null,p_points:xpEarned,p_xp:xpEarned,p_correct:null,p_duration_seconds:input.durationSeconds,p_metadata:{level:input.level??null,total:input.total,correct:input.correct,score}});for(const answer of input.answers)await supabase.rpc("record_learning_activity",{p_activity_type:"quiz_answered",p_content_type:input.skill??"quiz",p_content_id:answer.questionId,p_points:answer.isCorrect?10:0,p_xp:answer.isCorrect?10:0,p_correct:answer.isCorrect,p_duration_seconds:0,p_metadata:{quiz_id:input.quizId??null,level:input.level??null}});}
-export type LearnableItemType="kanji"|"vocabulary"|"grammar";
-async function currentUserId(){const {data}=await supabase.auth.getUser();const id=data.user?.id;if(!id)throw new Error("Sesi tidak ditemukan.");return id;}
-export async function markItemLearned(input:{itemType:LearnableItemType;itemId:string;level:Level}){const userId=await currentUserId();const {data:existing,error:readError}=await supabase.from("user_item_progress").select("id,status").eq("user_id",userId).eq("item_type",input.itemType).eq("item_id",input.itemId).maybeSingle();if(readError)throw new Error(readError.message);if(existing&&existing.status!=="new")return false;const due=new Date();due.setDate(due.getDate()+1);if(existing){const {error}=await supabase.from("user_item_progress").update({status:"learning",repetitions:1,last_reviewed_at:new Date().toISOString(),due_at:due.toISOString()}).eq("id",existing.id);if(error)throw new Error(error.message);}else{const {error}=await supabase.from("user_item_progress").insert({user_id:userId,item_type:input.itemType,item_id:input.itemId,level:input.level,status:"learning",repetitions:1,last_reviewed_at:new Date().toISOString(),due_at:due.toISOString()});if(error)throw new Error(error.message);}const {error:activityError}=await supabase.rpc("record_learning_activity",{p_activity_type:"lesson_completed",p_content_type:input.itemType,p_content_id:input.itemId,p_points:5,p_xp:5,p_correct:null,p_duration_seconds:60,p_metadata:{level:input.level,repetition:1}});if(activityError)throw new Error(activityError.message);return true;}
-export async function addItemToReview(input:{itemType:LearnableItemType;itemId:string;level:Level}){const userId=await currentUserId();const due=new Date().toISOString();const {data:existing,error:readError}=await supabase.from("user_item_progress").select("id,status").eq("user_id",userId).eq("item_type",input.itemType).eq("item_id",input.itemId).maybeSingle();if(readError)throw new Error(readError.message);if(existing?.status==="review")return false;if(existing){const {error}=await supabase.from("user_item_progress").update({status:"review",due_at:due}).eq("id",existing.id);if(error)throw new Error(error.message);}else{const {error}=await supabase.from("user_item_progress").insert({user_id:userId,item_type:input.itemType,item_id:input.itemId,level:input.level,status:"review",repetitions:0,due_at:due});if(error)throw new Error(error.message);}return true;}
-export async function fetchMyProgress(){const {data:userRes}=await supabase.auth.getUser();const userId=userRes.user?.id;if(!userId)return null;const [progress,stats,attempts,answers]=await Promise.all([supabase.from("user_item_progress").select("item_type, level, status").eq("user_id",userId),supabase.from("user_stats").select("*").eq("user_id",userId).maybeSingle(),supabase.from("quiz_attempts").select("id, level, skill, score, correct_count, total_questions, created_at").eq("user_id",userId).order("created_at",{ascending:false}).limit(10),supabase.from("quiz_answers").select("is_correct, question:question_id (skill, prompt)").eq("user_id",userId).eq("is_correct",false).limit(50)]);return {progress:progress.data??[],stats:stats.data,attempts:attempts.data??[],weak:answers.data??[]};}
-export async function fetchContentTotals(){const [kanji,vocab,grammar,reading,listening]=await Promise.all([supabase.from("kanji").select("id",{count:"exact",head:true}).eq("is_published",true),supabase.from("vocabulary").select("id",{count:"exact",head:true}).eq("is_published",true),supabase.from("grammar_points").select("id",{count:"exact",head:true}).eq("is_published",true),supabase.from("reading_passages").select("id",{count:"exact",head:true}).eq("is_published",true),supabase.from("listening_items").select("id",{count:"exact",head:true}).eq("is_published",true).not("audio_url","is",null)]);return {kanji:kanji.count??0,vocabulary:vocab.count??0,grammar:grammar.count??0,reading:reading.count??0,listening:listening.count??0};}
-export async function fetchRewards(){const {data:userRes}=await supabase.auth.getUser();const userId=userRes.user?.id;if(!userId)return null;const [profile,stats,referrals,grants]=await Promise.all([supabase.from("profiles").select("referral_code, display_name").eq("id",userId).maybeSingle(),supabase.from("user_stats").select("reward_points, total_xp, current_streak").eq("user_id",userId).maybeSingle(),supabase.from("referrals").select("id, code, status, points_awarded, created_at").eq("referrer_id",userId).order("created_at",{ascending:false}),supabase.from("reward_grants").select("id, reward_kind, premium_days, points_spent, created_at").eq("user_id",userId).order("created_at",{ascending:false})]);return {referralCode:profile.data?.referral_code??null,points:stats.data?.reward_points??0,xp:stats.data?.total_xp??0,streak:stats.data?.current_streak??0,referrals:referrals.data??[],grants:grants.data??[]};}
+export type VocabSense = {
+  meaning_id: string;
+  part_of_speech?: string | null;
+  usage_note_id?: string | null;
+  examples?: unknown;
+  source_book?: string | null;
+};
+export type VocabCurriculum = {
+  source_book: string;
+  lesson_number?: number | null;
+  lesson_title?: string | null;
+  source_term?: string | null;
+  source_reading?: string | null;
+  source_meaning_id?: string | null;
+};
+export function asExamples(value: unknown): Example[] {
+  if (!value) return [];
+  const raw = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? (() => {
+          try {
+            return JSON.parse(value);
+          } catch {
+            return [value];
+          }
+        })()
+      : [];
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (typeof item === "string") return { jp: item };
+      if (!item || typeof item !== "object") return {};
+      const x = item as Record<string, unknown>;
+      const jp = x["jp"] ?? x["japanese"] ?? x["ja"] ?? x["sentence"] ?? x["example"];
+      const id = x["id"] ?? x["indonesian"] ?? x["idn"] ?? x["translation_id"];
+      const reading = x["reading"] ?? x["hiragana"];
+      return {
+        jp: typeof jp === "string" && jp.trim() ? jp : undefined,
+        id: typeof id === "string" && id.trim() ? id : undefined,
+        reading: typeof reading === "string" && reading.trim() ? reading : undefined,
+      };
+    })
+    .filter((x) => x.jp || x.id);
+}
+function must<T>(res: { data: T | null; error: { message: string } | null }): T {
+  if (res.error) throw new Error(res.error.message);
+  return (res.data ?? []) as T;
+}
+export async function fetchKanjiList(level: Level) {
+  return must(
+    await supabase
+      .from("kanji")
+      .select(
+        "id, character, level, onyomi, kunyomi, meaning_id, stroke_count, sort_order, source_book, lesson_number, lesson_title",
+      )
+      .eq("level", level)
+      .eq("is_published", true)
+      .order("lesson_number", { ascending: true, nullsFirst: false })
+      .order("sort_order", { ascending: true }),
+  );
+}
+export async function fetchKanjiDetail(id: string) {
+  const kanji = must(
+    await supabase.from("kanji").select("*").eq("id", id).eq("is_published", true).limit(1),
+  );
+  const relations = must(
+    await supabase
+      .from("kanji_relations")
+      .select(
+        "id, note_id, sort_order, related:related_kanji_id (id, character, meaning_id, level)",
+      )
+      .eq("kanji_id", id)
+      .order("sort_order"),
+  );
+  return { kanji: kanji[0] ?? null, relations };
+}
+export async function fetchKanjiStudy(id: string) {
+  const kanjiRows = must(
+    await supabase.from("kanji").select("*").eq("id", id).eq("is_published", true).limit(1),
+  );
+  const kanji = kanjiRows[0] ?? null;
+  if (!kanji) return { kanji: null, examples: [] as Example[], relatedWords: [] as RelatedWord[] };
+  const char = String(kanji.character ?? "");
+  const vocabRows = must(
+    await supabase
+      .from("vocabulary")
+      .select("term, reading, meaning_id, examples")
+      .eq("is_published", true)
+      .ilike("term", `%${char}%`)
+      .limit(8),
+  );
+  const relatedWords: RelatedWord[] = [];
+  const examples: Example[] = [];
+  for (const v of vocabRows as Array<Record<string, unknown>>) {
+    relatedWords.push({
+      term: String(v["term"] ?? ""),
+      reading: v["reading"] ? String(v["reading"]) : null,
+      meaning: v["meaning_id"] ? String(v["meaning_id"]) : null,
+    });
+    examples.push(...asExamples(v["examples"]));
+  }
+  return {
+    kanji,
+    examples: examples.slice(0, 5),
+    relatedWords: relatedWords.filter((v) => v.term),
+  };
+}
+export async function fetchVocabList(level: Level) {
+  const masters = must(
+    await supabase
+      .from("vocabulary")
+      .select(
+        "id, term, reading, romaji, meaning_id, part_of_speech, examples, level, sort_order, source_book, lesson_number, lesson_title",
+      )
+      .eq("level", level)
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true }),
+  ) as Array<Record<string, unknown>>;
+  if (!masters.length) return [];
+  const masterIds = masters.map((v) => String(v["id"]));
+  const [mergeRes, curriculumRes, sensesRes] = await Promise.all([
+    supabase.from("vocabulary_merge_map").select("duplicate_id").in("duplicate_id", masterIds),
+    supabase
+      .from("vocabulary_curriculum")
+      .select(
+        "vocabulary_id, source_book, lesson_number, lesson_title, source_term, source_reading, source_meaning_id",
+      )
+      .in("vocabulary_id", masterIds)
+      .order("lesson_number", { ascending: true, nullsFirst: false }),
+    supabase
+      .from("vocabulary_senses")
+      .select("vocabulary_id, meaning_id, part_of_speech, usage_note_id, examples, source_book")
+      .in("vocabulary_id", masterIds),
+  ]);
+  const hiddenIds = new Set(
+    (must(mergeRes) as Array<Record<string, unknown>>).map((row) => String(row["duplicate_id"])),
+  );
+  const visibleMasters = masters.filter((row) => !hiddenIds.has(String(row["id"])));
+  const curriculum = must(curriculumRes) as Array<Record<string, unknown>>;
+  const senses = must(sensesRes) as Array<Record<string, unknown>>;
+  const byCurriculum = new Map<string, VocabCurriculum[]>();
+  const bySense = new Map<string, VocabSense[]>();
+  for (const row of curriculum) {
+    const key = String(row["vocabulary_id"]);
+    const list = byCurriculum.get(key) ?? [];
+    list.push({
+      source_book: String(row["source_book"] ?? ""),
+      lesson_number: typeof row["lesson_number"] === "number" ? row["lesson_number"] : null,
+      lesson_title: row["lesson_title"] ? String(row["lesson_title"]) : null,
+      source_term: row["source_term"] ? String(row["source_term"]) : null,
+      source_reading: row["source_reading"] ? String(row["source_reading"]) : null,
+      source_meaning_id: row["source_meaning_id"] ? String(row["source_meaning_id"]) : null,
+    });
+    byCurriculum.set(key, list);
+  }
+  for (const row of senses) {
+    const key = String(row["vocabulary_id"]);
+    const list = bySense.get(key) ?? [];
+    list.push({
+      meaning_id: String(row["meaning_id"] ?? ""),
+      part_of_speech: row["part_of_speech"] ? String(row["part_of_speech"]) : null,
+      usage_note_id: row["usage_note_id"] ? String(row["usage_note_id"]) : null,
+      examples: row["examples"],
+      source_book: row["source_book"] ? String(row["source_book"]) : null,
+    });
+    bySense.set(key, list);
+  }
+  return visibleMasters.flatMap((v) => {
+    const id = String(v["id"]);
+    const links = byCurriculum.get(id) ?? [];
+    const row = { ...v, senses: bySense.get(id) ?? [], curriculum: links };
+    if (!links.length) return [row];
+    return links.map((link) => ({
+      ...row,
+      source_book: link.source_book || v["source_book"],
+      lesson_number: link.lesson_number,
+      lesson_title: link.lesson_title,
+      source_term: link.source_term,
+      source_reading: link.source_reading,
+      source_meaning_id: link.source_meaning_id,
+    }));
+  });
+}
+export async function fetchGrammarList(level: Level) {
+  return must(
+    await supabase
+      .from("grammar_points")
+      .select(
+        "id, pattern, meaning_id, structure, explanation_id, examples, level, sort_order, source_book, lesson_number, lesson_title",
+      )
+      .eq("level", level)
+      .eq("is_published", true)
+      .order("lesson_number", { ascending: true, nullsFirst: false })
+      .order("sort_order", { ascending: true }),
+  );
+}
+export async function fetchPassages() {
+  return must(
+    await supabase
+      .from("reading_passages")
+      .select(
+        "id, title, level, body_jp, translation_id, estimated_minutes, sort_order, source_book, lesson_number, lesson_title",
+      )
+      .eq("is_published", true)
+      .order("level")
+      .order("lesson_number", { ascending: true, nullsFirst: false })
+      .order("sort_order", { ascending: true }),
+  );
+}
+export async function fetchPassageDetail(id: string) {
+  const passages = must(
+    await supabase
+      .from("reading_passages")
+      .select("*")
+      .eq("id", id)
+      .eq("is_published", true)
+      .limit(1),
+  );
+  const questions = must(
+    await supabase
+      .from("questions")
+      .select("id, prompt, prompt_note, choices, correct_index, explanation_id")
+      .eq("passage_id", id)
+      .eq("is_published", true),
+  );
+  return { passage: passages[0] ?? null, questions };
+}
+export async function fetchListeningList() {
+  return must(
+    await supabase
+      .from("listening_items")
+      .select(
+        "id, title, level, duration_seconds, sort_order, audio_url, source, source_book, lesson_number, lesson_title",
+      )
+      .eq("is_published", true)
+      .not("audio_url", "is", null)
+      .order("level")
+      .order("lesson_number", { ascending: true, nullsFirst: false })
+      .order("sort_order", { ascending: true }),
+  );
+}
+export async function fetchListeningDetail(id: string) {
+  const items = must(
+    await supabase
+      .from("listening_items")
+      .select("*")
+      .eq("id", id)
+      .eq("is_published", true)
+      .not("audio_url", "is", null)
+      .limit(1),
+  );
+  const questions = must(
+    await supabase
+      .from("questions")
+      .select("id, prompt, choices, correct_index, explanation_id")
+      .eq("listening_id", id)
+      .eq("is_published", true),
+  );
+  return { item: items[0] ?? null, questions };
+}
+export async function fetchQuizzes() {
+  return must(
+    await supabase
+      .from("quizzes")
+      .select(
+        "id, slug, title, description, level, skill, question_count, time_limit_seconds, sort_order",
+      )
+      .eq("is_published", true)
+      .order("level")
+      .order("sort_order"),
+  );
+}
+export type RunnerQuestion = {
+  id: string;
+  prompt: string;
+  prompt_note: string | null;
+  choices: string[];
+  correct_index: number;
+  explanation_id: string | null;
+};
+function toRunnerQuestions(rows: unknown[]): RunnerQuestion[] {
+  return (rows as Array<Record<string, unknown>>).map((q) => ({
+    id: String(q["id"]),
+    prompt: String(q["prompt"]),
+    prompt_note: (q["prompt_note"] as string | null) ?? null,
+    choices: Array.isArray(q["choices"]) ? (q["choices"] as string[]).map(String) : [],
+    correct_index: Number(q["correct_index"]),
+    explanation_id: (q["explanation_id"] as string | null) ?? null,
+  }));
+}
+export async function fetchQuizBySlug(slug: string) {
+  const quizzes = must(
+    await supabase.from("quizzes").select("*").eq("slug", slug).eq("is_published", true).limit(1),
+  );
+  const quiz = quizzes[0] ?? null;
+  if (!quiz) return { quiz: null, questions: [] as RunnerQuestion[] };
+  const rows = must(
+    await supabase
+      .from("quiz_questions")
+      .select(
+        "sort_order, question:question_id (id, prompt, prompt_note, choices, correct_index, explanation_id, is_published)",
+      )
+      .eq("quiz_id", quiz.id)
+      .order("sort_order"),
+  ) as Array<{ question: Record<string, unknown> | null }>;
+  return {
+    quiz,
+    questions: toRunnerQuestions(
+      rows
+        .map((r) => r.question)
+        .filter((q): q is Record<string, unknown> => !!q && q["is_published"] === true),
+    ),
+  };
+}
+export type SimSkillGroup = "vocabulary_grammar" | "reading" | "listening";
+export async function fetchSimulationQuestions(level: Level, group: SimSkillGroup) {
+  const skills: Array<"kanji" | "vocabulary" | "grammar" | "reading" | "listening"> =
+    group === "vocabulary_grammar"
+      ? ["vocabulary", "grammar", "kanji"]
+      : group === "reading"
+        ? ["reading"]
+        : ["listening"];
+  const rows = must(
+    await supabase
+      .from("questions")
+      .select("id, prompt, prompt_note, choices, correct_index, explanation_id, level, skill")
+      .eq("is_published", true)
+      .eq("level", level)
+      .in("skill", skills)
+      .limit(12),
+  );
+  return toRunnerQuestions(rows as unknown[]);
+}
+type PracticeQuizRow = {
+  correct_count: number;
+  total_questions: number;
+  score: number;
+  xp_earned: number;
+};
+/**
+ * Saves a practice quiz. The server grades the answers against the published question bank and
+ * decides score and XP; the client only reports which option was picked for each question.
+ */
+export async function submitPracticeQuiz(input: {
+  level: Level;
+  skill: "kanji" | "vocabulary" | "grammar" | "reading" | "listening" | null;
+  durationSeconds: number;
+  answers: Array<{ questionId: string; selectedIndex: number }>;
+}): Promise<
+  | { ok: true; correct: number; total: number; score: number; xp: number }
+  | { ok: false; message: string }
+> {
+  // submit_practice_quiz is typed locally: src/integrations/supabase/types.ts is regenerated from the
+  // live database by CI, so it only knows the function once the migration has been applied.
+  const rpc = supabase.rpc.bind(supabase) as unknown as (
+    fn: "submit_practice_quiz",
+    args: Record<string, unknown>,
+  ) => Promise<{ data: PracticeQuizRow | null; error: { message: string } | null }>;
+  const { data, error } = await rpc("submit_practice_quiz", {
+    p_level: input.level,
+    p_skill: input.skill,
+    p_duration_seconds: Math.max(0, Math.round(input.durationSeconds)),
+    p_answers: input.answers.map((a) => ({
+      questionId: a.questionId,
+      selectedIndex: a.selectedIndex,
+    })),
+  });
+  if (error || !data) {
+    console.error("submitPracticeQuiz failed", error);
+    return { ok: false, message: error?.message || "Hasil tidak dapat disimpan." };
+  }
+  return {
+    ok: true,
+    correct: data.correct_count,
+    total: data.total_questions,
+    score: Number(data.score),
+    xp: data.xp_earned,
+  };
+}
+export type LearnableItemType = "kanji" | "vocabulary" | "grammar" | "reading" | "listening";
+async function currentUserId() {
+  const { data } = await supabase.auth.getUser();
+  const id = data.user?.id;
+  if (!id) throw new Error("Sesi tidak ditemukan.");
+  return id;
+}
+export async function markItemLearned(input: {
+  itemType: LearnableItemType;
+  itemId: string;
+  level: Level;
+}) {
+  const userId = await currentUserId();
+  const { data: existing, error: readError } = await supabase
+    .from("user_item_progress")
+    .select("id,status")
+    .eq("user_id", userId)
+    .eq("item_type", input.itemType)
+    .eq("item_id", input.itemId)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (existing && existing.status !== "new") return false;
+  const due = new Date();
+  due.setDate(due.getDate() + 1);
+  if (existing) {
+    const { error } = await supabase
+      .from("user_item_progress")
+      .update({
+        status: "learning",
+        repetitions: 1,
+        last_reviewed_at: new Date().toISOString(),
+        due_at: due.toISOString(),
+      })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("user_item_progress").insert({
+      user_id: userId,
+      item_type: input.itemType,
+      item_id: input.itemId,
+      level: input.level,
+      status: "learning",
+      repetitions: 1,
+      last_reviewed_at: new Date().toISOString(),
+      due_at: due.toISOString(),
+    });
+    if (error) throw new Error(error.message);
+  }
+  const { error: activityError } = await supabase.rpc("record_learning_activity", {
+    p_activity_type: "lesson_completed",
+    p_content_type: input.itemType,
+    p_content_id: input.itemId,
+    p_points: 5,
+    p_xp: 5,
+    p_correct: null,
+    p_duration_seconds: 60,
+    p_metadata: { level: input.level, repetition: 1 },
+  });
+  if (activityError) throw new Error(activityError.message);
+  return true;
+}
+export async function addItemToReview(input: {
+  itemType: LearnableItemType;
+  itemId: string;
+  level: Level;
+}) {
+  const userId = await currentUserId();
+  const due = new Date().toISOString();
+  const { data: existing, error: readError } = await supabase
+    .from("user_item_progress")
+    .select("id,status")
+    .eq("user_id", userId)
+    .eq("item_type", input.itemType)
+    .eq("item_id", input.itemId)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (existing?.status === "review") return false;
+  if (existing) {
+    const { error } = await supabase
+      .from("user_item_progress")
+      .update({ status: "review", due_at: due })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("user_item_progress").insert({
+      user_id: userId,
+      item_type: input.itemType,
+      item_id: input.itemId,
+      level: input.level,
+      status: "review",
+      repetitions: 0,
+      due_at: due,
+    });
+    if (error) throw new Error(error.message);
+  }
+  return true;
+}
+export async function fetchMyProgress() {
+  const { data: userRes } = await supabase.auth.getUser();
+  const userId = userRes.user?.id;
+  if (!userId) return null;
+  const [progress, stats, attempts, answers] = await Promise.all([
+    supabase.from("user_item_progress").select("item_type, level, status").eq("user_id", userId),
+    supabase.from("user_stats").select("*").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("quiz_attempts")
+      .select("id, level, skill, score, correct_count, total_questions, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("quiz_answers")
+      .select("is_correct, question:question_id (skill, prompt)")
+      .eq("user_id", userId)
+      .eq("is_correct", false)
+      .limit(50),
+  ]);
+  return {
+    progress: progress.data ?? [],
+    stats: stats.data,
+    attempts: attempts.data ?? [],
+    weak: answers.data ?? [],
+  };
+}
+export async function fetchContentTotals() {
+  const [kanji, vocab, grammar, reading, listening] = await Promise.all([
+    supabase.from("kanji").select("id", { count: "exact", head: true }).eq("is_published", true),
+    supabase
+      .from("vocabulary")
+      .select("id", { count: "exact", head: true })
+      .eq("is_published", true),
+    supabase
+      .from("grammar_points")
+      .select("id", { count: "exact", head: true })
+      .eq("is_published", true),
+    supabase
+      .from("reading_passages")
+      .select("id", { count: "exact", head: true })
+      .eq("is_published", true),
+    supabase
+      .from("listening_items")
+      .select("id", { count: "exact", head: true })
+      .eq("is_published", true)
+      .not("audio_url", "is", null),
+  ]);
+  return {
+    kanji: kanji.count ?? 0,
+    vocabulary: vocab.count ?? 0,
+    grammar: grammar.count ?? 0,
+    reading: reading.count ?? 0,
+    listening: listening.count ?? 0,
+  };
+}
+export async function fetchRewards() {
+  const { data: userRes } = await supabase.auth.getUser();
+  const userId = userRes.user?.id;
+  if (!userId) return null;
+  const [profile, stats, referrals, grants] = await Promise.all([
+    supabase.from("profiles").select("referral_code, display_name").eq("id", userId).maybeSingle(),
+    supabase
+      .from("user_stats")
+      .select("reward_points, total_xp, current_streak")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("referrals")
+      .select("id, code, status, points_awarded, created_at")
+      .eq("referrer_id", userId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("reward_grants")
+      .select("id, reward_kind, premium_days, points_spent, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false }),
+  ]);
+  return {
+    referralCode: profile.data?.referral_code ?? null,
+    points: stats.data?.reward_points ?? 0,
+    xp: stats.data?.total_xp ?? 0,
+    streak: stats.data?.current_streak ?? 0,
+    referrals: referrals.data ?? [],
+    grants: grants.data ?? [],
+  };
+}

@@ -27,7 +27,7 @@ type Review = {
 async function fetchReviews(level: Level) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return [] as Review[];
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("flashcard_reviews")
     .select("item_type,item_id,rating,aspect,used_hint,response_ms,created_at")
     .eq("user_id", userData.user.id)
@@ -83,12 +83,9 @@ function HafalanHistoryPage() {
 
   const rows = reviews.data ?? [];
   const names = new Map<string, string>();
-  for (const item of (kanji.data ?? []) as any[])
-    names.set(`kanji:${item.id}`, item.character ?? "Kanji");
-  for (const item of (vocab.data ?? []) as any[])
-    names.set(`vocabulary:${item.id}`, item.term ?? "Kotoba");
-  for (const item of (grammar.data ?? []) as any[])
-    names.set(`grammar:${item.id}`, item.pattern ?? "Bunpou");
+  for (const item of kanji.data ?? []) names.set(`kanji:${item.id}`, item.character ?? "Kanji");
+  for (const item of vocab.data ?? []) names.set(`vocabulary:${item.id}`, item.term ?? "Kotoba");
+  for (const item of grammar.data ?? []) names.set(`grammar:${item.id}`, item.pattern ?? "Bunpou");
 
   const total = rows.length;
   const correct = rows.filter((row) => row.rating >= 2).length;

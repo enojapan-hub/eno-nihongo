@@ -7,6 +7,14 @@ import {
   isValidCallbackSignature,
 } from "@/lib/duitku.server";
 
+type FinalizeDuitkuArgs = {
+  p_merchant_order_id: string;
+  p_provider_reference: string | null;
+  p_payment_method: string | null;
+  p_event_key: string;
+  p_payload: Record<string, string>;
+};
+
 export const Route = createFileRoute("/pembayaran/duitku/callback")({
   server: {
     handlers: {
@@ -25,42 +33,67 @@ export const Route = createFileRoute("/pembayaran/duitku/callback")({
           if (!merchantOrderId || merchantCode !== expectedMerchantCode || !amount || !signature) {
             return new Response("Invalid payment callback", { status: 400 });
           }
-          const expectedSignature = createCallbackSignature(merchantCode, amount, merchantOrderId, apiKey);
+          const expectedSignature = createCallbackSignature(
+            merchantCode,
+            amount,
+            merchantOrderId,
+            apiKey,
+          );
           if (!isValidCallbackSignature(expectedSignature, signature)) {
             return new Response("Invalid payment callback signature", { status: 401 });
           }
 
-          const admin = supabaseAdmin as any;
+          const admin = supabaseAdmin;
           const { data: order, error: orderError } = await admin
             .from("payment_orders")
             .select("id,plan,amount_idr,status")
             .eq("merchant_order_id", merchantOrderId)
             .maybeSingle();
           if (orderError) throw new Error(orderError.message);
-          if (!order || Number(order.amount_idr) !== Number(amount) || !isDuitkuPlanCode(order.plan)) {
+          if (
+            !order ||
+            Number(order.amount_idr) !== Number(amount) ||
+            !isDuitkuPlanCode(order.plan)
+          ) {
             return new Response("Payment order not found", { status: 404 });
           }
 
-          const callbackPayload = Object.fromEntries(form.entries());
+          // Callback Duitku berupa form urlencoded, jadi semua nilai bertipe string.
+          const callbackPayload = Object.fromEntries(form.entries()) as Record<string, string>;
           if (resultCode !== "00") {
             const eventKey = `${merchantOrderId}:${resultCode}:${reference || "none"}`;
-            await admin.from("payment_webhook_events").upsert({
-              provider: "duitku",
-              event_key: eventKey,
-              merchant_order_id: merchantOrderId,
-              status: "received",
-              payload: callbackPayload,
-            }, { onConflict: "provider,event_key" });
-            await admin.from("payment_orders").update({
-              status: resultCode === "01" ? "failed" : "cancelled",
-              provider_reference: reference || null,
-              updated_at: new Date().toISOString(),
-            }).eq("id", order.id).neq("status", "paid");
+            await admin.from("payment_webhook_events").upsert(
+              {
+                provider: "duitku",
+                event_key: eventKey,
+                merchant_order_id: merchantOrderId,
+                status: "received",
+                payload: callbackPayload,
+              },
+              { onConflict: "provider,event_key" },
+            );
+            await admin
+              .from("payment_orders")
+              .update({
+                status: resultCode === "01" ? "failed" : "cancelled",
+                provider_reference: reference || null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", order.id)
+              .neq("status", "paid");
             return new Response("OK", { status: 200 });
           }
 
           const eventKey = `${merchantOrderId}:00:${reference || "paid"}`;
-          const { error: finalizeError } = await admin.rpc("finalize_duitku_payment", {
+          // Argumen referensi/metode boleh null di fungsi database; tipe generated menyebutnya string.
+          const { error: finalizeError } = await (
+            admin as unknown as {
+              rpc(
+                name: "finalize_duitku_payment",
+                args: FinalizeDuitkuArgs,
+              ): PromiseLike<{ error: { message: string } | null }>;
+            }
+          ).rpc("finalize_duitku_payment", {
             p_merchant_order_id: merchantOrderId,
             p_provider_reference: reference || null,
             p_payment_method: paymentCode || null,

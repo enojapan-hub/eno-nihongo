@@ -53,11 +53,21 @@ const sections = [
   {
     title: "Operasional",
     items: [
-      ["Kontrol Operasional", ClipboardCheck, "Review, laporan dan pengumuman", "/admin-operasional"],
+      [
+        "Kontrol Operasional",
+        ClipboardCheck,
+        "Review, laporan dan pengumuman",
+        "/admin-operasional",
+      ],
       ["Media Manager", Image, "Upload, preview dan safe-delete media", "/admin-media"],
       ["Import / Export", FileUp, "Import aman, validasi dan ekspor data", "/admin-import-export"],
       ["Sistem & Audit", CloudCog, "Kesehatan sistem dan audit log", "/admin-sistem"],
-      ["Role & Permission", Settings, "Role dinamis, permission dan anggota", "/admin-role-permission"],
+      [
+        "Role & Permission",
+        Settings,
+        "Role dinamis, permission dan anggota",
+        "/admin-role-permission",
+      ],
       ["Pengaturan Platform", Settings, "Konfigurasi global aplikasi", "/admin-pengaturan"],
     ],
   },
@@ -67,14 +77,59 @@ function formatNumber(value: unknown) {
   return Number(value || 0).toLocaleString("id-ID");
 }
 
+interface ActionItem {
+  key: string;
+  label: string;
+  count: number | string;
+  severity?: string;
+}
+interface AdminOverview {
+  users?: number;
+  premium_users?: number;
+  lifetime_users?: number;
+  classes?: number;
+  classes_published?: number;
+  classes_review?: number;
+  quiz_attempts?: number;
+  kanji?: number;
+  vocabulary?: number;
+  grammar?: number;
+  reading?: number;
+  listening?: number;
+}
+// Tujuan tiap antrean aksi. Href dari database memuat query string, sehingga dipetakan ke route bertipe.
+const actionTargets = {
+  classes: { to: "/admin-kelas" },
+  reports: { to: "/admin-operasional", search: { tab: "laporan" } },
+  content_fix: { to: "/admin-operasional", search: { tab: "review" } },
+  payments: { to: "/admin-keuangan" },
+  imports: { to: "/admin-import-export" },
+} as const;
+function isActionKey(key: string): key is keyof typeof actionTargets {
+  return key in actionTargets;
+}
+// get_admin_action_queue raises 'forbidden' for accounts without the view permissions; that is an
+// access decision, not a failure, so only other errors are surfaced to the admin.
+function isForbiddenError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : (error as { message?: string })?.message;
+  return typeof message === "string" && message.toLowerCase().includes("forbidden");
+}
 function Page() {
-  const actions = useQuery({queryKey:["admin-action-queue"],queryFn:async()=>{const {data,error}=await (supabase as any).rpc("get_admin_action_queue");if(error)throw error;return (data||[]) as any[]},retry:false});
+  const actions = useQuery({
+    queryKey: ["admin-action-queue"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_admin_action_queue");
+      if (error) throw error;
+      return (data || []) as unknown as ActionItem[];
+    },
+    retry: false,
+  });
   const q = useQuery({
     queryKey: ["admin-overview"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_admin_overview");
+      const { data, error } = await supabase.rpc("get_admin_overview");
       if (error) throw error;
-      return data as any;
+      return data as unknown as AdminOverview;
     },
     retry: false,
   });
@@ -103,7 +158,7 @@ function Page() {
       </AppShell>
     );
 
-  const o = q.data || {};
+  const o: AdminOverview = q.data || {};
   const contentTotal =
     Number(o.kanji || 0) +
     Number(o.vocabulary || 0) +
@@ -112,7 +167,12 @@ function Page() {
     Number(o.listening || 0);
 
   const metrics = [
-    ["Total Pengguna", o.users, Users, `${formatNumber(o.premium_users)} Premium · ${formatNumber(o.lifetime_users)} Lifetime`],
+    [
+      "Total Pengguna",
+      o.users,
+      Users,
+      `${formatNumber(o.premium_users)} Premium · ${formatNumber(o.lifetime_users)} Lifetime`,
+    ],
     ["Konten Aktif", contentTotal, BookOpen, "Materi terpublikasi"],
     ["Kelas", o.classes, GraduationCap, `${formatNumber(o.classes_published)} aktif`],
     ["Aktivitas Kuis", o.quiz_attempts, Activity, "Total pengerjaan kelas"],
@@ -131,7 +191,9 @@ function Page() {
                   <Crown className="size-3.5" /> OWNER CONTROL CENTER
                 </div>
                 <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">ENO NIHONGO</h1>
-                <p className="mt-1 text-sm font-semibold text-white/75">Administration & Operations</p>
+                <p className="mt-1 text-sm font-semibold text-white/75">
+                  Administration & Operations
+                </p>
               </div>
               <div className="flex items-center gap-2 rounded-2xl border border-white/15 bg-black/10 px-3 py-2 text-xs backdrop-blur">
                 <span className="size-2 rounded-full bg-emerald-300" />
@@ -173,12 +235,67 @@ function Page() {
           </Link>
         )}
 
-        {actions.isSuccess && actions.data.some((x:any)=>Number(x.count)>0) && <section><div className="mb-3"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Action Queue</p><h2 className="text-lg font-black">Perlu tindakan</h2></div><div className="grid gap-2 sm:grid-cols-2">{actions.data.filter((x:any)=>Number(x.count)>0).map((x:any)=><Link key={x.key} to={x.href as any} className="flex items-center gap-3 rounded-2xl border p-3 transition hover:border-primary/30"><span className={x.severity==="critical"?"grid size-9 place-items-center rounded-xl bg-destructive/10 font-black text-destructive":"grid size-9 place-items-center rounded-xl bg-amber-500/10 font-black text-amber-700"}>{x.count}</span><div className="flex-1"><p className="text-xs font-black">{x.label}</p><p className="text-[10px] text-muted-foreground">Buka untuk ditangani</p></div><ChevronRight className="size-4 text-muted-foreground"/></Link>)}</div></section>}
+        {actions.isError && !isForbiddenError(actions.error) && (
+          <div
+            role="alert"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-3"
+          >
+            <p className="text-xs font-semibold text-destructive">
+              Antrean tindakan gagal dimuat. Data lain di halaman ini tetap akurat.
+            </p>
+            <button
+              type="button"
+              onClick={() => void actions.refetch()}
+              className="shrink-0 rounded-lg border border-destructive/30 px-3 py-1.5 text-[11px] font-bold text-destructive"
+            >
+              Coba lagi
+            </button>
+          </div>
+        )}
+
+        {actions.isSuccess && actions.data.some((x) => Number(x.count) > 0) && (
+          <section>
+            <div className="mb-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                Action Queue
+              </p>
+              <h2 className="text-lg font-black">Perlu tindakan</h2>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {actions.data
+                .filter((x) => Number(x.count) > 0 && isActionKey(x.key))
+                .map((x) => (
+                  <Link
+                    key={x.key}
+                    {...actionTargets[x.key as keyof typeof actionTargets]}
+                    className="flex items-center gap-3 rounded-2xl border p-3 transition hover:border-primary/30"
+                  >
+                    <span
+                      className={
+                        x.severity === "critical"
+                          ? "grid size-9 place-items-center rounded-xl bg-destructive/10 font-black text-destructive"
+                          : "grid size-9 place-items-center rounded-xl bg-amber-500/10 font-black text-amber-700"
+                      }
+                    >
+                      {x.count}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-xs font-black">{x.label}</p>
+                      <p className="text-[10px] text-muted-foreground">Buka untuk ditangani</p>
+                    </div>
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  </Link>
+                ))}
+            </div>
+          </section>
+        )}
 
         <section>
           <div className="mb-3 flex items-end justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Overview</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                Overview
+              </p>
               <h2 className="text-lg font-black">Kondisi platform</h2>
             </div>
             <span className="hidden items-center gap-1 text-[10px] text-muted-foreground sm:flex">
@@ -228,7 +345,9 @@ function Page() {
                         )}
                       </div>
                       <h3 className="mt-2 text-sm font-black sm:mt-4">{label}</h3>
-                      <p className="mt-0.5 line-clamp-1 flex-1 text-[10px] leading-relaxed text-muted-foreground">{desc}</p>
+                      <p className="mt-0.5 line-clamp-1 flex-1 text-[10px] leading-relaxed text-muted-foreground">
+                        {desc}
+                      </p>
                       <p className="mt-1.5 text-[10px] font-bold text-primary sm:mt-4">
                         {to ? "Kelola →" : "Menunggu Duitku"}
                       </p>
@@ -236,7 +355,7 @@ function Page() {
                   </Card>
                 );
                 return to ? (
-                  <Link key={label} to={to as any} className="block">
+                  <Link key={label} to={to} className="block">
                     {body}
                   </Link>
                 ) : (

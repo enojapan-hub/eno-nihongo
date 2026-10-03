@@ -1,1 +1,104 @@
-import{createFileRoute}from'@tanstack/react-router';import{useCallback,useEffect,useState}from'react';import{AppShell}from'@/components/layout/AppShell';import{Button}from'@/components/ui/button';import{Card,CardContent}from'@/components/ui/card';import{supabase}from'@/integrations/supabase/client';export const Route=createFileRoute('/_authenticated/admin-terjemahan')({component:Page});type Kind='kanji'|'vocabulary'|'grammar'|'reading';async function headers(){const{data}=await supabase.auth.getSession();const token=data.session?.access_token;if(!token)throw Error('Sesi login tidak ditemukan.');return{Authorization:`Bearer ${token}`,'Content-Type':'application/json'}}function Page(){const[kind,setKind]=useState<Kind>('vocabulary'),[stats,setStats]=useState<any>({}),[busy,setBusy]=useState(false),[message,setMessage]=useState('');const load=useCallback(async()=>{const r=await fetch('/api/admin-translation',{headers:await headers()});const d=await r.json();if(!r.ok)throw Error(d.error||'Gagal memuat statistik');setStats(d)},[]);useEffect(()=>{load().catch(e=>setMessage(e.message))},[load]);async function run(){setBusy(true);setMessage('Memproses batch…');try{const r=await fetch('/api/admin-translation',{method:'POST',headers:await headers(),body:JSON.stringify({sourceType:kind,limit:50})});const d=await r.json();if(!r.ok)throw Error(d.error||'Batch gagal');setMessage(`${d.processed||0} item ${kind} berhasil diproses.`);await load()}catch(e:any){setMessage(e.message)}finally{setBusy(false)}}return <AppShell title="Terjemahan Indonesia" backTo="/admin"><div className="mx-auto max-w-4xl space-y-4"><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{[['Kanji',stats.kanji],['Kosakata',stats.vocabulary],['Bunpou',stats.grammar],['Dokkai',stats.reading]].map(([l,v])=><Card key={String(l)}><CardContent className="p-3"><p className="text-[10px] text-muted-foreground">{l}</p><p className="text-xl font-black">{String(v||0)}</p></CardContent></Card>)}</div><Card><CardContent className="space-y-4 p-4"><div><p className="font-black">Batch Terjemahan</p><p className="text-xs text-muted-foreground">Memproses field Indonesia yang masih kosong dari sumber Inggris. Maksimal 50 item per eksekusi.</p></div><div className="flex flex-wrap gap-2">{([['kanji','Kanji'],['vocabulary','Kosakata'],['grammar','Bunpou'],['reading','Dokkai']]as const).map(([id,l])=><Button key={id} size="sm" variant={kind===id?'default':'outline'} onClick={()=>setKind(id)}>{l}</Button>)}</div><Button disabled={busy} onClick={run}>{busy?'Memproses…':`Proses 50 ${kind}`}</Button>{message&&<p className="rounded-xl bg-muted p-3 text-xs">{message}</p>}</CardContent></Card></div></AppShell>}
+import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+import { AppShell } from "@/components/layout/AppShell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+export const Route = createFileRoute("/_authenticated/admin-terjemahan")({ component: Page });
+type Kind = "kanji" | "vocabulary" | "grammar" | "reading";
+async function headers() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw Error("Sesi login tidak ditemukan.");
+  return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+}
+type TranslationStats = Partial<Record<"kanji" | "vocabulary" | "grammar" | "reading", number>>;
+function Page() {
+  const [kind, setKind] = useState<Kind>("vocabulary"),
+    [stats, setStats] = useState<TranslationStats>({}),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState("");
+  const load = useCallback(async () => {
+    const r = await fetch("/api/admin-translation", { headers: await headers() });
+    const d = await r.json();
+    if (!r.ok) throw Error(d.error || "Gagal memuat statistik");
+    setStats(d);
+  }, []);
+  useEffect(() => {
+    load().catch((e) => setMessage(e.message));
+  }, [load]);
+  async function run() {
+    setBusy(true);
+    setMessage("Memproses batch…");
+    try {
+      const r = await fetch("/api/admin-translation", {
+        method: "POST",
+        headers: await headers(),
+        body: JSON.stringify({ sourceType: kind, limit: 50 }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw Error(d.error || "Batch gagal");
+      setMessage(`${d.processed || 0} item ${kind} berhasil diproses.`);
+      await load();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Batch gagal");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <AppShell title="Terjemahan Indonesia" backTo="/admin">
+      <div className="mx-auto max-w-4xl space-y-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            ["Kanji", stats.kanji],
+            ["Kosakata", stats.vocabulary],
+            ["Bunpou", stats.grammar],
+            ["Dokkai", stats.reading],
+          ].map(([l, v]) => (
+            <Card key={String(l)}>
+              <CardContent className="p-3">
+                <p className="text-[10px] text-muted-foreground">{l}</p>
+                <p className="text-xl font-black">{String(v || 0)}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardContent className="space-y-4 p-4">
+            <div>
+              <p className="font-black">Batch Terjemahan</p>
+              <p className="text-xs text-muted-foreground">
+                Memproses field Indonesia yang masih kosong dari sumber Inggris. Maksimal 50 item
+                per eksekusi.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["kanji", "Kanji"],
+                  ["vocabulary", "Kosakata"],
+                  ["grammar", "Bunpou"],
+                  ["reading", "Dokkai"],
+                ] as const
+              ).map(([id, l]) => (
+                <Button
+                  key={id}
+                  size="sm"
+                  variant={kind === id ? "default" : "outline"}
+                  onClick={() => setKind(id)}
+                >
+                  {l}
+                </Button>
+              ))}
+            </div>
+            <Button disabled={busy} onClick={run}>
+              {busy ? "Memproses…" : `Proses 50 ${kind}`}
+            </Button>
+            {message && <p className="rounded-xl bg-muted p-3 text-xs">{message}</p>}
+          </CardContent>
+        </Card>
+      </div>
+    </AppShell>
+  );
+}

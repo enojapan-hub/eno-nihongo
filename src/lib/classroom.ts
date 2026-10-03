@@ -1,10 +1,45 @@
 import { supabase } from "@/integrations/supabase/client";
-export const classroom = supabase as any;
+export const classroom = supabase;
 export const categories = ["Umum", "Kosakata", "Kanji", "Tata bahasa", "Membaca", "Menyimak"];
-export async function result<T = any>(request: PromiseLike<{ data: T; error: any }>): Promise<T> {
-  const { data, error } = await request;
-  if (error) throw new Error(error.message || "Data kelas gagal diproses.");
-  return data;
+type QueryResponse = { data: unknown; error: { message?: string } | null };
+// Tanpa argumen tipe: tipe data diambil dari cabang sukses (error: null) union respons PostgREST, sehingga
+// akurat untuk list, single, dan maybeSingle. Dengan argumen tipe eksplisit (RPC yang mengembalikan JSON),
+// pemanggil menyatakan bentuk datanya.
+export async function result<R extends QueryResponse>(
+  request: PromiseLike<R>,
+): Promise<Extract<R, { error: null }>["data"]>;
+export async function result<T>(request: PromiseLike<QueryResponse>): Promise<T>;
+export async function result(request: PromiseLike<QueryResponse>): Promise<unknown> {
+  const response = await request;
+  if (response.error) throw new Error(response.error.message || "Data kelas gagal diproses.");
+  return response.data;
+}
+export type ClassContentTable =
+  | "class_materials"
+  | "class_assignments"
+  | "class_quizzes"
+  | "class_announcements"
+  | "class_schedule";
+export type ClassRecord = Record<string, unknown>;
+type ClassContentQuery = PromiseLike<
+  { data: ClassRecord[]; error: null } | { data: null; error: { message?: string } }
+> & {
+  eq(column: string, value: unknown): ClassContentQuery;
+  order(column: string, options?: { ascending?: boolean }): ClassContentQuery;
+};
+type ClassContentTableApi = {
+  select(columns?: string): ClassContentQuery;
+  insert(row: ClassRecord): ClassContentQuery;
+  update(row: ClassRecord): ClassContentQuery;
+  delete(): ClassContentQuery;
+};
+// Halaman konten guru memilih tabel saat runtime (tab). Union nama tabel membuat tipe PostgREST terlalu dalam,
+// jadi permukaan yang dipakai dinyatakan secara eksplisit di sini (bukan any).
+export function classContentTable(name: ClassContentTable): ClassContentTableApi {
+  return supabase.from(name) as unknown as ClassContentTableApi;
+}
+export function errorMessage(error: unknown, fallback = "Terjadi kesalahan.") {
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 export function localDateTime(value?: string | null) {
   if (!value) return "";

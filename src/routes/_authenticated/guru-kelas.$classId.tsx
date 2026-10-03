@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { classroom, result, localDateTime, isoDate } from "@/lib/classroom";
+import type { Database, Tables } from "@/integrations/supabase/types";
+import { classroom, result, localDateTime, isoDate, errorMessage } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/guru-kelas/$classId")({
   component: TeacherClassRoute,
 });
@@ -88,7 +89,9 @@ function Page() {
                   {d.kelas.starts_at && (
                     <p className="text-xs text-muted-foreground">
                       Jadwal kelas: {new Date(d.kelas.starts_at).toLocaleString("id-ID")}
-                      {d.kelas.ends_at ? " – " + new Date(d.kelas.ends_at).toLocaleString("id-ID") : ""}
+                      {d.kelas.ends_at
+                        ? " – " + new Date(d.kelas.ends_at).toLocaleString("id-ID")
+                        : ""}
                     </p>
                   )}
                 </div>
@@ -156,32 +159,34 @@ function Page() {
             {tab === "ringkasan" && (
               <>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {[
+                  {(
                     [
-                      UsersRound,
-                      "Peserta aktif",
-                      d.participants.filter((p: any) => p.status === "active").length,
-                      "bg-sky-500/10 text-sky-600",
-                    ],
-                    [
-                      ClipboardList,
-                      "Tugas terbit",
-                      d.assignments.filter((a: any) => a.is_published).length,
-                      "bg-violet-500/10 text-violet-600",
-                    ],
-                    [
-                      ClipboardCheck,
-                      "Perlu dinilai",
-                      d.submissions.filter((s: any) => s.current_score == null).length,
-                      "bg-amber-500/10 text-amber-600",
-                    ],
-                    [
-                      BarChart3,
-                      "Topik dianalisis",
-                      d.insights.length,
-                      "bg-primary/10 text-primary",
-                    ],
-                  ].map(([Icon, label, value, tone]) => (
+                      [
+                        UsersRound,
+                        "Peserta aktif",
+                        d.participants.filter((p) => p.status === "active").length,
+                        "bg-sky-500/10 text-sky-600",
+                      ],
+                      [
+                        ClipboardList,
+                        "Tugas terbit",
+                        d.assignments.filter((a) => a.is_published).length,
+                        "bg-violet-500/10 text-violet-600",
+                      ],
+                      [
+                        ClipboardCheck,
+                        "Perlu dinilai",
+                        d.submissions.filter((s) => s.current_score == null).length,
+                        "bg-amber-500/10 text-amber-600",
+                      ],
+                      [
+                        BarChart3,
+                        "Topik dianalisis",
+                        d.insights.length,
+                        "bg-primary/10 text-primary",
+                      ],
+                    ] as const
+                  ).map(([Icon, label, value, tone]) => (
                     <Card key={label as string} className="border-border/70 shadow-sm">
                       <CardContent className="flex items-center gap-2.5 p-3">
                         <span
@@ -209,8 +214,8 @@ function Page() {
                         <h2 className="font-black">Persiapan mengajar</h2>
                         <p className="text-xs text-muted-foreground">
                           Buka Peserta & Nilai untuk melihat tugas yang tertinggal, koreksi guru,
-                          dan topik yang perlu diulang. Kuis hanya dapat dikumpulkan satu kali oleh setiap
-                          peserta.
+                          dan topik yang perlu diulang. Kuis hanya dapat dikumpulkan satu kali oleh
+                          setiap peserta.
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" onClick={() => setTab("peserta")}>
@@ -239,28 +244,33 @@ function Page() {
                     <UsersRound className="size-5 text-primary" /> Belum ada peserta.
                   </div>
                 )}
-                {d.participants.map((p: any) => {
-                  const submitted = d.submissions.filter((s: any) => s.user_id === p.user_id);
-                  const published = d.assignments.filter((a: any) => a.is_published);
+                {d.participants.map((p) => {
+                  const submitted = d.submissions.filter((s) => s.user_id === p.user_id);
+                  const published = d.assignments.filter((a) => a.is_published);
                   const missing = published.filter(
-                    (a: any) => !submitted.some((s: any) => s.assignment_id === a.id),
+                    (a) => !submitted.some((s) => s.assignment_id === a.id),
                   );
-                  const scored = submitted.filter((s: any) => s.current_score != null);
+                  const scored = submitted.filter((s) => s.current_score != null);
                   const average = scored.length
                     ? Math.round(
                         scored.reduce(
-                          (n: number, s: any) =>
+                          (n: number, s) =>
                             n + (Number(s.current_score) / Number(s.max_score || 100)) * 100,
                           0,
                         ) / scored.length,
                       )
                     : null;
-                  const topics = d.insights.filter((i: any) => i.user_id === p.user_id);
-                  const attempts = d.attempts.filter((a: any) => a.user_id === p.user_id);
+                  const topics = d.insights.filter((i) => i.user_id === p.user_id);
+                  const attempts = d.attempts.filter((a) => a.user_id === p.user_id);
                   const quizAverage = attempts.length
-                    ? Math.round(attempts.reduce((n: number, a: any) => n + Number(a.score), 0) / attempts.length)
+                    ? Math.round(
+                        attempts.reduce((n: number, a) => n + Number(a.score), 0) / attempts.length,
+                      )
                     : null;
-                  const needsAttention = missing.length > 0 || (average != null && average < 70) || (quizAverage != null && quizAverage < 70);
+                  const needsAttention =
+                    missing.length > 0 ||
+                    (average != null && average < 70) ||
+                    (quizAverage != null && quizAverage < 70);
                   return (
                     <details
                       key={p.user_id}
@@ -299,10 +309,9 @@ function Page() {
                         <h3 className="flex items-center gap-2 font-bold">
                           <ClipboardCheck className="size-4 text-primary" /> Nilai tugas dan koreksi
                         </h3>
-                        {submitted.map((s: any) => {
+                        {submitted.map((s) => {
                           const grade = d.grades.find(
-                            (g: any) =>
-                              g.assignment_id === s.assignment_id && g.user_id === p.user_id,
+                            (g) => g.assignment_id === s.assignment_id && g.user_id === p.user_id,
                           );
                           return (
                             <div key={s.id} className="rounded-xl border bg-muted/40 p-3">
@@ -318,7 +327,7 @@ function Page() {
                           );
                         })}
                         {missing.length > 0 && (
-                          <p>Belum dikumpulkan: {missing.map((a: any) => a.title).join(", ")}</p>
+                          <p>Belum dikumpulkan: {missing.map((a) => a.title).join(", ")}</p>
                         )}
                         <h3 className="flex items-center gap-2 font-bold">
                           <BarChart3 className="size-4 text-primary" /> Kemampuan per topik
@@ -328,7 +337,7 @@ function Page() {
                             Belum ada jawaban kuis untuk dianalisis.
                           </p>
                         ) : (
-                          topics.map((i: any) => (
+                          topics.map((i) => (
                             <div key={i.category + ":" + i.topic} className="space-y-1">
                               <p>
                                 {i.category} / {i.topic}: {Number(i.accuracy)}% ({i.correct_count}/
@@ -355,9 +364,7 @@ function Page() {
                         {attempts.length === 0 ? (
                           <p className="text-muted-foreground">Belum ada kuis yang dikumpulkan.</p>
                         ) : (
-                          attempts.map((a: any) => (
-                            <TeacherQuizAttempt key={a.attempt_id} attempt={a} />
-                          ))
+                          attempts.map((a) => <TeacherQuizAttempt key={a.attempt_id} attempt={a} />)
                         )}
                       </div>
                     </details>
@@ -380,16 +387,22 @@ function Page() {
     </AppShell>
   );
 }
-function TeacherQuizAttempt({ attempt }: { attempt: any }) {
+type QuizAttemptRow =
+  Database["public"]["Functions"]["get_teacher_class_quiz_attempts"]["Returns"][number];
+type QuizReviewRow = Omit<
+  Database["public"]["Functions"]["get_class_quiz_review"]["Returns"][number],
+  "choices"
+> & { choices: string[] | null };
+function TeacherQuizAttempt({ attempt }: { attempt: QuizAttemptRow }) {
   const review = useQuery({
     queryKey: ["teacher-quiz-review", attempt.attempt_id],
     queryFn: () =>
-      result<any[]>(
+      result<QuizReviewRow[]>(
         classroom.rpc("get_class_quiz_review", { p_attempt_id: attempt.attempt_id }),
       ),
     staleTime: Infinity,
   });
-  const wrong = review.data?.filter((row: any) => !row.is_correct) ?? [];
+  const wrong = review.data?.filter((row) => !row.is_correct) ?? [];
   return (
     <details className="rounded-xl border bg-muted/30 p-3">
       <summary className="cursor-pointer list-none">
@@ -411,10 +424,8 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
       </summary>
       <div className="mt-3 space-y-2 border-t pt-3">
         {review.isPending && <p className="text-muted-foreground">Memuat detail jawaban…</p>}
-        {review.isError && (
-          <p className="text-destructive">Detail jawaban gagal dimuat.</p>
-        )}
-        {review.data?.map((row: any, index: number) => {
+        {review.isError && <p className="text-destructive">Detail jawaban gagal dimuat.</p>}
+        {review.data?.map((row, index: number) => {
           const selected = Number(row.selected_index);
           const correct = Number(row.correct_index);
           return (
@@ -422,7 +433,9 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
               key={row.question_id}
               className={
                 "rounded-lg border p-2.5 " +
-                (row.is_correct ? "border-primary/20" : "border-destructive/25 bg-destructive/[0.04]")
+                (row.is_correct
+                  ? "border-primary/20"
+                  : "border-destructive/25 bg-destructive/[0.04]")
               }
             >
               <p className="font-bold">
@@ -430,11 +443,9 @@ function TeacherQuizAttempt({ attempt }: { attempt: any }) {
               </p>
               <p className={row.is_correct ? "text-primary" : "text-destructive"}>
                 {row.is_correct ? "Benar" : "Salah"} · Jawaban peserta:{" "}
-                {selected >= 0 ? row.choices?.[selected] ?? "Tidak valid" : "Tidak dijawab"}
+                {selected >= 0 ? (row.choices?.[selected] ?? "Tidak valid") : "Tidak dijawab"}
               </p>
-              {!row.is_correct && (
-                <p>Jawaban benar: {row.choices?.[correct] ?? "—"}</p>
-              )}
+              {!row.is_correct && <p>Jawaban benar: {row.choices?.[correct] ?? "—"}</p>}
             </div>
           );
         })}
@@ -448,10 +459,10 @@ function Settings({
   refresh,
   leave,
 }: {
-  kelas: any;
-  meeting: any;
-  refresh: () => Promise<any>;
-  leave: () => Promise<any>;
+  kelas: Tables<"classes">;
+  meeting: Tables<"class_meetings"> | null;
+  refresh: () => Promise<unknown>;
+  leave: () => Promise<unknown>;
 }) {
   const [f, setF] = useState({
     title: kelas.title,
@@ -501,8 +512,8 @@ function Settings({
       }
       await refresh();
       setMessage("Perubahan tersimpan.");
-    } catch (e: any) {
-      setMessage(e.message);
+    } catch (e) {
+      setMessage(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -630,7 +641,7 @@ function Settings({
     </Card>
   );
 }
-function Field({ label, children }: { label: string; children: any }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block space-y-1">
       <span className="text-xs font-bold">{label}</span>

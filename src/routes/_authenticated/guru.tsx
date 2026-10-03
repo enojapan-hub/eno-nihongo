@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { LucideIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
@@ -19,7 +20,15 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/guru")({ component: Page });
 type Kind = "kanji" | "vocabulary" | "grammar" | "reading" | "listening";
-const kinds: [Kind, string, any][] = [
+interface TeacherContentRow {
+  id: string;
+  title?: string | null;
+  level?: string | null;
+  subtitle?: string | null;
+  published?: boolean | null;
+  is_published?: boolean | null;
+}
+const kinds: [Kind, string, LucideIcon][] = [
   ["kanji", "Kanji", BookOpen],
   ["vocabulary", "Kosakata", Languages],
   ["grammar", "Bunpou", BookOpen],
@@ -30,13 +39,13 @@ function Page() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"kelas" | "materi" | "saldo">("kelas");
   const [kind, setKind] = useState<Kind>("kanji");
-  const [busyId, setBusyId] = useState<any>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const access = useQuery({
     queryKey: ["teacher-access"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_teacher_console_data");
+      const { data, error } = await supabase.rpc("get_teacher_console_data");
       if (error) throw error;
-      return data as any;
+      return data;
     },
     retry: false,
   });
@@ -47,7 +56,7 @@ function Page() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw Error();
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("classes")
         .select("*")
         .eq("teacher_id", user.id)
@@ -60,19 +69,16 @@ function Page() {
   const rows = useQuery({
     queryKey: ["teacher-content", kind],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_teacher_content", {
-        p_kind: kind,
-        p_level: null,
-      });
+      const { data, error } = await supabase.rpc("get_teacher_content", { p_kind: kind });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as TeacherContentRow[];
     },
     enabled: access.isSuccess && tab === "materi",
   });
-  async function toggle(r: any) {
+  async function toggle(r: TeacherContentRow) {
     setBusyId(r.id);
     const next = !(r.published ?? r.is_published ?? false);
-    const { error } = await (supabase as any).rpc("teacher_set_content_published", {
+    const { error } = await supabase.rpc("teacher_set_content_published", {
       p_kind: kind,
       p_id: r.id,
       p_published: next,
@@ -124,19 +130,21 @@ function Page() {
         ) : tab === "kelas" ? (
           <>
             <div className="grid grid-cols-3 gap-2">
-              {[
-                [GraduationCap, "Kelas", classes.data?.length ?? 0],
+              {(
                 [
-                  ClipboardCheck,
-                  "Review",
-                  (classes.data ?? []).filter((c: any) => c.status === "review").length,
-                ],
-                [
-                  BookOpen,
-                  "Draft",
-                  (classes.data ?? []).filter((c: any) => c.status === "draft").length,
-                ],
-              ].map(([I, l, n]: any) => (
+                  [GraduationCap, "Kelas", classes.data?.length ?? 0],
+                  [
+                    ClipboardCheck,
+                    "Review",
+                    (classes.data ?? []).filter((c) => c.status === "review").length,
+                  ],
+                  [
+                    BookOpen,
+                    "Draft",
+                    (classes.data ?? []).filter((c) => c.status === "draft").length,
+                  ],
+                ] as const
+              ).map(([I, l, n]) => (
                 <Card key={l}>
                   <CardContent className="p-3 text-center">
                     <I className="mx-auto size-5 text-primary" />
@@ -156,7 +164,7 @@ function Page() {
               </Button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              {(classes.data ?? []).map((c: any) => (
+              {(classes.data ?? []).map((c) => (
                 <Link
                   key={c.id}
                   to="/guru-kelas/$classId"
@@ -205,7 +213,7 @@ function Page() {
             <Card>
               <CardContent className="p-3">
                 <p className="mb-2 text-xs font-bold">{rows.data?.length ?? 0} materi</p>
-                {(rows.data ?? []).map((r: any) => {
+                {(rows.data ?? []).map((r) => {
                   const published = Boolean(r.published ?? r.is_published);
                   return (
                     <div key={r.id} className="flex items-center gap-2 border-b py-2 text-xs">
@@ -249,28 +257,53 @@ function TeacherWalletDraft() {
           <div className="flex items-center gap-2">
             <WalletCards className="size-5 text-primary" />
             <h2 className="font-black">Saldo Guru</h2>
-            <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-700">Segera tersedia</span>
+            <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-700">
+              Segera tersedia
+            </span>
           </div>
           <p className="text-xs text-muted-foreground">
             Komisi kelas berbayar akan aktif setelah sistem pembayaran dan pencairan resmi tersedia.
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl border bg-background/70 p-3"><p className="text-[10px] text-muted-foreground">Saldo tersedia</p><b>Rp0</b></div>
-            <div className="rounded-xl border bg-background/70 p-3"><p className="text-[10px] text-muted-foreground">Saldo tertahan</p><b>Rp0</b></div>
+            <div className="rounded-xl border bg-background/70 p-3">
+              <p className="text-[10px] text-muted-foreground">Saldo tersedia</p>
+              <b>Rp0</b>
+            </div>
+            <div className="rounded-xl border bg-background/70 p-3">
+              <p className="text-[10px] text-muted-foreground">Saldo tertahan</p>
+              <b>Rp0</b>
+            </div>
           </div>
         </CardContent>
       </Card>
-      <Card><CardContent className="space-y-2 p-4">
-        <h3 className="font-bold">Pembagian pendapatan</h3>
-        <div className="flex justify-between text-sm"><span>Komisi guru</span><b>80%</b></div>
-        <div className="flex justify-between text-sm"><span>Biaya admin ENO NIHONGO</span><b>20%</b></div>
-        <p className="text-xs text-muted-foreground">Komisi guru tetap tertahan sampai kelas berakhir.</p>
-      </CardContent></Card>
-      <Card><CardContent className="space-y-2 p-4">
-        <h3 className="font-bold">Rekening & penarikan</h3>
-        <p className="text-xs text-muted-foreground">Rekening pencairan, riwayat pendapatan, dan tarik saldo akan diaktifkan bersama backend pembayaran.</p>
-        <Button disabled className="w-full">Tarik Saldo · Segera tersedia</Button>
-      </CardContent></Card>
+      <Card>
+        <CardContent className="space-y-2 p-4">
+          <h3 className="font-bold">Pembagian pendapatan</h3>
+          <div className="flex justify-between text-sm">
+            <span>Komisi guru</span>
+            <b>80%</b>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Biaya admin ENO NIHONGO</span>
+            <b>20%</b>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Komisi guru tetap tertahan sampai kelas berakhir.
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="space-y-2 p-4">
+          <h3 className="font-bold">Rekening & penarikan</h3>
+          <p className="text-xs text-muted-foreground">
+            Rekening pencairan, riwayat pendapatan, dan tarik saldo akan diaktifkan bersama backend
+            pembayaran.
+          </p>
+          <Button disabled className="w-full">
+            Tarik Saldo · Segera tersedia
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

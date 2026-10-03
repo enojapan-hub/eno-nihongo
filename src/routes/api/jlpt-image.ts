@@ -1,103 +1,103 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 
-const IMAGE_CACHE = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
+const IMAGE_CACHE = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800";
 // These original, in-app illustrations replace the former third-party watermarked
 // N5 listening images while keeping the question-bank URLs stable.
 const N5_ILLUSTRATION_PATHS: Record<string, string> = {
-  '1T7YBrG3xUqsTUVvw2CfbVF5SNLQw32Ed': '/jlpt-illustrations/n2-v2/n2-m1-q1-watermarked.webp',
-  '1KhBl5HLohMttYlAFOV1iKGgJ2bMNoH5M': '/jlpt-illustrations/n3-v2/n3-m4-q1-watermarked.webp',
-  '1BiN2r7JxYAfq3YwpjDmlTTkRYkUOqVqo': '/jlpt-illustrations/n3-v2/n3-m4-q2-watermarked.webp',
-  '14ykuLqKR__w8m4Q_3d7bN-luK-v0eJEX': '/jlpt-illustrations/n3-v2/n3-m4-q3-watermarked.webp',
-  '1lhrsIBQKzinl0FyvvdVMwJM-ckolketW': '/jlpt-illustrations/n3-v2/n3-m4-q4-watermarked.webp',
-  '1ZAP_hLEs8XnnZq_aoyxBqwYhLqD4dBi9': '/jlpt-illustrations/n4-v2/n4-m3-q1-watermarked.webp',
-  '1l_dqKz19zm_ue_QrwzoB-VJSoB5zDFsd': '/jlpt-illustrations/n4-v2/n4-m3-q2-watermarked.webp',
-  '1ZwE4Z7KrL-DMONIwxE7Dtg_Pl7cW5y1K': '/jlpt-illustrations/n4-v2/n4-m3-q3-watermarked.webp',
-  '1nnsKVZbQekC0hbrvCR7ePNcA7kznEPCm': '/jlpt-illustrations/n4-v2/n4-m3-q4-watermarked.webp',
-  '1D5FCBI8cFGKvKFLVfCe-aX5krddYov6J': '/jlpt-illustrations/n4-v2/n4-m3-q5-watermarked.webp',
-  '1hFmoNMjlMhQ_0I6GhVImTkQ_OLW_1Vo3': '/jlpt-illustrations/n5-v2/n5-m1-q1-watermarked.webp',
-  '1tyLMzP4wxrSYlK1OFcjRTxRAQ4Xti1xF': '/jlpt-illustrations/n5-v2/n5-m1-q2-watermarked.webp',
-  '1_yFru5C_4juZpLniCyybr5JAEFTrYrqx': '/jlpt-illustrations/n5-v2/n5-m1-q3-watermarked.webp',
-  '1YdFL75fEPM8GapH_Y-mcYDcyC6qYim7C': '/jlpt-illustrations/n5-v2/n5-m1-q4-watermarked.webp',
-  '1xNqbhgANibATwvBgtm1OQ61QIHfs4dQv': '/jlpt-illustrations/n5-v2/n5-m2-q1-watermarked.webp',
-  '1LbNDQ69ksjrCwk0RD1alYM4HQnG2_H6A': '/jlpt-illustrations/n5-v2/n5-m2-q2-watermarked.webp',
-  '1q3xq5vCNEBIx99fTJoECfSiyEIcZ4xfw': '/jlpt-illustrations/n5-v2/n5-m2-q3-watermarked.webp',
-  '1j0qeueguTfV80gb7E8_--wqNabN6S9hB': '/jlpt-illustrations/n5-v2/n5-m3-q1-watermarked.webp',
-  '1n1y6S7G5b2n8y4QW_2DgAVy6ry5cpz1J': '/jlpt-illustrations/n5-v2/n5-m3-q2-watermarked.webp',
-  '11BFs2Rob8H_7pPqPkiAfMkSSL5FstfER': '/jlpt-illustrations/n5-v2/n5-m3-q3-watermarked.webp',
-  '1lf_OHa87t80fKAjhrjRIKJ-zKbkeBakT': '/jlpt-illustrations/n5-v2/n5-m3-q4-watermarked.webp',
-  '1oBnO-qJ_hX39XraInz8lKAHmJOI8cfLI': '/jlpt-illustrations/n5-v2/n5-m3-q5-watermarked.webp',
-  '1n7uuOeCPCsvQYrNu9fYKeA2mQzVEsu75': '/jlpt-illustrations/n5-v2/n5-m4-q1.svg',
-}
+  "1T7YBrG3xUqsTUVvw2CfbVF5SNLQw32Ed": "/jlpt-illustrations/n2-v2/n2-m1-q1-watermarked.webp",
+  "1KhBl5HLohMttYlAFOV1iKGgJ2bMNoH5M": "/jlpt-illustrations/n3-v2/n3-m4-q1-watermarked.webp",
+  "1BiN2r7JxYAfq3YwpjDmlTTkRYkUOqVqo": "/jlpt-illustrations/n3-v2/n3-m4-q2-watermarked.webp",
+  "14ykuLqKR__w8m4Q_3d7bN-luK-v0eJEX": "/jlpt-illustrations/n3-v2/n3-m4-q3-watermarked.webp",
+  "1lhrsIBQKzinl0FyvvdVMwJM-ckolketW": "/jlpt-illustrations/n3-v2/n3-m4-q4-watermarked.webp",
+  "1ZAP_hLEs8XnnZq_aoyxBqwYhLqD4dBi9": "/jlpt-illustrations/n4-v2/n4-m3-q1-watermarked.webp",
+  "1l_dqKz19zm_ue_QrwzoB-VJSoB5zDFsd": "/jlpt-illustrations/n4-v2/n4-m3-q2-watermarked.webp",
+  "1ZwE4Z7KrL-DMONIwxE7Dtg_Pl7cW5y1K": "/jlpt-illustrations/n4-v2/n4-m3-q3-watermarked.webp",
+  "1nnsKVZbQekC0hbrvCR7ePNcA7kznEPCm": "/jlpt-illustrations/n4-v2/n4-m3-q4-watermarked.webp",
+  "1D5FCBI8cFGKvKFLVfCe-aX5krddYov6J": "/jlpt-illustrations/n4-v2/n4-m3-q5-watermarked.webp",
+  "1hFmoNMjlMhQ_0I6GhVImTkQ_OLW_1Vo3": "/jlpt-illustrations/n5-v2/n5-m1-q1-watermarked.webp",
+  "1tyLMzP4wxrSYlK1OFcjRTxRAQ4Xti1xF": "/jlpt-illustrations/n5-v2/n5-m1-q2-watermarked.webp",
+  "1_yFru5C_4juZpLniCyybr5JAEFTrYrqx": "/jlpt-illustrations/n5-v2/n5-m1-q3-watermarked.webp",
+  "1YdFL75fEPM8GapH_Y-mcYDcyC6qYim7C": "/jlpt-illustrations/n5-v2/n5-m1-q4-watermarked.webp",
+  "1xNqbhgANibATwvBgtm1OQ61QIHfs4dQv": "/jlpt-illustrations/n5-v2/n5-m2-q1-watermarked.webp",
+  "1LbNDQ69ksjrCwk0RD1alYM4HQnG2_H6A": "/jlpt-illustrations/n5-v2/n5-m2-q2-watermarked.webp",
+  "1q3xq5vCNEBIx99fTJoECfSiyEIcZ4xfw": "/jlpt-illustrations/n5-v2/n5-m2-q3-watermarked.webp",
+  "1j0qeueguTfV80gb7E8_--wqNabN6S9hB": "/jlpt-illustrations/n5-v2/n5-m3-q1-watermarked.webp",
+  "1n1y6S7G5b2n8y4QW_2DgAVy6ry5cpz1J": "/jlpt-illustrations/n5-v2/n5-m3-q2-watermarked.webp",
+  "11BFs2Rob8H_7pPqPkiAfMkSSL5FstfER": "/jlpt-illustrations/n5-v2/n5-m3-q3-watermarked.webp",
+  "1lf_OHa87t80fKAjhrjRIKJ-zKbkeBakT": "/jlpt-illustrations/n5-v2/n5-m3-q4-watermarked.webp",
+  "1oBnO-qJ_hX39XraInz8lKAHmJOI8cfLI": "/jlpt-illustrations/n5-v2/n5-m3-q5-watermarked.webp",
+  "1n7uuOeCPCsvQYrNu9fYKeA2mQzVEsu75": "/jlpt-illustrations/n5-v2/n5-m4-q1.svg",
+};
 const ALLOWED_IMAGE_IDS = new Set([
-  '1ZAP_hLEs8XnnZq_aoyxBqwYhLqD4dBi9',
-  '1l_dqKz19zm_ue_QrwzoB-VJSoB5zDFsd',
-  '1ZwE4Z7KrL-DMONIwxE7Dtg_Pl7cW5y1K',
-  '1nnsKVZbQekC0hbrvCR7ePNcA7kznEPCm',
-  '1D5FCBI8cFGKvKFLVfCe-aX5krddYov6J',
-  '1T7YBrG3xUqsTUVvw2CfbVF5SNLQw32Ed',
-  '1n7uuOeCPCsvQYrNu9fYKeA2mQzVEsu75',
-  '1yhI5RT76oOpRzDoh_FbC1Ak3H6NZEKaf',
-  '190Rh2aG_7umo2_v0SHxG61-2jfNnH7IZ',
-  '1bfqHxwSAZky_oIbgK-XgE6jeCfdX0IoZ',
-  '1eal-PduKFl_H356pMVU8RLeopppxkyDT',
-  '1SpUNUfIawYWgFoNLhaF8reIRF11VYPuJ',
-  '1KhBl5HLohMttYlAFOV1iKGgJ2bMNoH5M',
-  '1BiN2r7JxYAfq3YwpjDmlTTkRYkUOqVqo',
-  '14ykuLqKR__w8m4Q_3d7bN-luK-v0eJEX',
-  '1lhrsIBQKzinl0FyvvdVMwJM-ckolketW',
-  '1hFmoNMjlMhQ_0I6GhVImTkQ_OLW_1Vo3',
-  '1tyLMzP4wxrSYlK1OFcjRTxRAQ4Xti1xF',
-  '1_yFru5C_4juZpLniCyybr5JAEFTrYrqx',
-  '1YdFL75fEPM8GapH_Y-mcYDcyC6qYim7C',
-  '1xNqbhgANibATwvBgtm1OQ61QIHfs4dQv',
-  '1LbNDQ69ksjrCwk0RD1alYM4HQnG2_H6A',
-  '1q3xq5vCNEBIx99fTJoECfSiyEIcZ4xfw',
-  '1j0qeueguTfV80gb7E8_--wqNabN6S9hB',
-  '1n1y6S7G5b2n8y4QW_2DgAVy6ry5cpz1J',
-  '11BFs2Rob8H_7pPqPkiAfMkSSL5FstfER',
-  '1lf_OHa87t80fKAjhrjRIKJ-zKbkeBakT',
-  '1oBnO-qJ_hX39XraInz8lKAHmJOI8cfLI',
-])
+  "1ZAP_hLEs8XnnZq_aoyxBqwYhLqD4dBi9",
+  "1l_dqKz19zm_ue_QrwzoB-VJSoB5zDFsd",
+  "1ZwE4Z7KrL-DMONIwxE7Dtg_Pl7cW5y1K",
+  "1nnsKVZbQekC0hbrvCR7ePNcA7kznEPCm",
+  "1D5FCBI8cFGKvKFLVfCe-aX5krddYov6J",
+  "1T7YBrG3xUqsTUVvw2CfbVF5SNLQw32Ed",
+  "1n7uuOeCPCsvQYrNu9fYKeA2mQzVEsu75",
+  "1yhI5RT76oOpRzDoh_FbC1Ak3H6NZEKaf",
+  "190Rh2aG_7umo2_v0SHxG61-2jfNnH7IZ",
+  "1bfqHxwSAZky_oIbgK-XgE6jeCfdX0IoZ",
+  "1eal-PduKFl_H356pMVU8RLeopppxkyDT",
+  "1SpUNUfIawYWgFoNLhaF8reIRF11VYPuJ",
+  "1KhBl5HLohMttYlAFOV1iKGgJ2bMNoH5M",
+  "1BiN2r7JxYAfq3YwpjDmlTTkRYkUOqVqo",
+  "14ykuLqKR__w8m4Q_3d7bN-luK-v0eJEX",
+  "1lhrsIBQKzinl0FyvvdVMwJM-ckolketW",
+  "1hFmoNMjlMhQ_0I6GhVImTkQ_OLW_1Vo3",
+  "1tyLMzP4wxrSYlK1OFcjRTxRAQ4Xti1xF",
+  "1_yFru5C_4juZpLniCyybr5JAEFTrYrqx",
+  "1YdFL75fEPM8GapH_Y-mcYDcyC6qYim7C",
+  "1xNqbhgANibATwvBgtm1OQ61QIHfs4dQv",
+  "1LbNDQ69ksjrCwk0RD1alYM4HQnG2_H6A",
+  "1q3xq5vCNEBIx99fTJoECfSiyEIcZ4xfw",
+  "1j0qeueguTfV80gb7E8_--wqNabN6S9hB",
+  "1n1y6S7G5b2n8y4QW_2DgAVy6ry5cpz1J",
+  "11BFs2Rob8H_7pPqPkiAfMkSSL5FstfER",
+  "1lf_OHa87t80fKAjhrjRIKJ-zKbkeBakT",
+  "1oBnO-qJ_hX39XraInz8lKAHmJOI8cfLI",
+]);
 
-export const Route = createFileRoute('/api/jlpt-image')({
+export const Route = createFileRoute("/api/jlpt-image")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const url = new URL(request.url)
-        const id = url.searchParams.get('id')?.trim()
+        const url = new URL(request.url);
+        const id = url.searchParams.get("id")?.trim();
 
         if (!id || !ALLOWED_IMAGE_IDS.has(id)) {
-          return Response.json({ error: 'Image not available' }, { status: 404 })
+          return Response.json({ error: "Image not available" }, { status: 404 });
         }
 
-        const localIllustration = N5_ILLUSTRATION_PATHS[id]
+        const localIllustration = N5_ILLUSTRATION_PATHS[id];
         if (localIllustration) {
-          return Response.redirect(new URL(localIllustration, url), 302)
+          return Response.redirect(new URL(localIllustration, url), 302);
         }
 
-        const sourceUrl = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(id)}&export=download&confirm=t`
-        let upstream: Response
+        const sourceUrl = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(id)}&export=download&confirm=t`;
+        let upstream: Response;
         try {
-          upstream = await fetch(sourceUrl, { method: 'GET', redirect: 'follow' })
+          upstream = await fetch(sourceUrl, { method: "GET", redirect: "follow" });
         } catch (fetchError) {
-          console.error('JLPT Drive image fetch failed', fetchError)
-          return Response.json({ error: 'Image source unavailable' }, { status: 502 })
+          console.error("JLPT Drive image fetch failed", fetchError);
+          return Response.json({ error: "Image source unavailable" }, { status: 502 });
         }
 
         if (!upstream.ok) {
-          console.error('JLPT Drive image returned', upstream.status)
-          return Response.json({ error: 'Image source unavailable' }, { status: 502 })
+          console.error("JLPT Drive image returned", upstream.status);
+          return Response.json({ error: "Image source unavailable" }, { status: 502 });
         }
 
-        const headers = new Headers()
-        headers.set('Content-Type', upstream.headers.get('content-type') || 'image/jpeg')
-        headers.set('Cache-Control', IMAGE_CACHE)
-        headers.set('X-Content-Type-Options', 'nosniff')
-        const contentLength = upstream.headers.get('content-length')
-        if (contentLength) headers.set('Content-Length', contentLength)
+        const headers = new Headers();
+        headers.set("Content-Type", upstream.headers.get("content-type") || "image/jpeg");
+        headers.set("Cache-Control", IMAGE_CACHE);
+        headers.set("X-Content-Type-Options", "nosniff");
+        const contentLength = upstream.headers.get("content-length");
+        if (contentLength) headers.set("Content-Length", contentLength);
 
-        return new Response(upstream.body, { status: 200, headers })
+        return new Response(upstream.body, { status: 200, headers });
       },
     },
   },
-})
+});

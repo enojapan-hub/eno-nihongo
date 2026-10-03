@@ -154,7 +154,7 @@ function Quiz({
     queryKey: ["student-quiz-review", userId, selected],
     enabled: !!current,
     queryFn: () =>
-      result<Review[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: selected })),
+      result<Review[]>(classroom.rpc("get_class_quiz_review", { p_attempt_id: selected ?? "" })),
   });
   async function submit() {
     if (busy || expired || completed || Object.keys(answers).length !== questions.length) return;
@@ -214,10 +214,12 @@ function Quiz({
           <CardContent className="space-y-3 p-5 text-center">
             <h2 className="font-bold">Kuis sudah dikumpulkan</h2>
             <p className="text-sm text-muted-foreground">
-              Setiap peserta hanya dapat mengirim kuis ini satu kali. Jawaban dan nilai sudah tercatat di panel guru.
+              Setiap peserta hanya dapat mengirim kuis ini satu kali. Jawaban dan nilai sudah
+              tercatat di panel guru.
             </p>
             <p className="text-3xl font-black text-primary">
-              {completed.score}<span className="text-sm"> / 100</span>
+              {completed.score}
+              <span className="text-sm"> / 100</span>
             </p>
             <Button variant="outline" onClick={() => setSelected(completed.id)}>
               Lihat Hasil & Pembahasan

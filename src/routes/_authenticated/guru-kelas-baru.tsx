@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { errorMessage } from "@/lib/classroom";
 
 export const Route = createFileRoute("/_authenticated/guru-kelas-baru")({ component: Page });
 
@@ -57,8 +58,8 @@ function Page() {
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from("class-banners").getPublicUrl(path);
       set("banner_url", data.publicUrl);
-    } catch (e: any) {
-      setError(e?.message || "Upload banner gagal.");
+    } catch (e) {
+      setError(errorMessage(e, "Upload banner gagal."));
     } finally {
       setUploading(false);
     }
@@ -100,26 +101,23 @@ function Page() {
     setError("");
     try {
       const sessions = makeSessions();
-      const { error: createError } = await (supabase as any).rpc(
-        "teacher_create_class_with_sessions",
-        {
-          p_data: {
-            title: f.title.trim(),
-            level: f.level,
-            description: f.description || null,
-            banner_url: f.banner_url || null,
-            meeting_url: f.meeting_url || null,
-            capacity: Number(f.capacity),
-            price: Number(f.price),
-            status,
-          },
-          p_sessions: sessions,
+      const { error: createError } = await supabase.rpc("teacher_create_class_with_sessions", {
+        p_data: {
+          title: f.title.trim(),
+          level: f.level,
+          description: f.description || null,
+          banner_url: f.banner_url || null,
+          meeting_url: f.meeting_url || null,
+          capacity: Number(f.capacity),
+          price: Number(f.price),
+          status,
         },
-      );
+        p_sessions: sessions,
+      });
       if (createError) throw createError;
       await nav({ to: "/guru" });
-    } catch (e: any) {
-      setError(e?.message || "Kelas gagal disimpan.");
+    } catch (e) {
+      setError(errorMessage(e, "Kelas gagal disimpan."));
     } finally {
       setBusy(false);
     }
@@ -295,7 +293,7 @@ function Page() {
     </AppShell>
   );
 }
-function Field({ label, children }: { label: string; children: any }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block space-y-1">
       <span className="text-xs font-bold">{label}</span>

@@ -18,12 +18,12 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { classroom, result, secureUrl, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    preview: search.preview === "guru" ? ("guru" as const) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { preview?: "guru" } =>
+    search["preview"] === "guru" ? { preview: "guru" } : {},
   component: Page,
 });
 function Page() {
@@ -40,72 +40,87 @@ function Page() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Login diperlukan.");
       const canManage = await result(classroom.rpc("can_manage_class", { p_class_id: classId }));
-      if (teacherPreview ? !canManage : !(await result(classroom.rpc("is_class_member", { p_class_id: classId }))))
-        throw new Error(teacherPreview ? "Akses guru diperlukan." : "Anda belum terdaftar di kelas ini.");
-      const [materials, assignments, quizzes, schedule, announcements, grades, meeting, myClasses, managedClass] =
-        await Promise.all([
-          result(
-            classroom
-              .from("class_materials")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("sort_order"),
-          ),
-          result(
-            classroom
-              .from("class_assignments")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("due_at"),
-          ),
-          result(
-            classroom
-              .from("class_quizzes")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("due_at"),
-          ),
-          result(
-            classroom.from("class_schedule").select("*").eq("class_id", classId).order("starts_at"),
-          ),
-          result(
-            classroom
-              .from("class_announcements")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("is_published", true)
-              .order("created_at", { ascending: false }),
-          ),
-          result(
-            classroom
-              .from("class_grades")
-              .select("*")
-              .eq("class_id", classId)
-              .eq("user_id", user.id),
-          ),
-          result(
-            classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle(),
-          ),
-          teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_classes")),
-          teacherPreview
-            ? result(classroom.from("classes").select("*").eq("id", classId).single())
-            : Promise.resolve(null),
-        ]);
-      const submissions = teacherPreview ? [] : assignments.length
-        ? await result(
-            classroom
-              .from("class_assignment_submissions")
-              .select("assignment_id,submitted_at")
-              .eq("user_id", user.id)
-              .in(
-                "assignment_id",
-                assignments.map((a: any) => a.id),
-              ),
-          )
-        : [];
+      if (
+        teacherPreview
+          ? !canManage
+          : !(await result(classroom.rpc("is_class_member", { p_class_id: classId })))
+      )
+        throw new Error(
+          teacherPreview ? "Akses guru diperlukan." : "Anda belum terdaftar di kelas ini.",
+        );
+      const [
+        materials,
+        assignments,
+        quizzes,
+        schedule,
+        announcements,
+        grades,
+        meeting,
+        myClasses,
+        managedClass,
+        classEnds,
+      ] = await Promise.all([
+        result(
+          classroom
+            .from("class_materials")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("sort_order"),
+        ),
+        result(
+          classroom
+            .from("class_assignments")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("due_at"),
+        ),
+        result(
+          classroom
+            .from("class_quizzes")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("due_at"),
+        ),
+        result(
+          classroom.from("class_schedule").select("*").eq("class_id", classId).order("starts_at"),
+        ),
+        result(
+          classroom
+            .from("class_announcements")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("is_published", true)
+            .order("created_at", { ascending: false }),
+        ),
+        result(
+          classroom.from("class_grades").select("*").eq("class_id", classId).eq("user_id", user.id),
+        ),
+        result(classroom.from("class_meetings").select("*").eq("class_id", classId).maybeSingle()),
+        teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_classes")),
+        teacherPreview
+          ? result(classroom.from("classes").select("*").eq("id", classId).single())
+          : Promise.resolve(null),
+        teacherPreview
+          ? Promise.resolve(null)
+          : result(classroom.from("classes").select("ends_at").eq("id", classId).maybeSingle()),
+      ]);
+      const submissions = teacherPreview
+        ? []
+        : assignments.length
+          ? await result(
+              classroom
+                .from("class_assignment_submissions")
+                .select("assignment_id,submitted_at")
+                .eq("user_id", user.id)
+                .in(
+                  "assignment_id",
+                  assignments.map((a) => a.id),
+                ),
+            )
+          : [];
       const [attempts, topics] = await Promise.all([
         !teacherPreview && quizzes.length
           ? result(
@@ -115,17 +130,23 @@ function Page() {
                 .eq("user_id", user.id)
                 .in(
                   "quiz_id",
-                  quizzes.map((q: any) => q.id),
+                  quizzes.map((q) => q.id),
                 )
                 .order("submitted_at", { ascending: false }),
             )
           : Promise.resolve([]),
-        teacherPreview ? Promise.resolve([]) : result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
+        teacherPreview
+          ? Promise.resolve([])
+          : result(classroom.rpc("get_my_class_topic_insights", { p_class_id: classId })),
       ]);
       return {
+        // get_my_classes tidak mengembalikan ends_at, jadi diambil terpisah dari tabel classes.
         kelas: teacherPreview
           ? managedClass
-          : myClasses.find((c: any) => c.id === classId) ?? null,
+          : (() => {
+              const mine = myClasses.find((c) => c.id === classId);
+              return mine ? { ...mine, ends_at: classEnds?.ends_at ?? null } : null;
+            })(),
         attempts,
         topics,
         materials,
@@ -141,9 +162,7 @@ function Page() {
     refetchInterval: 60_000,
   });
   const d = q.data;
-  const next = d?.schedule.find(
-    (s: any) => new Date(s.ends_at || s.starts_at).getTime() > Date.now(),
-  );
+  const next = d?.schedule.find((s) => new Date(s.ends_at || s.starts_at).getTime() > Date.now());
   const completedAssignments = d?.submissions.length ?? 0;
   const completedQuizzes = d?.attempts.length ?? 0;
   const totalActivities = (d?.assignments.length ?? 0) + (d?.quizzes.length ?? 0);
@@ -152,24 +171,44 @@ function Page() {
     ? Math.round(((completedAssignments + completedQuizzes) / totalActivities) * 100)
     : 0;
   const outstanding = d?.assignments.filter(
-    (a: any) => !d.submissions.some((s: any) => s.assignment_id === a.id),
+    (a) => !d.submissions.some((s) => s.assignment_id === a.id),
   );
-  const pendingQuizzes = d?.quizzes.filter((k: any) => !d.attempts.some((a: any) => a.quiz_id === k.id)) ?? [];
-  const nextAction = [...(outstanding ?? []).map((a:any)=>({type:"tugas",id:a.id,title:a.title,due_at:a.due_at})), ...pendingQuizzes.map((k:any)=>({type:"kuis",id:k.id,title:k.title,due_at:k.due_at}))].sort((a:any,b:any)=>(a.due_at?new Date(a.due_at).getTime():Infinity)-(b.due_at?new Date(b.due_at).getTime():Infinity))[0];
+  const pendingQuizzes =
+    d?.quizzes.filter((k) => !d.attempts.some((a) => a.quiz_id === k.id)) ?? [];
+  const nextAction = [
+    ...(outstanding ?? []).map((a) => ({
+      type: "tugas",
+      id: a.id,
+      title: a.title,
+      due_at: a.due_at,
+    })),
+    ...pendingQuizzes.map((k) => ({
+      type: "kuis",
+      id: k.id,
+      title: k.title,
+      due_at: k.due_at,
+    })),
+  ].sort(
+    (a, b) =>
+      (a.due_at ? new Date(a.due_at).getTime() : Infinity) -
+      (b.due_at ? new Date(b.due_at).getTime() : Infinity),
+  )[0];
   const deadlineLabel = (value?: string | null) => {
     if (!value) return "Tanpa tenggat";
-    const due = new Date(value); const now = new Date();
-    const start = new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
-    const target = new Date(due.getFullYear(),due.getMonth(),due.getDate()).getTime();
-    const days = Math.round((target-start)/86400000);
+    const due = new Date(value);
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const target = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+    const days = Math.round((target - start) / 86400000);
     if (due.getTime() < now.getTime()) return "Terlambat";
-    if (days===0) return "Hari ini"; if(days===1) return "Besok";
+    if (days === 0) return "Hari ini";
+    if (days === 1) return "Besok";
     return sessionTime(value);
   };
-  const taskStatus = (a: any) =>
-    d?.grades.some((g: any) => g.assignment_id === a.id)
+  const taskStatus = (a: Tables<"class_assignments">) =>
+    d?.grades.some((g) => g.assignment_id === a.id)
       ? "dinilai"
-      : d?.submissions.some((s: any) => s.assignment_id === a.id)
+      : d?.submissions.some((s) => s.assignment_id === a.id)
         ? "menunggu"
         : a.due_at && new Date(a.due_at).getTime() < Date.now() && !a.allow_late
           ? "lewat"
@@ -188,7 +227,7 @@ function Page() {
     { id: "pengumuman", label: "Pengumuman", icon: Megaphone },
     { id: "nilai", label: "Nilai", icon: Award },
   ] as const;
-  const task = (a: any) => (
+  const task = (a: Tables<"class_assignments">) => (
     <Card key={a.id} className="overflow-hidden border-border/70 shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -209,11 +248,24 @@ function Page() {
             {a.description && (
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">{a.description}</p>
             )}
-            {a.due_at && (<p className={"flex items-center gap-1 text-xs " + (deadlineLabel(a.due_at)==="Terlambat" ? "font-bold text-destructive" : "text-muted-foreground")}><Clock3 className="size-3.5" /> Batas {deadlineLabel(a.due_at)}</p>)}
+            {a.due_at && (
+              <p
+                className={
+                  "flex items-center gap-1 text-xs " +
+                  (deadlineLabel(a.due_at) === "Terlambat"
+                    ? "font-bold text-destructive"
+                    : "text-muted-foreground")
+                }
+              >
+                <Clock3 className="size-3.5" /> Batas {deadlineLabel(a.due_at)}
+              </p>
+            )}
           </div>
         </div>
         {teacherPreview ? (
-          <Button className="mt-4 w-full sm:w-auto" size="sm" disabled>Pratinjau · pengumpulan dinonaktifkan</Button>
+          <Button className="mt-4 w-full sm:w-auto" size="sm" disabled>
+            Pratinjau · pengumpulan dinonaktifkan
+          </Button>
         ) : (
           <Button className="mt-4 w-full sm:w-auto" size="sm" asChild>
             <Link to="/kelas/$classId/tugas/$assignmentId" params={{ classId, assignmentId: a.id }}>
@@ -224,7 +276,7 @@ function Page() {
       </CardContent>
     </Card>
   );
-  const notice = (a: any) => (
+  const notice = (a: Tables<"class_announcements">) => (
     <Card key={a.id} className="border-amber-500/20 bg-amber-500/[0.06] shadow-sm">
       <CardContent className="flex gap-3 p-4">
         <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-500/15 text-amber-600">
@@ -246,11 +298,15 @@ function Page() {
     </Card>
   );
   return (
-    <AppShell title={teacherPreview ? "Pratinjau Siswa" : "Ruang Kelas"} backTo={teacherPreview ? "/guru-kelas/" + classId : "/kelas-saya"}>
+    <AppShell
+      title={teacherPreview ? "Pratinjau Siswa" : "Ruang Kelas"}
+      backTo={teacherPreview ? "/guru-kelas/" + classId : "/kelas-saya"}
+    >
       <div className="mx-auto max-w-4xl space-y-5">
         {teacherPreview && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] p-3 text-xs">
-            <b>Mode pratinjau guru.</b> Anda melihat tampilan ruang kelas peserta tanpa menjadi peserta. Aksi pengumpulan tugas dan kuis dinonaktifkan.
+            <b>Mode pratinjau guru.</b> Anda melihat tampilan ruang kelas peserta tanpa menjadi
+            peserta. Aksi pengumpulan tugas dan kuis dinonaktifkan.
           </div>
         )}
         {d?.kelas && (
@@ -275,7 +331,15 @@ function Page() {
                 <GraduationCap className="size-6" />
               </span>
             </div>
-            {d.kelas.status === "closed" && (<div className="relative mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] p-3"><p className="text-xs font-bold text-amber-700">Kelas telah selesai</p><p className="mt-1 text-xs text-muted-foreground">Materi, riwayat tugas, nilai, dan hasil kuis tetap dapat Anda buka sebagai arsip belajar.</p></div>)}
+            {d.kelas.status === "closed" && (
+              <div className="relative mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] p-3">
+                <p className="text-xs font-bold text-amber-700">Kelas telah selesai</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Materi, riwayat tugas, nilai, dan hasil kuis tetap dapat Anda buka sebagai arsip
+                  belajar.
+                </p>
+              </div>
+            )}
           </header>
         )}
         <nav className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Bagian ruang kelas">
@@ -315,29 +379,69 @@ function Page() {
                   <Card className="border-primary/20">
                     <CardContent className="space-y-2 p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <div><p className="text-xs text-muted-foreground">Progress kelas</p><b>{progressPercent}% selesai</b></div>
-                        <span className="text-xs font-bold">{completedAssignments + completedQuizzes}/{totalActivities} aktivitas</span>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Progress kelas</p>
+                          <b>{progressPercent}% selesai</b>
+                        </div>
+                        <span className="text-xs font-bold">
+                          {completedAssignments + completedQuizzes}/{totalActivities} aktivitas
+                        </span>
                       </div>
-                      <progress className="h-2 w-full accent-green-600" max="100" value={progressPercent} />
-                      {d.kelas?.ends_at && <p className="text-xs text-muted-foreground">Kelas berakhir {sessionTime(d.kelas.ends_at)}</p>}
+                      <progress
+                        className="h-2 w-full accent-green-600"
+                        max="100"
+                        value={progressPercent}
+                      />
+                      {d.kelas?.ends_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Kelas berakhir {sessionTime(d.kelas.ends_at)}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 )}
                 {!teacherPreview && nextAction && (
                   <Card className="border-primary/25 bg-primary/[0.05] shadow-sm">
                     <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div><p className="text-[11px] font-bold uppercase tracking-wide text-primary">Kerjakan berikutnya</p><h2 className="mt-1 font-black">{nextAction.title}</h2><p className="mt-1 text-xs text-muted-foreground">{nextAction.type === "tugas" ? "Tugas" : "Kuis"} · {deadlineLabel(nextAction.due_at)}</p></div>
-                      <Button size="sm" asChild>{nextAction.type === "tugas" ? <Link to="/kelas/$classId/tugas/$assignmentId" params={{classId,assignmentId:nextAction.id}}>Kerjakan Sekarang</Link> : <Link to="/kelas/$classId/quiz/$quizId" params={{classId,quizId:nextAction.id}}>Mulai Kuis</Link>}</Button>
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-primary">
+                          Kerjakan berikutnya
+                        </p>
+                        <h2 className="mt-1 font-black">{nextAction.title}</h2>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {nextAction.type === "tugas" ? "Tugas" : "Kuis"} ·{" "}
+                          {deadlineLabel(nextAction.due_at)}
+                        </p>
+                      </div>
+                      <Button size="sm" asChild>
+                        {nextAction.type === "tugas" ? (
+                          <Link
+                            to="/kelas/$classId/tugas/$assignmentId"
+                            params={{ classId, assignmentId: nextAction.id }}
+                          >
+                            Kerjakan Sekarang
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/kelas/$classId/quiz/$quizId"
+                            params={{ classId, quizId: nextAction.id }}
+                          >
+                            Mulai Kuis
+                          </Link>
+                        )}
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {[
-                    [BookOpenText, "Materi", d.materials.length],
-                    [ClipboardList, "Tugas", d.assignments.length],
-                    [ListChecks, "Kuis", d.quizzes.length],
-                    [CalendarDays, "Sesi", d.schedule.length],
-                  ].map(([Icon, label, value]) => (
+                  {(
+                    [
+                      [BookOpenText, "Materi", d.materials.length],
+                      [ClipboardList, "Tugas", d.assignments.length],
+                      [ListChecks, "Kuis", d.quizzes.length],
+                      [CalendarDays, "Sesi", d.schedule.length],
+                    ] as const
+                  ).map(([Icon, label, value]) => (
                     <Card key={label as string} className="border-border/70 shadow-sm">
                       <CardContent className="flex items-center gap-2.5 p-3">
                         <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -409,7 +513,7 @@ function Page() {
             )}
             {tab === "materi" && (
               <>
-                {d.materials.map((m: any) => (
+                {d.materials.map((m) => (
                   <Card key={m.id}>
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{m.title}</h2>
@@ -448,20 +552,16 @@ function Page() {
                       onClick={() => setTaskFilter(id!)}
                     >
                       {label} (
-                      {
-                        d.assignments.filter((a: any) => id === "semua" || taskStatus(a) === id)
-                          .length
-                      }
-                      )
+                      {d.assignments.filter((a) => id === "semua" || taskStatus(a) === id).length})
                     </Button>
                   ))}
                 </div>
                 {d.assignments
-                  .filter((a: any) => taskFilter === "semua" || taskStatus(a) === taskFilter)
+                  .filter((a) => taskFilter === "semua" || taskStatus(a) === taskFilter)
                   .map(task)}
                 {!!d.assignments.length &&
                   !d.assignments.some(
-                    (a: any) => taskFilter === "semua" || taskStatus(a) === taskFilter,
+                    (a) => taskFilter === "semua" || taskStatus(a) === taskFilter,
                   ) && (
                     <p className="text-sm text-muted-foreground">
                       Tidak ada tugas pada status ini.
@@ -472,25 +572,47 @@ function Page() {
             )}
             {tab === "tugas" && (
               <>
-                <div className="mt-2 flex items-center gap-2"><ListChecks className="size-4 text-primary"/><h2 className="font-bold">Kuis</h2><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{d.quizzes.length}</span></div>
-                {d.quizzes.map((k: any) => (
+                <div className="mt-2 flex items-center gap-2">
+                  <ListChecks className="size-4 text-primary" />
+                  <h2 className="font-bold">Kuis</h2>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                    {d.quizzes.length}
+                  </span>
+                </div>
+                {d.quizzes.map((k) => (
                   <Card key={k.id}>
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{k.title}</h2>
                       <p className="text-sm">{k.description}</p>
-                      {k.due_at && <p className={"text-xs " + (deadlineLabel(k.due_at)==="Terlambat" ? "font-bold text-destructive" : "")}>Batas: {deadlineLabel(k.due_at)}</p>}
+                      {k.due_at && (
+                        <p
+                          className={
+                            "text-xs " +
+                            (deadlineLabel(k.due_at) === "Terlambat"
+                              ? "font-bold text-destructive"
+                              : "")
+                          }
+                        >
+                          Batas: {deadlineLabel(k.due_at)}
+                        </p>
+                      )}
                       <p className="text-xs font-bold">
-                        {d.attempts.some((a: any) => a.quiz_id === k.id)
+                        {d.attempts.some((a) => a.quiz_id === k.id)
                           ? "Sudah dikerjakan"
                           : k.due_at && new Date(k.due_at).getTime() < Date.now()
                             ? "Batas waktu berakhir"
                             : "Belum dikerjakan"}
                       </p>
                       {teacherPreview ? (
-                        <Button size="sm" disabled>Pratinjau · pengerjaan dinonaktifkan</Button>
+                        <Button size="sm" disabled>
+                          Pratinjau · pengerjaan dinonaktifkan
+                        </Button>
                       ) : (
                         <Button size="sm" asChild>
-                          <Link to="/kelas/$classId/quiz/$quizId" params={{ classId, quizId: k.id }}>
+                          <Link
+                            to="/kelas/$classId/quiz/$quizId"
+                            params={{ classId, quizId: k.id }}
+                          >
                             Buka Kuis
                           </Link>
                         </Button>
@@ -498,12 +620,14 @@ function Page() {
                     </CardContent>
                   </Card>
                 ))}
-                {!d.quizzes.length && <p className="text-sm text-muted-foreground">Belum ada kuis.</p>}
+                {!d.quizzes.length && (
+                  <p className="text-sm text-muted-foreground">Belum ada kuis.</p>
+                )}
               </>
             )}
             {tab === "jadwal" && (
               <>
-                {d.schedule.map((s: any) => (
+                {d.schedule.map((s) => (
                   <Card key={s.id}>
                     <CardContent className="space-y-2 p-4">
                       <h2 className="font-bold">{s.title}</h2>
@@ -524,8 +648,8 @@ function Page() {
             )}
             {tab === "nilai" && (
               <>
-                {d.grades.map((g: any) => {
-                  const a = d.assignments.find((x: any) => x.id === g.assignment_id);
+                {d.grades.map((g) => {
+                  const a = d.assignments.find((x) => x.id === g.assignment_id);
                   return (
                     <Card key={g.id}>
                       <CardContent className="space-y-2 p-4">
@@ -542,7 +666,7 @@ function Page() {
                 })}
                 {!d.grades.length && <p className="text-sm">Belum ada tugas yang dinilai guru.</p>}
                 <h2 className="font-bold">Nilai Kuis</h2>
-                {d.attempts.map((a: any) => (
+                {d.attempts.map((a) => (
                   <Link
                     key={a.id}
                     to="/kelas/$classId/quiz/$quizId"
@@ -551,7 +675,7 @@ function Page() {
                     className="block rounded-xl border p-3 text-sm hover:border-primary"
                   >
                     <strong>
-                      {d.quizzes.find((q: any) => q.id === a.quiz_id)?.title}: {a.score}/100
+                      {d.quizzes.find((q) => q.id === a.quiz_id)?.title}: {a.score}/100
                     </strong>
                     <p className="text-xs text-muted-foreground">{sessionTime(a.submitted_at)}</p>
                     <span className="text-xs text-primary">Lihat Pembahasan</span>
@@ -561,7 +685,7 @@ function Page() {
                   <p className="text-sm text-muted-foreground">Belum ada kuis yang dikerjakan.</p>
                 )}
                 <h2 className="font-bold">Latihan per Topik</h2>
-                {d.topics.map((t: any) => (
+                {d.topics.map((t) => (
                   <div key={t.category + ":" + t.topic} className="space-y-1">
                     <p className="text-xs">
                       {t.category} / {t.topic}: {t.accuracy}% ({t.correct_count}/{t.total_questions}{" "}
@@ -597,7 +721,12 @@ function Empty() {
     </div>
   );
 }
-function Live({ meeting }: { meeting: any }) {
+interface LiveMeeting {
+  meeting_url?: string | null;
+  meeting_id?: string | null;
+  passcode?: string | null;
+}
+function Live({ meeting }: { meeting?: LiveMeeting | null }) {
   const [message, setMessage] = useState("");
   const url = secureUrl(meeting?.meeting_url);
   if (!url)
@@ -622,18 +751,18 @@ function Live({ meeting }: { meeting: any }) {
           Masuk Kelas Live
         </a>
       </Button>
-      {meeting.meeting_id && (
+      {meeting?.meeting_id && (
         <p className="text-xs">
           Meeting ID: {meeting.meeting_id}{" "}
-          <button className="text-primary underline" onClick={() => copy(meeting.meeting_id)}>
+          <button className="text-primary underline" onClick={() => copy(meeting.meeting_id ?? "")}>
             Salin
           </button>
         </p>
       )}
-      {meeting.passcode && (
+      {meeting?.passcode && (
         <p className="text-xs">
           Passcode: {meeting.passcode}{" "}
-          <button className="text-primary underline" onClick={() => copy(meeting.passcode)}>
+          <button className="text-primary underline" onClick={() => copy(meeting.passcode ?? "")}>
             Salin
           </button>
         </p>
