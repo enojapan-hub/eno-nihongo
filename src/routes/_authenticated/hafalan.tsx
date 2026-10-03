@@ -15,6 +15,7 @@ import {
 } from "@/lib/hafalan-mastery";
 import { parseMasteryTraining } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
+import { separateSameItemCards } from "@/lib/flashcard-deck";
 export const Route = createFileRoute("/_authenticated/hafalan")({
   head: () => ({ meta: [{ title: "Flashcard — ENO NIHONGO" }] }),
   component: HafalanPage,
@@ -184,6 +185,10 @@ function HafalanPage() {
     queryKey: ["hafalan-progress", level],
     queryFn: () => fetchProgress(level!),
     enabled: ready,
+    // The deck order is derived from this data; a background refetch mid-session would reshuffle it
+    // under the saved card index.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
   const [kind, setKind] = useState<"mixed" | Kind>((targeted?.itemType as Kind) ?? "mixed"),
     [study, setStudy] = useState<Study>(targeted ? "weak" : "normal"),
@@ -243,7 +248,7 @@ function HafalanPage() {
       );
     });
     const n = study === "quick" ? a.length : study === "exam" ? Math.min(30, limit) : limit;
-    return a.slice(0, n);
+    return separateSameItemCards(a.slice(0, n));
   }, [source, progress.data, kind, study, limit, retryWrong, wrong, targeted]);
   const card = all[index],
     done = (study === "quick" && quickExpired) || (index >= all.length && all.length > 0);
