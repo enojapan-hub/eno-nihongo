@@ -240,7 +240,7 @@ function KotobaPage() {
   useEffect(() => {
     if (!lessonCounts.length) return;
     setLesson((v) =>
-      v != null && lessonCounts.some((x: any) => Number(x.lesson_number) === v)
+      v != null && lessonCounts.some((x) => Number(x.lesson_number) === v)
         ? v
         : (lessonCounts[0]?.lesson_number ?? null),
     );
@@ -261,7 +261,7 @@ function KotobaPage() {
   });
   const currentCount = category
     ? Number(categoryCount.data ?? 0)
-    : Number(lessonCounts.find((x: any) => x.lesson_number === lesson)?.word_count ?? 0);
+    : Number(lessonCounts.find((x) => x.lesson_number === lesson)?.word_count ?? 0);
   const {
     data = [],
     isLoading,
@@ -322,7 +322,7 @@ function KotobaPage() {
   const examples = useMemo(() => {
     if (!selected) return [];
     const seen = new Set<string>();
-    return [...asExamples(selected.examples), ...senses.flatMap((s: any) => asExamples(s.examples))]
+    return [...asExamples(selected.examples), ...senses.flatMap((s) => asExamples(s.examples))]
       .filter((e) => {
         const k = String(e.jp ?? "")
           .replace(/\s/g, "")
@@ -563,7 +563,7 @@ function KotobaPage() {
                   className="h-12 w-full appearance-none rounded-xl border bg-card px-3 pr-9 text-[13px] font-semibold shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <option value="">Pilih pelajaran</option>
-                  {lessonCounts.map((x: any) => (
+                  {lessonCounts.map((x) => (
                     <option key={x.lesson_number} value={x.lesson_number}>
                       {x.lesson_number === -1 ? "Materi tambahan" : `Pelajaran ${x.lesson_number}`}{" "}
                       · {Number(x.word_count)} kata

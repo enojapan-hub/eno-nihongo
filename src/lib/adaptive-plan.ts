@@ -283,9 +283,9 @@ async function enrichTasksWithSuggestions(
           return {
             ...adjusted,
             suggestions: (data ?? [])
-              .filter((x: any) => !skip.has(String(x.id)))
+              .filter((x) => !skip.has(String(x.id)))
               .slice(0, wanted)
-              .map((x: any) => ({
+              .map((x) => ({
                 id: String(x.id),
                 label: String(x.character ?? "Kanji"),
                 subtitle: x.meaning_id ? String(x.meaning_id) : null,
@@ -304,9 +304,9 @@ async function enrichTasksWithSuggestions(
           return {
             ...adjusted,
             suggestions: (data ?? [])
-              .filter((x: any) => !skip.has(String(x.id)))
+              .filter((x) => !skip.has(String(x.id)))
               .slice(0, wanted)
-              .map((x: any) => ({
+              .map((x) => ({
                 id: String(x.id),
                 label: String(x.term ?? "Kosakata"),
                 subtitle: [x.reading, x.meaning_id].filter(Boolean).map(String).join(" · "),
@@ -325,9 +325,9 @@ async function enrichTasksWithSuggestions(
           return {
             ...adjusted,
             suggestions: (data ?? [])
-              .filter((x: any) => !skip.has(String(x.id)))
+              .filter((x) => !skip.has(String(x.id)))
               .slice(0, wanted)
-              .map((x: any) => ({
+              .map((x) => ({
                 id: String(x.id),
                 label: String(x.pattern ?? "Bunpou"),
                 subtitle: x.meaning_id ? String(x.meaning_id) : null,
@@ -346,9 +346,9 @@ async function enrichTasksWithSuggestions(
           return {
             ...adjusted,
             suggestions: (data ?? [])
-              .filter((x: any) => !skip.has(String(x.id)))
+              .filter((x) => !skip.has(String(x.id)))
               .slice(0, wanted)
-              .map((x: any) => ({ id: String(x.id), label: String(x.title ?? "Dokkai") })),
+              .map((x) => ({ id: String(x.id), label: String(x.title ?? "Dokkai") })),
           };
         }
         if (task.task_type === "listening") {
@@ -363,9 +363,9 @@ async function enrichTasksWithSuggestions(
           return {
             ...adjusted,
             suggestions: (data ?? [])
-              .filter((x: any) => !skip.has(String(x.id)))
+              .filter((x) => !skip.has(String(x.id)))
               .slice(0, wanted)
-              .map((x: any) => ({
+              .map((x) => ({
                 id: String(x.id),
                 label: String(x.title ?? "Choukai"),
                 subtitle: x.duration_seconds
