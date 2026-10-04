@@ -95,7 +95,10 @@ export const ContinuousChokaiAudio = forwardRef<ChokaiAudioHandle, Props>(
       };
       const onTimeUpdate = () => {
         const t = audio.currentTime;
-        if (Math.abs(t - goodTime.current) < 1.5) goodTime.current = Math.max(goodTime.current, t);
+        // Maju sewajarnya (termasuk event timeupdate yang tertunda >1,5 dtk) diterima; lompatan akibat
+        // seek ditolak oleh onSeeking dan tidak pernah masuk ke goodTime.
+        if (!audio.seeking && t >= goodTime.current - 1.5)
+          goodTime.current = Math.max(goodTime.current, t);
         callbacks.current.onPosition(activePosition(timeline, goodTime.current));
         if (started.current && t - lastSaved.current >= 2) {
           lastSaved.current = t;
