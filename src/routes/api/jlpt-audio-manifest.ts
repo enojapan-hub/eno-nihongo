@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { parseTimeline } from "@/lib/chokai-timeline";
+import { parseManifestExam, rowExamNo, selectExamRows } from "@/lib/audio-manifest";
 
 const LEVELS = new Set(["N5", "N4", "N3", "N2", "N1"]);
 
@@ -15,8 +16,7 @@ export const Route = createFileRoute("/api/jlpt-audio-manifest")({
           return Response.json({ error: "Invalid JLPT level" }, { status: 400 });
         }
 
-        const examParam = Number(url.searchParams.get("exam") ?? "1");
-        const examNo = Number.isInteger(examParam) && examParam >= 1 ? examParam : 1;
+        const examNo = parseManifestExam(url.searchParams.get("exam"));
 
         // select("*"): kolom exam_no / question_timeline bersifat opsional, sehingga manifest
         // tetap berfungsi sebelum migrasi 20261004000000 diterapkan.
@@ -34,17 +34,16 @@ export const Route = createFileRoute("/api/jlpt-audio-manifest")({
           return Response.json({ error: "Audio manifest lookup failed" }, { status: 500 });
         }
 
-        const items = (data ?? [])
-          .filter((row) => Number((row as Record<string, unknown>)["exam_no"] ?? 1) === examNo)
-          .map((row) => ({
-            id: String(row.id),
-            level: String(row.level),
-            mondai_no: row.mondai_no == null ? null : Number(row.mondai_no),
-            mapping_scope: row.mapping_scope === "mondai" ? "mondai" : "session",
-            delivery_path:
-              row.delivery_path || `/api/jlpt-audio?id=${encodeURIComponent(String(row.id))}`,
-            timeline: parseTimeline((row as Record<string, unknown>)["question_timeline"]),
-          }));
+        const items = selectExamRows(data ?? [], examNo).map((row) => ({
+          id: String(row.id),
+          level: String(row.level),
+          exam_no: rowExamNo(row),
+          mondai_no: row.mondai_no == null ? null : Number(row.mondai_no),
+          mapping_scope: row.mapping_scope === "mondai" ? "mondai" : "session",
+          delivery_path:
+            row.delivery_path || `/api/jlpt-audio?id=${encodeURIComponent(String(row.id))}`,
+          timeline: parseTimeline((row as Record<string, unknown>)["question_timeline"]),
+        }));
 
         return Response.json(
           { items },

@@ -22,6 +22,7 @@ import {
   type TimelineEntry,
 } from "@/lib/chokai-timeline";
 import { supabase } from "@/integrations/supabase/client";
+import { selectExamRows } from "@/lib/audio-manifest";
 import {
   examQuery,
   fullStorageKey,
@@ -59,6 +60,7 @@ type Result = { total_questions: number; correct_count: number; score_percent: n
 type AudioManifestItem = {
   id: string;
   level: string;
+  exam_no?: number;
   mondai_no: number | null;
   mapping_scope: "mondai" | "session";
   delivery_path: string;
@@ -257,7 +259,7 @@ function FullSessionRunner() {
   }, [answers, answerKey]);
   const groupedAudio = useMemo(() => {
     if (!current || current.section !== "listening") return null;
-    const items = manifestQuery.data ?? [];
+    const items = selectExamRows(manifestQuery.data ?? [], examNo);
     const mondaiSource = items.find(
       (item) => item.mapping_scope === "mondai" && item.mondai_no === current.mondai_no,
     );
@@ -267,7 +269,7 @@ function FullSessionRunner() {
     return sessionSource
       ? { url: sessionSource.delivery_path, label: "聴解セッション共通音声" }
       : null;
-  }, [current, manifestQuery.data]);
+  }, [current, manifestQuery.data, examNo]);
   const activeAudioUrl = current?.audio_url ?? groupedAudio?.url ?? null;
   const activeAudioLabel = current?.audio_url ? null : (groupedAudio?.label ?? null);
   // Chōkai penuh berkelanjutan: hanya bila sesi murni listening dan manifest membawa timeline
@@ -278,14 +280,14 @@ function FullSessionRunner() {
   );
   const continuous = useMemo(() => {
     if (!sections.length || !sections.every((x) => x === "listening")) return null;
-    const source = (manifestQuery.data ?? []).find(
+    const source = selectExamRows(manifestQuery.data ?? [], examNo).find(
       (x) =>
         x.mapping_scope === "session" && isValidTimeline(x.timeline ?? null, listeningIdx.length),
     );
     return source && source.timeline
       ? { url: source.delivery_path, timeline: source.timeline }
       : null;
-  }, [sections, manifestQuery.data, listeningIdx.length]);
+  }, [sections, manifestQuery.data, listeningIdx.length, examNo]);
   const chokaiKey = `${storageKey}-session-${sessionIndex}-chokai`;
   const chokaiHandle = useRef<ChokaiAudioHandle | null>(null);
   const [chokaiPhase, setChokaiPhase] = useState<"gate" | "playing" | "finished">("gate");
