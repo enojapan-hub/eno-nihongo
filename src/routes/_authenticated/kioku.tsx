@@ -248,7 +248,10 @@ function KiokuPage() {
 
   return (
     <AppShell compact title="Kioku">
-      <div className="mx-auto w-full max-w-md space-y-3 pb-4">
+      <div
+        data-layout="wide"
+        className="mx-auto w-full max-w-md space-y-3 pb-4 md:max-w-2xl md:space-y-4 lg:max-w-3xl"
+      >
         <a
           href="/belajar"
           className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
@@ -256,14 +259,14 @@ function KiokuPage() {
           <ArrowLeft className="size-4" /> Kembali ke Materi
         </a>
         {!session && (
-          <section className="overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.08] to-card p-6 text-center shadow-[0_18px_50px_-34px_rgba(0,0,0,.55)]">
+          <section className="overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.08] to-card p-6 text-center md:p-10 shadow-[0_18px_50px_-34px_rgba(0,0,0,.55)]">
             <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10">
               <BrainCircuit className="size-6 text-primary" />
             </span>
             <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">
               ENO NIHONGO
             </p>
-            <h1 className="mt-1 text-[22px] font-black">ENO Kioku</h1>
+            <h1 className="mt-1 text-[22px] font-black md:text-[30px]">ENO Kioku</h1>
             <p className="mt-1 text-[10px] text-muted-foreground">
               Latihan ingatan adaptif dari materi yang sudah kamu pelajari.
             </p>
@@ -277,7 +280,7 @@ function KiokuPage() {
             <button
               disabled={loading || !ready || ready.exercises.length === 0}
               onClick={start}
-              className="mt-5 w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground disabled:opacity-50"
+              className="mx-auto mt-5 w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground disabled:opacity-50 md:mt-7 md:max-w-sm md:py-3.5 md:text-[13px]"
             >
               {loading ? "Menyiapkan…" : "Mulai Kioku"}
             </button>
@@ -321,7 +324,7 @@ function KiokuPage() {
                 style={{ width: `${(session!.index / Math.max(1, total)) * 100}%` }}
               />
             </div>
-            <section className="relative min-h-[210px] overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.055] to-card p-6 text-center shadow-[0_18px_50px_-32px_rgba(0,0,0,.5)]">
+            <section className="relative min-h-[210px] overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.055] to-card p-6 text-center md:min-h-[300px] md:p-10 shadow-[0_18px_50px_-32px_rgba(0,0,0,.5)]">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary/70" />
               <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
                 {ex.label
@@ -334,7 +337,7 @@ function KiokuPage() {
               </p>
               <p
                 data-testid="prompt"
-                className={`mt-5 font-jp font-bold leading-relaxed ${ex.prompt.length > 12 ? "text-[19px]" : "text-[30px]"}`}
+                className={`mt-5 font-jp font-bold leading-relaxed ${ex.prompt.length > 12 ? "text-[19px] md:text-[26px]" : "text-[30px] md:text-[44px]"}`}
               >
                 {ex.prompt}
               </p>
@@ -369,9 +372,13 @@ function KiokuPage() {
               )}
             </section>
             {isChoice ? (
-              <div className="grid gap-2">
+              <div className="grid gap-2 md:grid-cols-2">
                 {!answered && (
-                  <div className="flex items-center gap-2" role="group" aria-label="Keyakinan">
+                  <div
+                    className="flex items-center gap-2 md:col-span-2"
+                    role="group"
+                    aria-label="Keyakinan"
+                  >
                     {pill("ragu", "Ragu")}
                     {pill("yakin", "Yakin")}
                   </div>
@@ -400,7 +407,7 @@ function KiokuPage() {
                           responseMs: Math.max(0, Date.now() - shownAt.current),
                         });
                       }}
-                      className={`flex min-h-12 items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold ${tone}`}
+                      className={`flex min-h-12 items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold md:min-h-14 md:text-[15px] ${tone}`}
                     >
                       <span>{o.text}</span>
                       {answered && isAnswer && <CheckCircle2 className="size-4 text-emerald-600" />}
@@ -414,7 +421,7 @@ function KiokuPage() {
                   <button
                     ref={nextRef}
                     onClick={() => advance()}
-                    className="mt-1 w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground"
+                    className="mt-1 w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground md:col-span-2 md:py-3.5 md:text-[13px]"
                   >
                     Lanjut
                   </button>
@@ -439,13 +446,13 @@ function KiokuPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => reveal("ragu")}
-                    className="min-h-12 rounded-2xl border bg-card text-[11px] font-bold"
+                    className="min-h-12 rounded-2xl border bg-card text-[11px] font-bold md:min-h-14 md:text-[13px]"
                   >
                     Ragu · lihat jawaban
                   </button>
                   <button
                     onClick={() => reveal("yakin")}
-                    className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground"
+                    className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground md:min-h-14 md:text-[13px]"
                   >
                     Yakin · lihat jawaban
                   </button>
@@ -455,13 +462,13 @@ function KiokuPage() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => grade(false)}
-                  className="min-h-12 rounded-2xl border border-red-200 bg-red-50 text-[11px] font-bold text-red-700 dark:border-red-500/35 dark:bg-red-500/[.12] dark:text-red-200"
+                  className="min-h-12 rounded-2xl border border-red-200 bg-red-50 text-[11px] font-bold md:min-h-14 md:text-[13px] text-red-700 dark:border-red-500/35 dark:bg-red-500/[.12] dark:text-red-200"
                 >
                   Belum ingat
                 </button>
                 <button
                   onClick={() => grade(true)}
-                  className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground"
+                  className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground md:min-h-14 md:text-[13px]"
                 >
                   Masih ingat
                 </button>

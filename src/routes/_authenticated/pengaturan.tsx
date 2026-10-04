@@ -216,8 +216,11 @@ function Page() {
   const admin = role === "admin" || role === "owner";
   return (
     <AppShell title="Pengaturan" backTo="/profil" compact>
-      <div className="mx-auto max-w-md space-y-5 pb-8">
-        <section className="rounded-[2rem] bg-gradient-to-br from-emerald-950 to-primary p-5 text-white shadow-lg">
+      <div
+        data-layout="wide"
+        className="mx-auto grid max-w-md gap-5 pb-8 md:max-w-none md:grid-cols-2 md:items-start md:gap-6"
+      >
+        <section className="rounded-[2rem] bg-gradient-to-br from-emerald-950 to-primary p-5 text-white shadow-lg md:col-span-2 md:p-7">
           <p className="text-[10px] font-black uppercase tracking-[.16em] text-white/65">
             ENO NIHONGO
           </p>

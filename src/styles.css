@@ -288,12 +288,21 @@ button .border-t.pt-4 > p.font-jp[class~="text-[10px]"] {
   [data-app-main] [class~="text-[12px]"] { font-size: 13.5px; }
 }
 @media (min-width: 768px) {
-  [data-app-main] > div > .mx-auto.max-w-md { max-width: min(100%, 36rem); }
+  [data-app-main] > div > .mx-auto.max-w-md:not([data-layout="wide"]) { max-width: min(100%, 36rem); }
   [data-app-main] > div > .mx-auto.max-w-lg,
   [data-app-main] > div > .mx-auto.max-w-xl,
   [data-app-main] > div > .mx-auto.max-w-2xl,
   [data-app-main] > div > .mx-auto.max-w-3xl { max-width: 100%; }
 }
 @media (min-width: 1024px) {
-  [data-app-main] > div > .mx-auto.max-w-md { max-width: min(100%, 40rem); }
+  [data-app-main] > div > .mx-auto.max-w-md:not([data-layout="wide"]) { max-width: min(100%, 40rem); }
+}
+
+@keyframes eno-install-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.eno-install-in { animation: eno-install-in 0.24s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .eno-install-in { animation: none; }
 }
