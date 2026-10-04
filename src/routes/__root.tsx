@@ -90,6 +90,8 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
 const CANONICAL_ORIGIN = "https://www.enonihongo.com";
 const SHARE_LOGO = `${CANONICAL_ORIGIN}/enonihongo-logo-dark.png?v=20260909-new`;
 const ICON_VERSION = "20261004";
+const EARLY_INSTALL_CAPTURE =
+  "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__enoInstallEvent=e;window.dispatchEvent(new Event('eno:install-available'))});window.addEventListener('appinstalled',function(){window.__enoInstalled=true;window.dispatchEvent(new Event('eno:install-available'))});";
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -138,6 +140,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "twitter:image", content: SHARE_LOGO },
     ],
+    // Chrome menembakkan `beforeinstallprompt` sekali, sering sebelum React hydrate: tangkap sejak awal.
+    scripts: [{ children: EARLY_INSTALL_CAPTURE }],
     links: [
       { rel: "canonical", href: `${CANONICAL_ORIGIN}/` },
       { rel: "stylesheet", href: appCss },
