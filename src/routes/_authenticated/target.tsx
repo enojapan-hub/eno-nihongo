@@ -30,6 +30,7 @@ import {
 import { analyzeMastery, type MasteryReview } from "@/lib/mastery-analysis";
 import { masteryTrainingHref } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { fetchMembershipAccess } from "@/lib/membership";
 import {
   fetchLatestSimulation,
@@ -58,7 +59,7 @@ const fallback: Partial<Record<AdaptiveTaskType, string>> = {
 };
 
 async function fetchWeakness(level: Level) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getAuthUser();
   if (!u.user) return [];
   const [{ data: reviews, error }, { data: reading, error: readingError }] = await Promise.all([
     supabase

@@ -45,6 +45,7 @@ import {
 import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacing";
 import { exampleRomaji, wordRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
 const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
@@ -229,7 +230,7 @@ function KotobaPage() {
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getAuthUser();
       if (!auth.user) return [] as Array<{ item_id: string; status: string }>;
       const { data, error } = await supabase
         .from("user_item_progress")

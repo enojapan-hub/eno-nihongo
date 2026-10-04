@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   ChevronRight,
@@ -34,6 +34,7 @@ const norm = (v: unknown) =>
     .toLocaleLowerCase()
     .trim();
 const pct = (a: number, b: number) => (b ? Math.min(100, Math.round((a / b) * 100)) : 0);
+type CategoryCountRow = { category_slug: string; item_count: number | string };
 async function fetchExtra(level: Level) {
   const { data: cats, error } = await supabase
     .from("vocabulary_categories")
@@ -43,10 +44,21 @@ async function fetchExtra(level: Level) {
   if (error) throw error;
   if (!cats?.length) return [];
   // Tabel vocabulary_category_links tidak dapat dibaca langsung oleh pengguna (RLS tanpa policy);
-  // hitungan kategori diambil lewat RPC yang sudah dipakai halaman daftar kategori.
-  const counts = await Promise.all(
-    cats.map((x) => fetchVocabCategoryCount(level, String(x.canonical_slug || x.slug))),
+  // hitungan semua kategori diambil dalam satu RPC. Bila RPC batch belum tersedia, fallback ke
+  // satu RPC per kategori (perilaku lama).
+  const batch = await supabase.rpc(
+    "get_vocabulary_category_counts" as never,
+    {
+      p_level: level,
+    } as never,
   );
+  const batchRows = batch.error ? null : (batch.data as unknown as CategoryCountRow[] | null);
+  const bySlug = new Map((batchRows ?? []).map((r) => [r.category_slug, Number(r.item_count)]));
+  const counts = batchRows
+    ? cats.map((x) => bySlug.get(String(x.canonical_slug || x.slug)) ?? 0)
+    : await Promise.all(
+        cats.map((x) => fetchVocabCategoryCount(level, String(x.canonical_slug || x.slug))),
+      );
   return cats
     .map((x, i: number) => ({
       id: x.id,
@@ -85,10 +97,29 @@ function BelajarPage() {
     queryFn: fetchMyProgress,
     enabled: ready,
   });
+  // 38 hitungan kategori (satu RPC per kategori) hanya dimuat saat bagiannya mendekati layar.
+  const [extraNear, setExtraNear] = useState(false);
+  const extraRef = useCallback((node: HTMLElement | null) => {
+    if (!node) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setExtraNear(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setExtraNear(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(node);
+  }, []);
   const extra = useQuery({
     queryKey: ["materi-extra-vocab", level],
     queryFn: () => fetchExtra(level!),
-    enabled: ready,
+    enabled: ready && extraNear,
   });
   const cont = useQuery({
     queryKey: ["hub-continue", level],
@@ -355,7 +386,7 @@ function BelajarPage() {
                     ))}
                   </div>
                 </section>
-                <section className="rounded-2xl border bg-card p-3">
+                <section ref={extraRef} className="rounded-2xl border bg-card p-3">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="grid size-8 place-items-center rounded-xl bg-violet-100 text-violet-600">
                       <Tags className="size-4" />
@@ -367,7 +398,7 @@ function BelajarPage() {
                       </p>
                     </div>
                   </div>
-                  {extra.isLoading ? (
+                  {extra.isLoading || extra.isPending ? (
                     <p className="py-2 text-center text-[10px] text-muted-foreground">
                       Memuat kategori…
                     </p>

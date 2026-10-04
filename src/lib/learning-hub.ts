@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { dynamicTable } from "@/lib/dynamic-db";
 import type { Level } from "@/lib/learn-queries";
 
@@ -84,7 +85,7 @@ export type ContinueItem = {
 
 /** Most recent lesson the user actually completed at the active level (from learning_activity), or null. */
 export async function fetchContinueLearning(level: Level): Promise<ContinueItem | null> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getAuthUser();
   const userId = auth.user?.id;
   if (!userId) return null;
   const { data, error } = await supabase
@@ -140,7 +141,7 @@ export type MasteryRow = { kind: MasteryKind; mastered: number; learned: number;
 
 /** Real counters only: mastered/learned rows in user_item_progress against published content at the level. */
 export async function fetchMastery(level: Level): Promise<MasteryRow[]> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getAuthUser();
   const userId = auth.user?.id;
   if (!userId) return [];
   const kinds: MasteryKind[] = ["vocabulary", "kanji", "grammar", "reading", "listening"];
@@ -164,7 +165,7 @@ export type SimulationSummary = {
 };
 
 export async function fetchLatestSimulation(level: Level): Promise<SimulationSummary | null> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getAuthUser();
   const userId = auth.user?.id;
   if (!userId) return null;
   const { data } = await supabase
@@ -249,7 +250,7 @@ export async function fetchWeeklyPlan(
     };
   });
   const empty: WeeklyPlan = { rows: [], days, studyDays: offsets.length };
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getAuthUser();
   const userId = auth.user?.id;
   if (!userId || !planId) return empty;
   const end = days[6]?.date ?? start;

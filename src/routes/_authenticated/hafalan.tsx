@@ -15,6 +15,7 @@ import {
 } from "@/lib/hafalan-mastery";
 import { parseMasteryTraining } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { separateSameItemCards } from "@/lib/flashcard-deck";
 import { FitContent } from "@/components/learn/FitContent";
 export const Route = createFileRoute("/_authenticated/hafalan")({
@@ -62,7 +63,7 @@ function masteryAspect(card: Card): MasteryAspect {
   return card.reverse ? "reading" : "meaning";
 }
 async function fetchProgress(level: Level) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getAuthUser();
   if (!u.user) return [];
   const { data, error } = await supabase
     .from("user_item_progress")
@@ -75,7 +76,7 @@ async function fetchProgress(level: Level) {
   return data ?? [];
 }
 async function rate(card: Card, level: Level, rating: Rating, usedHint: boolean, ms: number) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getAuthUser();
   if (!u.user) throw new Error("Sesi tidak ditemukan.");
   const now = new Date(),
     { data: old } = await supabase

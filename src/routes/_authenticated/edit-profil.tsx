@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { getMyAccount, updateMyAccount } from "@/lib/profile.functions";
 import { COUNTRIES } from "@/lib/countries";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/edit-profil")({ component: EditProfilePage });
 const LEVELS = ["N5", "N4", "N3", "N2", "N1"] as const;
@@ -66,7 +67,7 @@ function EditProfilePage() {
   }, [account.data]);
   useEffect(() => {
     void (async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getAuthUser();
       if (!auth.user) return;
       const { data: plan } = await supabase
         .from("study_plans")
@@ -83,7 +84,7 @@ function EditProfilePage() {
     })();
   }, []);
   useEffect(() => {
-    void supabase.auth.getUser().then(({ data: auth }) => {
+    void getAuthUser().then(({ data: auth }) => {
       const months = Number(auth.user?.user_metadata?.["study_target_months"]);
       setInitialMonths((TARGET_MONTHS as readonly number[]).includes(months) ? months : 3);
       if ((TARGET_MONTHS as readonly number[]).includes(months))

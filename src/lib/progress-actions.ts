@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import type { Level } from "@/lib/learn-queries";
 
 export async function markContentMastered(input: {
@@ -7,7 +8,7 @@ export async function markContentMastered(input: {
   level: Level;
   durationSeconds?: number;
 }) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getAuthUser();
   const userId = auth.user?.id;
   if (!userId) throw new Error("Sesi tidak ditemukan.");
   const { data: existing, error: readError } = await supabase

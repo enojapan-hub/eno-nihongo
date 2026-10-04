@@ -8,6 +8,7 @@ import { fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { masteryLabel } from "@/lib/mastery-analysis";
 import { masteryTrainingHref } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/hafalan-riwayat")({
   head: () => ({ meta: [{ title: "Riwayat Hafalan — ENO NIHONGO" }] }),
@@ -25,7 +26,7 @@ type Review = {
 };
 
 async function fetchReviews(level: Level) {
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData } = await getAuthUser();
   if (!userData.user) return [] as Review[];
   const { data, error } = await supabase
     .from("flashcard_reviews")

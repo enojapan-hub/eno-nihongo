@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/profil-foto")({
   component: ProfilePhotoPage,
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/profil-foto")({
 type PhotoData = { userId: string; name: string; current: string; google: string };
 
 async function fetchPhotoData(): Promise<PhotoData> {
-  const { data: auth, error } = await supabase.auth.getUser();
+  const { data: auth, error } = await getAuthUser();
   if (error || !auth.user) throw new Error("Sesi akun tidak ditemukan.");
   const metadata = auth.user.user_metadata ?? {};
   const google = String(metadata["avatar_url"] ?? metadata["picture"] ?? "");

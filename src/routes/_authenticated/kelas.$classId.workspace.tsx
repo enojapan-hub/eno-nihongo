@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { classroom, result, secureUrl, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/workspace")({
   validateSearch: (search: Record<string, unknown>): { preview?: "guru" } =>
@@ -37,7 +38,7 @@ function Page() {
     queryFn: async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getAuthUser();
       if (!user) throw new Error("Login diperlukan.");
       const canManage = await result(classroom.rpc("can_manage_class", { p_class_id: classId }));
       if (

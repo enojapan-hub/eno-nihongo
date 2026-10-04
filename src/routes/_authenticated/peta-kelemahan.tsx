@@ -7,6 +7,7 @@ import { fetchTargetLevel } from "@/lib/target-level";
 import { analyzeMastery, type MasteryReview } from "@/lib/mastery-analysis";
 import { masteryTrainingHref } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import type { Level } from "@/lib/learn-queries";
 import { fetchMembershipAccess } from "@/lib/membership";
 import { PremiumBadge } from "@/components/membership/PremiumBadge";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/peta-kelemahan")({
 type Review = MasteryReview & { created_at: string | null };
 
 async function fetchReviews(level: Level) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getAuthUser();
   if (!u.user) return [];
   const { data, error } = await supabase
     .from("flashcard_reviews")

@@ -4850,6 +4850,13 @@ export type Database = {
           title: string
         }[]
       }
+      get_vocabulary_category_counts: {
+        Args: { p_level: Database["public"]["Enums"]["jlpt_level"] }
+        Returns: {
+          category_slug: string
+          item_count: number
+        }[]
+      }
       get_vocabulary_count_by_category: {
         Args: {
           p_category_slug: string

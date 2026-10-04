@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export type MembershipPlan = "free" | "premium" | "lifetime";
 export type Membership = {
@@ -35,7 +36,7 @@ export async function fetchMembership(): Promise<Membership> {
 
 export async function fetchMembershipAccess(): Promise<MembershipAccess> {
   const membership = await fetchMembership();
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData } = await getAuthUser();
   const userId = userData.user?.id;
   if (!userId) return { ...membership, hasPremiumAccess: false };
   const { data: profile } = await supabase

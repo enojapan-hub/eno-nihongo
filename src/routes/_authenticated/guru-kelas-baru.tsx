@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { errorMessage } from "@/lib/classroom";
 
 export const Route = createFileRoute("/_authenticated/guru-kelas-baru")({ component: Page });
@@ -48,7 +49,7 @@ function Page() {
     try {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getAuthUser();
       if (!user) throw new Error("Login diperlukan");
       const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const path = user.id + "/" + Date.now() + "-" + crypto.randomUUID() + "." + ext;

@@ -19,6 +19,7 @@ import { fetchLeaderboard } from "@/lib/leaderboard";
 import { fetchMyProgress } from "@/lib/learn-queries";
 import { fetchAdaptivePlan } from "@/lib/adaptive-plan";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 export const Route = createFileRoute("/_authenticated/profil")({ component: ProfilePage });
 function ProfilePage() {
   const account = useQuery({ queryKey: ["my-account-profile"], queryFn: () => getMyAccount() });
@@ -35,7 +36,7 @@ function ProfilePage() {
   const targetMeta = useQuery({
     queryKey: ["study-target-meta"],
     queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await getAuthUser();
       const m = data.user?.user_metadata ?? {};
       return {
         months: Number(m["study_target_months"]) || null,
