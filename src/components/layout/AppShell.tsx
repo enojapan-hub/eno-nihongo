@@ -85,7 +85,10 @@ export function AppShell({
   if (focus)
     return (
       <div className="min-h-[100dvh] bg-background text-foreground">
-        <main className="mx-auto w-full max-w-2xl px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+        <main
+          data-app-main
+          className="mx-auto w-full max-w-2xl px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-3xl md:px-5 lg:max-w-4xl"
+        >
           <JapaneseSpacing>{children}</JapaneseSpacing>
         </main>
       </div>
@@ -93,7 +96,7 @@ export function AppShell({
   return (
     <div className="relative min-h-screen bg-background pb-[calc(5.25rem+env(safe-area-inset-bottom))] text-foreground md:pb-8">
       <header className="sticky top-0 z-30 border-b border-border/55 bg-background/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 md:px-6">
           {backTo ? (
             <Link to={backTo} aria-label={backLabel} className="flex min-w-0 items-center gap-2">
               <ArrowLeft className="size-[18px] shrink-0" />
@@ -156,7 +159,7 @@ export function AppShell({
             )}
           </div>
         </div>
-        <nav className="mx-auto hidden max-w-5xl px-4 pb-2 md:block">
+        <nav className="mx-auto hidden max-w-5xl px-4 pb-2 md:block md:px-6">
           <ul className="flex items-center gap-1">
             {navItems.map((item) => (
               <li key={item.to}>
@@ -177,7 +180,13 @@ export function AppShell({
           </ul>
         </nav>
       </header>
-      <main className={cn("relative z-10 mx-auto w-full max-w-5xl px-4 py-5", compact && "py-4")}>
+      <main
+        data-app-main
+        className={cn(
+          "relative z-10 mx-auto w-full max-w-5xl px-4 py-5 md:px-6",
+          compact && "py-4",
+        )}
+      >
         <JapaneseSpacing>
           {!compact && description && (
             <p className="mb-4 text-[12px] leading-5 text-muted-foreground">{description}</p>

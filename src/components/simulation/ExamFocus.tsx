@@ -19,7 +19,7 @@ export function ExamHeader({
   const low = remaining <= 300;
   return (
     <div className="sticky top-0 z-40 -mx-3 border-b bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-2xl items-center justify-between gap-2">
+      <div className="mx-auto flex h-14 max-w-2xl items-center md:max-w-3xl lg:max-w-4xl justify-between gap-2">
         <button
           type="button"
           onClick={onExit}
@@ -40,7 +40,9 @@ export function ExamHeader({
           {formatExamTime(remaining)}
         </span>
       </div>
-      {children && <div className="mx-auto max-w-2xl pb-2">{children}</div>}
+      {children && (
+        <div className="mx-auto max-w-2xl pb-2 md:max-w-3xl lg:max-w-4xl">{children}</div>
+      )}
     </div>
   );
 }

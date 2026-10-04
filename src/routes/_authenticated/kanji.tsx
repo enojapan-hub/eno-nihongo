@@ -591,7 +591,7 @@ function KanjiPage() {
                 </section>
               )}
               <div className="mt-3 border-t bg-background px-1.5 py-1">
-                <div className="mx-auto grid max-w-lg grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
+                <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
                   <Button
                     variant="ghost"
                     aria-label="Materi sebelumnya"
