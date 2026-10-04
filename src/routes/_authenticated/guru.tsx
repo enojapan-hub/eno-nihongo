@@ -18,6 +18,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 export const Route = createFileRoute("/_authenticated/guru")({ component: Page });
 type Kind = "kanji" | "vocabulary" | "grammar" | "reading" | "listening";
 interface TeacherContentRow {
@@ -54,7 +55,7 @@ function Page() {
     queryFn: async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getAuthUser();
       if (!user) throw Error();
       const { data, error } = await supabase
         .from("classes")

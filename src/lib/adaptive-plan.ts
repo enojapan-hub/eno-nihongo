@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import type { Level } from "@/lib/learn-queries";
 import {
   analyzePlannerWeakness,
@@ -383,7 +384,7 @@ async function enrichTasksWithSuggestions(
 }
 
 export async function fetchAdaptivePlan(): Promise<AdaptivePlan> {
-  const { data: auth, error: authError } = await supabase.auth.getUser();
+  const { data: auth, error: authError } = await getAuthUser();
   if (authError || !auth.user) return emptyPlan;
   const client = supabase;
   const today = new Intl.DateTimeFormat("en-CA", {

@@ -14,6 +14,7 @@ import { fetchKanjiList, fetchGrammarList, type Level } from "@/lib/learn-querie
 import { fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/rantai-ingatan")({
   head: () => ({ meta: [{ title: "Rantai Ingatan — ENO NIHONGO" }] }),
@@ -33,7 +34,7 @@ type Step = {
 type Chain = { key: string; title: string; steps: Step[] };
 
 async function saveChainReview(step: Step, level: Level, correct: boolean, responseMs: number) {
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData } = await getAuthUser();
   if (!userData.user) return;
 
   const rating = correct ? 2 : 0;

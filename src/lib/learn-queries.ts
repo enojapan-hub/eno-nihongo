@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export type Level = "N5" | "N4" | "N3" | "N2" | "N1";
 export const LEVELS: Level[] = ["N5", "N4", "N3", "N2", "N1"];
@@ -359,7 +360,7 @@ export async function submitPracticeQuiz(input: {
 }
 export type LearnableItemType = "kanji" | "vocabulary" | "grammar" | "reading" | "listening";
 async function currentUserId() {
-  const { data } = await supabase.auth.getUser();
+  const { data } = await getAuthUser();
   const id = data.user?.id;
   if (!id) throw new Error("Sesi tidak ditemukan.");
   return id;
@@ -455,7 +456,7 @@ export async function addItemToReview(input: {
   return true;
 }
 export async function fetchMyProgress() {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await getAuthUser();
   const userId = userRes.user?.id;
   if (!userId) return null;
   const [progress, stats, attempts, answers] = await Promise.all([
@@ -511,7 +512,7 @@ export async function fetchContentTotals() {
   };
 }
 export async function fetchRewards() {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await getAuthUser();
   const userId = userRes.user?.id;
   if (!userId) return null;
   const [profile, stats, referrals, grants] = await Promise.all([

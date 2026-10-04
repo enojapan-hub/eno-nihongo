@@ -150,11 +150,12 @@ export function pickUsageNote(
 
 // Kompatibilitas untuk pemanggil lama: memuat bertahap agar tidak mengirim ribuan ID dalam satu query.
 export async function fetchVocabListResilient(level: Level) {
-  const total = await fetchVocabCount(level),
-    rows: Awaited<ReturnType<typeof fetchVocabPage>> = [];
-  for (let offset = 0; offset < total; offset += 200)
-    rows.push(...(await fetchVocabPage(level, offset, 200)));
-  return rows;
+  const total = await fetchVocabCount(level);
+  // Halaman saling independen setelah total diketahui: ambil paralel (urutan hasil tetap berurutan).
+  const offsets: number[] = [];
+  for (let offset = 0; offset < total; offset += 200) offsets.push(offset);
+  const pages = await Promise.all(offsets.map((offset) => fetchVocabPage(level, offset, 200)));
+  return pages.flat();
 }
 
 export async function fetchVocabCategoryCount(level: Level, category: string): Promise<number> {

@@ -8,6 +8,7 @@ import { fetchPassageDetail, fetchPassages, type Level } from "@/lib/learn-queri
 import { fetchTargetLevel } from "@/lib/target-level";
 import { markContentMastered } from "@/lib/progress-actions";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/dokkai/$id")({ component: DokkaiDetail });
 type FuriganaPassage = {
@@ -135,7 +136,7 @@ function DokkaiDetail() {
   const paragraphs = useMemo(() => splitParagraphs(body), [body]);
   const furiganaParagraphs = useMemo(() => splitParagraphs(furiganaBody), [furiganaBody]);
   const recordReadingSignals = async () => {
-    const { data: u } = await supabase.auth.getUser();
+    const { data: u } = await getAuthUser();
     if (!u.user || !p) return;
     const rows = questions
       .filter((q) => answers[q.id] !== undefined)

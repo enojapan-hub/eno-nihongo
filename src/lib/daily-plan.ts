@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import type { Level } from "@/lib/learn-queries";
 
 export type DailyItem = {
@@ -11,7 +12,7 @@ export type DailyItem = {
 };
 
 export async function fetchDailyPlan(level: Level = "N5") {
-  const { data: userRes } = await supabase.auth.getUser();
+  const { data: userRes } = await getAuthUser();
   const userId = userRes.user?.id;
   if (!userId) return { level, items: [] as DailyItem[], completed: 0, target: 5 };
   const start = new Date();

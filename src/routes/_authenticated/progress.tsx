@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/progress")({
   head: () => ({
@@ -29,7 +30,7 @@ type Attempt = {
 };
 
 async function fetchProgress(): Promise<Attempt[]> {
-  const { data: userRes, error: userError } = await supabase.auth.getUser();
+  const { data: userRes, error: userError } = await getAuthUser();
   if (userError || !userRes.user) throw new Error("Sesi masuk tidak ditemukan.");
   const { data, error } = await supabase
     .from("quiz_attempts")

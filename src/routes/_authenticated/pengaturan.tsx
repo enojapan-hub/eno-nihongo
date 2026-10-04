@@ -33,6 +33,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 export const Route = createFileRoute("/_authenticated/pengaturan")({ component: Page });
 function Row({
   icon: I,
@@ -47,12 +48,10 @@ function Row({
   onClick?: () => void;
   children?: React.ReactNode;
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-primary/[.04] active:scale-[.99]"
-    >
+  const className =
+    "group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-primary/[.04] active:scale-[.99]";
+  const content = (
+    <>
       <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
         <I className="size-[18px]" />
       </span>
@@ -63,6 +62,13 @@ function Row({
       {children ?? (
         <ChevronRight className="size-4 text-muted-foreground/60 transition group-hover:translate-x-0.5" />
       )}
+    </>
+  );
+  // Baris dengan kontrol (Switch) tidak boleh berupa <button>: tombol di dalam tombol tidak valid.
+  if (children) return <div className={className}>{content}</div>;
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
     </button>
   );
 }
@@ -182,7 +188,7 @@ function Page() {
     void (async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getAuthUser();
       if (!user) return;
       const [{ data: p }, { data: n }] = await Promise.all([
         supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),

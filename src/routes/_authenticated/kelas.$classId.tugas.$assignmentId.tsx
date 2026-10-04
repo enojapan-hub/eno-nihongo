@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { classroom, result, openClassAttachment, errorMessage } from "@/lib/classroom";
 import type { Tables } from "@/integrations/supabase/types";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/tugas/$assignmentId")({
@@ -19,7 +20,7 @@ function Page() {
     queryFn: async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getAuthUser();
       if (!user) throw new Error("Login diperlukan.");
       const [assignment, submission, grade] = await Promise.all([
         result(

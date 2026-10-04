@@ -7,6 +7,7 @@ import { fetchKanjiList, fetchGrammarList, type Level } from "@/lib/learn-querie
 import { fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 export const Route = createFileRoute("/_authenticated/jebakan-ingatan")({
   head: () => ({ meta: [{ title: "Jebakan Ingatan — ENO NIHONGO" }] }),
   component: Page,
@@ -47,7 +48,7 @@ function similarity(a: Item, b: Item) {
   return visual * 0.5 + sound * 0.4 + meaning;
 }
 async function history(level: Level) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getAuthUser();
   if (!u.user) return [];
   const { data, error } = await supabase
     .from("flashcard_reviews")
@@ -60,7 +61,7 @@ async function history(level: Level) {
   return (data ?? []) as Review[];
 }
 async function saveTrapReview(item: Item, level: Level, correct: boolean, ms: number) {
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await getAuthUser();
   if (!u.user) return;
   const { error } = await supabase.from("flashcard_reviews").insert({
     user_id: u.user.id,

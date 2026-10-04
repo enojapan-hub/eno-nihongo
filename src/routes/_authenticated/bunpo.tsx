@@ -9,6 +9,7 @@ import { addItemToReview, markItemLearned, type Level } from "@/lib/learn-querie
 import { fetchTargetLevel } from "@/lib/target-level";
 import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacing";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/bunpo")({ component: BunpoPage });
 const split = (v?: string | null) =>
@@ -228,7 +229,7 @@ function BunpoPage() {
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getAuthUser();
       if (!auth.user) return [] as Array<{ item_id: string; status: string }>;
       const { data, error } = await supabase
         .from("user_item_progress")

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { JapaneseSpacing } from "@/components/japanese/JapaneseSpacing";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 const navItems = [
   { to: "/target", label: "Target", icon: Target },
   { to: "/belajar", label: "Materi", icon: BookOpen },
@@ -34,6 +35,38 @@ type Props = {
   focus?: boolean;
   children: ReactNode;
 };
+// Setiap halaman me-mount AppShell sendiri; hitungan unread dipakai ulang antar navigasi.
+const UNREAD_TTL_MS = 15_000;
+let unreadCache: { count: number; at: number } | null = null;
+
+if (typeof window !== "undefined") {
+  // Ganti akun / logout: jangan tampilkan hitungan milik user sebelumnya.
+  supabase.auth.onAuthStateChange(() => {
+    unreadCache = null;
+  });
+}
+let unreadInflight: Promise<number> | null = null;
+function fetchUnreadCount(): Promise<number> {
+  if (unreadInflight) return unreadInflight;
+  unreadInflight = (async () => {
+    const { data: auth } = await getAuthUser();
+    if (!auth.user) {
+      unreadCache = null;
+      return 0;
+    }
+    const { count } = await supabase
+      .from("user_notifications" as never)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", auth.user.id)
+      .is("read_at", null);
+    unreadCache = { count: count ?? 0, at: Date.now() };
+    return count ?? 0;
+  })().finally(() => {
+    unreadInflight = null;
+  });
+  return unreadInflight;
+}
+
 export function AppShell({
   title,
   description,
@@ -45,7 +78,7 @@ export function AppShell({
 }: Props) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [darkMode, setDarkMode] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(unreadCache?.count ?? 0);
   useEffect(() => {
     const saved = window.localStorage.getItem("enonihongo-theme") === "dark";
     setDarkMode(saved);
@@ -53,21 +86,16 @@ export function AppShell({
   }, []);
   useEffect(() => {
     let active = true;
-    async function loadUnread() {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        if (active) setUnreadNotifications(0);
+    async function loadUnread(force = false) {
+      if (!force && unreadCache && Date.now() - unreadCache.at < UNREAD_TTL_MS) {
+        if (active) setUnreadNotifications(unreadCache.count);
         return;
       }
-      const { count } = await supabase
-        .from("user_notifications" as never)
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", auth.user.id)
-        .is("read_at", null);
-      if (active) setUnreadNotifications(count ?? 0);
+      const count = await fetchUnreadCount();
+      if (active) setUnreadNotifications(count);
     }
     void loadUnread();
-    const timer = window.setInterval(() => void loadUnread(), 30000);
+    const timer = window.setInterval(() => void loadUnread(true), 30000);
     return () => {
       active = false;
       window.clearInterval(timer);

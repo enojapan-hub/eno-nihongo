@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { classroom, result, sessionTime } from "@/lib/classroom";
 export const Route = createFileRoute("/_authenticated/kelas/$classId/quiz/$quizId")({
   validateSearch: (search: Record<string, unknown>): { attempt?: string } =>
@@ -34,7 +35,7 @@ function Page() {
     queryFn: async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getAuthUser();
       if (!user) throw new Error("Login diperlukan.");
       const quiz = await result<{
         id: string;

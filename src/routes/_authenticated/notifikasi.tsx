@@ -23,6 +23,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/notifikasi")({
   component: NotificationsPage,
@@ -38,7 +39,7 @@ type NotificationRow = {
   created_at: string;
 };
 async function fetchNotifications(): Promise<NotificationRow[]> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await getAuthUser();
   if (!auth.user) return [];
   const { data, error } = await supabase
     .from("user_notifications" as never)
@@ -130,7 +131,7 @@ function NotificationsPage() {
   });
   const markAll = useMutation({
     mutationFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getAuthUser();
       if (!auth.user) return;
       const { error } = await supabase
         .from("user_notifications" as never)

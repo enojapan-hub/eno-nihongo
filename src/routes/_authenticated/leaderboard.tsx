@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchCompetitionLeaderboard, fetchLeaderboard } from "@/lib/leaderboard";
 import { getLeague, LEAGUES } from "@/lib/progression";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({ meta: [{ title: "Leaderboard — ENO NIHONGO" }] }),
@@ -34,7 +35,7 @@ function LeaderboardPage() {
   });
   const me = useQuery({
     queryKey: ["auth-user-id"],
-    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
+    queryFn: async () => (await getAuthUser()).data.user?.id ?? null,
     staleTime: 60000,
   });
   const myWeeklyRow = weeklyRanks.data?.find((u) => u.userId === me.data);

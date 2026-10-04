@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 import { COUNTRIES } from "@/lib/countries";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({ component: OnboardingPage });
@@ -18,13 +20,14 @@ function plusMonths(months: number) {
 }
 function OnboardingPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [name, setName] = useState("");
   const [level, setLevel] = useState("N5");
   const [targetMonths, setTargetMonths] = useState(3);
   const [country, setCountry] = useState("Indonesia");
   const [saving, setSaving] = useState(false);
   useEffect(() => {
-    void supabase.auth.getUser().then(({ data }) => {
+    void getAuthUser().then(({ data }) => {
       const m = data.user?.user_metadata ?? {};
       setName(String(m["full_name"] ?? m["name"] ?? ""));
     });
@@ -36,7 +39,7 @@ function OnboardingPage() {
     }
     setSaving(true);
     try {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
+      const { data: auth, error: authError } = await getAuthUser();
       if (authError || !auth.user) throw new Error("Sesi tidak ditemukan.");
       const { error } = await supabase
         .from("profiles")
@@ -68,6 +71,7 @@ function OnboardingPage() {
         },
       });
       if (metaError) throw metaError;
+      await qc.invalidateQueries({ queryKey: ["target-level"] });
       toast.success("Akun siap digunakan.");
       await navigate({ to: "/dashboard", replace: true });
     } catch (e) {
