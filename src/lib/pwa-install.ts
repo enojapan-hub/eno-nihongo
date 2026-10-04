@@ -14,6 +14,7 @@ export const DISMISS_DAYS = 14;
 let deferred: BeforeInstallPromptEvent | null = null;
 let installed = false;
 let started = false;
+let consumed = false;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((fn) => fn());
 
@@ -53,15 +54,27 @@ export function writeDismissed(storage: Pick<Storage, "setItem"> | undefined, no
 export function initPwa() {
   if (typeof window === "undefined" || started) return;
   started = true;
+  // Skrip kecil di <head> (lihat __root.tsx) menangkap event sebelum hydration; baca hasilnya di sini.
+  const w = window as Window & { __enoInstallEvent?: Event; __enoInstalled?: boolean };
+  const sync = () => {
+    if (w.__enoInstalled) {
+      installed = true;
+      deferred = null;
+    } else if (w.__enoInstallEvent && !consumed) {
+      deferred = w.__enoInstallEvent as BeforeInstallPromptEvent;
+    }
+    emit();
+  };
+  sync();
+  window.addEventListener("eno:install-available", sync);
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
-    deferred = event as BeforeInstallPromptEvent;
-    emit();
+    w.__enoInstallEvent = event;
+    sync();
   });
   window.addEventListener("appinstalled", () => {
-    installed = true;
-    deferred = null;
-    emit();
+    w.__enoInstalled = true;
+    sync();
   });
   if ("serviceWorker" in navigator && import.meta.env.PROD) {
     window.addEventListener("load", () => {
@@ -84,6 +97,7 @@ export async function promptNativeInstall(): Promise<"accepted" | "dismissed" | 
   if (!deferred) return "unavailable";
   const event = deferred;
   deferred = null;
+  consumed = true;
   emit();
   await event.prompt();
   const choice = await event.userChoice.catch(() => ({ outcome: "dismissed" as const }));
