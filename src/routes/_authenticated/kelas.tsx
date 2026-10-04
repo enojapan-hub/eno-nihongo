@@ -1,15 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import {
-  ArrowRight,
-  BookOpen,
-  ChevronLeft,
-  GraduationCap,
-  Search,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { ArrowRight, BookOpen, GraduationCap, Search, Sparkles, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,38 +58,23 @@ function KelasPage() {
   }, [classes.data, search]);
 
   return (
-    <AppShell title="Kelas" focus>
-      <div className="-mx-3 -mt-3 min-h-[100dvh] bg-muted/20">
-        <header className="sticky top-0 z-20 border-b bg-background/95 px-4 py-3 backdrop-blur">
-          <div className="mx-auto flex max-w-5xl items-center justify-between">
-            <Link
-              to="/dashboard"
-              aria-label="Kembali ke beranda"
-              className="grid size-10 place-items-center rounded-full border bg-background hover:bg-muted"
-            >
-              <ChevronLeft className="size-5" />
+    <AppShell title="Kelas" compact>
+      <div className="space-y-5">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-lg font-black">Kelas</h1>
+          <Button
+            size="sm"
+            variant="outline"
+            asChild
+            className="h-10 rounded-full px-3 text-xs font-bold"
+          >
+            <Link to="/kelas-saya">
+              <GraduationCap className="mr-1.5 size-4" />
+              Kelas Saya
             </Link>
-            <div className="text-center">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-                ENO NIHONGO
-              </p>
-              <h1 className="text-lg font-black">Kelas</h1>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              asChild
-              className="h-10 rounded-full px-3 text-xs font-bold"
-            >
-              <Link to="/kelas-saya">
-                <GraduationCap className="mr-1.5 size-4" />
-                Kelas Saya
-              </Link>
-            </Button>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-5xl space-y-5 px-4 py-5 pb-10">
+          </Button>
+        </div>
+        <div className="space-y-5">
           <section className="overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/15 via-background to-background p-5 shadow-sm sm:p-7">
             <div className="max-w-2xl">
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
@@ -211,7 +188,7 @@ function KelasPage() {
               </div>
             )}
           </section>
-        </main>
+        </div>
       </div>
     </AppShell>
   );

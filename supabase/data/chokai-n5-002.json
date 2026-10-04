@@ -1,0 +1,193 @@
+{
+  "level": "N5",
+  "exam_no": 2,
+  "source": "JLPT_N5_002.pdf hal. 26-32 + Chokai_N5_002.mp3 (1 file, 1023.1 s)",
+  "audio": "public/audio/chokai/n5-002.mp3",
+  "status": "STAGED: audio map row status=aligned (timeline verified) but structure_verified=false so it is NOT served; questions is_published=false. Activate only after PR #112 is merged (production code before the merge picks the first session row without exam filter): update jlpt_simulation_audio_source_map set structure_verified=true where file_name='Chokai_N5_002.mp3' and level='N5'; then publish exam 2 listening questions.",
+  "timeline_basis": "Setiap batas dicek terhadap struktur MP3 (jeda digital-zero antar soal, onset narator, akhir pengulangan pertanyaan/pilihan terakhir), urutan 7/6/5/6 dari PDF, dan jangkar gambar Q14-Q18. 0 koreksi diperlukan. Uji putar 1x di Q6/Q7 dan Q8/Q9/Q10 cocok dengan timeline.",
+  "known_issues": [
+    "Q9 SOURCE ISSUE: setelah pertanyaan narator (berakhir 456.45 s) MP3 berisi digital silence persis 456.454-469.212 s (12.76 s). Soal lain di mondai 2 punya jeda baca (dengung ~3 s), dialog 25-35 s, dan pengulangan pertanyaan; Q9 tidak. Seluruh suara di file sudah teridentifikasi, tidak ada dialog Q9 di tempat lain. Audio dialog Q9 hilang dari file sumber; tidak dipalsukan.",
+    "Q2: pilihan 4 tercetak 'ない' di PDF, dipertahankan apa adanya.",
+    "transcript_jp sengaja kosong (tidak diperlukan schema/runner; ASR mentah tidak dipakai)."
+  ],
+  "questions": [
+    {
+      "n": 1,
+      "mondai": 1,
+      "key": "D",
+      "image": "q01.webp",
+      "start": 6.6,
+      "end": 49.0
+    },
+    {
+      "n": 2,
+      "mondai": 1,
+      "key": "A",
+      "start": 62.5,
+      "end": 111.1
+    },
+    {
+      "n": 3,
+      "mondai": 1,
+      "key": "B",
+      "start": 124.8,
+      "end": 163.6
+    },
+    {
+      "n": 4,
+      "mondai": 1,
+      "key": "C",
+      "start": 177.4,
+      "end": 220.0
+    },
+    {
+      "n": 5,
+      "mondai": 1,
+      "key": "D",
+      "image": "q05.webp",
+      "start": 233.3,
+      "end": 283.9
+    },
+    {
+      "n": 6,
+      "mondai": 1,
+      "key": "A",
+      "image": "q06.webp",
+      "start": 288.2,
+      "end": 333.9
+    },
+    {
+      "n": 7,
+      "mondai": 1,
+      "key": "D",
+      "image": "q07.webp",
+      "start": 339.3,
+      "end": 380.1
+    },
+    {
+      "n": 8,
+      "mondai": 2,
+      "key": "B",
+      "start": 389.7,
+      "end": 440.0
+    },
+    {
+      "n": 9,
+      "mondai": 2,
+      "key": "D",
+      "start": 449.8,
+      "end": 468.9
+    },
+    {
+      "n": 10,
+      "mondai": 2,
+      "key": "D",
+      "start": 469.0,
+      "end": 516.5
+    },
+    {
+      "n": 11,
+      "mondai": 2,
+      "key": "D",
+      "start": 519.1,
+      "end": 567.3
+    },
+    {
+      "n": 12,
+      "mondai": 2,
+      "key": "C",
+      "image": "q12.webp",
+      "start": 572.9,
+      "end": 611.0
+    },
+    {
+      "n": 13,
+      "mondai": 2,
+      "key": "C",
+      "start": 615.9,
+      "end": 662.7
+    },
+    {
+      "n": 14,
+      "mondai": 3,
+      "key": "A",
+      "image": "q14.webp",
+      "start": 673.9,
+      "end": 703.1
+    },
+    {
+      "n": 15,
+      "mondai": 3,
+      "key": "B",
+      "image": "q15.webp",
+      "start": 711.4,
+      "end": 728.9
+    },
+    {
+      "n": 16,
+      "mondai": 3,
+      "key": "A",
+      "image": "q16.webp",
+      "start": 738.6,
+      "end": 757.8
+    },
+    {
+      "n": 17,
+      "mondai": 3,
+      "key": "A",
+      "image": "q17.webp",
+      "start": 771.1,
+      "end": 791.3
+    },
+    {
+      "n": 18,
+      "mondai": 3,
+      "key": "C",
+      "image": "q18.webp",
+      "start": 800.5,
+      "end": 823.0
+    },
+    {
+      "n": 19,
+      "mondai": 4,
+      "key": "A",
+      "start": 833.2,
+      "end": 851.1
+    },
+    {
+      "n": 20,
+      "mondai": 4,
+      "key": "A",
+      "start": 862.1,
+      "end": 882.5
+    },
+    {
+      "n": 21,
+      "mondai": 4,
+      "key": "B",
+      "start": 894.4,
+      "end": 916.1
+    },
+    {
+      "n": 22,
+      "mondai": 4,
+      "key": "C",
+      "start": 928.5,
+      "end": 948.1
+    },
+    {
+      "n": 23,
+      "mondai": 4,
+      "key": "A",
+      "start": 958.3,
+      "end": 977.1
+    },
+    {
+      "n": 24,
+      "mondai": 4,
+      "key": "A",
+      "start": 989.5,
+      "end": 1017.0
+    }
+  ]
+}

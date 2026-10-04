@@ -14,7 +14,14 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { BrandLogo, BrandMark } from "@/components/layout/BrandMark";
+import { BrandMark } from "@/components/layout/BrandMark";
+import { AuthLoader } from "@/components/layout/AuthLoader";
+import {
+  CALLBACK_FAILED_MESSAGE,
+  canonicalAuthUrl,
+  initialAuthCallback,
+  resolveAuth,
+} from "@/lib/auth-flow";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -40,38 +47,10 @@ function selectedPlanCheckout() {
 }
 
 async function continueAfterAuth() {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  const user = data.session?.user;
-  if (!user) return false;
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("onboarding_completed, role")
-    .eq("id", user.id)
-    .maybeSingle();
-  const checkout = selectedPlanCheckout();
-  if (checkout) {
-    window.location.replace(checkout);
-    return true;
-  }
-  if (profile?.role === "owner" || profile?.role === "admin") {
-    window.location.replace("/admin");
-    return true;
-  }
-  const completed =
-    profile?.onboarding_completed === true || user.user_metadata?.["onboarding_completed"] === true;
-  window.location.replace(completed ? "/dashboard" : "/onboarding");
+  const result = await resolveAuth();
+  if (!result.authenticated) return false;
+  window.location.replace(selectedPlanCheckout() ?? result.destination);
   return true;
-}
-
-function LogoLoader() {
-  return (
-    <div className="grid min-h-screen place-items-center bg-[#f7f7f4] dark:bg-background">
-      <div role="status" aria-label="Memuat" className="animate-[pulse_1.25s_ease-in-out_infinite]">
-        <BrandLogo className="size-[84px]" />
-      </div>
-    </div>
-  );
 }
 
 function AuthPage() {
@@ -85,10 +64,22 @@ function AuthPage() {
 
   useEffect(() => {
     let active = true;
+    const canonical = canonicalAuthUrl(window.location);
+    if (canonical) {
+      window.location.replace(canonical);
+      return;
+    }
     const finish = async () => {
       try {
         const redirected = await continueAfterAuth();
-        if (active && !redirected) setChecking(false);
+        if (active && !redirected) {
+          if (
+            initialAuthCallback.present ||
+            new URLSearchParams(window.location.search).get("callback") === "failed"
+          )
+            setError(CALLBACK_FAILED_MESSAGE);
+          setChecking(false);
+        }
       } catch (caught) {
         if (active) {
           setError(caught instanceof Error ? caught.message : "Sesi tidak dapat diverifikasi.");
@@ -197,7 +188,7 @@ function AuthPage() {
     }
   }
 
-  if (checking) return <LogoLoader />;
+  if (checking) return <AuthLoader />;
   const busy = loading !== null;
   const isSignUp = mode === "signup";
   return (

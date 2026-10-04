@@ -9,6 +9,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveAuth } from "@/lib/auth-flow";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -169,21 +170,10 @@ function RootComponent() {
       if (typeof window === "undefined") return;
       const isEntryPage = window.location.pathname === "/" || window.location.pathname === "/auth";
       if (!isEntryPage) return;
-      const { data: auth, error } = await supabase.auth.getSession();
-      const user = auth.session?.user;
-      if (error || !active || !user) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("onboarding_completed, role")
-        .eq("id", user.id)
-        .maybeSingle();
-      const destination =
-        profile?.role === "owner" || profile?.role === "admin"
-          ? "/admin"
-          : profile?.onboarding_completed
-            ? "/dashboard"
-            : "/onboarding";
-      if (window.location.pathname !== destination) window.location.replace(destination);
+      const result = await resolveAuth();
+      if (!active || !result.authenticated) return;
+      if (window.location.pathname !== result.destination)
+        window.location.replace(result.destination);
     };
     window.sessionStorage.removeItem(`eno-module-recovery:${window.location.pathname}`);
     void redirectAfterLogin();

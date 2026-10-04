@@ -19,7 +19,8 @@ import {
   Target,
   Crown,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { AuthLoader } from "@/components/layout/AuthLoader";
+import { hasStoredSession, initialAuthCallback, resolveAuth } from "@/lib/auth-flow";
 const ORIGIN = "https://www.enonihongo.com";
 const DESCRIPTION = "Belajar bahasa Jepang dan persiapan JLPT N5–N1 bersama ENO NIHONGO.";
 export const Route = createFileRoute("/")({
@@ -80,30 +81,31 @@ const TikTokIcon = () => (
 );
 function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Callback OAuth/verifikasi atau sesi tersimpan: tampilkan loader (bukan beranda publik)
+  // sampai sesi selesai di-resolve, supaya pengguna tidak mengira belum masuk.
+  const [resolving, setResolving] = useState(false);
   useEffect(() => {
-    void (async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const u = data.session?.user;
-        if (!u) return;
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("onboarding_completed,role")
-          .eq("id", u.id)
-          .maybeSingle();
-        const r = p?.role ?? "student";
-        window.location.replace(
-          r === "owner" || r === "admin"
-            ? "/admin"
-            : p?.onboarding_completed
-              ? "/dashboard"
-              : "/onboarding",
-        );
-      } catch {
-        return;
-      }
-    })();
+    let active = true;
+    const pending = initialAuthCallback.present || hasStoredSession(window.localStorage);
+    if (pending) setResolving(true);
+    void resolveAuth()
+      .then((result) => {
+        if (!active) return;
+        if (result.authenticated) {
+          window.location.replace(result.destination);
+          return;
+        }
+        if (result.callbackFailed) window.location.replace("/auth?callback=failed");
+        else setResolving(false);
+      })
+      .catch(() => {
+        if (active) setResolving(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
+  if (resolving) return <AuthLoader />;
   return (
     <main className="min-h-screen bg-white font-sans text-[#10221a]">
       <header className="sticky top-0 z-50 border-b border-slate-100/80 bg-white/95 backdrop-blur">
