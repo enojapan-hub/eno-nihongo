@@ -7,6 +7,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { initPwa } from "@/lib/pwa-install";
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAuth } from "@/lib/auth-flow";
@@ -88,6 +89,7 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
 
 const CANONICAL_ORIGIN = "https://www.enonihongo.com";
 const SHARE_LOGO = `${CANONICAL_ORIGIN}/enonihongo-logo-dark.png?v=20260909-new`;
+const ICON_VERSION = "20261004";
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -105,6 +107,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "googlebot", content: "index, follow" },
       { name: "author", content: "ENO NIHONGO" },
+      { name: "theme-color", content: "#228b4c" },
+      { name: "application-name", content: "ENO NIHONGO" },
+      { name: "apple-mobile-web-app-title", content: "ENO NIHONGO" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "ENO NIHONGO" },
       { property: "og:locale", content: "id_ID" },
@@ -140,8 +147,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap",
       },
-      { rel: "icon", href: "/enonihongo-logo-dark.png?v=20260909-new", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/enonihongo-logo-dark.png?v=20260909-new" },
+      { rel: "icon", href: `/favicon.ico?v=${ICON_VERSION}`, sizes: "48x48" },
+      {
+        rel: "icon",
+        href: `/favicon-32x32.png?v=${ICON_VERSION}`,
+        type: "image/png",
+        sizes: "32x32",
+      },
+      {
+        rel: "icon",
+        href: `/favicon-16x16.png?v=${ICON_VERSION}`,
+        type: "image/png",
+        sizes: "16x16",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: `/apple-touch-icon.png?v=${ICON_VERSION}`,
+        sizes: "180x180",
+      },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -164,6 +188,9 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    initPwa();
+  }, []);
   useEffect(() => {
     let active = true;
     const redirectAfterLogin = async () => {

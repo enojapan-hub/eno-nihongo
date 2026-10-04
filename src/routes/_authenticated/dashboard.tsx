@@ -27,6 +27,7 @@ import { fetchLeaderboard } from "@/lib/leaderboard";
 import { fetchDashboardMetrics, resolveContinueLesson } from "@/lib/dashboard-live";
 import { getAccountLevel } from "@/lib/progression";
 import { AppShell } from "@/components/layout/AppShell";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { JlptStatusBar } from "@/components/layout/JlptStatusBar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -439,6 +440,7 @@ function DashboardPage() {
           </DialogContent>
         </Dialog>
       </div>
+      <InstallPrompt />
     </AppShell>
   );
 }

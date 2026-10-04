@@ -474,7 +474,10 @@ function HafalanPage() {
     );
   return (
     <AppShell compact title="Flashcard">
-      <div className="mx-auto w-full max-w-md space-y-3 pb-[max(calc(11.5rem+env(safe-area-inset-bottom)),calc(100svh-19rem))]">
+      <div
+        data-layout="wide"
+        className="mx-auto w-full max-w-md space-y-3 pb-[max(calc(11.5rem+env(safe-area-inset-bottom)),calc(100svh-19rem))] md:max-w-2xl lg:max-w-3xl"
+      >
         <div className="flex gap-2">
           <a
             href="/belajar"
@@ -637,7 +640,7 @@ function HafalanPage() {
                     transform: `translateX(${dragX}px) rotate(${dragX / 22}deg)`,
                     touchAction: revealed ? "pan-y" : "auto",
                   }}
-                  className={`relative h-[clamp(240px,calc(100svh-20.5rem-env(safe-area-inset-bottom)),460px)] w-full select-none overflow-hidden rounded-[28px] border bg-card text-center shadow-[0_18px_45px_-22px_rgba(0,0,0,0.45)] ease-out [transform-style:preserve-3d] ${dragging.current ? "transition-none" : "transition-transform duration-75"} ${swiping ? "pointer-events-none" : ""}`}
+                  className={`relative h-[clamp(240px,calc(100svh-20.5rem-env(safe-area-inset-bottom)),460px)] md:h-[clamp(300px,calc(100svh-20.5rem-env(safe-area-inset-bottom)),560px)] w-full select-none overflow-hidden rounded-[28px] border bg-card text-center shadow-[0_18px_45px_-22px_rgba(0,0,0,0.45)] ease-out [transform-style:preserve-3d] ${dragging.current ? "transition-none" : "transition-transform duration-75"} ${swiping ? "pointer-events-none" : ""}`}
                 >
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-primary/70" />
                   {revealed && (
@@ -709,7 +712,7 @@ function HafalanPage() {
               </div>
             </div>
             <div className="fixed inset-x-0 bottom-[calc(4.15rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 px-3 pb-2 pt-2 backdrop-blur md:bottom-0 md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-              <div className="mx-auto h-[6.25rem] w-full max-w-md md:max-w-xl lg:max-w-[40rem]">
+              <div className="mx-auto h-[6.25rem] w-full max-w-md md:max-w-2xl lg:max-w-3xl">
                 {!revealed ? (
                   <div className="space-y-2">
                     <div className="flex gap-2">

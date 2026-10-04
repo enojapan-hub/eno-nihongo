@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Bell,
   BellRing,
@@ -148,14 +149,27 @@ function NotificationsPage() {
       );
       if (error) throw new Error(error.message);
     },
-    onSuccess: refresh,
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: ["notifications"] });
+      const previous = qc.getQueryData<NotificationRow[]>(["notifications"]);
+      qc.setQueryData<NotificationRow[]>(["notifications"], (rows) =>
+        (rows ?? []).filter((n) => n.id !== id),
+      );
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      if (context?.previous) qc.setQueryData(["notifications"], context.previous);
+      toast.error("Pemberitahuan gagal dihapus. Coba lagi.");
+    },
+    onSettled: refresh,
   });
   const removeRead = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc("delete_my_read_notifications" as never);
       if (error) throw new Error(error.message);
     },
-    onSuccess: refresh,
+    onError: () => toast.error("Pemberitahuan gagal dihapus. Coba lagi."),
+    onSettled: refresh,
   });
   const rows = query.data ?? [],
     unread = rows.filter((n) => !n.read_at).length,
@@ -280,13 +294,8 @@ function NotificationsPage() {
                   {group.rows.map((row) => {
                     const m = metaFor(row.kind),
                       Icon = m.Icon;
-                    const box = (
-                      <div
-                        className={
-                          "flex items-start gap-3 rounded-2xl border p-3 transition " +
-                          (!row.read_at ? m.tone : "bg-card")
-                        }
-                      >
+                    const content = (
+                      <>
                         <span
                           className={
                             "grid size-10 shrink-0 place-items-center rounded-xl " + m.icon
@@ -315,42 +324,52 @@ function NotificationsPage() {
                         {row.action_url && (
                           <ChevronRight className="mt-3 size-4 shrink-0 text-muted-foreground" />
                         )}
+                      </>
+                    );
+                    const mainClass = "flex min-w-0 flex-1 items-start gap-3 text-left";
+                    // Hapus adalah saudara (bukan anak) dari area klik utama: <button>/<a> bersarang
+                    // tidak valid dan di Safari/Firefox klik pada tombol dalam diarahkan ke tombol luar.
+                    return (
+                      <div
+                        key={row.id}
+                        className={
+                          "flex items-start gap-1 rounded-2xl border p-3 transition " +
+                          (!row.read_at ? m.tone : "bg-card")
+                        }
+                      >
+                        {row.action_url ? (
+                          <Link
+                            to={row.action_url as "/dashboard"}
+                            className={mainClass}
+                            onClick={() => {
+                              if (!row.read_at) markRead.mutate(row.id);
+                            }}
+                          >
+                            {content}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            className={mainClass}
+                            onClick={() => {
+                              if (!row.read_at) markRead.mutate(row.id);
+                            }}
+                          >
+                            {content}
+                          </button>
+                        )}
                         <button
                           type="button"
                           aria-label="Hapus pemberitahuan"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
+                          onClick={() => {
                             if (window.confirm("Hapus pemberitahuan ini?")) remove.mutate(row.id);
                           }}
                           disabled={remove.isPending}
-                          className="grid size-8 shrink-0 place-items-center rounded-xl text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                          className="grid size-9 shrink-0 place-items-center rounded-xl text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                         >
                           <Trash2 className="size-3.5" />
                         </button>
                       </div>
-                    );
-                    return row.action_url ? (
-                      <Link
-                        key={row.id}
-                        to={row.action_url as "/dashboard"}
-                        onClick={() => {
-                          if (!row.read_at) markRead.mutate(row.id);
-                        }}
-                      >
-                        {box}
-                      </Link>
-                    ) : (
-                      <button
-                        key={row.id}
-                        type="button"
-                        className="w-full text-left"
-                        onClick={() => {
-                          if (!row.read_at) markRead.mutate(row.id);
-                        }}
-                      >
-                        {box}
-                      </button>
                     );
                   })}
                 </div>
