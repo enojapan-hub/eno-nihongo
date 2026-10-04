@@ -709,7 +709,7 @@ function HafalanPage() {
               </div>
             </div>
             <div className="fixed inset-x-0 bottom-[calc(4.15rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 px-3 pb-2 pt-2 backdrop-blur md:bottom-0 md:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-              <div className="mx-auto h-[6.25rem] w-full max-w-md">
+              <div className="mx-auto h-[6.25rem] w-full max-w-md md:max-w-xl lg:max-w-[40rem]">
                 {!revealed ? (
                   <div className="space-y-2">
                     <div className="flex gap-2">
