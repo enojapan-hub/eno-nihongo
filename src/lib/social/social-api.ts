@@ -3,6 +3,7 @@ import type {
   DmConversation,
   DmMessage,
   GlobalMessage,
+  ProfileCardData,
   SearchResult,
   SocialMe,
   SocialOverview,
@@ -25,6 +26,13 @@ export const socialApi = {
   me: () => rpc<SocialMe | null>("social_me"),
   setUsername: (username: string, displayName: string | null) =>
     rpc<SocialMe>("social_set_username", { p_username: username, p_display_name: displayName }),
+  changeUsername: (username: string) =>
+    rpc<SocialMe>("social_change_username", { p_username: username }),
+  setPrivacy: (allowFriendRequests: boolean) =>
+    rpc<SocialMe>("social_set_privacy", { p_allow_friend_requests: allowFriendRequests }),
+  profileCard: (userId: string) => rpc<ProfileCardData>("social_profile_card", { p_user: userId }),
+  reportUser: (userId: string, reason: string | null) =>
+    rpc<{ status: string }>("social_report_user", { p_user: userId, p_reason: reason }),
   overview: () => rpc<SocialOverview>("social_overview"),
   search: (query: string) => rpc<SearchResult[]>("social_search_users", { p_query: query }),
   unread: () => rpc<UnreadSummary>("social_unread_summary"),

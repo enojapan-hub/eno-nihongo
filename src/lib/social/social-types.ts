@@ -12,6 +12,9 @@ export type SocialMe = {
   display_name?: string | null;
   avatar_id?: number;
   is_moderator: boolean;
+  allow_friend_requests?: boolean;
+  /** ISO; null bila username boleh diubah sekarang (ditentukan server). */
+  next_username_change_at?: string | null;
 };
 
 export type ReplyPreview = {
@@ -66,3 +69,18 @@ export type SocialOverview = {
 };
 
 export type UnreadSummary = { global: number; dm: number; requests: number };
+
+export type CardRelation =
+  "self" | "friend" | "incoming" | "outgoing" | "none" | "blocked" | "unavailable";
+
+/** Data sosial aman untuk Profile Card: tanpa email, UUID render, role, atau izin. */
+export type ProfileCardData = {
+  has_username: boolean;
+  username: string | null;
+  display_name: string | null;
+  avatar_id: number;
+  level: string | null;
+  relation: CardRelation;
+  viewer_has_username: boolean;
+  can_request: boolean;
+};

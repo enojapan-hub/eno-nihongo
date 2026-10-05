@@ -3,6 +3,7 @@ import { Ban, Check, MessageCircle, Search, UserMinus, UserPlus, X } from "lucid
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { dock } from "@/lib/social/dock-state";
+import { profileCard } from "@/lib/social/profile-card-state";
 import { onSocialEvent } from "@/lib/social/social-bus";
 import { socialApi } from "@/lib/social/social-api";
 import { socialErrorMessage } from "@/lib/social/social-validation";
@@ -16,11 +17,20 @@ const pill =
 function Row({ who, children }: { who: SocialIdentity; children: ReactNode }) {
   return (
     <li className="flex items-center gap-2 px-3 py-2">
-      <SocialAvatar avatarId={who.avatar_id} size={36} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[14px] font-semibold">{who.display_name ?? who.username}</p>
-        <p className="truncate text-[12px] text-muted-foreground">@{who.username}</p>
-      </div>
+      <button
+        type="button"
+        aria-label={`Lihat profil @${who.username}`}
+        onClick={() => profileCard.open(who.user_id)}
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <SocialAvatar avatarId={who.avatar_id} size={36} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[14px] font-semibold">
+            {who.display_name ?? who.username}
+          </span>
+          <span className="block truncate text-[12px] text-muted-foreground">@{who.username}</span>
+        </span>
+      </button>
       <div className="flex shrink-0 flex-wrap justify-end gap-1">{children}</div>
     </li>
   );

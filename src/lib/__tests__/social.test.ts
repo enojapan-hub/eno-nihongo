@@ -159,6 +159,10 @@ const sql = readFileSync(
   join(root, "supabase/migrations/20261009000000_social_chat_v1.sql"),
   "utf8",
 );
+const sqlV2 = readFileSync(
+  join(root, "supabase/migrations/20261010000000_social_chat_v2.sql"),
+  "utf8",
+);
 const TABLES = [
   "social_profiles",
   "social_global_read",
@@ -271,7 +275,9 @@ describe("social client contract", () => {
     );
     expect(called.length).toBeGreaterThanOrEqual(20);
     for (const name of called)
-      expect(sql, name).toMatch(new RegExp(`create or replace function public\\.${name}\\(`));
+      expect(sql + sqlV2, name).toMatch(
+        new RegExp(`create or replace function public\\.${name}\\(`),
+      );
   });
 
   it("never writes social tables directly from the client", () => {

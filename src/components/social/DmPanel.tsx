@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { dock, useDock } from "@/lib/social/dock-state";
+import { profileCard } from "@/lib/social/profile-card-state";
 import { onSocialEvent } from "@/lib/social/social-bus";
 import { socialApi } from "@/lib/social/social-api";
 import { DM_MESSAGE_MAX, socialErrorMessage } from "@/lib/social/social-validation";
@@ -39,13 +40,23 @@ function ConversationList({ active }: { active: boolean }) {
       aria-label="Daftar percakapan"
     >
       {items.map((c) => (
-        <li key={c.user_id}>
+        <li
+          key={c.user_id}
+          className="flex items-center gap-1 border-b pl-3 pr-1 hover:bg-muted/50"
+        >
+          <button
+            type="button"
+            aria-label={`Lihat profil @${c.username}`}
+            onClick={() => profileCard.open(c.user_id)}
+            className="shrink-0 rounded-full py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <SocialAvatar avatarId={c.avatar_id} size={40} />
+          </button>
           <button
             type="button"
             onClick={() => dock.openDm(c)}
-            className="flex w-full items-center gap-2 border-b px-3 py-2.5 text-left hover:bg-muted/50"
+            className="flex min-w-0 flex-1 items-center gap-2 py-2.5 pl-1 pr-2 text-left"
           >
-            <SocialAvatar avatarId={c.avatar_id} size={40} />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[14px] font-semibold">
                 {c.display_name ?? c.username}

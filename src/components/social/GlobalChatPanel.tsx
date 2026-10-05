@@ -14,7 +14,12 @@ function toListMessage(m: GlobalMessage, meId: string): ListMessage {
   return {
     id: m.id,
     mine: m.sender_id === meId,
-    author: { name: m.display_name ?? m.username, username: m.username, avatarId: m.avatar_id },
+    author: {
+      userId: m.sender_id,
+      name: m.display_name ?? m.username,
+      username: m.username,
+      avatarId: m.avatar_id,
+    },
     body: m.body,
     deleted: m.deleted,
     createdAt: m.created_at,

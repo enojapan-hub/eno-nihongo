@@ -1,5 +1,6 @@
 import { Ban, Flag, Reply, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { profileCard } from "@/lib/social/profile-card-state";
 import { SocialAvatar } from "./SocialAvatar";
 import { cn } from "@/lib/utils";
 
@@ -7,7 +8,7 @@ export type ListMessage = {
   id: string;
   mine: boolean;
   /** Nama tampilan + @username (null pada DM, pengirimnya sudah jelas). */
-  author: { name: string; username: string; avatarId: number } | null;
+  author: { userId: string; name: string; username: string; avatarId: number } | null;
   body: string;
   deleted: boolean;
   createdAt: string;
@@ -40,18 +41,29 @@ function Item({ m, actions }: { m: ListMessage; actions: MessageActions }) {
   return (
     <li className={cn("flex gap-2 px-3 py-1", m.mine ? "flex-row-reverse" : "")}>
       {!m.mine && m.author && (
-        <SocialAvatar avatarId={m.author.avatarId} size={28} className="mt-0.5" />
+        <button
+          type="button"
+          aria-label={`Lihat profil @${m.author.username}`}
+          onClick={() => profileCard.open((m.author as { userId: string }).userId)}
+          className="mt-0.5 h-fit shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <SocialAvatar avatarId={m.author.avatarId} size={28} />
+        </button>
       )}
       <div
         className={cn("flex min-w-0 max-w-[82%] flex-col", m.mine ? "items-end" : "items-start")}
       >
         {!m.mine && m.author && (
-          <p className="mb-0.5 max-w-full truncate text-[11px] text-muted-foreground">
+          <button
+            type="button"
+            onClick={() => profileCard.open((m.author as { userId: string }).userId)}
+            className="mb-0.5 max-w-full truncate text-left text-[11px] text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
             {m.author.name !== m.author.username && (
               <span className="font-semibold text-foreground">{m.author.name} </span>
             )}
             @{m.author.username}
-          </p>
+          </button>
         )}
         <button
           type="button"
