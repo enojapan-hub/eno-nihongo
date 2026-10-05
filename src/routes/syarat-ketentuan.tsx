@@ -32,7 +32,7 @@ function Page() {
           </p>
         </div>
         <p className="mt-8 border-t pt-5 text-xs text-slate-500">
-          Pertanyaan: enoinjapan@gmail.com
+          Pertanyaan: enonihongo@gmail.com
         </p>
       </article>
     </main>

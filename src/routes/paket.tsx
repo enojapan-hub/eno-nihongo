@@ -166,12 +166,12 @@ function PaketPage() {
             Hubungi layanan pelanggan ENO NIHONGO.
           </p>
           <div className="mt-4 grid gap-3 text-[10px] sm:grid-cols-3">
-            <a href="mailto:enoinjapan@gmail.com" className="flex gap-2">
+            <a href="mailto:enonihongo@gmail.com" className="flex gap-2">
               <Mail className="size-4 shrink-0 text-[#23804d]" />
               <span>
                 <b>Email</b>
                 <br />
-                enoinjapan@gmail.com
+                enonihongo@gmail.com
               </span>
             </a>
             <a href="tel:082215155915" className="flex gap-2">

@@ -31,4 +31,16 @@ describe("official contacts", () => {
     const s = read("src/routes/index.tsx");
     expect(s).toMatch(/target="_blank"\s+rel="noopener noreferrer"/);
   });
+  it("uses the official email on legal and pricing pages, with no stale address left", () => {
+    for (const f of [
+      "src/routes/paket.tsx",
+      "src/routes/kebijakan-privasi.tsx",
+      "src/routes/kebijakan-pembayaran.tsx",
+      "src/routes/syarat-ketentuan.tsx",
+    ]) {
+      const s = read(f);
+      expect(s, f).toMatch(/enonihongo@gmail\.com/);
+      expect(s, f).not.toMatch(/enoinjapan/);
+    }
+  });
 });
