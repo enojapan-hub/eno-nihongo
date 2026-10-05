@@ -1884,6 +1884,82 @@ export type Database = {
           },
         ]
       }
+      kanji_radical_forms: {
+        Row: {
+          base_char: string
+          form_char: string
+          is_variant: boolean
+        }
+        Insert: {
+          base_char: string
+          form_char: string
+          is_variant: boolean
+        }
+        Update: {
+          base_char?: string
+          form_char?: string
+          is_variant?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanji_radical_forms_base_char_fkey"
+            columns: ["base_char"]
+            isOneToOne: false
+            referencedRelation: "kanji_radicals"
+            referencedColumns: ["base_char"]
+          },
+        ]
+      }
+      kanji_radical_names: {
+        Row: {
+          base_char: string
+          name_ja: string
+          position_class: string
+        }
+        Insert: {
+          base_char: string
+          name_ja: string
+          position_class: string
+        }
+        Update: {
+          base_char?: string
+          name_ja?: string
+          position_class?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanji_radical_names_base_char_fkey"
+            columns: ["base_char"]
+            isOneToOne: false
+            referencedRelation: "kanji_radicals"
+            referencedColumns: ["base_char"]
+          },
+        ]
+      }
+      kanji_radicals: {
+        Row: {
+          base_char: string
+          meaning_en: string
+          meaning_id: string
+          name_ja: string
+          source: string
+        }
+        Insert: {
+          base_char: string
+          meaning_en: string
+          meaning_id: string
+          name_ja: string
+          source?: string
+        }
+        Update: {
+          base_char?: string
+          meaning_en?: string
+          meaning_id?: string
+          name_ja?: string
+          source?: string
+        }
+        Relationships: []
+      }
       kanji_relations: {
         Row: {
           id: string
@@ -1920,6 +1996,67 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "kanji"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      kanji_structure: {
+        Row: {
+          components: string[]
+          created_at: string
+          decomposition: Json
+          kanji_id: string
+          needs_review: boolean
+          radical_base: string
+          radical_form: string
+          radical_position: string | null
+          radical_rule: string
+          source: string
+        }
+        Insert: {
+          components?: string[]
+          created_at?: string
+          decomposition?: Json
+          kanji_id: string
+          needs_review?: boolean
+          radical_base: string
+          radical_form: string
+          radical_position?: string | null
+          radical_rule: string
+          source?: string
+        }
+        Update: {
+          components?: string[]
+          created_at?: string
+          decomposition?: Json
+          kanji_id?: string
+          needs_review?: boolean
+          radical_base?: string
+          radical_form?: string
+          radical_position?: string | null
+          radical_rule?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanji_structure_kanji_id_fkey"
+            columns: ["kanji_id"]
+            isOneToOne: true
+            referencedRelation: "kanji"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kanji_structure_radical_base_fkey"
+            columns: ["radical_base"]
+            isOneToOne: false
+            referencedRelation: "kanji_radicals"
+            referencedColumns: ["base_char"]
+          },
+          {
+            foreignKeyName: "kanji_structure_radical_form_fkey"
+            columns: ["radical_form"]
+            isOneToOne: false
+            referencedRelation: "kanji_radical_forms"
+            referencedColumns: ["form_char"]
           },
         ]
       }
@@ -4589,6 +4726,13 @@ export type Database = {
         Args: { p_full_session_id: string }
         Returns: Json
       }
+      get_kanji_structure: {
+        Args: {
+          p_kanji_id: string
+          p_level?: Database["public"]["Enums"]["jlpt_level"]
+        }
+        Returns: Json
+      }
       get_leaderboard: {
         Args: { p_limit?: number }
         Returns: {
@@ -5160,6 +5304,7 @@ export type Database = {
         }
       }
       redeem_referral_points: { Args: { p_points?: number }; Returns: number }
+      refresh_adaptive_plan: { Args: { p_date: string }; Returns: undefined }
       save_eno_monthly_exam: {
         Args: {
           p_closes_at?: string

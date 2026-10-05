@@ -393,9 +393,14 @@ export async function fetchAdaptivePlan(): Promise<AdaptivePlan> {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-  await client.rpc("ensure_active_study_plan");
-  await client.rpc("generate_weekly_study_plan", { p_date: today });
-  await client.rpc("sync_daily_study_task_progress", { p_study_date: today });
+  // Satu RPC menjalankan ensure -> generate -> sync berurutan di server (round-trip 3 -> 1).
+  // Bila RPC gabungan belum tersedia / gagal, jalankan ketiga langkah seperti semula.
+  const refreshed = await client.rpc("refresh_adaptive_plan" as never, { p_date: today } as never);
+  if (refreshed.error) {
+    await client.rpc("ensure_active_study_plan");
+    await client.rpc("generate_weekly_study_plan", { p_date: today });
+    await client.rpc("sync_daily_study_task_progress", { p_study_date: today });
+  }
   const [{ data: plans }, { data: tasks }] = await Promise.all([
     client
       .from("study_plans")

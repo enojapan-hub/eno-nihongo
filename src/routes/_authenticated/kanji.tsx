@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
+import { KanjiGuide } from "@/components/learn/KanjiGuide";
+import { KanjiStructureSection } from "@/components/learn/KanjiStructureSection";
 import {
   fetchKanjiList,
   fetchKanjiStudy,
@@ -198,6 +200,7 @@ function KanjiPage() {
   useEffect(() => {
     if (page >= pageCount) setPage(Math.max(0, pageCount - 1));
   }, [page, pageCount]);
+  const openableIds = useMemo(() => new Set(allCards.map((x) => x.id)), [allCards]);
   const detailIndex = detailId ? allCards.findIndex((x) => x.id === detailId) : -1,
     item = detailIndex >= 0 ? allCards[detailIndex] : null;
   const prev = () => {
@@ -347,6 +350,7 @@ function KanjiPage() {
                   />
                 </div>
               </div>
+              <KanjiGuide />
               {lessons.length > 0 && (
                 <select
                   value={lesson ?? ""}
@@ -514,6 +518,16 @@ function KanjiPage() {
                 <Info label="Kunyomi" value={(item.kunyomi ?? []).join("・") || "—"} />
                 <Info label="Jumlah Coretan" value={String(item.stroke_count ?? "—")} />
               </div>
+              <KanjiStructureSection
+                kanjiId={item.id}
+                character={item.character}
+                level={level}
+                openableIds={openableIds}
+                onOpen={(id) => {
+                  openDetail(id);
+                  window.scrollTo({ top: 0 });
+                }}
+              />
               {studyError && (
                 <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-center">
                   <p className="text-[11px] text-destructive">Detail Kanji gagal dimuat.</p>
