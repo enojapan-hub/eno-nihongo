@@ -56,6 +56,7 @@ async function main() {
       `Snapshot ENO : versi ${manifest.snapshot.database_version} (${manifest.snapshot.date_of_creation})\n` +
       `Selisih bushu: ${changed.length}, hilang di sumber: ${missing.length}`,
   );
+  console.log(`Hasil: ${changed.length || missing.length ? "DIFFERENT" : "MATCH"}`);
   for (const c of changed) console.log(`  ${c.ch}: ${c.from} -> ${c.to}`);
   for (const ch of missing) console.log(`  ${ch}: tidak ada di KANJIDIC2 resmi`);
   if (write) {
@@ -66,7 +67,17 @@ async function main() {
       database_version: header.databaseVersion,
       date_of_creation: header.dateOfCreation,
       sha256,
+      obtained_from_official: true,
+    };
+    manifest.verification = {
       verified_against_official: true,
+      verified_against_version: header.databaseVersion,
+      official_date_of_creation: header.dateOfCreation,
+      verified_at: new Date().toISOString().slice(0, 10),
+      official_sha256: sha256,
+      result: changed.length || missing.length ? "DIFFERENT" : "MATCH",
+      radical_differences: changed.length,
+      missing_in_official: missing.length,
     };
     writeFileSync(MANIFEST, JSON.stringify(manifest, null, 1) + "\n");
     console.log(

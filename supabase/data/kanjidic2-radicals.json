@@ -6,7 +6,7 @@
   "via": "mirror KANJIDIC2 via scriptin/jmdict-simplified",
   "database_version": "2026-96",
   "date_of_creation": "2026-04-06",
-  "verified_against_official": false
+  "obtained_from_official": false
  },
  "radicals": {
   "一": 1,
@@ -2229,5 +2229,16 @@
   "黙": 203,
   "黛": 203,
   "鼓": 207
+ },
+ "verification": {
+  "verified_against_official": true,
+  "verified_against_version": "2026-278",
+  "official_date_of_creation": "2026-10-05",
+  "verified_at": "2026-10-05",
+  "official_sha256": "d9184343a8ce9e999ce9d22d45ca7201f906f80064073fb210faff436e7fa7e4",
+  "result": "MATCH",
+  "radical_differences": 0,
+  "missing_in_official": 0,
+  "run": "https://github.com/enojapan-hub/eno-nihongo/actions/runs/37270943611"
  }
 }

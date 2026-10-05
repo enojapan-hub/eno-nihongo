@@ -66,6 +66,14 @@ export function DataSourcesList() {
       ))}
       <li>
         <p>
+          <span className="font-bold text-[#10221a]">Catatan pengolahan</span> — data dari sumber di
+          atas telah diproses dan disesuaikan oleh ENO NIHONGO untuk kebutuhan aplikasi ini
+          (misalnya diringkas, disusun ulang, dan digabungkan). Perubahan tersebut dibuat oleh ENO
+          NIHONGO, bukan oleh penyedia data, dan tidak didukung atau disahkan oleh mereka.
+        </p>
+      </li>
+      <li>
+        <p>
           <span className="font-bold text-[#10221a]">Cara Mudah Mengingat</span> — dibuat oleh ENO
           NIHONGO dari komponen terverifikasi; bukan asal-usul kanji.
         </p>

@@ -39,4 +39,25 @@ describe("KANJIDIC2 check", () => {
     expect(m.radicals["語"]).toBe(149);
     expect(m.snapshot.database_version).toBeTruthy();
   });
+
+  it("keeps snapshot provenance separate from the official verification record", () => {
+    const m = JSON.parse(
+      readFileSync(
+        new URL("../../../supabase/data/kanjidic2-radicals.json", import.meta.url),
+        "utf8",
+      ),
+    );
+    expect(m.snapshot).toMatchObject({
+      database_version: "2026-96",
+      obtained_from_official: false,
+    });
+    expect(m.verification).toMatchObject({
+      verified_against_official: true,
+      verified_against_version: "2026-278",
+      result: "MATCH",
+      radical_differences: 0,
+      missing_in_official: 0,
+    });
+    expect(m.verification.official_sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
 });

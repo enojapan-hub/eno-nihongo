@@ -47,17 +47,32 @@ Perbandingan deterministik atas 1510 baris peran sebelum perubahan (CURRENT_ROLE
 
 Make Me a Hanzi tidak dipakai lagi oleh data produksi: tidak ada baris yang disimpan dengan sumber itu, kodenya tidak mereferensikannya, dan entri atribusinya dihapus. Ia hanya tersisa sebagai referensi riwayat pengembangan (skrip di luar repo yang pernah menyaring baris). Catatan jujur: 812 kanji itu dulu dipilih dari 1171 yang bertanda KanjiVG dengan penyaring tersebut; tiap baris yang tersimpan tetap dapat dibuktikan dari KanjiVG saja. Kanji bertanda KanjiVG lainnya sengaja tidak ditambahkan (kualitas penanda tidak konsisten).
 
-## Share-Alike (ringkasan audit; bukan nasihat hukum)
+## Share-Alike: penilaian akhir untuk database/RPC (bukan nasihat hukum)
 
-EKSPLISIT di teks lisensi resmi:
+EXPLICIT LICENSE TEXT
 
-- KanjiVG, CC BY-SA 3.0 (legalcode): atribusi pencipta/judul/URI dan tautan lisensi bila Distribute/Publicly Perform (4(c)); Adaptation harus memberi label bahwa ada perubahan (3(b)) dan hanya boleh didistribusikan di bawah CC BY-SA yang sama atau lebih baru (4(b)). Kumpulan (Collection) yang memuat Karya tanpa diubah tidak wajib seluruhnya berlisensi sama (4(a)/(b)).
-- KANJIDIC2, EDRDG: CC BY-SA 4.0 + ketentuan EDRDG (atribusi; tandai bila diubah; Adapter's License harus CC BY-SA 4.0 atau kompatibel, §3(b); hak basis data sui generis: basis data yang memuat bagian substansial isi adalah Adapted Material, §4(b), isinya sendiri tidak). EDRDG: perangkat lunak tidak wajib open source; pembaruan rutin (contoh "at least once a month").
-  INTERPRETASI / AMBIGUOUS, REQUIRES LEGAL DECISION:
-- Apakah data turunan ENO (tabel `kanji_structure`, `kanji_components`, hasil RPC `get_kanji_structure` yang dapat dibaca klien) dianggap "Adaptation/Adapted Material" yang didistribusikan, sehingga perlu diberi lisensi CC BY-SA dan tersedia untuk diunduh.
-- Apakah akses lewat RPC/PostgREST termasuk "Share/Distribute".
-- Apakah lisensi aplikasi secara keseluruhan terpengaruh (teks lisensi menyebut hanya Adaptation, bukan Collection/perangkat lunak; EDRDG menyatakan perangkat lunak tidak wajib open source).
-  Keputusan itu belum diambil; tidak ada perubahan lisensi repositori.
+- CC BY-SA 4.0 (legalcode): `Share` mencakup "make material available to the public including in ways that members of the public may access the material from a place and at a time individually chosen by them" (§1k), jadi penyajian online termasuk Share. ShareAlike berlaku bila "You Share Adapted Material You produce" (§3b); `Adapted Material` = materi yang diturunkan dari Licensed Material dan "translated, altered, arranged, transformed, or otherwise modified in a manner requiring permission under the Copyright and Similar Rights" (§1a). Adapter's License harus CC BY-SA 4.0+ atau kompatibel (§3b1). Basis data: bila bagian substansial isi dimasukkan ke database yang memiliki hak sui generis milik pengguna, "the database ... (but not its individual contents) is Adapted Material" (§4b). Memberi tanda perubahan wajib (§3a1B).
+- CC BY-SA 3.0 (KanjiVG, legalcode): `Adaptation` dikecualikan bila berupa `Collection` yang memuat Karya utuh tanpa diubah (§1a-b); Adaptation hanya boleh di-Distribute atau Publicly Perform di bawah CC BY-SA yang sama atau lebih baru (§4b) dan wajib diberi label perubahan (§3b); §4b berlaku bagi Adaptation, dan tidak mewajibkan Collection di luar Adaptation itu berlisensi sama. `Publicly Perform` mencakup membuat tersedia bagi publik sehingga dapat diakses dari tempat dan waktu pilihan sendiri (§1i).
+- EDRDG (licence.html): perangkat lunak yang memakai berkas tidak wajib open source; Share-Alike bila diubah/dikembangkan lalu didistribusikan; atribusi di situs; pembaruan rutin (contoh situs kamus: sebulan sekali).
+
+OFFICIAL GUIDANCE (Creative Commons FAQ dan wiki ShareAlike interpretation / Data)
+
+- "The ShareAlike condition applies only for works considered adaptations under copyright law, not simply in collections with other works."
+- "The ShareAlike condition only applies when a work is publicly shared"; adaptasi yang tidak dipublikasikan tidak wajib dilisensikan ulang.
+- Untuk database: SA mewajibkan lisensi sama atau kompatibel pada database yang dibagikan publik dan memuat bagian substansial isi, "Note that this does not require you to ShareAlike any copyright or other rights you have in the individual contents of the database."
+- CC tidak merekomendasikan lisensinya untuk perangkat lunak; operasi SA bergantung pada apa yang dianggap adaptasi menurut hukum hak cipta yurisdiksi tertentu.
+- Tidak ada panduan resmi CC, EDRDG, atau KanjiVG yang menyebut "RPC", "API", atau "penyimpanan server".
+
+ENGINEERING INTERPRETATION (bukan fakta hukum)
+
+- KanjiVG: A. Struktur komponen ENO (pohon, bushu, penanda bunyi) diturunkan dari pengelompokan KanjiVG; apakah itu "diubah dengan cara yang memerlukan izin hak cipta" bergantung pada orisinalitas pengelompokan KanjiVG dan transformasi ENO. B. Penyimpanan hanya di server tanpa akses publik: tidak ada Share (panduan CC). C. Respons RPC yang dibaca browser pengguna: kemungkinan besar termasuk "Share"/"Publicly Perform" menurut definisi online di atas, sehingga bila hasilnya Adaptation, SA berlaku. D. JSON hasil query: SA melekat pada materi turunan yang dikirim, bukan pada format pengiriman. E. Yang terkena hanya materi turunan KanjiVG (tabel struktur/komponen dan keluarannya), bukan seluruh database ENO (akun, progres, SRS, dll.). F. Source code aplikasi: tidak ada dasar eksplisit; SA mengikat Adaptation, dan pada 4.0 yang dilisensikan ulang hanya kontribusi pada Adapted Material.
+- KANJIDIC2: A. Nomor bushu klasik dan status per kanji adalah fakta/klasifikasi yang diolah; bila ada hak (hak cipta atau sui generis) atas pemilihan/penyusunannya, hasil olahan ENO bisa menjadi Adapted Material. B. Hanya tabel yang memuat bagian substansial isi KANJIDIC2 yang menjadi Adapted Material (§4b), bukan data lain. ENO hanya memakai 1 nilai per kanji (bushu klasik) untuk 2220 kanji, jauh dari "bagian substansial" isi KANJIDIC2, tetapi ambang substansial adalah penilaian hukum. C. Klausul database hanya berlaku bila hak sui generis berlaku pada penggunaan itu. D. Seperti KanjiVG. E. Bagian yang memuat materi turunan KANJIDIC2. F. Tidak (EDRDG: perangkat lunak tidak wajib open source). G. Tidak ada kewajiban eksplisit menyediakan unduhan; yang wajib adalah lisensi sama dan pemberitahuan lisensi saat Share. H. Pembaruan berkala: dicontohkan sebulan sekali untuk situs kamus; berlaku nyata hanya sejauh ENO menyajikan data KANJIDIC2 sebagai kamus (ENO menyajikan satu nilai bushu klasik dan memeriksa tiap bulan lewat workflow).
+
+UNCERTAINTY (satu pertanyaan hukum tersisa)
+
+- Apakah tabel struktur/komponen/bushu turunan ENO adalah "Adapted Material" (modifikasi yang memerlukan izin hak cipta atau melibatkan bagian substansial database sui generis) yang kemudian dibagikan lewat respons RPC. Jawaban resmi tidak tersedia; hasilnya menentukan perlunya lisensi CC BY-SA pada materi turunan itu.
+
+Yang sudah dipenuhi tanpa menunggu keputusan: atribusi, tautan lisensi, dan catatan pengolahan di `/tentang#sumber-data`. Tidak dilakukan (tidak dibutuhkan oleh teks eksplisit): perubahan lisensi repo, unduhan dataset, atau perubahan RLS.
 
 ## Prosedur pembaruan KANJIDIC2
 
@@ -71,4 +86,4 @@ Bila ada selisih:
 
 Workflow dapat dipicu manual (`workflow_dispatch`) setelah berada di cabang default; selama belum, ia berjalan pada PR yang mengubah workflow/skrip/snapshot. Skrip hanya mendeteksi selisih (tidak commit, tidak deploy, tanpa secret).
 
-Catatan: snapshot awal diambil dari mirror GitHub (`verified_against_official: false`) karena edrdg.org tidak dapat dijangkau dari lingkungan pengembangan; eksekusi workflow pertama akan membandingkannya dengan berkas resmi.
+Metadata manifest membedakan dua fakta: `snapshot` (asal data: mirror GitHub, versi 2026-96, `obtained_from_official: false`) dan `verification` (verifikasi terakhir terhadap berkas resmi). Verifikasi pertama: versi resmi 2026-278 (2026-10-05), sha256 `d9184343a8ce9e999ce9d22d45ca7201f906f80064073fb210faff436e7fa7e4`, hasil MATCH, selisih bushu 0, hilang 0 ([run](https://github.com/enojapan-hub/eno-nihongo/actions/runs/37270943611)). Karena MATCH, data bushu tidak ditulis ulang. Workflow berikutnya mencetak versi resmi, sha256, dan "Hasil: MATCH/DIFFERENT" (gagal unduh = exit 2); metadata `verification` hanya diperbarui lewat commit manual (`--write`), tidak otomatis.
