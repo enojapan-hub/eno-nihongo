@@ -12,6 +12,7 @@ import {
   type KanjiTreeNode,
 } from "@/lib/kanji-structure";
 import type { Level } from "@/lib/learn-queries";
+import { KanjiDataSources } from "./KanjiDataSources";
 
 type Props = {
   kanjiId: string;
@@ -268,10 +269,7 @@ function Loaded({
           <FamilyGrid items={s.phoneticFamily} onOpen={onOpen} labelId="kanji-bunyi" />
         </section>
       )}
-      <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
-        Data struktur: KanjiVG (CC BY-SA 3.0), KANJIDIC2 © EDRDG (dipakai sesuai lisensi
-        edrdg.org/edrdg/licence.html), dan Kanji alive (CC BY 4.0).
-      </p>
+      <KanjiDataSources />
     </>
   );
 }

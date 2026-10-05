@@ -1,4 +1,5 @@
 import { CircleHelp } from "lucide-react";
+import { KanjiDataSources } from "./KanjiDataSources";
 
 /** Panduan ringkas bushu & komponen untuk pemula; native <details> agar ringan dan aksesibel. */
 export function KanjiGuide() {
@@ -43,10 +44,7 @@ export function KanjiGuide() {
             sejarahnya.
           </p>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          Data struktur: KanjiVG (CC BY-SA 3.0), KANJIDIC2 © EDRDG (dipakai sesuai lisensi
-          edrdg.org/edrdg/licence.html), dan Kanji alive (CC BY 4.0).
-        </p>
+        <KanjiDataSources />
       </div>
     </details>
   );
