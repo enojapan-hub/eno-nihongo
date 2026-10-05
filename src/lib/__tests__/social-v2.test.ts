@@ -175,10 +175,11 @@ describe("chat dock UI contract", () => {
     expect(dockSrc).toMatch(/body\.style\.overflow = prev\.bodyOverflow/);
     expect(dockSrc).toMatch(/html\.style\.overflow = prev\.htmlOverflow/);
   });
-  it("opens the profile card above the dock without a second blur", () => {
+  it("opens the profile card above the dock with a single blur layer", () => {
     const cardSrc = read("src/components/social/SocialProfileCard.tsx");
     expect(cardSrc).toMatch(/z-\[60\]/);
-    expect(cardSrc).not.toMatch(/backdrop-blur/);
-    expect(cardSrc).not.toMatch(/\.email|user_id\}|uuid/i);
+    expect(cardSrc.match(/backdrop-blur/g)).toHaveLength(1);
+    expect(dockSrc).toMatch(/!cardOpen && "backdrop-blur/);
+    expect(cardSrc).not.toMatch(/\.email|uuid/i);
   });
 });

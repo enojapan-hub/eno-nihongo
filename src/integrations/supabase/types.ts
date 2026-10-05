@@ -5769,6 +5769,7 @@ export type Database = {
         Returns: undefined
       }
       social_assert_member: { Args: never; Returns: string }
+      social_badges: { Args: { p_users: string[] }; Returns: Json }
       social_block: { Args: { p_user: string }; Returns: Json }
       social_blocked_between: {
         Args: { p_a: string; p_b: string }
