@@ -1,6 +1,8 @@
 import { Ban, Flag, Reply, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { profileCard } from "@/lib/social/profile-card-state";
+import { usernameColorClass } from "@/lib/social/username-color";
+import { IdentityBadges } from "./IdentityBadges";
 import { SocialAvatar } from "./SocialAvatar";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +36,15 @@ function formatTime(iso: string): string {
     : `${d.toLocaleDateString("id-ID", { day: "numeric", month: "short" })} ${time}`;
 }
 
-function Item({ m, actions }: { m: ListMessage; actions: MessageActions }) {
+function Item({
+  m,
+  actions,
+  colorize,
+}: {
+  m: ListMessage;
+  actions: MessageActions;
+  colorize: boolean;
+}) {
   const [showActions, setShowActions] = useState(false);
   const btn =
     "flex min-h-8 items-center gap-1 rounded-full border bg-background px-2.5 text-[11px] font-semibold";
@@ -54,16 +64,22 @@ function Item({ m, actions }: { m: ListMessage; actions: MessageActions }) {
         className={cn("flex min-w-0 max-w-[82%] flex-col", m.mine ? "items-end" : "items-start")}
       >
         {!m.mine && m.author && (
-          <button
-            type="button"
-            onClick={() => profileCard.open((m.author as { userId: string }).userId)}
-            className="mb-0.5 max-w-full truncate text-left text-[11px] text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            {m.author.name !== m.author.username && (
-              <span className="font-semibold text-foreground">{m.author.name} </span>
-            )}
-            @{m.author.username}
-          </button>
+          <span className="mb-0.5 flex max-w-full items-center gap-1">
+            <button
+              type="button"
+              onClick={() => profileCard.open((m.author as { userId: string }).userId)}
+              className={cn(
+                "min-w-0 truncate text-left text-[11px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                colorize ? usernameColorClass(m.author.userId) : "text-muted-foreground",
+              )}
+            >
+              {m.author.name !== m.author.username && <span>{m.author.name} </span>}
+              <span className={m.author.name !== m.author.username ? "font-normal" : ""}>
+                @{m.author.username}
+              </span>
+            </button>
+            <IdentityBadges userId={m.author.userId} />
+          </span>
         )}
         <button
           type="button"
@@ -152,6 +168,7 @@ export function MessageList({
   loadingMore,
   onLoadOlder,
   empty,
+  colorize = false,
 }: {
   messages: readonly ListMessage[];
   actions: MessageActions;
@@ -160,6 +177,8 @@ export function MessageList({
   loadingMore: boolean;
   onLoadOlder: () => void;
   empty: ReactNode;
+  /** Warna username deterministik per akun (khusus Global Chat). */
+  colorize?: boolean;
 }) {
   if (loading && messages.length === 0)
     return <div className="flex-1 animate-pulse bg-muted/30" aria-label="Memuat pesan" />;
@@ -175,7 +194,7 @@ export function MessageList({
       aria-label="Daftar pesan"
     >
       {messages.map((m) => (
-        <Item key={m.id} m={m} actions={actions} />
+        <Item key={m.id} m={m} actions={actions} colorize={colorize} />
       ))}
       {hasMore && (
         <li className="px-3 py-2 text-center">

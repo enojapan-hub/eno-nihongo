@@ -119,6 +119,7 @@ export function GlobalChatPanel({ me, active }: { me: SocialMe; active: boolean 
     <div className="flex min-h-0 flex-1 flex-col">
       <MessageList
         messages={items}
+        colorize
         actions={actions}
         loading={thread.loading}
         hasMore={thread.hasMore}

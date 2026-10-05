@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { dock, useDock, type DockTab } from "@/lib/social/dock-state";
 import { dockHiddenOn, unreadBadge } from "@/lib/social/message-merge";
-import { profileCard } from "@/lib/social/profile-card-state";
+import { profileCard, useProfileCard } from "@/lib/social/profile-card-state";
+import { resetSocialBadges } from "@/lib/social/social-badges";
 import { emitSocialEvent } from "@/lib/social/social-bus";
 import { cn } from "@/lib/utils";
 import { DmPanel } from "./DmPanel";
@@ -96,6 +97,7 @@ export function ChatDock() {
   const userId = user?.id ?? null;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const state = useDock();
+  const cardOpen = useProfileCard() !== null;
   const qc = useQueryClient();
   const hidden = dockHiddenOn(pathname);
 
@@ -104,6 +106,7 @@ export function ChatDock() {
   useEffect(() => {
     if (lastUser.current !== null && lastUser.current !== userId) {
       dock.reset();
+      resetSocialBadges();
       qc.removeQueries({ queryKey: ["social"] });
     }
     lastUser.current = userId;
@@ -189,7 +192,11 @@ export function ChatDock() {
           aria-hidden
           data-testid="chat-backdrop"
           onClick={() => dock.close()}
-          className="fixed inset-0 z-[45] touch-none bg-black/40 backdrop-blur-[6px]"
+          className={cn(
+            "fixed inset-0 z-[45] touch-none bg-black/40",
+            // Saat Profile Card terbuka, lapisan kartu yang mengaburkan semuanya (satu lapis blur).
+            !cardOpen && "backdrop-blur-[6px]",
+          )}
         />
       )}
 

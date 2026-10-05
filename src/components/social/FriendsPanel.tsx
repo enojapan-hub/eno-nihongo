@@ -8,6 +8,7 @@ import { onSocialEvent } from "@/lib/social/social-bus";
 import { socialApi } from "@/lib/social/social-api";
 import { socialErrorMessage } from "@/lib/social/social-validation";
 import type { SocialIdentity } from "@/lib/social/social-types";
+import { IdentityBadges } from "./IdentityBadges";
 import { SocialAvatar } from "./SocialAvatar";
 import { useSocialInvalidate, useSocialOverview } from "./social-queries";
 
@@ -25,8 +26,11 @@ function Row({ who, children }: { who: SocialIdentity; children: ReactNode }) {
       >
         <SocialAvatar avatarId={who.avatar_id} size={36} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14px] font-semibold">
-            {who.display_name ?? who.username}
+          <span className="flex items-center gap-1">
+            <span className="truncate text-[14px] font-semibold">
+              {who.display_name ?? who.username}
+            </span>
+            <IdentityBadges userId={who.user_id} />
           </span>
           <span className="block truncate text-[12px] text-muted-foreground">@{who.username}</span>
         </span>

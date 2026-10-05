@@ -1,3 +1,4 @@
+import { IdentityBadges } from "@/components/social/IdentityBadges";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -200,9 +201,10 @@ function LeaderboardPage() {
                           <button
                             type="button"
                             onClick={() => openProfile(u)}
-                            className="mt-2 block w-full truncate text-[10px] font-black"
+                            className="mt-2 flex w-full items-center justify-center gap-1 text-[10px] font-black"
                           >
-                            {u.displayName}
+                            <span className="min-w-0 truncate">{u.displayName}</span>
+                            <IdentityBadges userId={u.userId} />
                           </button>
                           <p className="text-[8px] text-muted-foreground">{u.level}</p>
                           <p className="mt-1 text-[9px] font-black text-primary">
@@ -266,7 +268,10 @@ function LeaderboardPage() {
                         </span>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[10px] font-bold">{user.displayName}</p>
+                        <p className="flex items-center gap-1 text-[10px] font-bold">
+                          <span className="min-w-0 truncate">{user.displayName}</span>
+                          <IdentityBadges userId={user.userId} />
+                        </p>
                         <p className="text-[8px] text-muted-foreground">
                           {user.level} · 🔥 {user.streak} hari
                         </p>

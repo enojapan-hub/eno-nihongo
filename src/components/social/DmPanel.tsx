@@ -8,6 +8,7 @@ import { socialApi } from "@/lib/social/social-api";
 import { DM_MESSAGE_MAX, socialErrorMessage } from "@/lib/social/social-validation";
 import type { DmMessage, SocialIdentity, SocialMe } from "@/lib/social/social-types";
 import { Composer } from "./Composer";
+import { IdentityBadges } from "./IdentityBadges";
 import { MessageList, type ListMessage } from "./MessageList";
 import { SocialAvatar } from "./SocialAvatar";
 import { useDmList, useSocialInvalidate, useSocialOverview } from "./social-queries";
@@ -52,25 +53,39 @@ function ConversationList({ active }: { active: boolean }) {
           >
             <SocialAvatar avatarId={c.avatar_id} size={40} />
           </button>
-          <button
-            type="button"
-            onClick={() => dock.openDm(c)}
-            className="flex min-w-0 flex-1 items-center gap-2 py-2.5 pl-1 pr-2 text-left"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14px] font-semibold">
-                {c.display_name ?? c.username}
-              </span>
-              <span className="block truncate text-[12px] text-muted-foreground">
+          <div className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pl-1 pr-2">
+            <div className="min-w-0 flex-1">
+              <button
+                type="button"
+                onClick={() => profileCard.open(c.user_id)}
+                className="flex max-w-full items-center gap-1 rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <span className="truncate text-[14px] font-semibold">
+                  {c.display_name ?? c.username}
+                </span>
+                <IdentityBadges userId={c.user_id} />
+              </button>
+              <button
+                type="button"
+                onClick={() => dock.openDm(c)}
+                aria-label={`Buka percakapan dengan @${c.username}`}
+                className="block min-h-6 w-full truncate text-left text-[12px] text-muted-foreground"
+              >
                 {c.last_deleted ? "Pesan dihapus" : (c.last_body ?? "")}
-              </span>
-            </span>
+              </button>
+            </div>
             {c.unread > 0 && (
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-hidden
+                onClick={() => dock.openDm(c)}
+                className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground"
+              >
                 {c.unread > 99 ? "99+" : c.unread}
-              </span>
+              </button>
             )}
-          </button>
+          </div>
         </li>
       ))}
     </ul>
@@ -193,13 +208,25 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
         >
           <ArrowLeft className="size-[18px]" />
         </button>
-        <SocialAvatar avatarId={other.avatar_id} size={30} />
-        <div className="min-w-0">
-          <p className="truncate text-[14px] font-semibold">
-            {other.display_name ?? other.username}
-          </p>
-          <p className="truncate text-[11px] text-muted-foreground">@{other.username}</p>
-        </div>
+        <button
+          type="button"
+          aria-label={`Lihat profil @${other.username}`}
+          onClick={() => profileCard.open(other.user_id)}
+          className="flex min-w-0 items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <SocialAvatar avatarId={other.avatar_id} size={30} />
+          <span className="min-w-0">
+            <span className="flex items-center gap-1">
+              <span className="truncate text-[14px] font-semibold">
+                {other.display_name ?? other.username}
+              </span>
+              <IdentityBadges userId={other.user_id} />
+            </span>
+            <span className="block truncate text-[11px] text-muted-foreground">
+              @{other.username}
+            </span>
+          </span>
+        </button>
       </div>
       <MessageList
         messages={items}
