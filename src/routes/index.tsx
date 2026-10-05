@@ -15,10 +15,12 @@ import {
   Smartphone,
   Sparkles,
   Instagram,
+  Mail,
   ShieldCheck,
   Target,
   Crown,
 } from "lucide-react";
+import { OFFICIAL_CONTACTS } from "@/lib/official-contacts";
 import { AuthLoader } from "@/components/layout/AuthLoader";
 import { hasStoredSession, initialAuthCallback, resolveAuth } from "@/lib/auth-flow";
 const ORIGIN = "https://www.enonihongo.com";
@@ -430,24 +432,32 @@ function Home() {
               <b className="text-[12px] md:text-[13px]">Ikuti Kami</b>
               <div className="mt-2 flex gap-2">
                 <a
-                  href="https://www.instagram.com/enottf/"
+                  href={OFFICIAL_CONTACTS.instagram.url}
                   target="_blank"
-                  rel="noreferrer"
-                  aria-label="Instagram @enottf"
+                  rel="noopener noreferrer"
+                  aria-label={`Instagram ${OFFICIAL_CONTACTS.instagram.handle}`}
                   className="grid size-9 place-items-center rounded-full border border-slate-200 text-slate-700 transition hover:border-[#087d48] hover:bg-emerald-50 hover:text-[#087d48]"
-                  title="Instagram @enottf"
+                  title={`Instagram ${OFFICIAL_CONTACTS.instagram.handle}`}
                 >
                   <Instagram className="size-[17px]" strokeWidth={2.2} />
                 </a>
                 <a
-                  href="https://www.tiktok.com/@enottff"
+                  href={OFFICIAL_CONTACTS.tiktok.url}
                   target="_blank"
-                  rel="noreferrer"
-                  aria-label="TikTok @enottff"
+                  rel="noopener noreferrer"
+                  aria-label={`TikTok ${OFFICIAL_CONTACTS.tiktok.handle}`}
                   className="grid size-9 place-items-center rounded-full border border-slate-200 text-slate-700 transition hover:border-[#087d48] hover:bg-emerald-50 hover:text-[#087d48]"
-                  title="TikTok @enottff"
+                  title={`TikTok ${OFFICIAL_CONTACTS.tiktok.handle}`}
                 >
                   <TikTokIcon />
+                </a>
+                <a
+                  href={OFFICIAL_CONTACTS.email.url}
+                  aria-label={`Email ${OFFICIAL_CONTACTS.email.address}`}
+                  className="grid size-9 place-items-center rounded-full border border-slate-200 text-slate-700 transition hover:border-[#087d48] hover:bg-emerald-50 hover:text-[#087d48]"
+                  title={`Email ${OFFICIAL_CONTACTS.email.address}`}
+                >
+                  <Mail className="size-[17px]" strokeWidth={2.2} />
                 </a>
               </div>
             </div>
@@ -475,7 +485,7 @@ function Home() {
           <div className="mt-5 border-t border-slate-100 pt-4 text-[11px] leading-relaxed text-slate-600 md:text-[12px]">
             <b>Layanan Pelanggan</b>
             <div className="mt-2 grid gap-1 sm:grid-cols-3">
-              <a href="mailto:enoinjapan@gmail.com">Email: enoinjapan@gmail.com</a>
+              <a href={OFFICIAL_CONTACTS.email.url}>Email: {OFFICIAL_CONTACTS.email.address}</a>
               <a href="tel:082215155915">Telepon: 082215155915</a>
               <p>Alamat: Jl. Gagak Gg. Bpk Hasan No. 42, Sadang Serang, Coblong, Bandung</p>
             </div>
