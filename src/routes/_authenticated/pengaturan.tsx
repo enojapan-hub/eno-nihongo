@@ -29,6 +29,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
+import { OFFICIAL_CONTACTS } from "@/lib/official-contacts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -349,8 +350,8 @@ function Page() {
           <Row
             icon={LifeBuoy}
             title="Layanan Pelanggan"
-            desc="enoinjapan@gmail.com"
-            onClick={() => (location.href = "mailto:enoinjapan@gmail.com")}
+            desc={OFFICIAL_CONTACTS.email.address}
+            onClick={() => (location.href = OFFICIAL_CONTACTS.email.url)}
           />
           <Row
             icon={CircleHelp}
@@ -385,17 +386,17 @@ function Page() {
           <Row
             icon={Instagram}
             title="Instagram"
-            desc="@enottf"
+            desc={OFFICIAL_CONTACTS.instagram.handle}
             onClick={() =>
-              window.open("https://www.instagram.com/enottf/", "_blank", "noopener,noreferrer")
+              window.open(OFFICIAL_CONTACTS.instagram.url, "_blank", "noopener,noreferrer")
             }
           />
           <Row
             icon={Music2}
             title="TikTok"
-            desc="@enottff"
+            desc={OFFICIAL_CONTACTS.tiktok.handle}
             onClick={() =>
-              window.open("https://www.tiktok.com/@enottff", "_blank", "noopener,noreferrer")
+              window.open(OFFICIAL_CONTACTS.tiktok.url, "_blank", "noopener,noreferrer")
             }
           />
         </Section>
