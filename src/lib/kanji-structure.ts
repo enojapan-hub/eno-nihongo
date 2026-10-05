@@ -1,7 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Level } from "@/lib/learn-queries";
 
-/** Struktur kanji (bushu, komponen, keluarga bushu) dari RPC `get_kanji_structure`. */
+/** Struktur kanji (bushu, pohon komponen, peran bunyi/makna, keluarga) dari RPC `get_kanji_structure`. */
+export type KanjiRadicalStatus = "verified" | "conflict" | "single_source";
 export type KanjiRadical = {
   form: string;
   base: string;
@@ -11,10 +12,25 @@ export type KanjiRadical = {
   baseNameJa: string;
   meaningId: string;
   meaningEn: string;
-  rule: "general" | "tradit";
+  status: KanjiRadicalStatus;
+  /** Bushu klasik (Kangxi) menurut KANJIDIC2; dipakai untuk validasi silang. */
+  kd2: { base: string; nameJa: string; meaningId: string } | null;
 };
-export type KanjiComponent = { c: string; kanjiId: string | null };
-export type KanjiDecomposition = { c: string; p: string[] };
+export type KanjiNodeType = "kanji" | "radical" | "graphic" | "nonunicode";
+export type KanjiRole = "phonetic" | "semantic";
+export type KanjiTreeNode = {
+  id: number;
+  element: string;
+  type: KanjiNodeType;
+  role: KanjiRole | null;
+  /** Kanji terpublikasi dengan karakter yang sama; null bila bukan kanji mandiri. */
+  kanjiId: string | null;
+  meaningId: string | null;
+  /** Bentuk dasar bila node adalah varian bushu (mis. 氵 → 水), beserta kanji dasarnya bila tersedia. */
+  baseForm: string | null;
+  baseKanjiId: string | null;
+  children: KanjiTreeNode[];
+};
 export type KanjiFamilyItem = {
   id: string;
   character: string;
@@ -23,9 +39,12 @@ export type KanjiFamilyItem = {
 };
 export type KanjiStructure = {
   radical: KanjiRadical;
-  components: KanjiComponent[];
-  decomposition: KanjiDecomposition[];
+  /** Akar pohon (komponen langsung); kosong untuk kanji atomik atau yang masih ditinjau. */
+  tree: KanjiTreeNode[];
   needsReview: boolean;
+  mnemonic: string | null;
+  phoneticElement: string | null;
+  phoneticFamily: KanjiFamilyItem[];
   family: KanjiFamilyItem[];
   familyTotal: number;
 };
@@ -44,7 +63,7 @@ const isRec = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 const str = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
 
-/** Katakana → hiragana (untuk bacaan onyomi yang ditampilkan di keluarga bushu). */
+/** Katakana → hiragana (untuk bacaan onyomi yang ditampilkan di keluarga). */
 export function toHiragana(s: string): string {
   return s.replace(/[ァ-ヶ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60));
 }
@@ -60,6 +79,63 @@ export function pickReading(
   return on ? toHiragana(on) : null;
 }
 
+function parseFamily(raw: unknown): KanjiFamilyItem[] {
+  const out: KanjiFamilyItem[] = [];
+  for (const f of Array.isArray(raw) ? raw : []) {
+    if (!isRec(f)) continue;
+    const id = str(f["id"]),
+      ch = str(f["character"]);
+    if (!id || !ch) continue;
+    // RPC mengirim elemen pertama kunyomi/onyomi sebagai teks tunggal.
+    const kun = str(f["kunyomi"]),
+      on = str(f["onyomi"]);
+    out.push({
+      id,
+      character: ch,
+      meaningId: str(f["meaning_id"]),
+      reading: pickReading(kun ? [kun] : null, on ? [on] : null),
+    });
+  }
+  return out;
+}
+
+const NODE_TYPES: readonly KanjiNodeType[] = ["kanji", "radical", "graphic", "nonunicode"];
+
+/** Susun daftar node datar (id, parent, ord) menjadi pohon; node yatim dibuang, bukan ditebak. */
+export function buildTree(raw: unknown): KanjiTreeNode[] {
+  const rows: Array<{ node: KanjiTreeNode; parent: number | null; ord: number }> = [];
+  for (const r of Array.isArray(raw) ? raw : []) {
+    if (!isRec(r)) continue;
+    const id = typeof r["id"] === "number" ? r["id"] : null,
+      el = str(r["el"]);
+    const type = NODE_TYPES.find((t) => t === r["type"]);
+    if (id === null || !el || !type) continue;
+    const role = r["role"] === "phonetic" || r["role"] === "semantic" ? r["role"] : null;
+    rows.push({
+      parent: typeof r["parent"] === "number" ? r["parent"] : null,
+      ord: typeof r["ord"] === "number" ? r["ord"] : 0,
+      node: {
+        id,
+        element: el,
+        type,
+        role,
+        kanjiId: str(r["kanji_id"]),
+        meaningId: str(r["meaning_id"]),
+        baseForm: str(r["base"]),
+        baseKanjiId: str(r["base_kanji_id"]),
+        children: [],
+      },
+    });
+  }
+  const byId = new Map(rows.map((r) => [r.node.id, r]));
+  const roots: Array<{ node: KanjiTreeNode; ord: number }> = [];
+  for (const r of [...rows].sort((a, b) => a.ord - b.ord || a.node.id - b.node.id)) {
+    if (r.parent === null) roots.push(r);
+    else byId.get(r.parent)?.node.children.push(r.node);
+  }
+  return roots.map((r) => r.node);
+}
+
 /** Validasi payload RPC; mengembalikan null bila bentuknya tidak dikenali (tidak menebak). */
 export function parseKanjiStructure(raw: unknown): KanjiStructure | null {
   if (!isRec(raw) || !isRec(raw["radical"])) return null;
@@ -69,37 +145,10 @@ export function parseKanjiStructure(raw: unknown): KanjiStructure | null {
     nameJa = str(r["name_ja"]),
     meaningId = str(r["meaning_id"]);
   if (!form || !base || !nameJa || !meaningId) return null;
-  const components: KanjiComponent[] = [];
-  for (const c of Array.isArray(raw["components"]) ? raw["components"] : []) {
-    if (!isRec(c)) continue;
-    const ch = str(c["c"]);
-    if (ch) components.push({ c: ch, kanjiId: str(c["kanji_id"]) });
-  }
-  const decomposition: KanjiDecomposition[] = [];
-  for (const d of Array.isArray(raw["decomposition"]) ? raw["decomposition"] : []) {
-    if (!isRec(d)) continue;
-    const ch = str(d["c"]);
-    const parts = (Array.isArray(d["p"]) ? d["p"] : []).filter(
-      (x): x is string => typeof x === "string" && x.length > 0,
-    );
-    if (ch && parts.length >= 2) decomposition.push({ c: ch, p: parts });
-  }
-  const family: KanjiFamilyItem[] = [];
-  for (const f of Array.isArray(raw["family"]) ? raw["family"] : []) {
-    if (!isRec(f)) continue;
-    const id = str(f["id"]),
-      ch = str(f["character"]);
-    if (!id || !ch) continue;
-    // RPC mengirim elemen pertama kunyomi/onyomi sebagai teks tunggal.
-    const kun = str(f["kunyomi"]),
-      on = str(f["onyomi"]);
-    family.push({
-      id,
-      character: ch,
-      meaningId: str(f["meaning_id"]),
-      reading: pickReading(kun ? [kun] : null, on ? [on] : null),
-    });
-  }
+  const kd2 = isRec(r["kd2"]) ? r["kd2"] : null;
+  const kd2Base = kd2 ? str(kd2["base"]) : null;
+  const status: KanjiRadicalStatus =
+    r["status"] === "conflict" || r["status"] === "single_source" ? r["status"] : "verified";
   return {
     radical: {
       form,
@@ -110,13 +159,26 @@ export function parseKanjiStructure(raw: unknown): KanjiStructure | null {
       baseNameJa: str(r["base_name_ja"]) ?? nameJa,
       meaningId,
       meaningEn: str(r["meaning_en"]) ?? "",
-      rule: r["rule"] === "tradit" ? "tradit" : "general",
+      status,
+      kd2:
+        kd2 && kd2Base
+          ? {
+              base: kd2Base,
+              nameJa: str(kd2["name_ja"]) ?? "",
+              meaningId: str(kd2["meaning_id"]) ?? "",
+            }
+          : null,
     },
-    components,
-    decomposition,
+    tree: buildTree(raw["tree"]),
     needsReview: raw["needs_review"] === true,
-    family,
-    familyTotal: typeof raw["family_total"] === "number" ? raw["family_total"] : family.length,
+    mnemonic: str(raw["mnemonic"]),
+    phoneticElement: str(raw["phonetic_element"]),
+    phoneticFamily: parseFamily(raw["phonetic_family"]),
+    family: parseFamily(raw["family"]),
+    familyTotal:
+      typeof raw["family_total"] === "number"
+        ? raw["family_total"]
+        : parseFamily(raw["family"]).length,
   };
 }
 
@@ -143,47 +205,93 @@ export function radicalBaseNote(r: KanjiRadical): string | null {
   return r.form !== r.base || r.isVariant ? `bentuk dasar ${r.base}` : null;
 }
 
-function joinParts(parts: readonly string[]): string {
-  return parts.map((p) => `「${p}」`).join(" + ");
+/** Bushu klasik hanya ditampilkan terpisah bila sumber berbeda pendapat (tidak memilih salah satu). */
+export function hasRadicalConflict(r: KanjiRadical): boolean {
+  return r.status === "conflict" && r.kd2 !== null;
+}
+
+/** Label singkat jenis node untuk pemula. */
+export function nodeKindLabel(n: KanjiTreeNode): string {
+  if (n.type === "nonunicode") return "Bagian grafis tanpa karakter Unicode";
+  if (n.type === "graphic") return "Bagian grafis (bukan kanji mandiri)";
+  if (n.type === "radical") return n.baseForm ? `Bentuk bushu dari ${n.baseForm}` : "Bentuk bushu";
+  return n.baseForm ? `Kanji (bentuk bushu dari ${n.baseForm})` : "Kanji";
+}
+
+/** Tampilan karakter node: bagian non-Unicode tidak punya karakter yang bisa dirender. */
+export function nodeGlyph(n: KanjiTreeNode): string {
+  return n.type === "nonunicode" ? "◌" : n.element;
+}
+
+function nameOf(n: KanjiTreeNode): string {
+  return n.type === "nonunicode" ? "satu bagian grafis" : `「${n.element}」`;
+}
+function joinNodes(nodes: readonly KanjiTreeNode[]): string {
+  return nodes.map(nameOf).join(" + ");
 }
 
 /**
- * Penjelasan "Memahami Bentuk Kanji" yang deterministik dari data terverifikasi.
- * Hanya menjelaskan susunan bentuk (bushu, komponen, uraian), tanpa klaim asal-usul atau mnemonik.
+ * Penjelasan "Memahami Bentuk Kanji": hanya fakta terverifikasi (struktur, bushu, peran bunyi/makna yang
+ * disetujui dua sumber). Tidak memuat asal-usul atau mnemonik; keduanya punya bagian tersendiri.
  */
 export function buildShapeExplanation(character: string, s: KanjiStructure): string[] {
   const lines: string[] = [];
-  const { radical: r } = s;
-  if (s.needsReview) {
+  const { radical: r, tree } = s;
+  if (tree.length === 0) {
     lines.push(
-      `Bushu kanji 「${character}」 adalah 「${r.form}」. Rincian komponen kanji ini masih dalam peninjauan, jadi belum ditampilkan.`,
+      s.needsReview
+        ? `Rincian komponen kanji 「${character}」 masih dalam peninjauan, jadi belum ditampilkan.`
+        : `Kanji 「${character}」 adalah bentuk dasar pada tingkat struktur ini dan tidak diuraikan lebih lanjut.`,
     );
-    return lines;
-  }
-  const comps = s.components.map((c) => c.c);
-  const distinct = [...new Set(comps)];
-  if (comps.length === 0 || (comps.length === 1 && comps[0] === character)) {
-    lines.push(
-      `Kanji 「${character}」 adalah bentuk dasar yang tidak diuraikan lagi dalam data kami.`,
-    );
-  } else if (distinct.length === 1 && comps.length > 1) {
-    lines.push(
-      `Kanji 「${character}」 tersusun dari 「${distinct[0]}」 yang diulang ${comps.length} kali.`,
-    );
-  } else if (comps.length === 1) {
-    lines.push(`Kanji 「${character}」 mengandung komponen 「${comps[0]}」.`);
   } else {
-    lines.push(`Kanji 「${character}」 tersusun dari ${joinParts(comps)}.`);
+    const names = tree.map((n) => n.element);
+    const distinct = new Set(names);
+    if (distinct.size === 1 && tree.length > 1)
+      lines.push(
+        `Kanji 「${character}」 tersusun dari ${nameOf(tree[0]!)} yang diulang ${tree.length} kali.`,
+      );
+    else if (tree.length === 1)
+      lines.push(`Kanji 「${character}」 mengandung komponen ${nameOf(tree[0]!)}.`);
+    else lines.push(`Kanji 「${character}」 tersusun dari ${joinNodes(tree)}.`);
   }
-  const where = r.position ? POSITION_ID[r.position] : null;
-  const baseNote = radicalBaseNote(r);
-  const hasOwnForm = comps.includes(r.form) || r.form === character;
-  lines.push(
-    `Bushunya adalah 「${r.form}」（${r.nameJa}）${baseNote ? `, ${baseNote}` : ""}, berarti "${r.meaningId}"` +
-      `${where && hasOwnForm && r.form !== character ? `, terletak ${where}` : ""}.`,
-  );
-  for (const d of s.decomposition) {
-    lines.push(`Komponen 「${d.c}」 sendiri tersusun dari ${joinParts(d.p)}.`);
+  if (hasRadicalConflict(r)) {
+    lines.push(
+      `Sumber berbeda soal bushu: KanjiVG menandai 「${r.form}」, sedangkan bushu klasik (Kangxi) menurut KANJIDIC2 adalah 「${r.kd2!.base}」. Keduanya ditampilkan apa adanya.`,
+    );
+  } else {
+    const where = r.position ? POSITION_ID[r.position] : null;
+    const baseNote = radicalBaseNote(r);
+    const inside = tree.some((n) => n.element === r.form);
+    lines.push(
+      `Bushunya adalah 「${r.form}」（${r.nameJa}）${baseNote ? `, ${baseNote}` : ""}, berarti "${r.meaningId}"` +
+        `${where && inside && r.form !== character ? `, terletak ${where}` : ""}.`,
+    );
   }
+  const phon = tree.find((n) => n.role === "phonetic");
+  const sem = tree.find((n) => n.role === "semantic");
+  if (phon && sem) {
+    const meaning = sem.meaningId ? ` (berkaitan dengan "${sem.meaningId}")` : "";
+    lines.push(
+      `Menurut sumber data kami, ${nameOf(sem)}${meaning} berfungsi sebagai petunjuk kelompok makna, sedangkan ${nameOf(phon)} berfungsi sebagai petunjuk bunyi. Bunyi yang dimaksud adalah bunyi Tionghoa asal kanji, yang tidak selalu sama dengan bacaan Jepang sekarang.`,
+    );
+  } else if (phon) {
+    lines.push(
+      `Menurut sumber data kami, ${nameOf(phon)} berfungsi sebagai petunjuk bunyi. Bunyi yang dimaksud adalah bunyi Tionghoa asal kanji, yang tidak selalu sama dengan bacaan Jepang sekarang.`,
+    );
+  }
+  const seen = new Set<string>();
+  const walk = (nodes: readonly KanjiTreeNode[]) => {
+    for (const n of nodes) {
+      if (n.children.length >= 2) {
+        const key = `${n.element}:${n.children.map((c) => c.element).join("")}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          lines.push(`Komponen ${nameOf(n)} sendiri tersusun dari ${joinNodes(n.children)}.`);
+        }
+      }
+      walk(n.children);
+    }
+  };
+  walk(tree);
   return lines;
 }
