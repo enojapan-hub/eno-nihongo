@@ -386,4 +386,12 @@ describe("migration contract", () => {
     }
     for (const sql of data) expect(sql).toMatch(/on conflict/);
   });
+
+  it("role cleanup only nulls semantic roles and keeps nodes (no deletes, KanjiVG-only provenance)", () => {
+    const roles = read("20261008000000_kanji_roles_kanjivg_only.sql");
+    expect(roles).not.toMatch(/\b(drop|truncate|delete\s+from|insert\s+into)\b/i);
+    expect(roles).toMatch(/set role = null, role_source = null\s+where role = 'semantic'/);
+    expect(roles).toMatch(/KanjiVG \(kvg:phon\)/);
+    expect(roles).not.toMatch(/hanzi|kamus pembanding/i);
+  });
 });

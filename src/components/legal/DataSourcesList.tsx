@@ -35,15 +35,6 @@ const SOURCES: readonly Source[] = [
       ["Lisensi", "https://creativecommons.org/licenses/by/4.0/"],
     ],
   },
-  {
-    name: "Make Me a Hanzi",
-    license: "LGPL v3",
-    used: "Hanya pembanding untuk memverifikasi peran bunyi/makna; datanya tidak disalin.",
-    links: [
-      ["Make Me a Hanzi", "https://github.com/skishore/makemeahanzi"],
-      ["Lisensi", "https://www.gnu.org/licenses/lgpl-3.0.html"],
-    ],
-  },
 ];
 
 /** Sumber & lisensi data Kanji (halaman Tentang); tidak ditampilkan di layar belajar. */

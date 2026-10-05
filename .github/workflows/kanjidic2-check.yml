@@ -6,6 +6,12 @@ on:
   schedule:
     - cron: "23 3 1 * *"
   workflow_dispatch:
+  # Berjalan juga pada PR yang mengubah workflow/skrip/snapshot ini, agar bisa diverifikasi sebelum merge.
+  pull_request:
+    paths:
+      - ".github/workflows/kanjidic2-check.yml"
+      - "scripts/kanjidic2-radical-check.mjs"
+      - "supabase/data/kanjidic2-radicals.json"
 
 permissions:
   contents: read

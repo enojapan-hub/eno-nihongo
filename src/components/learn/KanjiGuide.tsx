@@ -31,9 +31,8 @@ export function KanjiGuide() {
         <div>
           <p className="font-bold">Petunjuk bunyi dan makna</p>
           <p className="text-muted-foreground">
-            Pada banyak kanji, satu bagian menunjukkan kelompok makna dan bagian lain menunjukkan
-            bunyi. Kami hanya menampilkannya jika dua sumber data saling setuju; selain itu bagian
-            tersebut ditulis netral sebagai komponen penyusun.
+            Pada banyak kanji, satu bagian menunjukkan bunyi. Kami hanya menandainya bila data
+            sumber menandainya; selain itu bagian tersebut ditulis netral sebagai komponen penyusun.
           </p>
         </div>
         <div>
