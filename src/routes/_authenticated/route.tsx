@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { ChatDock } from "@/components/social/ChatDock";
 import { supabase } from "@/integrations/supabase/client";
 
 // beforeLoad berjalan pada SETIAP navigasi; pemeriksaan suspend ke database di-cache singkat per user
@@ -37,5 +38,10 @@ export const Route = createFileRoute("/_authenticated")({
     if (error) await supabase.auth.signOut({ scope: "local" });
     throw redirect({ to: "/auth" });
   },
-  component: () => <Outlet />,
+  component: () => (
+    <>
+      <Outlet />
+      <ChatDock />
+    </>
+  ),
 });
