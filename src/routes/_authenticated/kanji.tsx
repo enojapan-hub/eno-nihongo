@@ -17,6 +17,7 @@ import { KanjiGuide } from "@/components/learn/KanjiGuide";
 import { KanjiStructureSection } from "@/components/learn/KanjiStructureSection";
 import {
   fetchKanjiList,
+  fetchKanjiOne,
   fetchKanjiStudy,
   addItemToReview,
   markItemLearned,
@@ -28,6 +29,13 @@ import { normalizeJapaneseSpacing } from "@/lib/japanese-spacing";
 import { exampleRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import {
+  EXTRA_LESSON,
+  filterByLesson,
+  hasExtraKanji,
+  lessonNumbers,
+  normalizeLesson,
+} from "@/lib/kanji-lessons";
 
 export const Route = createFileRoute("/_authenticated/kanji")({
   validateSearch: (search: Record<string, unknown>): { id?: string } =>
@@ -99,15 +107,8 @@ function KanjiPage() {
     },
   });
   const allCards = useMemo(() => (data ?? []) as KanjiRow[], [data]);
-  const lessons = useMemo(
-    () =>
-      [
-        ...new Set(
-          allCards.map((x) => x.lesson_number).filter((n): n is number => typeof n === "number"),
-        ),
-      ].sort((a, b) => a - b),
-    [allCards],
-  );
+  const lessons = useMemo(() => lessonNumbers(allCards), [allCards]),
+    extraLesson = useMemo(() => hasExtraKanji(allCards), [allCards]);
   const [lesson, setLesson] = useState<number | null>(() => {
       const v = localStorage.getItem(`eno:materi:kanji:${level}:lesson`);
       return v ? Number(v) : null;
@@ -134,8 +135,8 @@ function KanjiPage() {
     setPage(Number(savedPage || 0));
   }, [targetLevel]);
   useEffect(() => {
-    if (lessons.length) setLesson((c) => (c && lessons.includes(c) ? c : (lessons[0] ?? null)));
-  }, [level, lessons]);
+    if (lessons.length) setLesson((c) => normalizeLesson(c, lessons, extraLesson));
+  }, [level, lessons, extraLesson]);
   useEffect(() => {
     if (lesson != null) localStorage.setItem(`eno:materi:kanji:${level}:lesson`, String(lesson));
     if (lessonReady.current) setPage(0);
@@ -192,17 +193,50 @@ function KanjiPage() {
       );
     }
   }, [masteredRows]);
-  const chapterCards =
-      lesson == null ? allCards : allCards.filter((x) => x.lesson_number === lesson),
+  const chapterCards = filterByLesson(allCards, lesson),
     pageSize = 60,
     pageCount = Math.max(1, Math.ceil(chapterCards.length / pageSize)),
     visibleCards = chapterCards.slice(page * pageSize, (page + 1) * pageSize);
   useEffect(() => {
     if (page >= pageCount) setPage(Math.max(0, pageCount - 1));
   }, [page, pageCount]);
-  const openableIds = useMemo(() => new Set(allCards.map((x) => x.id)), [allCards]);
   const detailIndex = detailId ? allCards.findIndex((x) => x.id === detailId) : -1,
-    item = detailIndex >= 0 ? allCards[detailIndex] : null;
+    listItem = detailIndex >= 0 ? allCards[detailIndex] : null;
+  // Detail dari relasi (keluarga/komponen) boleh berada di luar level target: ambil barisnya sendiri.
+  const { data: relatedItem, isLoading: relatedLoading } = useQuery({
+    queryKey: ["kanji-one", detailId],
+    enabled: !!detailId && !!data && !listItem,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    queryFn: () => fetchKanjiOne(detailId!),
+  });
+  const item: KanjiRow | null = listItem ?? (relatedItem as KanjiRow | null | undefined) ?? null;
+  const itemLevel: Level = item?.level ?? level;
+  const { data: relatedProgress } = useQuery({
+    queryKey: ["kanji-one-progress", detailId],
+    enabled: !!relatedItem && !listItem,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const { data: auth } = await getAuthUser();
+      if (!auth.user) return null;
+      const { data: row, error } = await supabase
+        .from("user_item_progress")
+        .select("status")
+        .eq("user_id", auth.user.id)
+        .eq("item_type", "kanji")
+        .eq("item_id", detailId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (row?.status as string | undefined) ?? null;
+    },
+  });
+  useEffect(() => {
+    if (!detailId || listItem || !relatedProgress) return;
+    if (!["learning", "review", "mastered"].includes(relatedProgress)) return;
+    setLearned((v) => ({ ...v, [detailId]: true }));
+    if (relatedProgress === "review") setReview((v) => ({ ...v, [detailId]: true }));
+  }, [detailId, listItem, relatedProgress]);
   const prev = () => {
       if (detailIndex > 0) {
         const t = allCards[detailIndex - 1];
@@ -236,7 +270,8 @@ function KanjiPage() {
         });
   }, [detailIndex, allCards, qc]);
   const reviewMutation = useMutation({
-    mutationFn: (id: string) => addItemToReview({ itemType: "kanji", itemId: id, level }),
+    mutationFn: (id: string) =>
+      addItemToReview({ itemType: "kanji", itemId: id, level: itemLevel }),
     onMutate: (id) => {
       const previous = review[id];
       setReview((v) => ({ ...v, [id]: true }));
@@ -254,12 +289,14 @@ function KanjiPage() {
       toast.success("Progress tersimpan");
       setReview((v) => ({ ...v, [id]: true }));
       void qc.invalidateQueries({ queryKey: ["mastered-items", "kanji", level] });
+      void qc.invalidateQueries({ queryKey: ["kanji-one-progress"] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
     },
   });
   const mutation = useMutation({
-    mutationFn: (id: string) => markItemLearned({ itemType: "kanji", itemId: id, level }),
+    mutationFn: (id: string) =>
+      markItemLearned({ itemType: "kanji", itemId: id, level: itemLevel }),
     onMutate: (id) => {
       const previous = learned[id];
       setLearned((v) => ({ ...v, [id]: true }));
@@ -278,6 +315,7 @@ function KanjiPage() {
       setLearned((v) => ({ ...v, [id]: true }));
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["mastered-items", "kanji", level] });
+      void qc.invalidateQueries({ queryKey: ["kanji-one-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
     },
   });
@@ -327,7 +365,12 @@ function KanjiPage() {
         </p>
       ) : (
         <div className="mx-auto min-w-0 max-w-lg overflow-x-hidden pb-[max(1rem,env(safe-area-inset-bottom))]">
-          {!item ? (
+          {!item && detailId && relatedLoading ? (
+            <div
+              aria-label="Memuat kanji"
+              className="my-4 h-40 animate-pulse rounded-2xl bg-muted/60"
+            />
+          ) : !item ? (
             <>
               <div className="mb-3">
                 <div className="flex items-end justify-between gap-3">
@@ -363,6 +406,7 @@ function KanjiPage() {
                       Pelajaran Kanji Ke {lessonLabel(level, n)}
                     </option>
                   ))}
+                  {extraLesson && <option value={EXTRA_LESSON}>Kanji Tambahan</option>}
                 </select>
               )}
               {error && (
@@ -464,7 +508,7 @@ function KanjiPage() {
                   Kanji {level}
                 </button>
                 <span className="text-[13px] font-semibold text-muted-foreground">
-                  {detailIndex + 1} / {allCards.length}
+                  {detailIndex >= 0 ? `${detailIndex + 1} / ${allCards.length}` : item.level}
                 </span>
               </div>
               <div className="grid grid-cols-[44px_1fr_44px] items-center gap-2">
@@ -472,7 +516,7 @@ function KanjiPage() {
                   type="button"
                   aria-label="Kanji sebelumnya"
                   onClick={goPrev}
-                  disabled={detailIndex === 0}
+                  disabled={detailIndex <= 0}
                   className="grid size-11 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
                 >
                   <ArrowLeft className="mx-auto size-4" />
@@ -492,7 +536,7 @@ function KanjiPage() {
                   type="button"
                   aria-label="Kanji selanjutnya"
                   onClick={goNext}
-                  disabled={detailIndex === allCards.length - 1}
+                  disabled={detailIndex < 0 || detailIndex === allCards.length - 1}
                   className="grid size-11 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
                 >
                   <ArrowRight className="mx-auto size-4" />
@@ -521,8 +565,8 @@ function KanjiPage() {
               <KanjiStructureSection
                 kanjiId={item.id}
                 character={item.character}
+                meaning={item.meaning_id}
                 level={level}
-                openableIds={openableIds}
                 onOpen={(id) => {
                   openDetail(id);
                   window.scrollTo({ top: 0 });
@@ -610,7 +654,7 @@ function KanjiPage() {
                   <Button
                     variant="ghost"
                     aria-label="Materi sebelumnya"
-                    disabled={detailIndex === 0}
+                    disabled={detailIndex <= 0}
                     onClick={prev}
                     className="size-9 rounded-full p-0 transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
                   >
@@ -628,7 +672,7 @@ function KanjiPage() {
                     <span className="truncate">Review</span>
                   </Button>
                   <span className="min-w-11 text-center text-[10px] font-semibold text-muted-foreground">
-                    {detailIndex + 1}/{allCards.length}
+                    {detailIndex >= 0 ? `${detailIndex + 1}/${allCards.length}` : item.level}
                   </span>
                   <Button
                     onClick={() => mutation.mutate(item.id)}
@@ -643,7 +687,7 @@ function KanjiPage() {
                   <Button
                     variant="ghost"
                     aria-label="Materi selanjutnya"
-                    disabled={detailIndex === allCards.length - 1}
+                    disabled={detailIndex < 0 || detailIndex === allCards.length - 1}
                     onClick={next}
                     className="size-9 rounded-full p-0 transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
                   >

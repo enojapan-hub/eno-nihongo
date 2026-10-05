@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { DataSourcesList } from "@/components/legal/DataSourcesList";
 const ORIGIN = "https://www.enonihongo.com";
 export const Route = createFileRoute("/tentang")({
   head: () => ({
@@ -34,6 +35,14 @@ function Tentang() {
           JLPT. Platform terus dikembangkan agar pengalaman belajar tetap praktis, jelas, dan mudah
           digunakan.
         </p>
+        <h2 id="sumber-data" className="mt-8 scroll-mt-6 text-xl font-black">
+          Sumber & Lisensi Data Kanji
+        </h2>
+        <p className="mt-3 leading-7 text-slate-600">
+          Struktur kanji (bushu, komponen, dan keluarga bushu) disusun dari sumber terbuka berikut.
+          Kami berterima kasih kepada para penyusunnya.
+        </p>
+        <DataSourcesList />
         <a
           href="/auth"
           className="mt-8 inline-flex rounded-full bg-[#087d48] px-5 py-3 text-sm font-black text-white"

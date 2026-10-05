@@ -28,9 +28,20 @@ export function KanjiGuide() {
             Bushu 語 adalah 言（ごんべん）. 吾 adalah komponen lain, yang tersusun dari 五 + 口.
           </p>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          Data struktur: KanjiVG (CC BY-SA 3.0) dan Kanji alive (CC BY 4.0).
-        </p>
+        <div>
+          <p className="font-bold">Petunjuk bunyi</p>
+          <p className="text-muted-foreground">
+            Pada banyak kanji, satu bagian menunjukkan bunyi. Bagian itu hanya ditandai bila memang
+            ada penandanya; selain itu ditulis netral sebagai komponen penyusun.
+          </p>
+        </div>
+        <div>
+          <p className="font-bold">Cara Mudah Mengingat</p>
+          <p className="text-muted-foreground">
+            Cerita pendek pembantu ingatan. Ini bukan asal-usul kanji dan bisa berbeda dari
+            sejarahnya.
+          </p>
+        </div>
       </div>
     </details>
   );

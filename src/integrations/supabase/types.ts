@@ -1843,6 +1843,47 @@ export type Database = {
         }
         Relationships: []
       }
+      kanji_components: {
+        Row: {
+          depth: number
+          element: string
+          kanji_id: string
+          node_id: number
+          ord: number
+          parent_id: number | null
+          role: string | null
+          role_source: string | null
+        }
+        Insert: {
+          depth: number
+          element: string
+          kanji_id: string
+          node_id: number
+          ord: number
+          parent_id?: number | null
+          role?: string | null
+          role_source?: string | null
+        }
+        Update: {
+          depth?: number
+          element?: string
+          kanji_id?: string
+          node_id?: number
+          ord?: number
+          parent_id?: number | null
+          role?: string | null
+          role_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanji_components_kanji_id_fkey"
+            columns: ["kanji_id"]
+            isOneToOne: false
+            referencedRelation: "kanji"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kanji_curriculum: {
         Row: {
           character: string
@@ -1879,6 +1920,32 @@ export type Database = {
             foreignKeyName: "kanji_curriculum_kanji_id_fkey"
             columns: ["kanji_id"]
             isOneToOne: false
+            referencedRelation: "kanji"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kanji_mnemonics: {
+        Row: {
+          basis: string
+          body: string
+          kanji_id: string
+        }
+        Insert: {
+          basis?: string
+          body: string
+          kanji_id: string
+        }
+        Update: {
+          basis?: string
+          body?: string
+          kanji_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanji_mnemonics_kanji_id_fkey"
+            columns: ["kanji_id"]
+            isOneToOne: true
             referencedRelation: "kanji"
             referencedColumns: ["id"]
           },
@@ -2008,8 +2075,10 @@ export type Database = {
           needs_review: boolean
           radical_base: string
           radical_form: string
+          radical_kd2_base: string | null
           radical_position: string | null
-          radical_rule: string
+          radical_rule: string | null
+          radical_status: string
           source: string
         }
         Insert: {
@@ -2020,8 +2089,10 @@ export type Database = {
           needs_review?: boolean
           radical_base: string
           radical_form: string
+          radical_kd2_base?: string | null
           radical_position?: string | null
-          radical_rule: string
+          radical_rule?: string | null
+          radical_status?: string
           source?: string
         }
         Update: {
@@ -2032,8 +2103,10 @@ export type Database = {
           needs_review?: boolean
           radical_base?: string
           radical_form?: string
+          radical_kd2_base?: string | null
           radical_position?: string | null
-          radical_rule?: string
+          radical_rule?: string | null
+          radical_status?: string
           source?: string
         }
         Relationships: [
@@ -2057,6 +2130,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "kanji_radical_forms"
             referencedColumns: ["form_char"]
+          },
+          {
+            foreignKeyName: "kanji_structure_radical_kd2_base_fkey"
+            columns: ["radical_kd2_base"]
+            isOneToOne: false
+            referencedRelation: "kanji_radicals"
+            referencedColumns: ["base_char"]
           },
         ]
       }

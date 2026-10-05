@@ -40,6 +40,20 @@ export async function fetchKanjiList(level: Level) {
       .order("sort_order", { ascending: true }),
   );
 }
+/** Satu kanji terpublikasi menurut id (untuk membuka detail dari relasi lintas level; RLS tetap berlaku). */
+export async function fetchKanjiOne(id: string) {
+  const rows = must(
+    await supabase
+      .from("kanji")
+      .select(
+        "id, character, level, onyomi, kunyomi, meaning_id, stroke_count, sort_order, source_book, lesson_number, lesson_title",
+      )
+      .eq("id", id)
+      .eq("is_published", true)
+      .limit(1),
+  );
+  return rows[0] ?? null;
+}
 export async function fetchKanjiDetail(id: string) {
   const kanji = must(
     await supabase.from("kanji").select("*").eq("id", id).eq("is_published", true).limit(1),
