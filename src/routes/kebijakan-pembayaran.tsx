@@ -29,7 +29,7 @@ function Page() {
         </div>
         <div className="mt-8 rounded-2xl bg-emerald-50 p-4 text-xs">
           <b>Layanan pelanggan</b>
-          <p className="mt-1">enoinjapan@gmail.com · 082215155915</p>
+          <p className="mt-1">enonihongo@gmail.com · 082215155915</p>
         </div>
       </article>
     </main>

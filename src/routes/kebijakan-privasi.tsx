@@ -31,7 +31,7 @@ function Page() {
             PIN, OTP, atau kredensial pembayaran pengguna.
           </p>
         </div>
-        <p className="mt-8 border-t pt-5 text-xs text-slate-500">Kontak: enoinjapan@gmail.com</p>
+        <p className="mt-8 border-t pt-5 text-xs text-slate-500">Kontak: enonihongo@gmail.com</p>
       </article>
     </main>
   );
