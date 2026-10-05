@@ -981,6 +981,84 @@ export type Database = {
           },
         ]
       }
+      dm_conversations: {
+        Row: {
+          created_at: string
+          high_last_read_at: string
+          id: string
+          last_message_at: string
+          low_last_read_at: string
+          user_high: string
+          user_low: string
+        }
+        Insert: {
+          created_at?: string
+          high_last_read_at?: string
+          id?: string
+          last_message_at?: string
+          low_last_read_at?: string
+          user_high: string
+          user_low: string
+        }
+        Update: {
+          created_at?: string
+          high_last_read_at?: string
+          id?: string
+          last_message_at?: string
+          low_last_read_at?: string
+          user_high?: string
+          user_low?: string
+        }
+        Relationships: []
+      }
+      dm_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          recipient_id: string
+          reply_to: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          recipient_id: string
+          reply_to?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          recipient_id?: string
+          reply_to?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "dm_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "dm_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eno_monthly_exam_attempts: {
         Row: {
           answers: Json
@@ -1212,6 +1290,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      global_messages: {
+        Row: {
+          body: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          reply_to: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          reply_to?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          reply_to?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "global_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "global_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       grammar_curriculum: {
         Row: {
@@ -3193,6 +3309,93 @@ export type Database = {
           },
         ]
       }
+      social_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      social_friendships: {
+        Row: {
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+          user_high: string
+          user_low: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+          user_high: string
+          user_low: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+          user_high?: string
+          user_low?: string
+        }
+        Relationships: []
+      }
+      social_global_read: {
+        Row: {
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      social_profiles: {
+        Row: {
+          avatar_id: number
+          created_at: string
+          display_name: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_id?: number
+          created_at?: string
+          display_name?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_id?: number
+          created_at?: string
+          display_name?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       study_plans: {
         Row: {
           created_at: string
@@ -4529,6 +4732,22 @@ export type Database = {
         Returns: boolean
       }
       delete_my_read_notifications: { Args: never; Returns: number }
+      dm_conversation_list: { Args: never; Returns: Json }
+      dm_delete_message: { Args: { p_id: string }; Returns: Json }
+      dm_history: {
+        Args: {
+          p_before_at?: string
+          p_before_id?: string
+          p_limit?: number
+          p_with: string
+        }
+        Returns: Json
+      }
+      dm_mark_read: { Args: { p_with: string }; Returns: Json }
+      dm_send: {
+        Args: { p_body: string; p_reply_to?: string; p_to: string }
+        Returns: Json
+      }
       enroll_in_class: { Args: { p_class_id: string }; Returns: string }
       ensure_active_study_plan: {
         Args: never
@@ -4579,6 +4798,13 @@ export type Database = {
           total_score: number
         }[]
       }
+      friend_remove: { Args: { p_user: string }; Returns: Json }
+      friend_request_cancel: { Args: { p_user: string }; Returns: Json }
+      friend_request_respond: {
+        Args: { p_accept: boolean; p_user: string }
+        Returns: Json
+      }
+      friend_request_send: { Args: { p_username: string }; Returns: Json }
       generate_daily_study_tasks: {
         Args: { p_study_date?: string }
         Returns: {
@@ -5193,6 +5419,16 @@ export type Database = {
           usage_note_id: string
         }[]
       }
+      global_delete_message: { Args: { p_id: string }; Returns: Json }
+      global_history: {
+        Args: { p_before_at?: string; p_before_id?: string; p_limit?: number }
+        Returns: Json
+      }
+      global_mark_read: { Args: never; Returns: Json }
+      global_send_message: {
+        Args: { p_body: string; p_reply_to?: string }
+        Returns: Json
+      }
       grade_class_submission: {
         Args: { p_feedback?: string; p_score: number; p_submission_id: string }
         Returns: undefined
@@ -5417,6 +5653,33 @@ export type Database = {
         Args: { p_enabled: boolean }
         Returns: undefined
       }
+      social_assert_member: { Args: never; Returns: string }
+      social_block: { Args: { p_user: string }; Returns: Json }
+      social_blocked_between: {
+        Args: { p_a: string; p_b: string }
+        Returns: boolean
+      }
+      social_drop_pending: {
+        Args: { p_a: string; p_b: string; p_requester: string }
+        Returns: boolean
+      }
+      social_end_friendship: {
+        Args: { p_a: string; p_b: string }
+        Returns: boolean
+      }
+      social_me: { Args: never; Returns: Json }
+      social_overview: { Args: never; Returns: Json }
+      social_report_message: {
+        Args: { p_message_id: string; p_reason?: string; p_scope: string }
+        Returns: Json
+      }
+      social_search_users: { Args: { p_query: string }; Returns: Json }
+      social_set_username: {
+        Args: { p_display_name?: string; p_username: string }
+        Returns: Json
+      }
+      social_unblock: { Args: { p_user: string }; Returns: Json }
+      social_unread_summary: { Args: never; Returns: Json }
       start_eno_monthly_exam: { Args: { p_exam_id: string }; Returns: Json }
       start_jlpt_simulation_full: {
         Args: { p_exam_no?: number; p_level: string }
