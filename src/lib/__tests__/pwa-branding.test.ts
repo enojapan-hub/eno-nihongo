@@ -28,6 +28,19 @@ describe("PWA manifest + branding assets", () => {
     }
     expect(manifest.icons.some((i: { purpose: string }) => i.purpose === "maskable")).toBe(true);
   });
+  it("app icons are the official square set and fully opaque (no transparent corners)", () => {
+    const expected: Record<string, number> = {
+      "icon-192.png": 192,
+      "icon-512.png": 512,
+      "icon-maskable-512.png": 512,
+      "apple-touch-icon.png": 180,
+    };
+    for (const [file, size] of Object.entries(expected)) {
+      expect(pngSize(file), file).toEqual([size, size]);
+      // IHDR color type 2 = truecolor without alpha: iOS/Android never composite on black/white.
+      expect(readFileSync(pub(file)).readUInt8(25), file).toBe(2);
+    }
+  });
   it("favicon set is square and favicon.ico is multi-size (16/32/48)", () => {
     expect(pngSize("favicon-16x16.png")).toEqual([16, 16]);
     expect(pngSize("favicon-32x32.png")).toEqual([32, 32]);
