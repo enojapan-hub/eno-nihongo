@@ -9,6 +9,7 @@ import { fetchCompetitionLeaderboard, fetchLeaderboard } from "@/lib/leaderboard
 import { getLeague, LEAGUES } from "@/lib/progression";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { profileCard } from "@/lib/social/profile-card-state";
 
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({ meta: [{ title: "Leaderboard — ENO NIHONGO" }] }),
@@ -65,6 +66,14 @@ function LeaderboardPage() {
     }));
   }, [period, level, leaderboard.data, weeklyRanks.data, monthlyRanks.data]);
   const mine = rankRows.find((x) => x.userId === me.data);
+  const pointsLabel = "Poin";
+  const openProfile = (u: { userId: string; rank: number; points: number; level: string }) =>
+    profileCard.open(u.userId, {
+      rank: u.rank,
+      points: u.points,
+      pointsLabel,
+      level: u.level,
+    });
   const top3 = rankRows.slice(0, 3);
   return (
     <AppShell compact title="Leaderboard">
@@ -155,7 +164,12 @@ function LeaderboardPage() {
                     {[top3[1], top3[0], top3[2]].map((u, i) =>
                       u ? (
                         <div key={u.userId} className={"text-center " + (i === 1 ? "pb-4" : "")}>
-                          <div className="relative mx-auto w-fit">
+                          <button
+                            type="button"
+                            aria-label={`Lihat profil ${u.displayName}`}
+                            onClick={() => openProfile(u)}
+                            className="relative mx-auto block w-fit rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          >
                             {i === 1 && (
                               <Crown className="absolute -top-5 left-1/2 size-5 -translate-x-1/2 text-amber-500" />
                             )}
@@ -182,8 +196,14 @@ function LeaderboardPage() {
                             >
                               {u.rank}
                             </span>
-                          </div>
-                          <p className="mt-2 truncate text-[10px] font-black">{u.displayName}</p>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openProfile(u)}
+                            className="mt-2 block w-full truncate text-[10px] font-black"
+                          >
+                            {u.displayName}
+                          </button>
                           <p className="text-[8px] text-muted-foreground">{u.level}</p>
                           <p className="mt-1 text-[9px] font-black text-primary">
                             {u.points.toLocaleString("id-ID")} Poin
@@ -228,23 +248,30 @@ function LeaderboardPage() {
                     <span className="w-7 text-center text-[10px] font-black text-muted-foreground">
                       #{user.rank}
                     </span>
-                    {user.avatarUrl ? (
-                      <img
-                        src={user.avatarUrl}
-                        alt=""
-                        className="size-8 rounded-full border object-cover"
-                      />
-                    ) : (
-                      <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                        {user.displayName[0]}
-                      </span>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[10px] font-bold">{user.displayName}</p>
-                      <p className="text-[8px] text-muted-foreground">
-                        {user.level} · 🔥 {user.streak} hari
-                      </p>
-                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Lihat profil ${user.displayName}`}
+                      onClick={() => openProfile(user)}
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      {user.avatarUrl ? (
+                        <img
+                          src={user.avatarUrl}
+                          alt=""
+                          className="size-8 rounded-full border object-cover"
+                        />
+                      ) : (
+                        <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                          {user.displayName[0]}
+                        </span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[10px] font-bold">{user.displayName}</p>
+                        <p className="text-[8px] text-muted-foreground">
+                          {user.level} · 🔥 {user.streak} hari
+                        </p>
+                      </div>
+                    </button>
                     <span className="text-[10px] font-black text-primary">
                       {user.points.toLocaleString("id-ID")} Poin
                     </span>

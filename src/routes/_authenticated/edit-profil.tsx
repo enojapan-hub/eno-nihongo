@@ -17,6 +17,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SocialAccountCard } from "@/components/social/SocialAccountCard";
 import { getMyAccount, updateMyAccount } from "@/lib/profile.functions";
 import { COUNTRIES } from "@/lib/countries";
 import { supabase } from "@/integrations/supabase/client";
@@ -275,6 +276,8 @@ function EditProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        <SocialAccountCard />
 
         <Card className="rounded-3xl shadow-none">
           <CardContent className="space-y-4 p-5">

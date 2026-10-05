@@ -33,7 +33,7 @@ const MESSAGES: Record<string, string> = {
   invalid_username: "Username 3–20 karakter, hanya huruf kecil, angka, dan garis bawah (_).",
   username_reserved: "Username ini tidak tersedia.",
   username_taken: "Username sudah dipakai.",
-  username_already_set: "Username sudah diatur dan tidak bisa diganti.",
+  username_already_set: "Username sudah diatur. Gunakan Ubah Username di Edit Profil.",
   invalid_display_name: "Nama tampilan maksimal 40 karakter dan tidak boleh memuat @.",
   user_not_found: "Pengguna tidak ditemukan.",
   self_target: "Tidak bisa dilakukan pada diri sendiri.",
@@ -42,13 +42,18 @@ const MESSAGES: Record<string, string> = {
   request_exists: "Permintaan sudah dikirim.",
   no_request: "Permintaan tidak ditemukan.",
   not_friends: "Hanya teman yang bisa saling mengirim pesan.",
-  too_many_requests: "Terlalu banyak permintaan menunggu. Coba lagi nanti.",
+  too_many_requests: "Terlalu banyak permintaan pertemanan. Coba lagi nanti.",
   message_empty: "Pesan tidak boleh kosong.",
   message_too_long: "Pesan terlalu panjang.",
   rate_limited: "Terlalu cepat. Tunggu sebentar lalu coba lagi.",
   forbidden: "Kamu tidak berhak melakukan ini.",
   not_found: "Pesan tidak ditemukan.",
   invalid_scope: "Laporan tidak valid.",
+  message_rejected: "Pesan tidak dapat dikirim karena mengandung kata yang tidak diizinkan.",
+  username_not_allowed: "Username atau nama ini mengandung kata yang tidak diizinkan.",
+  username_cooldown: "Username baru bisa diubah lagi setelah masa tunggu 30 hari berakhir.",
+  username_unchanged: "Itu sudah menjadi usernamemu.",
+  requests_disabled: "Pengguna ini tidak menerima permintaan pertemanan.",
 };
 
 export function socialErrorCode(err: unknown): string | null {
@@ -65,4 +70,12 @@ export function socialErrorCode(err: unknown): string | null {
 export function socialErrorMessage(err: unknown): string {
   const code = socialErrorCode(err);
   return code ? (MESSAGES[code] as string) : "Terjadi kesalahan. Coba lagi.";
+}
+
+/** Tanggal ramah pengguna untuk masa tunggu username, mis. "12 November 2026". */
+export function formatCooldownDate(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }

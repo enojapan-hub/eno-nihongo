@@ -24,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { openChatLink, parseChatLink } from "@/lib/social/chat-links";
+import { socialErrorMessage } from "@/lib/social/social-validation";
 
 export const Route = createFileRoute("/_authenticated/notifikasi")({
   component: NotificationsPage,
@@ -327,6 +329,7 @@ function NotificationsPage() {
                         )}
                       </>
                     );
+                    const chat = parseChatLink(row.action_url);
                     const mainClass = "flex min-w-0 flex-1 items-start gap-3 text-left";
                     // Hapus adalah saudara (bukan anak) dari area klik utama: <button>/<a> bersarang
                     // tidak valid dan di Safari/Firefox klik pada tombol dalam diarahkan ke tombol luar.
@@ -338,7 +341,7 @@ function NotificationsPage() {
                           (!row.read_at ? m.tone : "bg-card")
                         }
                       >
-                        {row.action_url ? (
+                        {row.action_url && !chat ? (
                           <Link
                             to={row.action_url as "/dashboard"}
                             className={mainClass}
@@ -354,6 +357,11 @@ function NotificationsPage() {
                             className={mainClass}
                             onClick={() => {
                               if (!row.read_at) markRead.mutate(row.id);
+                              if (chat) {
+                                openChatLink(chat).catch((e: unknown) =>
+                                  toast.error(socialErrorMessage(e)),
+                                );
+                              }
                             }}
                           >
                             {content}

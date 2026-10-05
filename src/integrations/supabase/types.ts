@@ -3372,6 +3372,39 @@ export type Database = {
         }
         Relationships: []
       }
+      social_moderation_terms: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          id: number
+          language: string
+          match_type: string
+          severity: number
+          term: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          id?: never
+          language?: string
+          match_type?: string
+          severity?: number
+          term: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          id?: never
+          language?: string
+          match_type?: string
+          severity?: number
+          term?: string
+        }
+        Relationships: []
+      }
       social_profiles: {
         Row: {
           avatar_id: number
@@ -3393,6 +3426,72 @@ export type Database = {
           display_name?: string | null
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      social_request_log: {
+        Row: {
+          created_at: string
+          id: number
+          requester_id: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          requester_id: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          requester_id?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
+      social_settings: {
+        Row: {
+          allow_friend_requests: boolean
+          updated_at: string
+          user_id: string
+          username_changed_at: string | null
+        }
+        Insert: {
+          allow_friend_requests?: boolean
+          updated_at?: string
+          user_id: string
+          username_changed_at?: string | null
+        }
+        Update: {
+          allow_friend_requests?: boolean
+          updated_at?: string
+          user_id?: string
+          username_changed_at?: string | null
+        }
+        Relationships: []
+      }
+      social_username_history: {
+        Row: {
+          changed_at: string
+          id: number
+          new_username: string
+          old_username: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          id?: never
+          new_username: string
+          old_username: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          id?: never
+          new_username?: string
+          old_username?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -5653,12 +5752,29 @@ export type Database = {
         Args: { p_enabled: boolean }
         Returns: undefined
       }
+      social_admin_term_upsert: {
+        Args: {
+          p_active?: boolean
+          p_category?: string
+          p_language?: string
+          p_match_type?: string
+          p_term: string
+        }
+        Returns: Json
+      }
+      social_admin_terms_list: { Args: never; Returns: Json }
+      social_admin_username_history: { Args: { p_user: string }; Returns: Json }
+      social_assert_clean: {
+        Args: { p_code?: string; p_text: string }
+        Returns: undefined
+      }
       social_assert_member: { Args: never; Returns: string }
       social_block: { Args: { p_user: string }; Returns: Json }
       social_blocked_between: {
         Args: { p_a: string; p_b: string }
         Returns: boolean
       }
+      social_change_username: { Args: { p_username: string }; Returns: Json }
       social_drop_pending: {
         Args: { p_a: string; p_b: string; p_requester: string }
         Returns: boolean
@@ -5668,18 +5784,29 @@ export type Database = {
         Returns: boolean
       }
       social_me: { Args: never; Returns: Json }
+      social_normalize_text: { Args: { p_text: string }; Returns: string }
       social_overview: { Args: never; Returns: Json }
+      social_profile_card: { Args: { p_user: string }; Returns: Json }
       social_report_message: {
         Args: { p_message_id: string; p_reason?: string; p_scope: string }
         Returns: Json
       }
+      social_report_user: {
+        Args: { p_reason?: string; p_user: string }
+        Returns: Json
+      }
       social_search_users: { Args: { p_query: string }; Returns: Json }
+      social_set_privacy: {
+        Args: { p_allow_friend_requests: boolean }
+        Returns: Json
+      }
       social_set_username: {
         Args: { p_display_name?: string; p_username: string }
         Returns: Json
       }
       social_unblock: { Args: { p_user: string }; Returns: Json }
       social_unread_summary: { Args: never; Returns: Json }
+      social_username_reserved: { Args: { p_name: string }; Returns: boolean }
       start_eno_monthly_exam: { Args: { p_exam_id: string }; Returns: Json }
       start_jlpt_simulation_full: {
         Args: { p_exam_no?: number; p_level: string }

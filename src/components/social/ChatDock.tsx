@@ -6,11 +6,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { dock, useDock, type DockTab } from "@/lib/social/dock-state";
 import { dockHiddenOn, unreadBadge } from "@/lib/social/message-merge";
+import { profileCard } from "@/lib/social/profile-card-state";
 import { emitSocialEvent } from "@/lib/social/social-bus";
 import { cn } from "@/lib/utils";
 import { DmPanel } from "./DmPanel";
 import { FriendsPanel } from "./FriendsPanel";
 import { GlobalChatPanel } from "./GlobalChatPanel";
+import { SocialProfileHost } from "./SocialProfileCard";
 import { UsernameSetup } from "./UsernameSetup";
 import { invalidate, useSocialMe, useUnread } from "./social-queries";
 
@@ -113,14 +115,45 @@ export function ChatDock() {
   const unread = useUnread(ready && !hidden);
   useSocialRealtime(userId, ready && !hidden);
 
+  const visible = !!userId && !hidden;
+
+  // Rute yang menyembunyikan ChatDock (ujian/login) tidak boleh meninggalkan panel atau scroll lock.
   useEffect(() => {
-    if (!state.open) return;
+    if (!visible) {
+      dock.close();
+      profileCard.close();
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!state.open || !visible) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dock.close();
+      if (e.key === "Escape" && !profileCard.get()) dock.close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [state.open]);
+  }, [state.open, visible]);
+
+  // Kunci scroll halaman belakang selama panel terbuka; selalu dipulihkan (termasuk saat unmount).
+  useEffect(() => {
+    if (!state.open || !visible) return;
+    const body = document.body;
+    const html = document.documentElement;
+    const prev = {
+      bodyOverflow: body.style.overflow,
+      bodyPadding: body.style.paddingRight,
+      htmlOverflow: html.style.overflow,
+    };
+    const scrollbar = window.innerWidth - html.clientWidth;
+    body.style.overflow = "hidden";
+    html.style.overflow = "hidden";
+    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
+    return () => {
+      body.style.overflow = prev.bodyOverflow;
+      body.style.paddingRight = prev.bodyPadding;
+      html.style.overflow = prev.htmlOverflow;
+    };
+  }, [state.open, visible]);
 
   if (!userId || hidden) return null;
 
@@ -140,7 +173,7 @@ export function ChatDock() {
           aria-label={badge.label ? `Buka obrolan, ${badge.label} belum dibaca` : "Buka obrolan"}
           aria-expanded={false}
           onClick={() => dock.open()}
-          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom)+0.75rem)] left-3 z-40 grid size-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:bottom-5 md:left-5"
+          className="fixed bottom-[calc(4.15rem+env(safe-area-inset-bottom)+0.625rem)] left-3 z-40 grid size-[52px] place-items-center rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:bottom-5 md:left-5 md:size-12"
         >
           <MessageCircle className="size-6" />
           {badge.label && (
@@ -151,13 +184,22 @@ export function ChatDock() {
         </button>
       )}
 
+      {state.open && (
+        <div
+          aria-hidden
+          data-testid="chat-backdrop"
+          onClick={() => dock.close()}
+          className="fixed inset-0 z-[45] touch-none bg-black/40 backdrop-blur-[6px]"
+        />
+      )}
+
       {state.everOpened && (
         <div
           role="dialog"
           aria-label="Obrolan"
           aria-hidden={!state.open}
           className={cn(
-            "fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom)+0.5rem)] left-2 right-2 z-50 h-[min(70dvh,34rem)] flex-col overflow-hidden rounded-2xl border bg-background text-foreground shadow-2xl md:bottom-5 md:left-5 md:right-auto md:h-[34rem] md:w-[24rem]",
+            "fixed bottom-[calc(4.15rem+env(safe-area-inset-bottom)+0.5rem)] left-2 right-2 z-50 h-[min(70dvh,34rem)] flex-col overflow-hidden rounded-2xl border bg-background text-foreground shadow-2xl md:bottom-5 md:left-5 md:right-auto md:h-[34rem] md:w-[24rem]",
             state.open ? "flex" : "hidden",
           )}
         >
@@ -249,6 +291,7 @@ export function ChatDock() {
           )}
         </div>
       )}
+      <SocialProfileHost />
     </>
   );
 }
