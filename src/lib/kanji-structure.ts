@@ -330,7 +330,10 @@ export function buildShapeExplanation(
         const key = `${n.element}:${n.children.map((c) => c.element).join("")}`;
         if (!seen.has(key)) {
           seen.add(key);
-          lines.push(`${nameOf(n)} sendiri tersusun dari ${joinNodes(n.children)}.`);
+          const head = nameOf(n);
+          lines.push(
+            `${head.charAt(0).toUpperCase()}${head.slice(1)} sendiri tersusun dari ${joinNodes(n.children)}.`,
+          );
         }
       }
       walk(n.children);
