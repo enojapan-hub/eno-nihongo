@@ -279,7 +279,7 @@ export function buildShapeExplanation(
   const state = componentState(s);
   const gloss = primaryMeaning(meaning);
   if (state === "review") {
-    lines.push("Struktur kanji ini masih ditinjau.");
+    // Kartu struktur sudah menyatakan "masih ditinjau"; tidak diulang di sini.
   } else if (state === "atomic") {
     lines.push(`「${character}」 adalah kanji dasar${gloss ? ` yang berarti "${gloss}"` : ""}.`);
     const variants = s.radicalVariants.filter((v) => v !== character);

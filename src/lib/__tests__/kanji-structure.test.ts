@@ -220,8 +220,8 @@ describe("atomic vs review vs decomposed", () => {
     const review = parseKanjiStructure(payload({ tree: [], needs_review: true }))!;
     expect(componentState(review)).toBe("review");
     const r = buildShapeExplanation("午", review);
-    expect(r[0]).toBe("Struktur kanji ini masih ditinjau.");
-    expect(r.join(" ")).not.toContain("kanji dasar");
+    expect(r[0]).toContain("Bushunya");
+    expect(r.join(" ")).not.toMatch(/kanji dasar|tersusun/);
     expect(componentState(parseKanjiStructure(payload())!)).toBe("decomposed");
   });
 
