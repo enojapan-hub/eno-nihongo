@@ -565,6 +565,7 @@ function KanjiPage() {
               <KanjiStructureSection
                 kanjiId={item.id}
                 character={item.character}
+                meaning={item.meaning_id}
                 level={level}
                 onOpen={(id) => {
                   openDetail(id);

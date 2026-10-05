@@ -18,6 +18,10 @@ Ketentuan EDRDG yang relevan (kutipan ringkas dari §3-§4 halaman lisensi):
 - Share-Alike berlaku bila karya diubah/dikembangkan lalu didistribusikan.
 - "There must be a procedure for regular updating of the data from the most recent versions available"; contoh resmi: situs kamus memperbarui "at least once a month". Frekuensi untuk jenis penggunaan lain tidak ditentukan (AMBIGUOUS).
 
+## Atribusi di aplikasi
+
+Atribusi tidak ditampilkan di layar belajar. Letaknya: halaman Tentang (`/tentang#sumber-data`), dengan tautan dari footer beranda dan menu Pengaturan ("Sumber & Lisensi Data"). Isinya dibuat per jenis data (KanjiVG, KANJIDIC2/EDRDG, Kanji alive, Make Me a Hanzi, mnemonik buatan ENO) dengan tautan lisensi. Daftar sumbernya ada di `src/components/legal/DataSourcesList.tsx`.
+
 ## Provenance per field
 
 | Field | Sumber | Disimpan/dihitung | Status |

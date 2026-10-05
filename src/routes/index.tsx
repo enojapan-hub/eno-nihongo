@@ -499,6 +499,12 @@ function Home() {
             >
               Pembayaran & Pengembalian Dana
             </a>
+            <a
+              href="/tentang#sumber-data"
+              className="text-[10px] font-semibold text-slate-600 hover:text-[#087d48]"
+            >
+              Sumber & Lisensi Data
+            </a>
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-slate-100 pt-3 text-[9px] text-slate-400 md:text-[10px]">
             <span>© {new Date().getFullYear()} ENO NIHONGO. Semua hak dilindungi.</span>

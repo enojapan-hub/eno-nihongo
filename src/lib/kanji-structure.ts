@@ -42,6 +42,8 @@ export type KanjiStructure = {
   /** Akar pohon (komponen langsung); kosong untuk kanji atomik atau yang masih ditinjau. */
   tree: KanjiTreeNode[];
   needsReview: boolean;
+  /** Bentuk bushu lain dari bushu kanji ini (mis. 水 → 氵, 氺); kosong bila tidak ada. */
+  radicalVariants: string[];
   mnemonic: string | null;
   phoneticElement: string | null;
   phoneticFamily: KanjiFamilyItem[];
@@ -171,6 +173,9 @@ export function parseKanjiStructure(raw: unknown): KanjiStructure | null {
     },
     tree: buildTree(raw["tree"]),
     needsReview: raw["needs_review"] === true,
+    radicalVariants: (Array.isArray(raw["radical_variants"]) ? raw["radical_variants"] : []).filter(
+      (x): x is string => typeof x === "string" && x.length > 0,
+    ),
     mnemonic: str(raw["mnemonic"]),
     phoneticElement: str(raw["phonetic_element"]),
     phoneticFamily: parseFamily(raw["phonetic_family"]),
@@ -210,17 +215,47 @@ export function hasRadicalConflict(r: KanjiRadical): boolean {
   return r.status === "conflict" && r.kd2 !== null;
 }
 
-/** Label singkat jenis node untuk pemula. */
-export function nodeKindLabel(n: KanjiTreeNode): string {
-  if (n.type === "nonunicode") return "Bagian grafis tanpa karakter Unicode";
-  if (n.type === "graphic") return "Bagian grafis (bukan kanji mandiri)";
-  if (n.type === "radical") return n.baseForm ? `Bentuk bushu dari ${n.baseForm}` : "Bentuk bushu";
-  return n.baseForm ? `Kanji (bentuk bushu dari ${n.baseForm})` : "Kanji";
+/** Arti utama: bagian pertama sebelum ; atau , (tidak mengubah arti di database). */
+export function primaryMeaning(meaning: string | null | undefined): string | null {
+  const first = meaning?.split(/[;,]/)[0]?.trim();
+  return first ? first : null;
+}
+
+/** Keadaan komponen: atomik bukan "kosong", dan "ditinjau" bukan atomik. */
+export type ComponentState = "decomposed" | "atomic" | "review";
+export function componentState(s: KanjiStructure): ComponentState {
+  if (s.tree.length > 0) return "decomposed";
+  return s.needsReview ? "review" : "atomic";
+}
+
+export const FAMILY_PREVIEW = 6;
+
+/** Bagian keluarga yang tampil secara default, dan sisanya yang bisa dibuka. */
+export function splitFamily<T>(items: readonly T[], preview = FAMILY_PREVIEW) {
+  return { shown: items.slice(0, preview), hidden: items.slice(preview) };
 }
 
 /** Tampilan karakter node: bagian non-Unicode tidak punya karakter yang bisa dirender. */
 export function nodeGlyph(n: KanjiTreeNode): string {
   return n.type === "nonunicode" ? "◌" : n.element;
+}
+
+/** Lencana singkat (maksimal tiga): bushu, makna, bunyi, varian. Peran hanya muncul bila terverifikasi. */
+export function nodeBadges(n: KanjiTreeNode, radicalForm: string): string[] {
+  const out: string[] = [];
+  if (n.type !== "nonunicode" && n.element === radicalForm) out.push("Bushu");
+  if (n.role === "semantic") out.push("Makna");
+  if (n.role === "phonetic") out.push("Bunyi");
+  if (n.baseForm) out.push("Varian");
+  return out;
+}
+
+/** Keterangan di bawah karakter: arti utama, atau jenis bagian bila bukan kanji mandiri. */
+export function nodeCaption(n: KanjiTreeNode): string | null {
+  if (n.type === "nonunicode") return "bagian grafis";
+  const m = primaryMeaning(n.meaningId);
+  if (m) return m;
+  return n.type === "graphic" ? "bagian grafis" : null;
 }
 
 function nameOf(n: KanjiTreeNode): string {
@@ -231,53 +266,62 @@ function joinNodes(nodes: readonly KanjiTreeNode[]): string {
 }
 
 /**
- * Penjelasan "Memahami Bentuk Kanji": hanya fakta terverifikasi (struktur, bushu, peran bunyi/makna yang
- * disetujui dua sumber). Tidak memuat asal-usul atau mnemonik; keduanya punya bagian tersendiri.
+ * Penjelasan "Memahami Bentuk Kanji" dalam bahasa belajar: hanya fakta terverifikasi (struktur, bushu,
+ * peran bunyi/makna yang disetujui dua sumber). Tidak memuat asal-usul atau mnemonik; keduanya punya bagian sendiri.
  */
-export function buildShapeExplanation(character: string, s: KanjiStructure): string[] {
+export function buildShapeExplanation(
+  character: string,
+  s: KanjiStructure,
+  meaning?: string | null,
+): string[] {
   const lines: string[] = [];
   const { radical: r, tree } = s;
-  if (tree.length === 0) {
-    lines.push(
-      s.needsReview
-        ? `Rincian komponen kanji 「${character}」 masih dalam peninjauan, jadi belum ditampilkan.`
-        : `Kanji 「${character}」 adalah bentuk dasar pada tingkat struktur ini dan tidak diuraikan lebih lanjut.`,
-    );
+  const state = componentState(s);
+  const gloss = primaryMeaning(meaning);
+  if (state === "review") {
+    lines.push("Struktur kanji ini masih ditinjau.");
+  } else if (state === "atomic") {
+    lines.push(`「${character}」 adalah kanji dasar${gloss ? ` yang berarti "${gloss}"` : ""}.`);
+    const variants = s.radicalVariants.filter((v) => v !== character);
+    if (r.form === character && variants.length > 0)
+      lines.push(
+        `Saat menjadi bagian kanji lain, bentuknya bisa berubah menjadi ${variants.map((v) => `「${v}」`).join(" atau ")}.`,
+      );
   } else {
     const names = tree.map((n) => n.element);
-    const distinct = new Set(names);
-    if (distinct.size === 1 && tree.length > 1)
+    if (new Set(names).size === 1 && tree.length > 1)
       lines.push(
-        `Kanji 「${character}」 tersusun dari ${nameOf(tree[0]!)} yang diulang ${tree.length} kali.`,
+        `「${character}」 tersusun dari ${nameOf(tree[0]!)} yang diulang ${tree.length} kali.`,
       );
-    else if (tree.length === 1)
-      lines.push(`Kanji 「${character}」 mengandung komponen ${nameOf(tree[0]!)}.`);
-    else lines.push(`Kanji 「${character}」 tersusun dari ${joinNodes(tree)}.`);
+    else if (tree.length === 1) lines.push(`「${character}」 mengandung ${nameOf(tree[0]!)}.`);
+    else lines.push(`「${character}」 tersusun dari ${joinNodes(tree)}.`);
   }
-  if (hasRadicalConflict(r)) {
-    lines.push(
-      `Sumber berbeda soal bushu: KanjiVG menandai 「${r.form}」, sedangkan bushu klasik (Kangxi) menurut KANJIDIC2 adalah 「${r.kd2!.base}」. Keduanya ditampilkan apa adanya.`,
-    );
-  } else {
-    const where = r.position ? POSITION_ID[r.position] : null;
-    const baseNote = radicalBaseNote(r);
-    const inside = tree.some((n) => n.element === r.form);
-    lines.push(
-      `Bushunya adalah 「${r.form}」（${r.nameJa}）${baseNote ? `, ${baseNote}` : ""}, berarti "${r.meaningId}"` +
-        `${where && inside && r.form !== character ? `, terletak ${where}` : ""}.`,
-    );
+  if (state !== "atomic" || r.form !== character) {
+    if (hasRadicalConflict(r)) {
+      lines.push(
+        `Bushu kanji ini bisa digolongkan sebagai 「${r.form}」 atau, menurut penggolongan klasik Kangxi, 「${r.kd2!.base}」. Keduanya ditampilkan.`,
+      );
+    } else {
+      const where = r.position ? POSITION_ID[r.position] : null;
+      const baseNote = radicalBaseNote(r);
+      const inside = tree.some((n) => n.element === r.form);
+      lines.push(
+        `Bushunya 「${r.form}」（${r.nameJa}）${baseNote ? `, ${baseNote}` : ""}, artinya "${r.meaningId}"` +
+          `${where && inside && r.form !== character ? `; letaknya ${where}` : ""}.`,
+      );
+    }
   }
   const phon = tree.find((n) => n.role === "phonetic");
   const sem = tree.find((n) => n.role === "semantic");
+  const caveat =
+    " Bunyi yang dimaksud adalah bunyi Tionghoa asal kanji, tidak selalu sama dengan bacaan Jepang sekarang.";
   if (phon && sem) {
-    const meaning = sem.meaningId ? ` (berkaitan dengan "${sem.meaningId}")` : "";
+    const m = primaryMeaning(sem.meaningId);
     lines.push(
-      `Menurut sumber data kami, ${nameOf(sem)}${meaning} berfungsi sebagai petunjuk kelompok makna, sedangkan ${nameOf(phon)} berfungsi sebagai petunjuk bunyi. Bunyi yang dimaksud adalah bunyi Tionghoa asal kanji, yang tidak selalu sama dengan bacaan Jepang sekarang.`,
+      `${nameOf(sem)}${m ? ` (${m})` : ""} menunjukkan kelompok makna, sedangkan ${nameOf(phon)} menunjukkan bunyi.${caveat}`,
     );
   } else if (phon) {
-    lines.push(
-      `Menurut sumber data kami, ${nameOf(phon)} berfungsi sebagai petunjuk bunyi. Bunyi yang dimaksud adalah bunyi Tionghoa asal kanji, yang tidak selalu sama dengan bacaan Jepang sekarang.`,
-    );
+    lines.push(`${nameOf(phon)} menunjukkan bunyi.${caveat}`);
   }
   const seen = new Set<string>();
   const walk = (nodes: readonly KanjiTreeNode[]) => {
@@ -286,7 +330,7 @@ export function buildShapeExplanation(character: string, s: KanjiStructure): str
         const key = `${n.element}:${n.children.map((c) => c.element).join("")}`;
         if (!seen.has(key)) {
           seen.add(key);
-          lines.push(`Komponen ${nameOf(n)} sendiri tersusun dari ${joinNodes(n.children)}.`);
+          lines.push(`${nameOf(n)} sendiri tersusun dari ${joinNodes(n.children)}.`);
         }
       }
       walk(n.children);

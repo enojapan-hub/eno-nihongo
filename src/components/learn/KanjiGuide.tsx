@@ -1,5 +1,4 @@
 import { CircleHelp } from "lucide-react";
-import { KanjiDataSources } from "./KanjiDataSources";
 
 /** Panduan ringkas bushu & komponen untuk pemula; native <details> agar ringan dan aksesibel. */
 export function KanjiGuide() {
@@ -44,7 +43,6 @@ export function KanjiGuide() {
             sejarahnya.
           </p>
         </div>
-        <KanjiDataSources />
       </div>
     </details>
   );

@@ -1,34 +1,37 @@
+import { Fragment, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   buildShapeExplanation,
+  componentState,
   fetchKanjiStructure,
   hasRadicalConflict,
+  nodeBadges,
+  nodeCaption,
   nodeGlyph,
-  nodeKindLabel,
+  primaryMeaning,
   radicalBaseNote,
   radicalTitle,
+  splitFamily,
   type KanjiFamilyItem,
   type KanjiStructure,
   type KanjiTreeNode,
 } from "@/lib/kanji-structure";
 import type { Level } from "@/lib/learn-queries";
-import { KanjiDataSources } from "./KanjiDataSources";
 
 type Props = {
   kanjiId: string;
   character: string;
+  /** Arti kanji ini (untuk kalimat penjelasan kanji dasar). */
+  meaning?: string | null;
   level: Level;
   /** Membuka detail kanji lain; semua id dari RPC adalah kanji terpublikasi yang boleh dibaca pengguna. */
   onOpen: (id: string) => void;
 };
 
-const chipBase =
-  "grid size-11 shrink-0 place-items-center rounded-xl border bg-card font-jp text-[22px] font-semibold";
 const chipLink =
   "hover:bg-primary/[.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
-const ROLE_LABEL = { phonetic: "Petunjuk bunyi", semantic: "Petunjuk makna" } as const;
 
-export function KanjiStructureSection({ kanjiId, character, level, onOpen }: Props) {
+export function KanjiStructureSection({ kanjiId, character, meaning, level, onOpen }: Props) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["kanji-structure", kanjiId, level],
     queryFn: () => fetchKanjiStructure(kanjiId, level),
@@ -55,77 +58,138 @@ export function KanjiStructureSection({ kanjiId, character, level, onOpen }: Pro
         </button>
       </div>
     );
-  if (!data)
-    return (
-      <section className="mt-4">
-        <h3 className="text-[16px] font-bold">Struktur Kanji</h3>
-        <p className="mt-1 text-[13px] text-muted-foreground">Struktur kanji ini belum tersedia.</p>
-      </section>
-    );
-  return <Loaded s={data} character={character} onOpen={onOpen} />;
+  if (!data) return null;
+  return <Loaded s={data} character={character} meaning={meaning ?? null} onOpen={onOpen} />;
 }
 
-function NodeRow({ n, onOpen }: { n: KanjiTreeNode; onOpen: (id: string) => void }) {
-  const glyph = nodeGlyph(n);
+/** Satu bagian kanji: karakter (tombol bila kanji mandiri), arti utama, dan lencana singkat. */
+function Cell({
+  n,
+  radicalForm,
+  onOpen,
+  small,
+}: {
+  n: KanjiTreeNode;
+  radicalForm: string;
+  onOpen: (id: string) => void;
+  small?: boolean | undefined;
+}) {
+  const caption = nodeCaption(n);
+  const badges = nodeBadges(n, radicalForm);
+  const size = small ? "size-10 text-[20px]" : "size-12 text-[26px]";
+  const chip = `grid ${size} shrink-0 place-items-center rounded-xl border bg-card font-jp font-semibold`;
   return (
-    <div className="flex min-w-0 items-start gap-2">
+    <div className="flex w-[76px] min-w-0 flex-col items-center text-center">
       {n.kanjiId ? (
         <button
           type="button"
           lang="ja"
           aria-label={`Buka kanji ${n.element}`}
           onClick={() => onOpen(n.kanjiId!)}
-          className={`${chipBase} ${chipLink}`}
+          className={`${chip} ${chipLink}`}
         >
-          {glyph}
+          {nodeGlyph(n)}
         </button>
       ) : (
-        <span lang="ja" className={`${chipBase} text-muted-foreground`}>
-          {glyph}
+        <span lang="ja" className={`${chip} text-muted-foreground`}>
+          {nodeGlyph(n)}
         </span>
       )}
-      <div className="min-w-0 flex-1 pt-0.5 text-[13px] leading-5">
-        <p className="text-muted-foreground">{nodeKindLabel(n)}</p>
-        {n.meaningId && <p className="font-medium">{n.meaningId}</p>}
-        {n.baseForm && n.baseKanjiId && (
-          <button
-            type="button"
-            lang="ja"
-            aria-label={`Buka kanji ${n.baseForm}`}
-            onClick={() => onOpen(n.baseKanjiId!)}
-            className="min-h-6 rounded text-[12px] font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            Lihat {n.baseForm}
-          </button>
-        )}
-        {n.role && (
-          <span className="mt-0.5 inline-block rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-            {ROLE_LABEL[n.role]}
-          </span>
-        )}
-      </div>
+      {caption && (
+        <span className="mt-1 line-clamp-2 text-[12px] leading-4 text-muted-foreground">
+          {caption}
+        </span>
+      )}
+      {n.baseForm && (
+        <span lang="ja" className="text-[11px] leading-4 text-muted-foreground">
+          Bentuk dasar: {n.baseForm}
+        </span>
+      )}
+      {badges.length > 0 && (
+        <span className="mt-1 flex flex-wrap justify-center gap-1">
+          {badges.map((b) => (
+            <span
+              key={b}
+              className="rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary"
+            >
+              {b}
+            </span>
+          ))}
+        </span>
+      )}
     </div>
   );
 }
 
-function TreeList({
+function CellRow({
   nodes,
+  radicalForm,
   onOpen,
-  nested,
+  small,
 }: {
   nodes: readonly KanjiTreeNode[];
+  radicalForm: string;
   onOpen: (id: string) => void;
-  nested?: boolean;
+  small?: boolean | undefined;
 }) {
   return (
-    <ul className={nested ? "ml-5 mt-1.5 space-y-1.5 border-l pl-3" : "space-y-2"}>
-      {nodes.map((n) => (
-        <li key={n.id} className="min-w-0">
-          <NodeRow n={n} onOpen={onOpen} />
-          {n.children.length > 0 && <TreeList nodes={n.children} onOpen={onOpen} nested />}
-        </li>
+    <div className="flex flex-wrap items-start gap-x-1 gap-y-3">
+      {nodes.map((n, i) => (
+        <Fragment key={n.id}>
+          {i > 0 && (
+            <span aria-hidden className={`${small ? "mt-2" : "mt-3"} text-muted-foreground`}>
+              +
+            </span>
+          )}
+          <Cell n={n} radicalForm={radicalForm} onOpen={onOpen} small={small} />
+        </Fragment>
       ))}
-    </ul>
+    </div>
+  );
+}
+
+/** Baris penguraian bertingkat: "吾 → 五 + 口", menjorok sesuai kedalaman; mudah dibaca di layar sempit. */
+function ExpansionRows({
+  nodes,
+  radicalForm,
+  onOpen,
+  depth,
+}: {
+  nodes: readonly KanjiTreeNode[];
+  radicalForm: string;
+  onOpen: (id: string) => void;
+  depth: number;
+}) {
+  return (
+    <>
+      {nodes
+        .filter((n) => n.children.length > 0)
+        .map((n) => (
+          <Fragment key={n.id}>
+            <div
+              style={{ marginLeft: depth * 14 }}
+              className="mt-3 flex items-start gap-1.5 border-l-2 border-primary/25 pl-2.5"
+            >
+              <div
+                lang="ja"
+                className="grid size-10 shrink-0 place-items-center font-jp text-[22px] font-semibold"
+              >
+                {nodeGlyph(n)}
+              </div>
+              <span aria-hidden className="mt-2 text-muted-foreground">
+                →
+              </span>
+              <CellRow nodes={n.children} radicalForm={radicalForm} onOpen={onOpen} small />
+            </div>
+            <ExpansionRows
+              nodes={n.children}
+              radicalForm={radicalForm}
+              onOpen={onOpen}
+              depth={depth + 1}
+            />
+          </Fragment>
+        ))}
+    </>
   );
 }
 
@@ -138,88 +202,100 @@ function FamilyGrid({
   onOpen: (id: string) => void;
   labelId: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const { shown, hidden } = splitFamily(items);
+  const visible = open ? items : shown;
   return (
-    <ul aria-labelledby={labelId} className="mt-2 grid grid-cols-3 gap-1.5 min-[420px]:grid-cols-4">
-      {items.map((f) => (
-        <li key={f.id} className="min-w-0">
-          <button
-            type="button"
-            aria-label={`Buka kanji ${f.character}`}
-            onClick={() => onOpen(f.id)}
-            className={`flex min-h-[76px] w-full min-w-0 flex-col items-center rounded-2xl border bg-card px-1 py-2 text-center shadow-sm ${chipLink}`}
-          >
-            <span lang="ja" className="font-jp text-[24px] font-semibold leading-8">
-              {f.character}
-            </span>
-            <span lang="ja" className="line-clamp-1 font-jp text-[12px] text-muted-foreground">
-              {f.reading ?? "—"}
-            </span>
-            <span className="line-clamp-1 text-[12px] leading-4 text-muted-foreground">
-              {f.meaningId ?? "—"}
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul
+        aria-labelledby={labelId}
+        className="mt-2 grid grid-cols-3 gap-1.5 min-[420px]:grid-cols-4 min-[1000px]:grid-cols-6"
+      >
+        {visible.map((f) => (
+          <li key={f.id} className="min-w-0">
+            <button
+              type="button"
+              aria-label={`Buka kanji ${f.character}`}
+              onClick={() => onOpen(f.id)}
+              className={`flex min-h-[72px] w-full min-w-0 flex-col items-center rounded-2xl border bg-card px-1 py-1.5 text-center shadow-sm ${chipLink}`}
+            >
+              <span lang="ja" className="font-jp text-[22px] font-semibold leading-7">
+                {f.character}
+              </span>
+              <span lang="ja" className="line-clamp-1 font-jp text-[11px] text-muted-foreground">
+                {f.reading ?? "—"}
+              </span>
+              <span className="line-clamp-1 w-full px-0.5 text-[11px] leading-4 text-muted-foreground">
+                {primaryMeaning(f.meaningId) ?? "—"}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {hidden.length > 0 && (
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+          className="mt-2 min-h-11 w-full rounded-full border text-[12px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          {open ? "Tampilkan lebih sedikit" : `Lihat semua (${items.length})`}
+        </button>
+      )}
+    </>
   );
 }
 
 function Loaded({
   s,
   character,
+  meaning,
   onOpen,
 }: {
   s: KanjiStructure;
   character: string;
+  meaning: string | null;
   onOpen: (id: string) => void;
 }) {
   const r = s.radical;
-  const baseNote = radicalBaseNote(r);
+  const state = componentState(s);
   const conflict = hasRadicalConflict(r);
-  const explanation = buildShapeExplanation(character, s);
+  const baseNote = radicalBaseNote(r);
+  const explanation = buildShapeExplanation(character, s, meaning);
   return (
     <>
       <section className="mt-4" aria-labelledby="kanji-struktur">
         <h3 id="kanji-struktur" className="text-[16px] font-bold">
           Struktur Kanji
         </h3>
-        <div className="mt-2 rounded-xl bg-primary/[.07] p-3">
-          <p className="text-[12px] text-muted-foreground">
-            {conflict ? "Bushu (menurut KanjiVG)" : "Bushu"}
+        {state === "decomposed" && (
+          <div className="mt-2 rounded-xl bg-primary/[.07] p-3">
+            <CellRow nodes={s.tree} radicalForm={r.form} onOpen={onOpen} />
+            <ExpansionRows nodes={s.tree} radicalForm={r.form} onOpen={onOpen} depth={0} />
+          </div>
+        )}
+        {state === "review" && (
+          <p className="mt-2 rounded-xl bg-muted/40 p-3 text-[13px] leading-5 text-muted-foreground">
+            Struktur kanji ini masih ditinjau.
           </p>
-          <p lang="ja" className="mt-1 break-words font-jp text-[18px] font-semibold leading-6">
+        )}
+        <div className="mt-1.5 rounded-xl bg-primary/[.07] p-3">
+          <p className="text-[12px] text-muted-foreground">Bushu</p>
+          <p lang="ja" className="mt-0.5 break-words font-jp text-[17px] font-semibold leading-6">
             {radicalTitle(r)}
           </p>
-          {baseNote && <p className="text-[12px] text-muted-foreground">{baseNote}</p>}
-          <p className="mt-1 text-[14px] leading-5">Arti: {r.meaningId}</p>
+          <p className="text-[13px] leading-5">
+            {baseNote ? <span lang="ja">{baseNote} · </span> : null}arti: {r.meaningId}
+          </p>
           {conflict && r.kd2 && (
-            <div className="mt-2 border-t pt-2">
-              <p className="text-[12px] text-muted-foreground">
-                Bushu klasik Kangxi (menurut KANJIDIC2)
-              </p>
-              <p lang="ja" className="mt-1 font-jp text-[18px] font-semibold leading-6">
+            <p className="mt-1.5 border-t pt-1.5 text-[13px] leading-5 text-muted-foreground">
+              Penggolongan klasik Kangxi:{" "}
+              <span lang="ja" className="font-jp font-semibold text-foreground">
                 {r.kd2.base}
                 {r.kd2.nameJa ? `（${r.kd2.nameJa}）` : ""}
-              </p>
-              {r.kd2.meaningId && <p className="text-[14px] leading-5">Arti: {r.kd2.meaningId}</p>}
-            </div>
-          )}
-          {r.status === "single_source" && (
-            <p className="mt-1 text-[12px] text-muted-foreground">Sumber bushu: KANJIDIC2</p>
-          )}
-        </div>
-        <div className="mt-1.5 rounded-xl bg-primary/[.07] p-3">
-          <p className="text-[12px] text-muted-foreground">Komponen</p>
-          {s.tree.length === 0 ? (
-            <p className="mt-1 text-[14px] leading-5 text-muted-foreground">
-              {s.needsReview
-                ? "Rincian komponen sedang ditinjau."
-                : "Bentuk dasar; tidak diuraikan lebih lanjut."}
+              </span>
+              {r.kd2.meaningId ? `, arti: ${r.kd2.meaningId}` : ""}
             </p>
-          ) : (
-            <div className="mt-2">
-              <TreeList nodes={s.tree} onOpen={onOpen} />
-            </div>
           )}
         </div>
       </section>
@@ -243,7 +319,7 @@ function Loaded({
           <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/[.07] p-2.5">
             <p className="text-[14px] leading-6">{s.mnemonic}</p>
             <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
-              Ini hanya alat bantu ingatan, bukan asal-usul kanji.
+              Ini adalah cara mengingat, bukan penjelasan asal-usul kanji.
             </p>
           </div>
         </section>
@@ -251,25 +327,26 @@ function Loaded({
       {s.family.length > 0 && (
         <section className="mt-4" aria-labelledby="kanji-keluarga">
           <h3 id="kanji-keluarga" className="text-[16px] font-bold">
-            Kanji dengan Bushu yang Sama
+            Keluarga Bushu
           </h3>
+          <p className="mt-0.5 text-[12px] leading-4 text-muted-foreground">
+            Kanji lain yang bushunya sama (<span lang="ja">{r.base}</span>,{" "}
+            {primaryMeaning(r.meaningId) ?? r.meaningId}). Mereka bukan bagian penyusun kanji ini.
+          </p>
           <FamilyGrid items={s.family} onOpen={onOpen} labelId="kanji-keluarga" />
-          {s.familyTotal > s.family.length && (
-            <p className="mt-1.5 text-[12px] text-muted-foreground">
-              Menampilkan {s.family.length} dari {s.familyTotal} kanji dengan bushu ini.
-            </p>
-          )}
         </section>
       )}
       {s.phoneticElement && s.phoneticFamily.length > 0 && (
         <section className="mt-4" aria-labelledby="kanji-bunyi">
           <h3 id="kanji-bunyi" className="text-[16px] font-bold">
-            Kanji dengan Petunjuk Bunyi <span lang="ja">「{s.phoneticElement}」</span> yang Sama
+            Satu Petunjuk Bunyi <span lang="ja">「{s.phoneticElement}」</span>
           </h3>
+          <p className="mt-0.5 text-[12px] leading-4 text-muted-foreground">
+            Kanji lain yang memakai komponen bunyi yang sama.
+          </p>
           <FamilyGrid items={s.phoneticFamily} onOpen={onOpen} labelId="kanji-bunyi" />
         </section>
       )}
-      <KanjiDataSources />
     </>
   );
 }

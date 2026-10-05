@@ -11,7 +11,11 @@ import {
   buildTree,
   fetchKanjiStructure,
   hasRadicalConflict,
-  nodeKindLabel,
+  componentState,
+  nodeBadges,
+  nodeCaption,
+  primaryMeaning,
+  splitFamily,
   parseKanjiStructure,
   pickReading,
   radicalBaseNote,
@@ -65,6 +69,7 @@ const payload = (over: Record<string, unknown> = {}) => ({
   radical: radical(),
   tree: goTree(),
   needs_review: false,
+  radical_variants: [],
   mnemonic: null,
   phonetic_element: "吾",
   phonetic_family: [
@@ -109,9 +114,10 @@ describe("radical (bushu) mapping", () => {
     )!;
     expect(hasRadicalConflict(s.radical)).toBe(true);
     const text = buildShapeExplanation("肺", s).join(" ");
-    expect(text).toContain("Sumber berbeda soal bushu");
     expect(text).toContain("「月」");
     expect(text).toContain("「肉」");
+    expect(text).toContain("Kangxi");
+    expect(text).not.toMatch(/salah|benar/);
   });
 });
 
@@ -131,10 +137,9 @@ describe("nested decomposition + component types", () => {
     ]);
     expect(tree.map((n) => n.element)).toEqual(["亻", "吾", "CDP-8BC4"]);
     expect(tree[1]!.children.map((n) => n.element)).toEqual(["五"]);
-    expect(nodeKindLabel(tree[0]!)).toBe("Bentuk bushu dari 人");
-    expect(nodeKindLabel(tree[1]!)).toBe("Bagian grafis (bukan kanji mandiri)");
-    expect(nodeKindLabel(tree[2]!)).toBe("Bagian grafis tanpa karakter Unicode");
-    expect(nodeKindLabel(tree[1]!.children[0]!)).toBe("Kanji");
+    expect(nodeCaption(tree[2]!)).toBe("bagian grafis");
+    expect(nodeCaption(tree[1]!)).toBe("bagian grafis");
+    expect(nodeCaption(tree[1]!.children[0]!)).toBeNull();
   });
 
   it("only links components that are published kanji (graphical parts get no id)", () => {
@@ -149,37 +154,88 @@ describe("nested decomposition + component types", () => {
   });
 });
 
+describe("badges and captions (roles only when verified)", () => {
+  it("marks bushu, variant, meaning and sound only where known", () => {
+    const s = parseKanjiStructure(
+      payload({
+        radical: radical({ form: "氵", base: "水", is_variant: true }),
+        tree: [
+          node(1, null, 1, "氵", {
+            role: "semantic",
+            type: "radical",
+            base: "水",
+            meaning_id: "air",
+            kanji_id: null,
+          }),
+          node(2, null, 2, "毎", { role: "phonetic", meaning_id: "setiap; tiap" }),
+          node(3, null, 3, "丿", { type: "radical", kanji_id: null }),
+        ],
+      }),
+    )!;
+    expect(nodeBadges(s.tree[0]!, "氵")).toEqual(["Bushu", "Makna", "Varian"]);
+    expect(nodeBadges(s.tree[1]!, "氵")).toEqual(["Bunyi"]);
+    expect(nodeBadges(s.tree[2]!, "氵")).toEqual([]);
+    expect(nodeCaption(s.tree[1]!)).toBe("setiap");
+  });
+
+  it("keeps the first meaning only and never invents one", () => {
+    expect(primaryMeaning("kata; bahasa; ucapan")).toBe("kata");
+    expect(primaryMeaning("Tiongkok, Han")).toBe("Tiongkok");
+    expect(primaryMeaning("  ")).toBeNull();
+    expect(primaryMeaning(null)).toBeNull();
+  });
+});
+
 describe("semantic / phonetic roles", () => {
-  it("states roles only when verified, with the Chinese-sound caveat", () => {
+  it("states roles in plain language only when verified", () => {
     const lines = buildShapeExplanation("語", parseKanjiStructure(payload())!);
-    expect(lines[0]).toBe("Kanji 「語」 tersusun dari 「言」 + 「吾」.");
+    expect(lines[0]).toBe("「語」 tersusun dari 「言」 + 「吾」.");
     expect(lines[1]).toContain("「言」（ごんべん）");
-    expect(lines[1]).toContain("terletak di sisi kiri");
-    const roles = lines.find((l) => l.includes("petunjuk bunyi"))!;
-    expect(roles).toContain("「言」");
-    expect(roles).toContain("petunjuk kelompok makna");
+    expect(lines[1]).toContain("letaknya di sisi kiri");
+    const roles = lines.find((l) => l.includes("menunjukkan bunyi"))!;
+    expect(roles).toContain("「言」 (kata) menunjukkan kelompok makna");
     expect(roles).toContain("bunyi Tionghoa");
-    expect(lines.at(-1)).toBe("Komponen 「吾」 sendiri tersusun dari 「五」 + 「口」.");
+    expect(lines.at(-1)).toBe("「吾」 sendiri tersusun dari 「五」 + 「口」.");
   });
 
   it("falls back to neutral wording when roles are unknown", () => {
     const tree = goTree().map((n) => ({ ...n, role: null }));
     const text = buildShapeExplanation("語", parseKanjiStructure(payload({ tree }))!).join(" ");
-    expect(text).not.toContain("petunjuk");
+    expect(text).not.toContain("menunjukkan");
     expect(text).toContain("tersusun dari 「言」 + 「吾」");
+  });
+
+  it("never uses database wording in student-facing text", () => {
+    const text = buildShapeExplanation("語", parseKanjiStructure(payload())!).join(" ");
+    expect(text).not.toMatch(/data kami|sumber|record|pipeline|tidak diuraikan/i);
   });
 });
 
-describe("empty / review / repeated structure", () => {
-  it("separates atomic kanji from kanji whose components are under review", () => {
-    const atomic = buildShapeExplanation("木", parseKanjiStructure(payload({ tree: [] }))!)[0];
-    expect(atomic).toContain("bentuk dasar");
-    const review = buildShapeExplanation(
-      "午",
-      parseKanjiStructure(payload({ tree: [], needs_review: true }))!,
-    )[0];
-    expect(review).toContain("dalam peninjauan");
-    expect(review).not.toContain("tersusun dari");
+describe("atomic vs review vs decomposed", () => {
+  it("separates atomic kanji from kanji whose structure is under review", () => {
+    const atomic = parseKanjiStructure(payload({ tree: [] }))!;
+    expect(componentState(atomic)).toBe("atomic");
+    const lines = buildShapeExplanation("水", atomic, "air");
+    expect(lines[0]).toBe('「水」 adalah kanji dasar yang berarti "air".');
+    const review = parseKanjiStructure(payload({ tree: [], needs_review: true }))!;
+    expect(componentState(review)).toBe("review");
+    const r = buildShapeExplanation("午", review);
+    expect(r[0]).toBe("Struktur kanji ini masih ditinjau.");
+    expect(r.join(" ")).not.toContain("kanji dasar");
+    expect(componentState(parseKanjiStructure(payload())!)).toBe("decomposed");
+  });
+
+  it("explains that a bushu kanji changes shape inside other kanji (only from verified variants)", () => {
+    const s = parseKanjiStructure(
+      payload({
+        tree: [],
+        radical: radical({ form: "水", base: "水", name_ja: "みず", meaning_id: "air", kd2: null }),
+        radical_variants: ["氵", "氺"],
+      }),
+    )!;
+    const lines = buildShapeExplanation("水", s, "air");
+    expect(lines).toHaveLength(2);
+    expect(lines[1]).toContain("「氵」 atau 「氺」");
   });
 
   it("describes a repeated component and a non-Unicode part", () => {
@@ -196,7 +252,7 @@ describe("empty / review / repeated structure", () => {
       }),
     )!;
     expect(buildShapeExplanation("原", cdp)[0]).toBe(
-      "Kanji 「原」 tersusun dari 「厂」 + satu bagian grafis.",
+      "「原」 tersusun dari 「厂」 + satu bagian grafis.",
     );
   });
 
@@ -217,15 +273,20 @@ describe("mnemonic is separate from facts", () => {
   });
 });
 
-describe("family (cross-level, no duplicates)", () => {
+describe("family (canonical bushu, cross-level, preview of 6)", () => {
   it("keeps every published family member regardless of level, with short hiragana readings", () => {
     const s = parseKanjiStructure(payload())!;
     expect(s.family.map((f) => f.id)).toEqual(["a", "b"]);
     expect(s.family.map((f) => f.reading)).toEqual(["はなす", "どく"]);
     expect(s.phoneticFamily[0]).toMatchObject({ character: "悟", reading: "さとる" });
     expect(s.phoneticElement).toBe("吾");
-    expect(s.familyTotal).toBe(64);
     expect(new Set(s.family.map((f) => f.id)).size).toBe(s.family.length);
+  });
+
+  it("shows 6 by default and keeps the rest for 'Lihat semua'", () => {
+    const items = Array.from({ length: 9 }, (_, i) => i);
+    expect(splitFamily(items)).toEqual({ shown: [0, 1, 2, 3, 4, 5], hidden: [6, 7, 8] });
+    expect(splitFamily([1, 2, 3]).hidden).toEqual([]);
   });
 
   it("converts katakana, strips okurigana markers and prefers kunyomi", () => {
@@ -291,6 +352,7 @@ describe("migration contract", () => {
     readFileSync(new URL(`../../../supabase/migrations/${f}`, import.meta.url), "utf8");
   const v1 = read("20261005010000_kanji_structure.sql");
   const v2 = read("20261006000000_kanji_structure_v2.sql");
+  const v3 = read("20261007000000_kanji_structure_v3.sql");
   const data = [
     read("20261005020000_kanji_structure_data.sql"),
     read("20261006010000_kanji_structure_v2_data.sql"),
@@ -300,9 +362,13 @@ describe("migration contract", () => {
     expect(v1).toMatch(/limit 12/);
     expect(v2).toMatch(/limit 12/);
     expect(v2).toMatch(/limit 8/);
-    for (const sql of [v1, v2]) {
+    // v3: keluarga bushu memuat semua anggota (UI yang membatasi tampilan), keluarga bunyi tetap 8
+    expect(v3).not.toMatch(/limit 12/);
+    expect(v3).toMatch(/limit 8/);
+    expect(v3).toMatch(/order by rn/);
+    for (const sql of [v1, v2, v3]) {
       expect(sql).not.toMatch(/grant (insert|update|delete|all)/i);
-      expect(sql).toMatch(/grant select on[^;]*to anon, authenticated/);
+      if (sql !== v3) expect(sql).toMatch(/grant select on[^;]*to anon, authenticated/);
       expect(sql).toMatch(
         /grant execute on function public\.get_kanji_structure[^;]*to authenticated, service_role/,
       );
@@ -312,7 +378,7 @@ describe("migration contract", () => {
   });
 
   it("is non-destructive and the seeds are idempotent", () => {
-    for (const sql of [v1, v2, ...data]) {
+    for (const sql of [v1, v2, v3, ...data]) {
       expect(sql).not.toMatch(
         /\b(drop\s+(table|schema|function|constraint)|truncate|delete\s+from)\b/i,
       );

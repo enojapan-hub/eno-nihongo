@@ -377,6 +377,12 @@ function Page() {
             }
           />
           <Row
+            icon={BookOpenCheck}
+            title="Sumber & Lisensi Data"
+            desc="Sumber data struktur kanji."
+            onClick={() => (location.href = "/tentang#sumber-data")}
+          />
+          <Row
             icon={Instagram}
             title="Instagram"
             desc="@enottf"
