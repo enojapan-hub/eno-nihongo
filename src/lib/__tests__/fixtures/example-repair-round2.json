@@ -1,2427 +1,2427 @@
 [
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "39f17a6f#0",
-    "table": "vocabulary_senses",
-    "ja": "その髪型は女子高生の間ではやっている。",
-    "reading": "その かみがた は じょしこうせい の あいだ で はやって いる。",
-    "romaji": "Sono kamigata wa joshikousei no aida de hayatte iru.",
-    "arti": "Gaya rambut itu cocok di kalangan siswa SMA perempuan.",
-    "before": {
-      "reading": "その かみがた は じょしこうせい の あいだ ではやって いる。",
-      "romaji": "Sono kamigata wa joshikousei no aida de wa yatte iru."
-    },
-    "n": 0
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "d2c504c1#0",
-    "table": "vocabulary",
-    "ja": "古い町並みに江戸時代の名残が残っている。",
-    "reading": "ふるい まちなみ に えどじだい の なごり が のこって いる。",
-    "romaji": "Furui machinami ni Edo jidai no nagori ga nokotte iru.",
-    "arti": "Jejak zaman Edo masih tersisa pada kawasan kota tua itu.",
-    "before": {
-      "reading": "ふるい まちなみ に はえどじだい の なごり が のこって いる。",
-      "romaji": "Furui machinami ni wa Edo jidai no nagori ga nokotte iru."
-    },
-    "n": 1
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "1e9a30b6#0",
-    "table": "vocabulary",
-    "ja": "車輪が壊れていたので、彼は重いスーツケースを床の上でずるずる引きずりました。",
-    "reading": "しゃりん が こわれて いた ので、かれ は おもい スーツケース を ゆか の うえ で ずるずる ひきずりました。",
-    "romaji": "Sharin ga kowarete ita node, kare wa omoi suutsukeesu o yuka no ue de zuruzuru hikizurimashita.",
-    "arti": "Dia menyeret koper berat itu di lantai karena rodanya rusak.",
-    "before": {
-      "romaji": "Sharin ga kowarete ita node, kare wa omoi suutukeesu o yuka no ue de zuruzuru hikizurimashita."
-    },
-    "n": 2
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "4491dec1#0",
-    "table": "vocabulary",
-    "ja": "農民たちは畑で野菜を育てています。",
-    "reading": "のうみんたち は はたけ で やさい を そだてて います。",
-    "romaji": "Noumintachi wa hatake de yasai o sodatete imasu.",
-    "arti": "Para petani sedang menanam sayuran di ladang.",
-    "before": {
-      "romaji": "Noumintachi wa hatake de yasai o sodate imasu."
-    },
-    "n": 3
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "91dc8243#0",
-    "table": "vocabulary",
-    "ja": "祖父は畑で野菜を育てています。",
-    "reading": "そふ は はたけ で やさい を そだてて います。",
-    "romaji": "Sofu wa hatake de yasai o sodatete imasu.",
-    "arti": "Kakek menanam sayuran di ladang.",
-    "before": {
-      "romaji": "Sofu wa hatake de yasai o sodate imasu."
-    },
-    "n": 4
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "52f07014#0",
-    "table": "vocabulary",
-    "ja": "一頃、この地域は多くの工場が稼働していて、とても活気がありました。",
-    "reading": "ひところ、この ちいき は おおく の こうじょう が かどうして いて、とても かっき が ありました。",
-    "romaji": "Hitokoro, kono chiiki wa ooku no koujou ga kadou shite ite, totemo kakki ga arimashita.",
-    "arti": "Beberapa waktu lalu, kawasan ini sangat ramai karena banyak pabrik beroperasi.",
-    "before": {
-      "romaji": "Hitokoro, kono chiiki wa ooku no koujou ga kadou shite ite, totemo katsuki ga arimashita."
-    },
-    "n": 5
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "53232c6c#0",
-    "table": "vocabulary",
-    "ja": "竹にはいくつもの節があります。",
-    "reading": "たけ には いくつ も の ふし が あります。",
-    "romaji": "Take ni wa ikutsu mo no fushi ga arimasu.",
-    "arti": "Bambu memiliki banyak ruas.",
-    "before": {
-      "romaji": "Take ni wa ikutsumo fushi ga arimasu."
-    },
-    "n": 6
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "590c21a5#0",
-    "table": "vocabulary",
-    "ja": "その若い俳優は、物語の主人公を見事に演じました。",
-    "reading": "その わかい はいゆう は、ものがたり の しゅじんこう を みごと に えんじました。",
-    "romaji": "Sono wakai haiyuu wa, monogatari no shujinkou o migoto ni enjimashita.",
-    "arti": "Aktor muda itu memerankan tokoh utama dengan sangat baik.",
-    "before": {
-      "romaji": "Sono wakai haiyuu wa, monogatari no shujinkou o migoto ni enjirimashita."
-    },
-    "n": 7
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "643522ad#0",
-    "table": "vocabulary",
-    "ja": "彼はスピード違反で警察に捕まりました。",
-    "reading": "かれ は スピードいはん で けいさつ に つかまりました。",
-    "romaji": "Kare wa supiido ihan de keisatsu ni tsukamarimashita.",
-    "arti": "Dia ditangkap polisi karena melanggar batas kecepatan.",
-    "before": {
-      "romaji": "Kare wa supiido ihan de keisatsu ni tsukarimashita."
-    },
-    "n": 8
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "7809d4bf#0",
-    "table": "vocabulary",
-    "ja": "その会社は一社の供給元に依存しすぎており、供給が止まると大きな影響を受けます。",
-    "reading": "その かいしゃ は いっしゃ の きょうきゅうもと に いぞんしすぎて おり、きょうきゅう が とまる と おおきな えいきょう を うけます。",
-    "romaji": "Sono kaisha wa issha no kyoukyuumoto ni izon shisugite ori, kyoukyuu ga tomaru to ookina eikyou o ukemasu.",
-    "arti": "Perusahaan itu terlalu bergantung pada satu pemasok sehingga rentan ketika pasokan terhenti.",
-    "before": {
-      "romaji": "Sono kaisha wa issha no kyoukyuumoto ni ison shisugite ori, kyoukyuu ga tomaru to ookina eikyou o ukemasu."
-    },
-    "n": 9
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "9dd7cebf#0",
-    "table": "vocabulary",
-    "ja": "彼は惇厚な人柄で皆に慕われている。",
-    "reading": "かれ は じゅんこう な ひとがら で みな に したわれて いる。",
-    "romaji": "Kare wa junkou na hitogara de mina ni shitawarete iru.",
-    "arti": "Dia disukai semua orang karena kepribadiannya yang tulus dan baik hati.",
-    "before": {
-      "romaji": "Kare wa junkou na hitogara de minna ni shitawarete iru."
-    },
-    "n": 10
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "bef32257#0",
-    "table": "vocabulary",
-    "ja": "月給は毎月末に銀行口座へ振り込まれる。",
-    "reading": "げっきゅう は まいげつまつ に ぎんこうこうざ へ ふりこまれる。",
-    "romaji": "Gekkyuu wa maigetsumatsu ni ginkou kouza e furikomareru.",
-    "arti": "Gaji bulanan saya dibayarkan melalui rekening bank pada akhir bulan.",
-    "before": {
-      "romaji": "Gekkyuu wa maitsuki matsu ni ginkou kouza e furikomareru."
-    },
-    "n": 11
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "d10270a9#0",
-    "table": "vocabulary",
-    "ja": "機械を整備するときは、油で床を汚さないよう保護シートを敷いてください。",
-    "reading": "きかい を せいびする とき は、あぶら で ゆか を よごさない よう ほごシート を しいて ください。",
-    "romaji": "Kikai o seibi suru toki wa, abura de yuka o yogosanai you hogo shiito o shiite kudasai.",
-    "arti": "Gunakan alas pelindung agar oli tidak mengotori lantai saat melakukan perawatan mesin.",
-    "before": {
-      "romaji": "Kikai o seibi suru toki wa, abura de yuka o yogosanai you hogo shiito o hiite kudasai."
-    },
-    "n": 12
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "d8b56d7a#0",
-    "table": "vocabulary",
-    "ja": "性別で人を分け隔てすべきでない。",
-    "reading": "せいべつ で ひと を わけへだて すべき で ない。",
-    "romaji": "Seibetsu de hito o wakehedate subeki de nai.",
-    "arti": "Jangan membeda-bedakan orang berdasarkan jenis kelamin.",
-    "before": {
-      "romaji": "Seibetsu de hito o wakehedateru beki de nai."
-    },
-    "n": 13
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "d8fc7280#0",
-    "table": "vocabulary",
-    "ja": "緊急時には、避難場所に簡易トイレを設置します。",
-    "reading": "きんきゅうじ には、ひなんばしょ に かんい トイレ を せっちします。",
-    "romaji": "Kinkyuuji ni wa, hinan basho ni kan-i toire o setchi shimasu.",
-    "arti": "Saat keadaan darurat, perusahaan memasang toilet sederhana di area evakuasi.",
-    "before": {
-      "romaji": "Kinkyuji ni wa, hinan basho ni kan-i toire o setchi shimasu."
-    },
-    "n": 14
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "462ae0aa#0",
-    "table": "vocabulary",
-    "ja": "この 箱 は ３０センチ です。",
-    "reading": "この はこ は さんじゅっセンチ です。",
-    "romaji": "kono hako wa sanjussenchi desu.",
-    "arti": "Kotak ini berukuran 30 sentimeter.",
-    "before": {
-      "romaji": "kono hako wa sanjuu senchi desu."
-    },
-    "n": 15
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "bfb1cc73#1",
-    "table": "vocabulary",
-    "ja": "誰でも２足す２イコール４であることを知っている。",
-    "reading": "だれ でも に たす に イコール よん で ある こと を しって いる。",
-    "romaji": "Dare demo ni tasu ni ikooru yon de aru koto o shitte iru.",
-    "arti": "Semua orang tahu bahwa dua ditambah dua sama dengan empat.",
-    "before": {
-      "romaji": "Dare demo 2 tasu 2 ikooru 4 de aru koto o shitte iru."
-    },
-    "n": 16
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "8d426f2b#0",
-    "table": "vocabulary",
-    "ja": "水は０カロリーです。",
-    "reading": "みず は ゼロカロリー です。",
-    "romaji": "Mizu wa zero karorii desu.",
-    "arti": "Air memiliki nol kalori.",
-    "before": {
-      "romaji": "Mizu wa 0 karorii desu."
-    },
-    "n": 17
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "57670114#0",
-    "table": "vocabulary",
-    "ja": "この全集は最終巻が欠けている。",
-    "reading": "この ぜんしゅう は さいしゅうかん が かけて いる。",
-    "romaji": "Kono zenshuu wa saishuukan ga kakete iru.",
-    "arti": "Kumpulan karya lengkap ini kehilangan jilid terakhir.",
-    "before": {
-      "romaji": "Kono zenshuu no gokanme ga miataranai."
-    },
-    "n": 18
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "31f5a045#0",
-    "table": "vocabulary",
-    "ja": "このプラスチック製品は燃えないごみです。",
-    "reading": "この プラスチックせいひん は もえないごみ です。",
-    "romaji": "Kono purasuchikku seihin wa moenai gomi desu.",
-    "arti": "Produk plastik ini termasuk sampah yang tidak dapat dibakar.",
-    "before": {
-      "romaji": "kono purasuchikku wa wa moenai gomi"
-    },
-    "n": 19
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "04194e52#0",
-    "table": "vocabulary",
-    "ja": "土曜日に料理教室へ通っています。",
-    "reading": "どようび に りょうりきょうしつ へ かよって います。",
-    "romaji": "Doyoubi ni ryouri kyoushitsu e kayotte imasu.",
-    "arti": "Saya mengikuti kelas memasak setiap hari Sabtu.",
-    "before": {
-      "romaji": "doyoubi ni ryouri e e"
-    },
-    "n": 20
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "14bde440#0",
-    "table": "vocabulary",
-    "ja": "毎週このテレビ番組を見ています。",
-    "reading": "まいしゅう この テレビばんぐみ を みて います。",
-    "romaji": "Maishuu kono terebi bangumi o mite imasu.",
-    "arti": "Saya menonton acara televisi ini setiap minggu.",
-    "before": {
-      "romaji": "maishuu kono terebi o o"
-    },
-    "n": 21
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "1fd8ba69#0",
-    "table": "vocabulary",
-    "ja": "コンビニでコンサートチケットを販売しています。",
-    "reading": "コンビニ で コンサートチケット を はんばいして います。",
-    "romaji": "Konbini de konsaato chiketto o hanbai shite imasu.",
-    "arti": "Tiket konser dijual di minimarket.",
-    "before": {
-      "romaji": "konbini de konsaato o o"
-    },
-    "n": 22
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "25f4e6ce#0",
-    "table": "vocabulary",
-    "ja": "古い家庭電化製品を処分します。",
-    "reading": "ふるい かていでんかせいひん を しょぶんします。",
-    "romaji": "Furui katei denka seihin o shobun shimasu.",
-    "arti": "Saya akan membuang peralatan elektronik rumah tangga yang lama.",
-    "before": {
-      "romaji": "furui kateidenka o o"
-    },
-    "n": 23
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "5c41fe06#0",
-    "table": "vocabulary",
-    "ja": "コンビニで公共料金を払いました。",
-    "reading": "コンビニ で こうきょうりょうきん を はらいました。",
-    "romaji": "Konbini de koukyou ryoukin o haraimashita.",
-    "arti": "Saya membayar tagihan layanan umum di minimarket.",
-    "before": {
-      "romaji": "konbini de koukyou o o"
-    },
-    "n": 24
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "6b84695d#0",
-    "table": "vocabulary",
-    "ja": "毎日、日本語の会話を練習しています。",
-    "reading": "まいにち、にほんご の かいわ を れんしゅうして います。",
-    "romaji": "Mainichi, nihongo no kaiwa o renshuu shite imasu.",
-    "arti": "Saya berlatih percakapan bahasa Jepang setiap hari.",
-    "before": {
-      "romaji": "mainichi, nihongo no o o"
-    },
-    "n": 25
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "7f1d994c#0",
-    "table": "vocabulary",
-    "ja": "パーティールームは二階にあります。",
-    "reading": "パーティールーム は にかい に あります。",
-    "romaji": "Paatii ruumu wa nikai ni arimasu.",
-    "arti": "Ruang pesta berada di lantai dua.",
-    "before": {
-      "romaji": "paatii wa wa nikai ni"
-    },
-    "n": 26
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "856f89af#0",
-    "table": "vocabulary",
-    "ja": "電話番号を間違えました。",
-    "reading": "でんわばんごう を まちがえました。",
-    "romaji": "Denwa bangou o machigaemashita.",
-    "arti": "Saya salah memasukkan nomor telepon.",
-    "before": {
-      "romaji": "denwa o o"
-    },
-    "n": 27
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "a298bda0#0",
-    "table": "vocabulary",
-    "ja": "今度いっしょに京都へ行きませんか。",
-    "reading": "こんど いっしょ に きょうと へ いきません か。",
-    "romaji": "Kondo issho ni Kyouto e ikimasen ka.",
-    "arti": "Lain kali, mau pergi ke Kyoto bersama?",
-    "before": {
-      "romaji": "kondo issho ni kyouto e ikimasen"
-    },
-    "n": 28
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "a38bbdb9#0",
-    "table": "vocabulary",
-    "ja": "道が凍っていますから、気をつけてください。",
-    "reading": "みち が こおって います から、き を つけて ください。",
-    "romaji": "Michi ga kootte imasu kara, ki o tsukete kudasai.",
-    "arti": "Jalannya membeku, jadi berhati-hatilah.",
-    "before": {
-      "romaji": "michi ga kootteimasu kara, o o tsukete"
-    },
-    "n": 29
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "c34561dd#0",
-    "table": "vocabulary",
-    "ja": "将来、海の近くに家を建てたいです。",
-    "reading": "しょうらい、うみ の ちかく に いえ を たてたい です。",
-    "romaji": "Shourai, umi no chikaku ni ie o tatetai desu.",
-    "arti": "Di masa depan saya ingin membangun rumah dekat laut.",
-    "before": {
-      "romaji": "shourai, umi no chikaku ni o o tatetai"
-    },
-    "n": 30
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "c96923ed#0",
-    "table": "vocabulary",
-    "ja": "割れたガラス製品は気をつけて捨ててください。",
-    "reading": "われた ガラスせいひん は き を つけて すてて ください。",
-    "romaji": "Wareta garasu seihin wa ki o tsukete sutete kudasai.",
-    "arti": "Buang barang kaca yang pecah dengan hati-hati.",
-    "before": {
-      "romaji": "wareta garasu wa wa ki o"
-    },
-    "n": 31
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "cd1a1f60#0",
-    "table": "vocabulary",
-    "ja": "このズボンのサイズ直しをお願いします。",
-    "reading": "この ズボン の サイズなおし を おねがいします。",
-    "romaji": "Kono zubon no saizu naoshi o onegai shimasu.",
-    "arti": "Tolong sesuaikan ukuran celana ini.",
-    "before": {
-      "romaji": "kono zubon no saizu o o"
-    },
-    "n": 32
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "cda35ad8#0",
-    "table": "vocabulary",
-    "ja": "集合する場所を教えてください。",
-    "reading": "しゅうごうする ばしょ を おしえて ください。",
-    "romaji": "Shuugou suru basho o oshiete kudasai.",
-    "arti": "Tolong beri tahu tempat berkumpulnya.",
-    "before": {
-      "romaji": "shuugou suru o o oshiete"
-    },
-    "n": 33
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "eafdf6d3#0",
-    "table": "vocabulary",
-    "ja": "先生にでんしメールを送りました。",
-    "reading": "せんせい に でんしメール を おくりました。",
-    "romaji": "Sensei ni denshi meeru o okurimashita.",
-    "arti": "Saya mengirim email kepada guru.",
-    "before": {
-      "romaji": "sensei ni denshi o o"
-    },
-    "n": 34
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "f408e8db#0",
-    "table": "vocabulary",
-    "ja": "この店では、はがきと切手を販売しています。",
-    "reading": "この みせ では、はがき と きって を はんばいして います。",
-    "romaji": "Kono mise dewa, hagaki to kitte o hanbai shite imasu.",
-    "arti": "Toko ini menjual kartu pos dan perangko.",
-    "before": {
-      "romaji": "kono mise dewa, hagaki to o o"
-    },
-    "n": 35
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "5f6867ec#0",
-    "table": "vocabulary_senses",
-    "ja": "昨日、不思議な夢を見ました。",
-    "reading": "きのう、ふしぎな ゆめ を みました。",
-    "romaji": "Kinou, fushigi na yume o mimashita.",
-    "arti": "Kemarin saya bermimpi aneh.",
-    "before": {
-      "romaji": "kinou, fushigina o o"
-    },
-    "n": 36
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "8fe5c173#0",
-    "table": "vocabulary_senses",
-    "ja": "集合する場所を確認します。",
-    "reading": "しゅうごうする ばしょ を かくにんします。",
-    "romaji": "Shuugou suru basho o kakunin shimasu.",
-    "arti": "Saya memastikan tempat berkumpul.",
-    "before": {
-      "romaji": "shuugou suru o o"
-    },
-    "n": 37
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "90fda1fd#0",
-    "table": "vocabulary_senses",
-    "ja": "将来、自分の会社を作りたいです。",
-    "reading": "しょうらい、じぶん の かいしゃ を つくりたい です。",
-    "romaji": "Shourai, jibun no kaisha o tsukuritai desu.",
-    "arti": "Di masa depan saya ingin mendirikan perusahaan sendiri.",
-    "before": {
-      "romaji": "shourai, jibun no o o tsukuritai"
-    },
-    "n": 38
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "478447ef#0",
-    "table": "vocabulary",
-    "ja": "彼を煽てて仕事を引き受けさせた。",
-    "reading": "かれ を おだてて しごと を ひきうけさせた。",
-    "romaji": "Kare o odatete shigoto o hikiukesaseta.",
-    "arti": "Saya menyanjungnya agar mau menerima pekerjaan itu.",
-    "before": {
-      "romaji": "Kare o odatete shigoto o hikiukesase ta."
-    },
-    "n": 39
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "5410cc1a#1",
-    "table": "vocabulary",
-    "ja": "ヤニーは初来日してます。",
-    "reading": "ヤニー は はつらいにちしてます。",
-    "romaji": "Yanii wa hatsu rainichi shitemasu.",
-    "arti": "Yanni sedang melakukan kunjungan pertamanya ke Jepang.",
-    "before": {
-      "romaji": "Yanii wa hatsu rainichi shite masu."
-    },
-    "n": 40
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "970fa0b7#0",
-    "table": "vocabulary",
-    "ja": "野菜を細かく刻みます。",
-    "reading": "やさい を こまかく きざみます。",
-    "romaji": "Yasai o komakaku kizamimasu.",
-    "arti": "Saya mencincang sayuran kecil-kecil.",
-    "before": {
-      "romaji": "Yasai o komakaku kizami masu."
-    },
-    "n": 41
-  },
-  {
-    "category": "romaji repair: typo / wrong romanization / contraction / digit",
-    "id": "e54e62f6#0",
-    "table": "vocabulary",
-    "ja": "床にしゃがみました。",
-    "reading": "ゆか に しゃがみました。",
-    "romaji": "Yuka ni shagamimashita.",
-    "arti": "Saya berjongkok di lantai.",
-    "before": {
-      "romaji": "Yuka ni shagami mashita."
-    },
-    "n": 42
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "72cfb139#0",
-    "table": "vocabulary_senses",
-    "ja": "物理って得意？",
-    "reading": "ぶつり って とくい？",
-    "romaji": "Butsuri tte tokui?",
-    "arti": "Kamu pandai fisika?",
-    "before": {
-      "romaji": "Butsuritte tokui?"
-    },
-    "n": 43
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "cb3fc597#0",
-    "table": "vocabulary",
-    "ja": "ここは風通しが良くて、涼むにはもってこいの場所なんだ。",
-    "reading": "ここ は かぜとおし が よくて、すずむ には もって こい の ばしょ なんだ。",
-    "romaji": "Koko wa kazetooshi ga yokute, suzumu ni wa motte koi no basho nan da.",
-    "arti": "Tempat ini memiliki sirkulasi udara yang baik dan sangat cocok untuk menyejukkan diri.",
-    "before": {
-      "romaji": "Koko wa kazetooshi ga yokute, suzumu ni wa mottekoi no basho nan da."
-    },
-    "n": 44
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "c2298ba0#0",
-    "table": "vocabulary",
-    "ja": "大切なことをメモします。",
-    "reading": "たいせつ な こと を メモします。",
-    "romaji": "taisetsu na koto o memo shimasu.",
-    "arti": "Saya mencatat hal-hal penting.",
-    "before": {
-      "romaji": "taisetsuna koto o memo shimasu."
-    },
-    "n": 45
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "fee473d5#0",
-    "table": "vocabulary",
-    "ja": "この部屋にはエアコンが付いています。",
-    "reading": "この へや には エアコン が ついて います。",
-    "romaji": "kono heya ni wa eakon ga tsuite imasu.",
-    "arti": "Kamar ini dilengkapi AC.",
-    "before": {
-      "romaji": "kono heya ni wa eakon ga tsuiteimasu."
-    },
-    "n": 46
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "38c9afaf#0",
-    "table": "grammar_points",
-    "ja": "褒められて、彼はまんざらでもない顔をしていた。",
-    "reading": "ほめられて、かれ は まんざら でも ない かお を して いた。",
-    "romaji": "homerarete, kare wa manzara de mo nai kao o shite ita.",
-    "arti": "Setelah dipuji, dia memasang wajah yang tampaknya tidak sepenuhnya tidak senang.",
-    "before": {
-      "romaji": "homerarete, kare wa manzara de mo nai kao o shiteita."
-    },
-    "n": 47
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "c4db26e9#0",
-    "table": "vocabulary",
-    "ja": "そのレストランは落ち着いた色と柔らかな照明を使った、シックな内装です。",
-    "reading": "その レストラン は おちついた いろ と やわらか な しょうめい を つかった、シック な ないそう です。",
-    "romaji": "Sono resutoran wa ochitsuita iro to yawaraka na shoumei o tsukatta, shikku na naisou desu.",
-    "arti": "Interior restoran itu bergaya elegan dengan warna-warna tenang dan pencahayaan lembut.",
-    "before": {
-      "romaji": "Sono resutoran wa ochitsuita iro to yawarakana shoumei o tsukatta, shikku na naisou desu."
-    },
-    "n": 48
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "e27dff43#0",
-    "table": "vocabulary_senses",
-    "ja": "あんな人になりたいです。",
-    "reading": "あんな ひと に なりたい です。",
-    "romaji": "Anna hito ni naritai desu.",
-    "arti": "Saya ingin menjadi orang seperti itu.",
-    "before": {
-      "romaji": "Anna hito ni naritaidesu."
-    },
-    "n": 49
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "9e8c0900#0",
-    "table": "vocabulary",
-    "ja": "彼 は 明るい 性格 なので、よく もてます。",
-    "reading": "かれ は あかるい せいかく な ので、よく もてます。",
-    "romaji": "kare wa akarui seikaku na no de, yoku motemasu.",
-    "arti": "Karena sifatnya ceria, dia populer di kalangan lawan jenis.",
-    "before": {
-      "romaji": "kare wa akarui seikaku nano de, yoku motemasu."
-    },
-    "n": 50
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "b94e53cc#0",
-    "table": "vocabulary_senses",
-    "ja": "症状は軽いですよ。",
-    "reading": "しょうじょう は かるい です よ。",
-    "romaji": "Shoujou wa karui desu yo.",
-    "arti": "Gejalanya ringan, kok.",
-    "before": {
-      "romaji": "Shoujou wa karuidesu yo."
-    },
-    "n": 51
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "be598ef1#0",
-    "table": "vocabulary_senses",
-    "ja": "肌寒いです。",
-    "reading": "はださむい です。",
-    "romaji": "Hadasamui desu.",
-    "arti": "Agak dingin.",
-    "before": {
-      "romaji": "Hadasamuidesu."
-    },
-    "n": 52
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "70e320c2#0",
-    "table": "vocabulary",
-    "ja": "この方法の他にもいくつか方法があります。",
-    "reading": "この ほうほう の ほか にも いくつ か ほうほう が あります。",
-    "romaji": "Kono houhou no hoka ni mo ikutsu ka houhou ga arimasu.",
-    "arti": "Selain cara ini, ada beberapa cara lainnya.",
-    "before": {
-      "romaji": "Kono houhou no hoka ni mo ikutsuka houhou ga arimasu."
-    },
-    "n": 53
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "c7ba1d91#0",
-    "table": "vocabulary_senses",
-    "ja": "彼を重視しているのですか。",
-    "reading": "かれ を じゅうしして いる の です か。",
-    "romaji": "Kare o juushi shite iru no desu ka.",
-    "arti": "Apakah Anda sangat menghargainya?",
-    "before": {
-      "romaji": "Kare o juushi shite iru nodesu ka."
-    },
-    "n": 54
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "ef5ad25d#0",
-    "table": "grammar_points",
-    "ja": "今さら謝ったところで、許してもらえない。",
-    "reading": "いまさら あやまった ところ で、ゆるして もらえない。",
-    "romaji": "imasara ayamatta tokoro de, yurushite moraenai.",
-    "arti": "Sekalipun meminta maaf sekarang, Anda tidak akan dimaafkan.",
-    "before": {
-      "romaji": "imasara ayamatta tokorode, yurushite moraenai."
-    },
-    "n": 55
-  },
-  {
-    "category": "romaji repair: spacing only (romaji boundary matches Reading)",
-    "id": "38be0fbe#1",
-    "table": "vocabulary_senses",
-    "ja": "生粋のお嬢様だからな。残念ながら悪戯とかじゃなくてあれで素だ。",
-    "reading": "きっすい の おじょうさま だから な。ざんねんながら いたずら と か じゃ なくて あれ で す だ。",
-    "romaji": "Kissui no ojousama dakara na. Zannen nagara itazura to ka ja nakute are de su da.",
-    "arti": "Dia memang putri bangsawan sejati. Sayangnya itu bukan pura-pura, memang begitulah sifat aslinya.",
-    "before": {
-      "romaji": "Kissui no ojousama dakara na. Zannen nagara itazura toka janakute are de su da."
-    },
-    "n": 56
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "f11f752b#1",
-    "table": "vocabulary_senses",
-    "ja": "百年は一世紀と呼ばれる。",
-    "reading": "ひゃくねん は いちせいき と よばれる。",
-    "romaji": "Hyakunen wa ichiseiki to yobareru.",
-    "arti": "Seratus tahun disebut satu abad.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 57
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "920a7314#0",
-    "table": "vocabulary_senses",
-    "ja": "あと五分あります。",
-    "reading": "あと ごふん あります。",
-    "romaji": "Ato gofun arimasu.",
-    "arti": "Masih tersisa lima menit.",
-    "before": {
-      "reading": null,
-      "romaji": null
-    },
-    "n": 58
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "1fa57772#0",
-    "table": "vocabulary_senses",
-    "ja": "君はギター弾く？",
-    "reading": "きみ は ギター ひく？",
-    "romaji": "Kimi wa gitaa hiku?",
-    "arti": "Apakah kamu bermain gitar?",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 59
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "4af1bf7e#1",
-    "table": "vocabulary_senses",
-    "ja": "ただいま満席です。席が空くまでこちらでお待ちください。",
-    "reading": "ただいま まんせき です。せき が あく まで こちら で おまちください。",
-    "romaji": "Tadaima manseki desu. seki ga aku made kochira de omachikudasai.",
-    "arti": "Saat ini semua kursi penuh. Mohon tunggu di sini sampai ada kursi kosong.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 60
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "99ae0211#0",
-    "table": "vocabulary_senses",
-    "ja": "曇ってきた。",
-    "reading": "くもって きた。",
-    "romaji": "Kumotte kita.",
-    "arti": "Langit mulai berawan.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 61
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "a67a43a8#1",
-    "table": "vocabulary_senses",
-    "ja": "その合併は１対１で行われた。",
-    "reading": "その がっぺい は いちたいいち で おこなわれた。",
-    "romaji": "Sono gappei wa ichitaiichi de okonawareta.",
-    "arti": "Penggabungan itu dilakukan dengan rasio 1 banding 1.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 62
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "68406e59#1",
-    "table": "vocabulary_senses",
-    "ja": "費用は最低一万円です。",
-    "reading": "ひよう は さいてい いちまんえん です。",
-    "romaji": "Hiyou wa saitei ichiman'en desu.",
-    "arti": "Biayanya minimal 10.000 yen.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 63
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "bd95db3e#0",
-    "table": "vocabulary_senses",
-    "ja": "３日連続して雨が降った。",
-    "reading": "みっか れんぞくして あめ が ふった。",
-    "romaji": "Mikka renzokushite ame ga futta.",
-    "arti": "Hujan turun tiga hari berturut-turut.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 64
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "af77f0f9#0",
-    "table": "vocabulary_senses",
-    "ja": "彼は賢者だ。",
-    "reading": "かれ は けんじゃ だ。",
-    "romaji": "Kare wa kenja da.",
-    "arti": "Dia seorang bijak.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 65
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "e67abebd#1",
-    "table": "vocabulary_senses",
-    "ja": "血便がでます。",
-    "reading": "けつべん が でます。",
-    "romaji": "Ketsuben ga demasu.",
-    "arti": "Saya buang air besar berdarah.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 66
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "5bb02d74#1",
-    "table": "vocabulary_senses",
-    "ja": "十二は偶数だ。",
-    "reading": "じゅうに は ぐうすう だ。",
-    "romaji": "Juuni wa guusuu da.",
-    "arti": "Dua belas adalah bilangan genap.",
-    "before": {
-      "reading": null,
-      "romaji": null
-    },
-    "n": 67
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "951d0aeb#1",
-    "table": "vocabulary_senses",
-    "ja": "牛の尻尾は長い。",
-    "reading": "うし の しっぽ は ながい。",
-    "romaji": "Ushi no shippo wa nagai.",
-    "arti": "Ekor sapi itu panjang.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 68
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "d3637245#1",
-    "table": "vocabulary_senses",
-    "ja": "涙が一筋頬を流れた。",
-    "reading": "なみだ が ひとすじ ほお を ながれた。",
-    "romaji": "Namida ga hitosuji hoo o nagareta.",
-    "arti": "Seuntai air mata mengalir di pipinya.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 69
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "4af1bf7e#0",
-    "table": "vocabulary_senses",
-    "ja": "あと１０分で手が空く。",
-    "reading": "あと じゅっぷん で て が あく。",
-    "romaji": "Ato juppun de te ga aku.",
-    "arti": "Sepuluh menit lagi saya luang.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 70
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "82d6bfa9#0",
-    "table": "vocabulary_senses",
-    "ja": "駅まで三キロメートルです。",
-    "reading": "えき まで さんキロメートル です。",
-    "romaji": "Eki made sankiromeetoru desu.",
-    "arti": "Jarak ke stasiun tiga kilometer.",
-    "before": {
-      "reading": null,
-      "romaji": null
-    },
-    "n": 71
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "abb6f50e#1",
-    "table": "vocabulary_senses",
-    "ja": "一年中雨が多い。",
-    "reading": "いちねんじゅう あめ が おおい。",
-    "romaji": "Ichinenjuu ame ga ooi.",
-    "arti": "Hujan banyak turun sepanjang tahun.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 72
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "95064334#0",
-    "table": "vocabulary_senses",
-    "ja": "歯茎がはれています。",
-    "reading": "はぐき が はれて います。",
-    "romaji": "Haguki ga harete imasu.",
-    "arti": "Gusi saya bengkak.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 73
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "9407394f#0",
-    "table": "vocabulary_senses",
-    "ja": "水は100度で沸騰する。",
-    "reading": "みず は ひゃくど で ふっとうする。",
-    "romaji": "Mizu wa hyakudo de futtousuru.",
-    "arti": "Air mendidih pada 100 derajat.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 74
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "500b7f6f#1",
-    "table": "vocabulary_senses",
-    "ja": "一寸の虫にも五分の魂。",
-    "reading": "いっすん の むし にも ごぶ の たましい。",
-    "romaji": "Issun no mushi ni mo gobu no tamashii.",
-    "arti": "Bahkan serangga kecil pun punya harga diri.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 75
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "af83e598#1",
-    "table": "vocabulary_senses",
-    "ja": "いつか私の夢は実現する。",
-    "reading": "いつか わたし の ゆめ は じつげんする。",
-    "romaji": "Itsuka watashi no yume wa jitsugensuru.",
-    "arti": "Suatu hari nanti mimpiku akan terwujud.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 76
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "94ced9ea#1",
-    "table": "vocabulary_senses",
-    "ja": "大抵１０時には寝るよ。",
-    "reading": "たいてい じゅうじ には ねる よ。",
-    "romaji": "Taitei juuji ni wa neru yo.",
-    "arti": "Biasanya saya tidur pukul sepuluh.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 77
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "d3637245#0",
-    "table": "vocabulary_senses",
-    "ja": "頬にキスしたいな。",
-    "reading": "ほお に キスしたいな。",
-    "romaji": "Hoo ni kisushitaina.",
-    "arti": "Aku ingin mencium pipimu.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 78
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "3f938f09#1",
-    "table": "vocabulary_senses",
-    "ja": "麻雀が大好きです。",
-    "reading": "マージャン が だいすき です。",
-    "romaji": "Maajan ga daisuki desu.",
-    "arti": "Saya sangat suka mahjong.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 79
-  },
-  {
-    "category": "missing-reading recovery",
-    "id": "52f048b7#0",
-    "table": "vocabulary_senses",
-    "ja": "毎年健康診断を受けます。",
-    "reading": "まいとし けんこうしんだん を うけます。",
-    "romaji": "Maitoshi kenkoushindan o ukemasu.",
-    "arti": "Saya menjalani pemeriksaan kesehatan setiap tahun.",
-    "before": {
-      "reading": null,
-      "romaji": null
-    },
-    "n": 80
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "dea414ca#1",
-    "table": "vocabulary",
-    "ja": "思想は世界中をアッという間に巡る。",
-    "reading": "しそう は せかいじゅう を あっと いう ま に めぐる。",
-    "romaji": "Shisou wa sekaijuu o atto iu ma ni meguru.",
-    "arti": "Gagasan dapat beredar ke seluruh dunia dalam sekejap.",
-    "before": {
-      "reading": "しそう は せかいじゅう を あっ と いう ま に めぐる。"
-    },
-    "n": 81
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "df554a87#0",
-    "table": "vocabulary_senses",
-    "ja": "仕事はやり残すなよ。",
-    "reading": "しごと は やりのこす な よ。",
-    "romaji": "Shigoto wa yarinokosu na yo.",
-    "arti": "Jangan tinggalkan pekerjaanmu setengah jalan.",
-    "before": {
-      "reading": "しごと はやりのこすな よ。"
-    },
-    "n": 82
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "0126d120#0",
-    "table": "vocabulary",
-    "ja": "真っ白な歯がきれいだ。",
-    "reading": "まっしろな は が きれい だ。",
-    "romaji": "Masshiro na ha ga kirei da.",
-    "arti": "Gigi yang sangat putih itu indah.",
-    "before": {
-      "reading": "まっしろなは が きれい だ。"
-    },
-    "n": 83
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "a7a638ec#0",
-    "table": "vocabulary_senses",
-    "ja": "おしゃべりはやめにして、仕事を始めましょう。",
-    "reading": "おしゃべり は やめ に して、しごと を はじめましょう。",
-    "romaji": "Oshaberi wa yame ni shite, shigoto o hajimemashou.",
-    "arti": "Ayo berhenti mengobrol dan mulai bekerja.",
-    "before": {
-      "reading": "おしゃべり はやめに して、しごと を はじめましょう。"
-    },
-    "n": 84
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "bd6a9242#0",
-    "table": "grammar_points",
-    "ja": "これは「9」ですか、「7」ですか。",
-    "reading": "これ は きゅう です か、なな です か。",
-    "romaji": "Kore wa kyuu desu ka, nana desu ka.",
-    "arti": "Apakah ini angka 9 atau angka 7?",
-    "before": {
-      "hiragana": "これ はきゅうです か、ななです か。"
-    },
-    "n": 85
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "f90a5185#0",
-    "table": "vocabulary",
-    "ja": "私の犬はしっぽが長い。",
-    "reading": "わたし の いぬ は しっぽ が ながい。",
-    "romaji": "Watashi no inu wa shippo ga nagai.",
-    "arti": "Anjing saya berekor panjang.",
-    "before": {
-      "reading": "わたし の いぬ はしっぽ が ながい。"
-    },
-    "n": 86
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "59614c4c#2",
-    "table": "grammar_points",
-    "ja": "トイレットペーパーがもうすぐなくなるから、買っとかないと。",
-    "reading": "といれっとぺーぱー が もうすぐ なくなる から、かっとかない と。",
-    "romaji": "Toiretto peepaa ga mou sugu nakunaru kara, kattokanai to.",
-    "arti": "Tisu toilet sebentar lagi habis, jadi harus beli dulu.",
-    "before": {
-      "hiragana": "といれっとぺーぱー が もうすぐ なくなる から、かっ と か ない と。"
-    },
-    "n": 87
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "d2c504c1#0",
-    "table": "vocabulary",
-    "ja": "古い町並みに江戸時代の名残が残っている。",
-    "reading": "ふるい まちなみ に えどじだい の なごり が のこって いる。",
-    "romaji": "Furui machinami ni Edo jidai no nagori ga nokotte iru.",
-    "arti": "Jejak zaman Edo masih tersisa pada kawasan kota tua itu.",
-    "before": {
-      "reading": "ふるい まちなみ に はえどじだい の なごり が のこって いる。",
-      "romaji": "Furui machinami ni wa Edo jidai no nagori ga nokotte iru."
-    },
-    "n": 88
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "01ebb6b8#1",
-    "table": "grammar_points",
-    "ja": "この部屋は自由に使えます。ただし、飲食は禁止です。",
-    "reading": "この へや は じゆうに つかえます。ただし、いんしょく は きんし です。",
-    "romaji": "Kono heya wa jiyuu ni tsukaemasu. Tadashi, inshoku wa kinshi desu.",
-    "arti": "Ruangan ini boleh digunakan bebas. Hanya saja, makan dan minum dilarang.",
-    "before": {
-      "hiragana": "この へや は じゆうに つかえます。ただし、いんしょく は 禁止 です。"
-    },
-    "n": 89
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "39f17a6f#0",
-    "table": "vocabulary_senses",
-    "ja": "その髪型は女子高生の間ではやっている。",
-    "reading": "その かみがた は じょしこうせい の あいだ で はやって いる。",
-    "romaji": "Sono kamigata wa joshikousei no aida de hayatte iru.",
-    "arti": "Gaya rambut itu cocok di kalangan siswa SMA perempuan.",
-    "before": {
-      "reading": "その かみがた は じょしこうせい の あいだ ではやって いる。",
-      "romaji": "Sono kamigata wa joshikousei no aida de wa yatte iru."
-    },
-    "n": 90
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "7fb82666#0",
-    "table": "vocabulary",
-    "ja": "祖母 に 昔話 を 聞きました。",
-    "reading": "そぼ に むかしばなし を ききました。",
-    "romaji": "sobo ni mukashibanashi o kikimashita.",
-    "arti": "Saya mendengar cerita zaman dahulu dari nenek.",
-    "before": {
-      "reading": "そぼ に むかしはなし を ききました。"
-    },
-    "n": 91
-  },
-  {
-    "category": "reading source repair: stray space / stuck particle / kanji left",
-    "id": "f90a5185#1",
-    "table": "vocabulary",
-    "ja": "あの犬はしっぽが短い。",
-    "reading": "あの いぬ は しっぽ が みじかい。",
-    "romaji": "Ano inu wa shippo ga mijikai.",
-    "arti": "Anjing itu berekor pendek.",
-    "before": {
-      "reading": "あの いぬ はしっぽ が みじかい。"
-    },
-    "n": 92
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "5fb6bcd2#0",
-    "table": "vocabulary",
-    "ja": "イベントが終わったあと、全員で会場や道具の後始末をしました。",
-    "reading": "イベント が おわった あと、ぜんいん で かいじょう や どうぐ の あとしまつ を しました。",
-    "romaji": "Ibento ga owatta ato, zenin de kaijou ya dougu no atoshimatsu o shimashita.",
-    "arti": "Setelah acara selesai, kami semua membantu membereskan ruangan dan peralatan.",
-    "before": {
-      "reading": "イベント が おわった あと、ぜんいん で かいじょう や どうぐ の あと しまつ を しました。"
-    },
-    "n": 93
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "f2ac5ff3#0",
-    "table": "vocabulary",
-    "ja": "わが党はこれに飽くまで反対します。",
-    "reading": "わがとう は これ に あくまで はんたいします。",
-    "romaji": "Wagatou wa kore ni akumade hantai shimasu.",
-    "arti": "Partai kami akan tetap menentang hal ini sampai akhir.",
-    "before": {
-      "reading": "わが とう は これ に あくまで はんたいします。"
-    },
-    "n": 94
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "b730660a#0",
-    "table": "vocabulary_senses",
-    "ja": "おじいちゃんとおばあちゃんになってもラブラブでいたいね。",
-    "reading": "おじいちゃん と おばあちゃん に なって も ラブラブ で いたい ね。",
-    "romaji": "Ojiichan to obaachan ni natte mo raburabu de itai ne.",
-    "arti": "Meskipun menjadi kakek nenek, kita harus tetap saling mencinta.",
-    "before": {
-      "reading": "おじい ちゃんと おばあちゃん に なって も ラブラブ で いたい ね。"
-    },
-    "n": 95
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "476c2a99#0",
-    "table": "grammar_points",
-    "ja": "悪天候で中止を余儀なくされた。",
-    "reading": "あくてんこう で ちゅうし を よぎなく された。",
-    "romaji": "akutenkou de chuushi o yoginaku sareta.",
-    "arti": "Karena cuaca buruk, kami terpaksa membatalkan acara.",
-    "before": {
-      "hiragana": "あくてんこう で ちゅうし を よぎ なく された。"
-    },
-    "n": 96
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "ba22f1b4#0",
-    "table": "vocabulary",
-    "ja": "彼は疾っくに帰りました。",
-    "reading": "かれ は とっくに かえりました。",
-    "romaji": "Kare wa tokkuni kaerimashita.",
-    "arti": "Dia sudah pulang sejak lama.",
-    "before": {
-      "reading": "かれ は とっく に かえりました。"
-    },
-    "n": 97
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "0a67dae1#0",
-    "table": "vocabulary",
-    "ja": "一時間 は 六十分 です。",
-    "reading": "いちじかん は ろくじゅっぷん です。",
-    "romaji": "ichijikan wa rokujuppun desu.",
-    "arti": "Satu jam sama dengan 60 menit.",
-    "before": {
-      "reading": "いちじかん は ろく じゅっぷん です。"
-    },
-    "n": 98
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "29568915#0",
-    "table": "vocabulary",
-    "ja": "出発時刻の三十分前に搭乗してください。",
-    "reading": "しゅっぱつじこく の さんじゅっぷん まえ に とうじょうして ください。",
-    "romaji": "Shuppatsu jikoku no sanjuppun mae ni toujou shite kudasai.",
-    "arti": "Silakan naik pesawat tiga puluh menit sebelum waktu keberangkatan.",
-    "before": {
-      "reading": "しゅっぱつじこく の さん じゅっぷん まえ に とうじょうして ください。"
-    },
-    "n": 99
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "3dc58eb8#0",
-    "table": "grammar_points",
-    "ja": "もう二度と彼とは会うまい。",
-    "reading": "もう にどと かれ とは あうまい。",
-    "romaji": "mou nidoto kare to wa au mai.",
-    "arti": "Saya bertekad tidak akan bertemu dengannya lagi.",
-    "before": {
-      "hiragana": "もう にど と かれ とは あうまい。",
-      "romaji": "mou nido to kare to wa au mai."
-    },
-    "n": 100
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "654b8833#2",
-    "table": "grammar_points",
-    "ja": "多少なりともご協力いたします。",
-    "reading": "たしょう なりとも ごきょうりょくいたします。",
-    "romaji": "tashou naritomo gokyouryoku itashimasu.",
-    "arti": "Saya akan memberikan setidaknya sedikit kerja sama.",
-    "before": {
-      "reading": "たしょう なり とも ごきょうりょくいたします。"
-    },
-    "n": 101
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "ad45b202#2",
-    "table": "grammar_points",
-    "ja": "彼女はめったに病気をしないのに、入院しているらしい。",
-    "reading": "かのじょ は めったに びょうき を しない の に、にゅういんして いるらしい。",
-    "romaji": "Kanojo wa mettani byouki o shinai no ni, nyuuin shite iru rashii.",
-    "arti": "Padahal dia jarang sakit, tetapi katanya sekarang sedang dirawat di rumah sakit.",
-    "before": {
-      "hiragana": "かのじょ は めった に びょうき を しない の に、にゅういんして いるらしい。",
-      "romaji": "Kanojo wa mettani byouki o shinai noni, nyuuin shite iru rashii."
-    },
-    "n": 102
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "a77abdc1#0",
-    "table": "vocabulary",
-    "ja": "彼 は めったに 怒りません。",
-    "reading": "かれ は めったに おこりません。",
-    "romaji": "kare wa mettani okorimasen.",
-    "arti": "Dia jarang sekali marah.",
-    "before": {
-      "reading": "かれ は めった に おこりません。",
-      "romaji": "kare wa metta ni okorimasen."
-    },
-    "n": 103
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "55fc77d0#0",
-    "table": "vocabulary",
-    "ja": "市場の情勢を注意深く見守る。",
-    "reading": "しじょう の じょうせい を ちゅういぶかく みまもる。",
-    "romaji": "Shijou no jousei o chuuibukaku mimamoru.",
-    "arti": "Kami mengamati situasi pasar dengan saksama.",
-    "before": {
-      "reading": "しじょう の じょうせい を ちゅうい ぶかく みまもる。"
-    },
-    "n": 104
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "f9fbc9f2#0",
-    "table": "vocabulary",
-    "ja": "毎日三十分運動します。",
-    "reading": "まいにち さんじゅっぷん うんどうします。",
-    "romaji": "Mainichi sanjuppun undou shimasu.",
-    "arti": "Saya berolahraga selama tiga puluh menit setiap hari.",
-    "before": {
-      "reading": "まいにち さん じゅっぷん うんどうします。"
-    },
-    "n": 105
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "4c522623#0",
-    "table": "vocabulary",
-    "ja": "駅まで三十分かかります。",
-    "reading": "えき まで さんじゅっぷん かかります。",
-    "romaji": "Eki made sanjuppun kakarimasu.",
-    "arti": "Perlu tiga puluh menit sampai stasiun.",
-    "before": {
-      "reading": "えき まで さん じゅっぷん かかります。"
-    },
-    "n": 106
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "cc4631ae#0",
-    "table": "grammar_points",
-    "ja": "これは努力の結果に他ならない。",
-    "reading": "これ は どりょく の けっか に ほかならない。",
-    "romaji": "kore wa doryoku no kekka ni hokanaranai.",
-    "arti": "Ini tidak lain adalah hasil dari usaha.",
-    "before": {
-      "reading": "これ は どりょく の けっか に ほか ならない。"
-    },
-    "n": 107
-  },
-  {
-    "category": "reading source repair: lexical word rejoined",
-    "id": "2c4c1666#1",
-    "table": "vocabulary_senses",
-    "ja": "興味深い文章だね。",
-    "reading": "きょうみぶかい ぶんしょう だ ね。",
-    "romaji": "Kyoumibukai bunshou da ne.",
-    "arti": "Tulisan yang menarik, ya.",
-    "before": {
-      "reading": "きょうみ ぶかい ぶんしょう だ ね。"
-    },
-    "n": 108
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "142383f2#0",
-    "table": "vocabulary_senses",
-    "ja": "出ます。",
-    "reading": "でます （が）",
-    "romaji": "demasu (ga).",
-    "arti": "Berangkat (bus).",
-    "before": {
-      "id": "Contoh penggunaan: Berangkat (bis)"
-    },
-    "n": 109
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "ffbdfbab#0",
-    "table": "vocabulary_senses",
-    "ja": "亡くなります。",
-    "reading": "なくなります",
-    "romaji": "nakunarimasu.",
-    "arti": "Meninggal.",
-    "before": {
-      "id": "Contoh penggunaan: Meninggal"
-    },
-    "n": 110
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "0fd0f9a0#0",
-    "table": "vocabulary_senses",
-    "ja": "掛けます。",
-    "reading": "かけます",
-    "romaji": "kakemasu.",
-    "arti": "Menggantungkan.",
-    "before": {
-      "id": "Contoh penggunaan: Menggantungkan"
-    },
-    "n": 111
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "b5b45727#1",
-    "table": "vocabulary_senses",
-    "ja": "遅刻します。",
-    "reading": "ちこくします",
-    "romaji": "chikokushimasu.",
-    "arti": "Terlambat.",
-    "before": {
-      "id": "Contoh penggunaan: Terlambat"
-    },
-    "n": 112
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "906613fb#0",
-    "table": "vocabulary_senses",
-    "ja": "つけます。",
-    "reading": "つけます",
-    "romaji": "tsukemasu.",
-    "arti": "Membubuhi.",
-    "before": {
-      "id": "Contoh penggunaan: Membubuhi"
-    },
-    "n": 113
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "6d0601d6#0",
-    "table": "vocabulary_senses",
-    "ja": "伺います。",
-    "reading": "うかがいます",
-    "romaji": "ukagaimasu.",
-    "arti": "Bertanya, mendengar, mengunjungi (bentuk merendah dari ききます, いきます).",
-    "before": {
-      "id": "Contoh penggunaan: Bertanya,mendengar,mengunjungi (bentuk ききます、いきます) merendah"
-    },
-    "n": 114
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "2eb18c3b#0",
-    "table": "vocabulary_senses",
-    "ja": "呼びます。",
-    "reading": "よびます",
-    "romaji": "yobimasu.",
-    "arti": "Memanggil.",
-    "before": {
-      "id": "Contoh penggunaan: Memangil"
-    },
-    "n": 115
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "8f44b0b3#0",
-    "table": "vocabulary_senses",
-    "ja": "けんかします。",
-    "reading": "けんかします",
-    "romaji": "kenkashimasu.",
-    "arti": "Bertengkar.",
-    "before": {
-      "id": "Contoh penggunaan: Bertengkar"
-    },
-    "n": 116
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "1964e177#0",
-    "table": "vocabulary_senses",
-    "ja": "到着します。",
-    "reading": "とうちゃくします",
-    "romaji": "touchakushimasu.",
-    "arti": "Tiba.",
-    "before": {
-      "id": "Contoh penggunaan: Tiba"
-    },
-    "n": 117
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "f83202ab#0",
-    "table": "vocabulary_senses",
-    "ja": "打ちます。",
-    "reading": "うちます （を）",
-    "romaji": "uchimasu (o).",
-    "arti": "Mengirim (telegram).",
-    "before": {
-      "id": "Contoh penggunaan: Mengirim (telegram)"
-    },
-    "n": 118
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "0a729f65#0",
-    "table": "vocabulary_senses",
-    "ja": "ほんとう。",
-    "reading": "ほんとう",
-    "romaji": "hontou.",
-    "arti": "Kebenaran, fakta.",
-    "before": {
-      "id": "Contoh penggunaan: Kebenaran, fakta"
-    },
-    "n": 119
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "203d7c69#0",
-    "table": "vocabulary_senses",
-    "ja": "いらっしゃいます。",
-    "reading": "いらっしゃいます",
-    "romaji": "irasshaimasu.",
-    "arti": "Ada, pergi, datang (bentuk hormat dari います, いきます, きます).",
-    "before": {
-      "id": "Contoh penggunaan: います、い Ada,pergi,datang (bentuk hormat きます、きます)"
-    },
-    "n": 120
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "d6733540#0",
-    "table": "vocabulary_senses",
-    "ja": "出席します。",
-    "reading": "しゅっせきします （に）",
-    "romaji": "shussekishimasu ni.",
-    "arti": "Menghadiri.",
-    "before": {
-      "id": "Contoh penggunaan: Menghadiri"
-    },
-    "n": 121
-  },
-  {
-    "category": "arti repair: template placeholder removed",
-    "id": "ef58892c#0",
-    "table": "vocabulary_senses",
-    "ja": "利用します。",
-    "reading": "りようします",
-    "romaji": "riyoushimasu.",
-    "arti": "Memakai, menggunakan.",
-    "before": {
-      "id": "Contoh penggunaan: Memakai,menggunakan"
-    },
-    "n": 122
-  },
-  {
-    "category": "arti repair: wrong meaning corrected",
-    "id": "6f797513#0",
-    "table": "vocabulary",
-    "ja": "スポーツ用品店でバドミントンの羽根を2個買った。",
-    "reading": "スポーツ ようひんてん で バドミントン の はね を にこ かった。",
-    "romaji": "Supootsu youhinten de badominton no hane o niko katta.",
-    "arti": "Saya membeli 2 kok bulu tangkis di toko perlengkapan olahraga.",
-    "before": {
-      "id": "Mari kita cabut dan buang bulu-bulumu."
-    },
-    "n": 123
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "b0b93ef9#1",
-    "table": "vocabulary_senses",
-    "ja": "2時半頃出た。",
-    "reading": "にじ はんごろ でた。",
-    "romaji": "Niji hangoro deta.",
-    "arti": "Saya berangkat sekitar pukul setengah tiga.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 124
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "d42f66d3#1",
-    "table": "vocabulary_senses",
-    "ja": "１年が過ぎ、彼の死体は塵と化した。",
-    "reading": "いちねん が すぎ、かれ の したい は ちり と かした。",
-    "romaji": "Ichinen ga sugi, kare no shitai wa chiri to kashita.",
-    "arti": "Setahun berlalu, dan jasadnya berubah menjadi debu.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 125
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "951ed546#1",
-    "table": "vocabulary_senses",
-    "ja": "トムは３０代半ばだよ。",
-    "reading": "トム は さんじゅうだい なかば だ よ。",
-    "romaji": "Tomu wa sanjuudai nakaba da yo.",
-    "arti": "Tom berusia pertengahan tiga puluhan.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 126
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "817e0190#0",
-    "table": "vocabulary_senses",
-    "ja": "日本人ですか。",
-    "reading": "にほんじん です か。",
-    "romaji": "Nihonjin desu ka.",
-    "arti": "Apakah Anda orang Jepang?",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 127
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "a5e499a9#1",
-    "table": "vocabulary_senses",
-    "ja": "今晩暇かな？",
-    "reading": "こんばん ひま か な？",
-    "romaji": "Konban hima ka na?",
-    "arti": "Apakah kamu luang malam ini?",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 128
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "f598e692#1",
-    "table": "vocabulary_senses",
-    "ja": "誰かの口笛が聞こえた。",
-    "reading": "だれか の くちぶえ が きこえた。",
-    "romaji": "Dareka no kuchibue ga kikoeta.",
-    "arti": "Saya mendengar seseorang bersiul.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 129
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "d9dd34fc#0",
-    "table": "vocabulary_senses",
-    "ja": "三週間経った。",
-    "reading": "さんしゅうかん たった。",
-    "romaji": "Sanshuukan tatta.",
-    "arti": "Tiga minggu telah berlalu.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 130
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "d501fdd8#0",
-    "table": "vocabulary_senses",
-    "ja": "本日定休日。",
-    "reading": "ほんじつ ていきゅうび。",
-    "romaji": "Honjitsu teikyuubi.",
-    "arti": "Hari ini libur tetap (toko tutup).",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 131
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "4e4630fa#1",
-    "table": "vocabulary_senses",
-    "ja": "気温が数度下がった。",
-    "reading": "きおん が すうど さがった。",
-    "romaji": "Kion ga suudo sagatta.",
-    "arti": "Suhu turun beberapa derajat.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 132
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "b8bd30fc#0",
-    "table": "vocabulary_senses",
-    "ja": "彼は多趣味だ。",
-    "reading": "かれ は たしゅみ だ。",
-    "romaji": "Kare wa tashumi da.",
-    "arti": "Dia punya banyak hobi.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 133
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "6a9edd4f#1",
-    "table": "vocabulary_senses",
-    "ja": "弾き方わかる？",
-    "reading": "ひきかた わかる？",
-    "romaji": "Hikikata wakaru?",
-    "arti": "Tahu cara memainkannya?",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 134
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "cd86358a#1",
-    "table": "vocabulary_senses",
-    "ja": "原子力は安全だ。",
-    "reading": "げんしりょく は あんぜん だ。",
-    "romaji": "Genshiryoku wa anzen da.",
-    "arti": "Tenaga nuklir itu aman.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 135
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "e8fad512#1",
-    "table": "vocabulary_senses",
-    "ja": "ほとんど全部分かった。",
-    "reading": "ほとんど ぜんぶ わかった。",
-    "romaji": "Hotondo zenbu wakatta.",
-    "arti": "Saya hampir mengerti semuanya.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 136
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "2f32e422#1",
-    "table": "vocabulary_senses",
-    "ja": "妻は潔癖症だ。",
-    "reading": "つま は けっぺきしょう だ。",
-    "romaji": "Tsuma wa keppekishou da.",
-    "arti": "Istri saya sangat terobsesi dengan kebersihan.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 137
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "38e82173#1",
-    "table": "vocabulary_senses",
-    "ja": "ご飯にする？",
-    "reading": "ごはん に する？",
-    "romaji": "Gohan ni suru?",
-    "arti": "Mau makan sekarang?",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 138
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "60c14caa#1",
-    "table": "vocabulary_senses",
-    "ja": "お手上げだ。",
-    "reading": "おてあげ だ。",
-    "romaji": "Oteage da.",
-    "arti": "Saya menyerah (tidak tahu harus bagaimana).",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 139
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "de0f8b76#0",
-    "table": "vocabulary_senses",
-    "ja": "この２行は省くべきだ。",
-    "reading": "この にぎょう は はぶくべき だ。",
-    "romaji": "Kono nigyou wa habukubeki da.",
-    "arti": "Kedua baris ini sebaiknya dihilangkan.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 140
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "11fbfeed#1",
-    "table": "vocabulary_senses",
-    "ja": "沖縄は１年中よい気候だ。",
-    "reading": "おきなわ は いちねんじゅう よい きこう だ。",
-    "romaji": "Okinawa wa ichinenjuu yoi kikou da.",
-    "arti": "Okinawa beriklim baik sepanjang tahun.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 141
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "a67eba14#1",
-    "table": "vocabulary_senses",
-    "ja": "思い出せない。",
-    "reading": "おもいだせない。",
-    "romaji": "Omoidasenai.",
-    "arti": "Aku tidak bisa mengingatnya.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 142
-  },
-  {
-    "category": "arti repair: empty arti filled from Japanese",
-    "id": "e2063848#1",
-    "table": "vocabulary_senses",
-    "ja": "四月一日です。",
-    "reading": "しがつ ついたち です。",
-    "romaji": "Shigatsu tsuitachi desu.",
-    "arti": "Tanggal 1 April.",
-    "before": {
-      "reading": null,
-      "romaji": null,
-      "id": null
-    },
-    "n": 143
-  },
-  {
-    "category": "particle romanization (は→wa, を→o, へ→e)",
-    "id": "ae4fdebb#0",
-    "table": "vocabulary",
-    "ja": "この会社は自動車を海外へ輸出しています。",
-    "reading": "この かいしゃ は じどうしゃ を かいがい へ ゆしゅつして います。",
-    "romaji": "Kono kaisha wa jidousha o kaigai e yushutsu shite imasu.",
-    "arti": "Perusahaan ini mengekspor mobil ke luar negeri.",
-    "before": null,
-    "n": 144
-  },
-  {
-    "category": "particle romanization (は→wa, を→o, へ→e)",
-    "id": "c6158336#0",
-    "table": "vocabulary",
-    "ja": "その船は日本から海外へ大量の貨物を運んでいる。",
-    "reading": "その ふね は にほん から かいがい へ たいりょう の かもつ を はこんで いる。",
-    "romaji": "Sono fune wa Nihon kara kaigai e tairyou no kamotsu o hakonde iru.",
-    "arti": "Kapal itu mengangkut sejumlah besar kargo dari Jepang ke luar negeri.",
-    "before": null,
-    "n": 145
-  },
-  {
-    "category": "particle romanization (は→wa, を→o, へ→e)",
-    "id": "96656f54#0",
-    "table": "vocabulary",
-    "ja": "その船は月初めに、太平洋を横断する長い航海へ出発しました。",
-    "reading": "その ふね は つきはじめ に、たいへいよう を おうだんする ながい こうかい へ しゅっぱつしました。",
-    "romaji": "Sono fune wa tsukihajime ni, Taiheiyou o oudan suru nagai koukai e shuppatsu shimashita.",
-    "arti": "Kapal itu memulai pelayaran panjang melintasi Samudra Pasifik pada awal bulan.",
-    "before": null,
-    "n": 146
-  },
-  {
-    "category": "particle romanization (は→wa, を→o, へ→e)",
-    "id": "6fae988e#0",
-    "table": "vocabulary",
-    "ja": "会社は技術者を海外へ派遣した。",
-    "reading": "かいしゃ は ぎじゅつしゃ を かいがい へ はけんした。",
-    "romaji": "Kaisha wa gijutsusha o kaigai e haken shita.",
-    "arti": "Perusahaan menugaskan teknisi ke luar negeri.",
-    "before": null,
-    "n": 147
-  },
-  {
-    "category": "particle romanization (は→wa, を→o, へ→e)",
-    "id": "7c95deb7#0",
-    "table": "vocabulary",
-    "ja": "私は毎朝、仕事へ行く前に黒い靴をはきます。",
-    "reading": "わたし は まいあさ、しごと へ いく まえ に くろい くつ を はきます。",
-    "romaji": "Watashi wa maiasa, shigoto e iku mae ni kuroi kutsu o hakimasu.",
-    "arti": "Saya memakai sepatu hitam setiap pagi sebelum pergi bekerja.",
-    "before": null,
-    "n": 148
-  },
-  {
-    "category": "particle romanization (は→wa, を→o, へ→e)",
-    "id": "5baf29d3#0",
-    "table": "vocabulary",
-    "ja": "彼は大学を卒業したあと、四月にこの会社へ入社した。",
-    "reading": "かれ は だいがく を そつぎょうした あと、しがつ に この かいしゃ へ にゅうしゃした。",
-    "romaji": "Kare wa daigaku o sotsugyou shita ato, shigatsu ni kono kaisha e nyuusha shita.",
-    "arti": "Dia mulai bekerja di perusahaan ini pada bulan April setelah lulus universitas.",
-    "before": null,
-    "n": 149
-  },
-  {
-    "category": "long vowel (ou/oo/uu/ei)",
-    "id": "9cf89981#2",
-    "table": "grammar_points",
-    "ja": "油断すると、大きな失敗をしかねない。",
-    "reading": "ゆだんする と、おおきな しっぱい を しかねない。",
-    "romaji": "yudan suru to, ookina shippai o shikanenai.",
-    "arti": "Kalau lengah, Anda bisa saja membuat kesalahan besar.",
-    "before": null,
-    "n": 150
-  },
-  {
-    "category": "long vowel (ou/oo/uu/ei)",
-    "id": "8633f6bb#1",
-    "table": "vocabulary_senses",
-    "ja": "駅は市の中央にある。",
-    "reading": "えき は し の ちゅうおう に ある。",
-    "romaji": "Eki wa shi no chuuou ni aru.",
-    "arti": "Stasiunnya ada di tengah kota.",
-    "before": null,
-    "n": 151
-  },
-  {
-    "category": "long vowel (ou/oo/uu/ei)",
-    "id": "90e1528a#1",
-    "table": "vocabulary",
-    "ja": "両天秤をかけると失敗する。",
-    "reading": "りょうてんびん を かける と しっぱいする。",
-    "romaji": "Ryoutenbin o kakeru to shippai suru.",
-    "arti": "Jika mencoba mengambil keuntungan dari kedua pihak sekaligus, bisa berakhir gagal.",
-    "before": null,
-    "n": 152
-  },
-  {
-    "category": "long vowel (ou/oo/uu/ei)",
-    "id": "7427ca3b#0",
-    "table": "vocabulary",
-    "ja": "今日は早く起きました。",
-    "reading": "きょう は はやく おきました。",
-    "romaji": "Kyou wa hayaku okimashita.",
-    "arti": "Hari ini saya bangun lebih awal.",
-    "before": null,
-    "n": 153
-  },
-  {
-    "category": "long vowel (ou/oo/uu/ei)",
-    "id": "46ea741a#1",
-    "table": "vocabulary_senses",
-    "ja": "細菌が病気を引き起こすことがある。",
-    "reading": "さいきん が びょうき を ひきおこす こと が ある。",
-    "romaji": "Saikin ga byouki o hikiokosu koto ga aru.",
-    "arti": "Bakteri dapat menyebabkan penyakit.",
-    "before": null,
-    "n": 154
-  },
-  {
-    "category": "long vowel (ou/oo/uu/ei)",
-    "id": "efd2327a#0",
-    "table": "vocabulary",
-    "ja": "１２歳以下 は 子ども料金 です。",
-    "reading": "じゅうにさい いか は こどもりょうきん です。",
-    "romaji": "juunisai ika wa kodomo ryoukin desu.",
-    "arti": "Usia 12 tahun ke bawah dikenai tarif anak-anak.",
-    "before": null,
-    "n": 155
-  },
-  {
-    "category": "small tsu (っ) gemination",
-    "id": "c2288520#2",
-    "table": "grammar_points",
-    "ja": "旅行といっても、近くへ行っただけです。",
-    "reading": "りょこう と いって も、ちかく へ いった だけ です。",
-    "romaji": "Ryokou to itte mo, chikaku e itta dake desu.",
-    "arti": "Meskipun disebut perjalanan, saya hanya pergi ke tempat yang dekat.",
-    "before": null,
-    "n": 156
-  },
-  {
-    "category": "small tsu (っ) gemination",
-    "id": "acbc111b#0",
-    "table": "grammar_points",
-    "ja": "会社をやめようと思っている。",
-    "reading": "かいしゃ を やめよう と おもって いる。",
-    "romaji": "Kaisha o yameyou to omotte iru.",
-    "arti": "Saya bermaksud ingin berhenti dari perusahaan.",
-    "before": null,
-    "n": 157
-  },
-  {
-    "category": "small tsu (っ) gemination",
-    "id": "a3cbed9e#2",
-    "table": "grammar_points",
-    "ja": "考え得る限りの対策を取った。",
-    "reading": "かんがえうる かぎり の たいさく を とった。",
-    "romaji": "kangaeuru kagiri no taisaku o totta.",
-    "arti": "Kami mengambil semua langkah yang mungkin terpikirkan.",
-    "before": null,
-    "n": 158
-  },
-  {
-    "category": "small tsu (っ) gemination",
-    "id": "2537c7da#0",
-    "table": "vocabulary",
-    "ja": "御免ください、どなたかいらっしゃいますか。",
-    "reading": "ごめんください、どなた か いらっしゃいます か。",
-    "romaji": "Gomen kudasai, donata ka irasshaimasu ka.",
-    "arti": "Permisi, apakah ada orang di rumah?",
-    "before": null,
-    "n": 159
-  },
-  {
-    "category": "small tsu (っ) gemination",
-    "id": "1ac6ea66#0",
-    "table": "vocabulary",
-    "ja": "みかんを四つください。",
-    "reading": "みかん を よっつ ください。",
-    "romaji": "Mikan o yottsu kudasai.",
-    "arti": "Tolong beri saya empat jeruk.",
-    "before": null,
-    "n": 160
-  },
-  {
-    "category": "small tsu (っ) gemination",
-    "id": "7769a4ff#0",
-    "table": "vocabulary_senses",
-    "ja": "美しい景色にうっとりしました。",
-    "reading": "うつくしい けしき に うっとりしました。",
-    "romaji": "Utsukushii keshiki ni uttori shimashita.",
-    "arti": "Saya terpesona oleh pemandangan yang indah.",
-    "before": null,
-    "n": 161
-  },
-  {
-    "category": "katakana loanword (ー long mark)",
-    "id": "b72eb86b#0",
-    "table": "vocabulary",
-    "ja": "彼はスチュワーデスと結婚した。",
-    "reading": "かれ は スチュワーデス と けっこんした。",
-    "romaji": "Kare wa suchuwaadesu to kekkon shita.",
-    "arti": "Dia menikah dengan seorang pramugari.",
-    "before": null,
-    "n": 162
-  },
-  {
-    "category": "katakana loanword (ー long mark)",
-    "id": "32a57538#1",
-    "table": "vocabulary_senses",
-    "ja": "マヨネーズの油は分離することがある。",
-    "reading": "マヨネーズ の あぶら は ぶんりする こと が ある。",
-    "romaji": "Mayoneezu no abura wa bunri suru koto ga aru.",
-    "arti": "Minyak dalam mayones kadang-kadang terpisah.",
-    "before": null,
-    "n": 163
-  },
-  {
-    "category": "katakana loanword (ー long mark)",
-    "id": "75d1b4f1#0",
-    "table": "vocabulary",
-    "ja": "朝 オレンジジュース を 飲みました。",
-    "reading": "あさ オレンジジュース を のみました。",
-    "romaji": "asa orenji juusu o nomimashita.",
-    "arti": "Pagi tadi saya minum jus jeruk.",
-    "before": null,
-    "n": 164
-  },
-  {
-    "category": "katakana loanword (ー long mark)",
-    "id": "df29d5dd#0",
-    "table": "vocabulary",
-    "ja": "スタートボタンをクリックする。",
-    "reading": "スタートボタン を クリックする。",
-    "romaji": "Sutaato botan o kurikku suru.",
-    "arti": "Mengeklik tombol mulai.",
-    "before": null,
-    "n": 165
-  },
-  {
-    "category": "katakana loanword (ー long mark)",
-    "id": "11fb80e2#0",
-    "table": "vocabulary",
-    "ja": "雨が降り始めたのでワイパーを動かしました。",
-    "reading": "あめ が ふりはじめた ので ワイパー を うごかしました。",
-    "romaji": "Ame ga furihajimeta node waipaa o ugokashimashita.",
-    "arti": "Karena mulai hujan, saya menyalakan wiper.",
-    "before": null,
-    "n": 166
-  },
-  {
-    "category": "katakana loanword (ー long mark)",
-    "id": "34ad3951#0",
-    "table": "vocabulary",
-    "ja": "日曜日にあるサッカーの試合に出ます。",
-    "reading": "にちようび に ある サッカー の しあい に でます。",
-    "romaji": "Nichiyoubi ni aru sakkaa no shiai ni demasu.",
-    "arti": "Saya akan ikut pertandingan sepak bola yang diadakan hari Minggu.",
-    "before": null,
-    "n": 167
-  },
-  {
-    "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
-    "id": "7e5717fc#0",
-    "table": "vocabulary",
-    "ja": "友達が私に本をくれました。",
-    "reading": "ともだち が わたし に ほん を くれました。",
-    "romaji": "Tomodachi ga watashi ni hon o kuremashita.",
-    "arti": "Teman memberi saya sebuah buku.",
-    "before": null,
-    "n": 168
-  },
-  {
-    "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
-    "id": "43de416d#0",
-    "table": "vocabulary",
-    "ja": "雨の勢いが急に強くなりました。",
-    "reading": "あめ の いきおい が きゅうに つよく なりました。",
-    "romaji": "Ame no ikioi ga kyuu ni tsuyoku narimashita.",
-    "arti": "Intensitas hujan tiba-tiba menjadi lebih kuat.",
-    "before": null,
-    "n": 169
-  },
-  {
-    "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
-    "id": "09f5afad#0",
-    "table": "vocabulary",
-    "ja": "寒くて指の感覚がなくなってきました。",
-    "reading": "さむくて ゆび の かんかく が なくなって きました。",
-    "romaji": "Samukute yubi no kankaku ga nakunatte kimashita.",
-    "arti": "Karena dingin, jari-jari saya mulai kehilangan rasa.",
-    "before": null,
-    "n": 170
-  },
-  {
-    "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
-    "id": "d1609bbb#0",
-    "table": "vocabulary",
-    "ja": "済みません、少しお尋ねしてもよろしいですか。",
-    "reading": "すみません、すこし おたずねして も よろしい です か。",
-    "romaji": "Sumimasen, sukoshi otazune shite mo yoroshii desu ka.",
-    "arti": "Permisi, boleh saya menanyakan sesuatu?",
-    "before": null,
-    "n": 171
-  },
-  {
-    "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
-    "id": "d5b370cc#0",
-    "table": "vocabulary_senses",
-    "ja": "水玉のスカートを買いました。",
-    "reading": "みずたま の スカート を かいました。",
-    "romaji": "Mizutama no sukaato o kaimashita.",
-    "arti": "Saya membeli rok bermotif polkadot.",
-    "before": null,
-    "n": 172
-  },
-  {
-    "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
-    "id": "24a04b52#0",
-    "table": "vocabulary_senses",
-    "ja": "規則正しい生活をしています。",
-    "reading": "きそく ただしい せいかつ を して います。",
-    "romaji": "Kisoku tadashii seikatsu o shite imasu.",
-    "arti": "Saya menjalani hidup secara teratur.",
-    "before": null,
-    "n": 173
-  },
-  {
-    "category": "punctuation (、 。 ？ ！ attached)",
-    "id": "35a91372#1",
-    "table": "vocabulary",
-    "ja": "今、牡蠣のシーズン？",
-    "reading": "いま、かき の シーズン？",
-    "romaji": "Ima, kaki no shiizun?",
-    "arti": "Apakah sekarang sedang musim tiram?",
-    "before": null,
-    "n": 174
-  },
-  {
-    "category": "punctuation (、 。 ？ ！ attached)",
-    "id": "15082908#0",
-    "table": "vocabulary",
-    "ja": "そういえば、そこへは何時に行くの？",
-    "reading": "そういえば、そこ へは なんじ に いく の？",
-    "romaji": "Sou ieba, soko e wa nanji ni iku no?",
-    "arti": "Ngomong-ngomong, pukul berapa kamu akan pergi ke sana?",
-    "before": null,
-    "n": 175
-  },
-  {
-    "category": "punctuation (、 。 ？ ！ attached)",
-    "id": "50e3a9d3#2",
-    "table": "grammar_points",
-    "ja": "どうして行かないの？だって、今日は仕事があるんだもん。",
-    "reading": "どうして いかない の？だって、きょう は しごと が あるんだ もん。",
-    "romaji": "Doushite ikanai no? Datte, kyou wa shigoto ga arun da mon.",
-    "arti": "Kenapa tidak pergi? Soalnya hari ini saya harus bekerja.",
-    "before": null,
-    "n": 176
-  },
-  {
-    "category": "punctuation (、 。 ？ ！ attached)",
-    "id": "63b8f42a#0",
-    "table": "vocabulary_senses",
-    "ja": "本、注文した？",
-    "reading": "ほん、ちゅうもんした？",
-    "romaji": "Hon, chuumon shita?",
-    "arti": "Kamu sudah pesan bukunya?",
-    "before": null,
-    "n": 177
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "a3cbed9e#2",
-    "table": "grammar_points",
-    "ja": "考え得る限りの対策を取った。",
-    "reading": "かんがえうる かぎり の たいさく を とった。",
-    "romaji": "kangaeuru kagiri no taisaku o totta.",
-    "arti": "Kami mengambil semua langkah yang mungkin terpikirkan.",
-    "before": null,
-    "n": 178
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "3a9092ee#0",
-    "table": "grammar_points",
-    "ja": "調査した結果、新しい事実が分かった。",
-    "reading": "ちょうさした けっか、あたらしい じじつ が わかった。",
-    "romaji": "chousa shita kekka, atarashii jijitsu ga wakatta.",
-    "arti": "Sebagai hasil penyelidikan, diketahui fakta baru.",
-    "before": null,
-    "n": 179
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "1ba618ba#0",
-    "table": "grammar_points",
-    "ja": "ここに座ってもいいですか。",
-    "reading": "ここ に すわって も いい です か。",
-    "romaji": "Koko ni suwatte mo ii desu ka.",
-    "arti": "Bolehkah saya duduk di sini?",
-    "before": null,
-    "n": 180
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "271be91b#2",
-    "table": "grammar_points",
-    "ja": "会話はおろか、挨拶もできない。",
-    "reading": "かいわ は おろか、あいさつ も できない。",
-    "romaji": "kaiwa wa oroka, aisatsu mo dekinai.",
-    "arti": "Jangankan bercakap-cakap, memberi salam pun saya tidak bisa.",
-    "before": null,
-    "n": 181
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "a40ae7a2#1",
-    "table": "grammar_points",
-    "ja": "私の家は駅から遠くて、不便でかなわない。",
-    "reading": "わたし の いえ は えき から とおくて、ふべん で かなわない。",
-    "romaji": "Watashi no ie wa eki kara tookute, fuben de kanawanai.",
-    "arti": "Rumah saya jauh dari stasiun dan sangat tidak praktis sampai menyusahkan.",
-    "before": null,
-    "n": 182
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "beb938f6#0",
-    "table": "grammar_points",
-    "ja": "お金さえあれば、何でも買える。",
-    "reading": "おかね さえ あれば、なんでも かえる。",
-    "romaji": "okane sae areba, nandemo kaeru.",
-    "arti": "Asalkan punya uang, Anda bisa membeli apa saja.",
-    "before": null,
-    "n": 183
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "ec6770fe#2",
-    "table": "grammar_points",
-    "ja": "彼は医者にして作家でもある。",
-    "reading": "かれ は いしゃ に して さっか でも ある。",
-    "romaji": "kare wa isha ni shite sakka demo aru.",
-    "arti": "Dia adalah seorang dokter sekaligus penulis.",
-    "before": null,
-    "n": 184
-  },
-  {
-    "category": "grammar example (Bunpō) four fields intact",
-    "id": "2109e5e4#2",
-    "table": "grammar_points",
-    "ja": "努力は今の成功、ひいては将来の幸せをもたらす。",
-    "reading": "どりょく は いま の せいこう、ひいては しょうらい の しあわせ を もたらす。",
-    "romaji": "doryoku wa ima no seikou, hiite wa shourai no shiawase o motarasu.",
-    "arti": "Usaha membawa keberhasilan saat ini dan, lebih jauh lagi, kebahagiaan di masa depan.",
-    "before": null,
-    "n": 185
-  }
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "39f17a6f#0",
+  "table": "vocabulary_senses",
+  "ja": "その髪型は女子高生の間ではやっている。",
+  "reading": "その かみがた は じょしこうせい の あいだ で はやって いる。",
+  "romaji": "Sono kamigata wa joshikousei no aida de hayatte iru.",
+  "arti": "Gaya rambut itu cocok di kalangan siswa SMA perempuan.",
+  "before": {
+   "reading": "その かみがた は じょしこうせい の あいだ ではやって いる。",
+   "romaji": "Sono kamigata wa joshikousei no aida de wa yatte iru."
+  },
+  "n": 0
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "d2c504c1#0",
+  "table": "vocabulary",
+  "ja": "古い町並みに江戸時代の名残が残っている。",
+  "reading": "ふるい まちなみ に えどじだい の なごり が のこって いる。",
+  "romaji": "Furui machinami ni Edo jidai no nagori ga nokotte iru.",
+  "arti": "Jejak zaman Edo masih tersisa pada kawasan kota tua itu.",
+  "before": {
+   "reading": "ふるい まちなみ に はえどじだい の なごり が のこって いる。",
+   "romaji": "Furui machinami ni wa Edo jidai no nagori ga nokotte iru."
+  },
+  "n": 1
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "1e9a30b6#0",
+  "table": "vocabulary",
+  "ja": "車輪が壊れていたので、彼は重いスーツケースを床の上でずるずる引きずりました。",
+  "reading": "しゃりん が こわれて いた ので、かれ は おもい スーツケース を ゆか の うえ で ずるずる ひきずりました。",
+  "romaji": "Sharin ga kowarete ita node, kare wa omoi suutsukeesu o yuka no ue de zuruzuru hikizurimashita.",
+  "arti": "Dia menyeret koper berat itu di lantai karena rodanya rusak.",
+  "before": {
+   "romaji": "Sharin ga kowarete ita node, kare wa omoi suutukeesu o yuka no ue de zuruzuru hikizurimashita."
+  },
+  "n": 2
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "4491dec1#0",
+  "table": "vocabulary",
+  "ja": "農民たちは畑で野菜を育てています。",
+  "reading": "のうみんたち は はたけ で やさい を そだてて います。",
+  "romaji": "Noumintachi wa hatake de yasai o sodatete imasu.",
+  "arti": "Para petani sedang menanam sayuran di ladang.",
+  "before": {
+   "romaji": "Noumintachi wa hatake de yasai o sodate imasu."
+  },
+  "n": 3
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "91dc8243#0",
+  "table": "vocabulary",
+  "ja": "祖父は畑で野菜を育てています。",
+  "reading": "そふ は はたけ で やさい を そだてて います。",
+  "romaji": "Sofu wa hatake de yasai o sodatete imasu.",
+  "arti": "Kakek menanam sayuran di ladang.",
+  "before": {
+   "romaji": "Sofu wa hatake de yasai o sodate imasu."
+  },
+  "n": 4
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "52f07014#0",
+  "table": "vocabulary",
+  "ja": "一頃、この地域は多くの工場が稼働していて、とても活気がありました。",
+  "reading": "ひところ、この ちいき は おおく の こうじょう が かどうして いて、とても かっき が ありました。",
+  "romaji": "Hitokoro, kono chiiki wa ooku no koujou ga kadou shite ite, totemo kakki ga arimashita.",
+  "arti": "Beberapa waktu lalu, kawasan ini sangat ramai karena banyak pabrik beroperasi.",
+  "before": {
+   "romaji": "Hitokoro, kono chiiki wa ooku no koujou ga kadou shite ite, totemo katsuki ga arimashita."
+  },
+  "n": 5
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "53232c6c#0",
+  "table": "vocabulary",
+  "ja": "竹にはいくつもの節があります。",
+  "reading": "たけ には いくつ も の ふし が あります。",
+  "romaji": "Take ni wa ikutsu mo no fushi ga arimasu.",
+  "arti": "Bambu memiliki banyak ruas.",
+  "before": {
+   "romaji": "Take ni wa ikutsumo fushi ga arimasu."
+  },
+  "n": 6
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "590c21a5#0",
+  "table": "vocabulary",
+  "ja": "その若い俳優は、物語の主人公を見事に演じました。",
+  "reading": "その わかい はいゆう は、ものがたり の しゅじんこう を みごと に えんじました。",
+  "romaji": "Sono wakai haiyuu wa, monogatari no shujinkou o migoto ni enjimashita.",
+  "arti": "Aktor muda itu memerankan tokoh utama dengan sangat baik.",
+  "before": {
+   "romaji": "Sono wakai haiyuu wa, monogatari no shujinkou o migoto ni enjirimashita."
+  },
+  "n": 7
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "643522ad#0",
+  "table": "vocabulary",
+  "ja": "彼はスピード違反で警察に捕まりました。",
+  "reading": "かれ は スピードいはん で けいさつ に つかまりました。",
+  "romaji": "Kare wa supiido ihan de keisatsu ni tsukamarimashita.",
+  "arti": "Dia ditangkap polisi karena melanggar batas kecepatan.",
+  "before": {
+   "romaji": "Kare wa supiido ihan de keisatsu ni tsukarimashita."
+  },
+  "n": 8
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "7809d4bf#0",
+  "table": "vocabulary",
+  "ja": "その会社は一社の供給元に依存しすぎており、供給が止まると大きな影響を受けます。",
+  "reading": "その かいしゃ は いっしゃ の きょうきゅうもと に いぞんしすぎて おり、きょうきゅう が とまる と おおきな えいきょう を うけます。",
+  "romaji": "Sono kaisha wa issha no kyoukyuumoto ni izon shisugite ori, kyoukyuu ga tomaru to ookina eikyou o ukemasu.",
+  "arti": "Perusahaan itu terlalu bergantung pada satu pemasok sehingga rentan ketika pasokan terhenti.",
+  "before": {
+   "romaji": "Sono kaisha wa issha no kyoukyuumoto ni ison shisugite ori, kyoukyuu ga tomaru to ookina eikyou o ukemasu."
+  },
+  "n": 9
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "9dd7cebf#0",
+  "table": "vocabulary",
+  "ja": "彼は惇厚な人柄で皆に慕われている。",
+  "reading": "かれ は じゅんこう な ひとがら で みな に したわれて いる。",
+  "romaji": "Kare wa junkou na hitogara de mina ni shitawarete iru.",
+  "arti": "Dia disukai semua orang karena kepribadiannya yang tulus dan baik hati.",
+  "before": {
+   "romaji": "Kare wa junkou na hitogara de minna ni shitawarete iru."
+  },
+  "n": 10
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "bef32257#0",
+  "table": "vocabulary",
+  "ja": "月給は毎月末に銀行口座へ振り込まれる。",
+  "reading": "げっきゅう は まいげつまつ に ぎんこうこうざ へ ふりこまれる。",
+  "romaji": "Gekkyuu wa maigetsumatsu ni ginkou kouza e furikomareru.",
+  "arti": "Gaji bulanan saya dibayarkan melalui rekening bank pada akhir bulan.",
+  "before": {
+   "romaji": "Gekkyuu wa maitsuki matsu ni ginkou kouza e furikomareru."
+  },
+  "n": 11
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "d10270a9#0",
+  "table": "vocabulary",
+  "ja": "機械を整備するときは、油で床を汚さないよう保護シートを敷いてください。",
+  "reading": "きかい を せいびする とき は、あぶら で ゆか を よごさない よう ほごシート を しいて ください。",
+  "romaji": "Kikai o seibi suru toki wa, abura de yuka o yogosanai you hogo shiito o shiite kudasai.",
+  "arti": "Gunakan alas pelindung agar oli tidak mengotori lantai saat melakukan perawatan mesin.",
+  "before": {
+   "romaji": "Kikai o seibi suru toki wa, abura de yuka o yogosanai you hogo shiito o hiite kudasai."
+  },
+  "n": 12
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "d8b56d7a#0",
+  "table": "vocabulary",
+  "ja": "性別で人を分け隔てすべきでない。",
+  "reading": "せいべつ で ひと を わけへだて すべき で ない。",
+  "romaji": "Seibetsu de hito o wakehedate subeki de nai.",
+  "arti": "Jangan membeda-bedakan orang berdasarkan jenis kelamin.",
+  "before": {
+   "romaji": "Seibetsu de hito o wakehedateru beki de nai."
+  },
+  "n": 13
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "d8fc7280#0",
+  "table": "vocabulary",
+  "ja": "緊急時には、避難場所に簡易トイレを設置します。",
+  "reading": "きんきゅうじ には、ひなんばしょ に かんい トイレ を せっちします。",
+  "romaji": "Kinkyuuji ni wa, hinan basho ni kan-i toire o setchi shimasu.",
+  "arti": "Saat keadaan darurat, perusahaan memasang toilet sederhana di area evakuasi.",
+  "before": {
+   "romaji": "Kinkyuji ni wa, hinan basho ni kan-i toire o setchi shimasu."
+  },
+  "n": 14
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "462ae0aa#0",
+  "table": "vocabulary",
+  "ja": "この 箱 は ３０センチ です。",
+  "reading": "この はこ は さんじゅっセンチ です。",
+  "romaji": "kono hako wa sanjussenchi desu.",
+  "arti": "Kotak ini berukuran 30 sentimeter.",
+  "before": {
+   "romaji": "kono hako wa sanjuu senchi desu."
+  },
+  "n": 15
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "bfb1cc73#1",
+  "table": "vocabulary",
+  "ja": "誰でも２足す２イコール４であることを知っている。",
+  "reading": "だれ でも に たす に イコール よん で ある こと を しって いる。",
+  "romaji": "Dare demo ni tasu ni ikooru yon de aru koto o shitte iru.",
+  "arti": "Semua orang tahu bahwa dua ditambah dua sama dengan empat.",
+  "before": {
+   "romaji": "Dare demo 2 tasu 2 ikooru 4 de aru koto o shitte iru."
+  },
+  "n": 16
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "8d426f2b#0",
+  "table": "vocabulary",
+  "ja": "水は０カロリーです。",
+  "reading": "みず は ゼロカロリー です。",
+  "romaji": "Mizu wa zero karorii desu.",
+  "arti": "Air memiliki nol kalori.",
+  "before": {
+   "romaji": "Mizu wa 0 karorii desu."
+  },
+  "n": 17
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "57670114#0",
+  "table": "vocabulary",
+  "ja": "この全集は最終巻が欠けている。",
+  "reading": "この ぜんしゅう は さいしゅうかん が かけて いる。",
+  "romaji": "Kono zenshuu wa saishuukan ga kakete iru.",
+  "arti": "Kumpulan karya lengkap ini kehilangan jilid terakhir.",
+  "before": {
+   "romaji": "Kono zenshuu no gokanme ga miataranai."
+  },
+  "n": 18
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "31f5a045#0",
+  "table": "vocabulary",
+  "ja": "このプラスチック製品は燃えないごみです。",
+  "reading": "この プラスチックせいひん は もえないごみ です。",
+  "romaji": "Kono purasuchikku seihin wa moenai gomi desu.",
+  "arti": "Produk plastik ini termasuk sampah yang tidak dapat dibakar.",
+  "before": {
+   "romaji": "kono purasuchikku wa wa moenai gomi"
+  },
+  "n": 19
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "04194e52#0",
+  "table": "vocabulary",
+  "ja": "土曜日に料理教室へ通っています。",
+  "reading": "どようび に りょうりきょうしつ へ かよって います。",
+  "romaji": "Doyoubi ni ryouri kyoushitsu e kayotte imasu.",
+  "arti": "Saya mengikuti kelas memasak setiap hari Sabtu.",
+  "before": {
+   "romaji": "doyoubi ni ryouri e e"
+  },
+  "n": 20
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "14bde440#0",
+  "table": "vocabulary",
+  "ja": "毎週このテレビ番組を見ています。",
+  "reading": "まいしゅう この テレビばんぐみ を みて います。",
+  "romaji": "Maishuu kono terebi bangumi o mite imasu.",
+  "arti": "Saya menonton acara televisi ini setiap minggu.",
+  "before": {
+   "romaji": "maishuu kono terebi o o"
+  },
+  "n": 21
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "1fd8ba69#0",
+  "table": "vocabulary",
+  "ja": "コンビニでコンサートチケットを販売しています。",
+  "reading": "コンビニ で コンサートチケット を はんばいして います。",
+  "romaji": "Konbini de konsaato chiketto o hanbai shite imasu.",
+  "arti": "Tiket konser dijual di minimarket.",
+  "before": {
+   "romaji": "konbini de konsaato o o"
+  },
+  "n": 22
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "25f4e6ce#0",
+  "table": "vocabulary",
+  "ja": "古い家庭電化製品を処分します。",
+  "reading": "ふるい かていでんかせいひん を しょぶんします。",
+  "romaji": "Furui katei denka seihin o shobun shimasu.",
+  "arti": "Saya akan membuang peralatan elektronik rumah tangga yang lama.",
+  "before": {
+   "romaji": "furui kateidenka o o"
+  },
+  "n": 23
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "5c41fe06#0",
+  "table": "vocabulary",
+  "ja": "コンビニで公共料金を払いました。",
+  "reading": "コンビニ で こうきょうりょうきん を はらいました。",
+  "romaji": "Konbini de koukyou ryoukin o haraimashita.",
+  "arti": "Saya membayar tagihan layanan umum di minimarket.",
+  "before": {
+   "romaji": "konbini de koukyou o o"
+  },
+  "n": 24
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "6b84695d#0",
+  "table": "vocabulary",
+  "ja": "毎日、日本語の会話を練習しています。",
+  "reading": "まいにち、にほんご の かいわ を れんしゅうして います。",
+  "romaji": "Mainichi, nihongo no kaiwa o renshuu shite imasu.",
+  "arti": "Saya berlatih percakapan bahasa Jepang setiap hari.",
+  "before": {
+   "romaji": "mainichi, nihongo no o o"
+  },
+  "n": 25
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "7f1d994c#0",
+  "table": "vocabulary",
+  "ja": "パーティールームは二階にあります。",
+  "reading": "パーティールーム は にかい に あります。",
+  "romaji": "Paatii ruumu wa nikai ni arimasu.",
+  "arti": "Ruang pesta berada di lantai dua.",
+  "before": {
+   "romaji": "paatii wa wa nikai ni"
+  },
+  "n": 26
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "856f89af#0",
+  "table": "vocabulary",
+  "ja": "電話番号を間違えました。",
+  "reading": "でんわばんごう を まちがえました。",
+  "romaji": "Denwa bangou o machigaemashita.",
+  "arti": "Saya salah memasukkan nomor telepon.",
+  "before": {
+   "romaji": "denwa o o"
+  },
+  "n": 27
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "a298bda0#0",
+  "table": "vocabulary",
+  "ja": "今度いっしょに京都へ行きませんか。",
+  "reading": "こんど いっしょ に きょうと へ いきません か。",
+  "romaji": "Kondo issho ni Kyouto e ikimasen ka.",
+  "arti": "Lain kali, mau pergi ke Kyoto bersama?",
+  "before": {
+   "romaji": "kondo issho ni kyouto e ikimasen"
+  },
+  "n": 28
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "a38bbdb9#0",
+  "table": "vocabulary",
+  "ja": "道が凍っていますから、気をつけてください。",
+  "reading": "みち が こおって います から、き を つけて ください。",
+  "romaji": "Michi ga kootte imasu kara, ki o tsukete kudasai.",
+  "arti": "Jalannya membeku, jadi berhati-hatilah.",
+  "before": {
+   "romaji": "michi ga kootteimasu kara, o o tsukete"
+  },
+  "n": 29
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "c34561dd#0",
+  "table": "vocabulary",
+  "ja": "将来、海の近くに家を建てたいです。",
+  "reading": "しょうらい、うみ の ちかく に いえ を たてたい です。",
+  "romaji": "Shourai, umi no chikaku ni ie o tatetai desu.",
+  "arti": "Di masa depan saya ingin membangun rumah dekat laut.",
+  "before": {
+   "romaji": "shourai, umi no chikaku ni o o tatetai"
+  },
+  "n": 30
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "c96923ed#0",
+  "table": "vocabulary",
+  "ja": "割れたガラス製品は気をつけて捨ててください。",
+  "reading": "われた ガラスせいひん は き を つけて すてて ください。",
+  "romaji": "Wareta garasu seihin wa ki o tsukete sutete kudasai.",
+  "arti": "Buang barang kaca yang pecah dengan hati-hati.",
+  "before": {
+   "romaji": "wareta garasu wa wa ki o"
+  },
+  "n": 31
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "cd1a1f60#0",
+  "table": "vocabulary",
+  "ja": "このズボンのサイズ直しをお願いします。",
+  "reading": "この ズボン の サイズなおし を おねがいします。",
+  "romaji": "Kono zubon no saizu naoshi o onegai shimasu.",
+  "arti": "Tolong sesuaikan ukuran celana ini.",
+  "before": {
+   "romaji": "kono zubon no saizu o o"
+  },
+  "n": 32
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "cda35ad8#0",
+  "table": "vocabulary",
+  "ja": "集合する場所を教えてください。",
+  "reading": "しゅうごうする ばしょ を おしえて ください。",
+  "romaji": "Shuugou suru basho o oshiete kudasai.",
+  "arti": "Tolong beri tahu tempat berkumpulnya.",
+  "before": {
+   "romaji": "shuugou suru o o oshiete"
+  },
+  "n": 33
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "eafdf6d3#0",
+  "table": "vocabulary",
+  "ja": "先生にでんしメールを送りました。",
+  "reading": "せんせい に でんしメール を おくりました。",
+  "romaji": "Sensei ni denshi meeru o okurimashita.",
+  "arti": "Saya mengirim email kepada guru.",
+  "before": {
+   "romaji": "sensei ni denshi o o"
+  },
+  "n": 34
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "f408e8db#0",
+  "table": "vocabulary",
+  "ja": "この店では、はがきと切手を販売しています。",
+  "reading": "この みせ では、はがき と きって を はんばいして います。",
+  "romaji": "Kono mise dewa, hagaki to kitte o hanbai shite imasu.",
+  "arti": "Toko ini menjual kartu pos dan perangko.",
+  "before": {
+   "romaji": "kono mise dewa, hagaki to o o"
+  },
+  "n": 35
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "5f6867ec#0",
+  "table": "vocabulary_senses",
+  "ja": "昨日、不思議な夢を見ました。",
+  "reading": "きのう、ふしぎな ゆめ を みました。",
+  "romaji": "Kinou, fushigi na yume o mimashita.",
+  "arti": "Kemarin saya bermimpi aneh.",
+  "before": {
+   "romaji": "kinou, fushigina o o"
+  },
+  "n": 36
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "8fe5c173#0",
+  "table": "vocabulary_senses",
+  "ja": "集合する場所を確認します。",
+  "reading": "しゅうごうする ばしょ を かくにんします。",
+  "romaji": "Shuugou suru basho o kakunin shimasu.",
+  "arti": "Saya memastikan tempat berkumpul.",
+  "before": {
+   "romaji": "shuugou suru o o"
+  },
+  "n": 37
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "90fda1fd#0",
+  "table": "vocabulary_senses",
+  "ja": "将来、自分の会社を作りたいです。",
+  "reading": "しょうらい、じぶん の かいしゃ を つくりたい です。",
+  "romaji": "Shourai, jibun no kaisha o tsukuritai desu.",
+  "arti": "Di masa depan saya ingin mendirikan perusahaan sendiri.",
+  "before": {
+   "romaji": "shourai, jibun no o o tsukuritai"
+  },
+  "n": 38
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "478447ef#0",
+  "table": "vocabulary",
+  "ja": "彼を煽てて仕事を引き受けさせた。",
+  "reading": "かれ を おだてて しごと を ひきうけさせた。",
+  "romaji": "Kare o odatete shigoto o hikiukesaseta.",
+  "arti": "Saya menyanjungnya agar mau menerima pekerjaan itu.",
+  "before": {
+   "romaji": "Kare o odatete shigoto o hikiukesase ta."
+  },
+  "n": 39
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "5410cc1a#1",
+  "table": "vocabulary",
+  "ja": "ヤニーは初来日してます。",
+  "reading": "ヤニー は はつらいにちしてます。",
+  "romaji": "Yanii wa hatsu rainichi shitemasu.",
+  "arti": "Yanni sedang melakukan kunjungan pertamanya ke Jepang.",
+  "before": {
+   "romaji": "Yanii wa hatsu rainichi shite masu."
+  },
+  "n": 40
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "970fa0b7#0",
+  "table": "vocabulary",
+  "ja": "野菜を細かく刻みます。",
+  "reading": "やさい を こまかく きざみます。",
+  "romaji": "Yasai o komakaku kizamimasu.",
+  "arti": "Saya mencincang sayuran kecil-kecil.",
+  "before": {
+   "romaji": "Yasai o komakaku kizami masu."
+  },
+  "n": 41
+ },
+ {
+  "category": "romaji repair: typo / wrong romanization / contraction / digit",
+  "id": "e54e62f6#0",
+  "table": "vocabulary",
+  "ja": "床にしゃがみました。",
+  "reading": "ゆか に しゃがみました。",
+  "romaji": "Yuka ni shagamimashita.",
+  "arti": "Saya berjongkok di lantai.",
+  "before": {
+   "romaji": "Yuka ni shagami mashita."
+  },
+  "n": 42
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "72cfb139#0",
+  "table": "vocabulary_senses",
+  "ja": "物理って得意？",
+  "reading": "ぶつり って とくい？",
+  "romaji": "Butsuri tte tokui?",
+  "arti": "Kamu pandai fisika?",
+  "before": {
+   "romaji": "Butsuritte tokui?"
+  },
+  "n": 43
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "cb3fc597#0",
+  "table": "vocabulary",
+  "ja": "ここは風通しが良くて、涼むにはもってこいの場所なんだ。",
+  "reading": "ここ は かぜとおし が よくて、すずむ には もって こい の ばしょ なんだ。",
+  "romaji": "Koko wa kazetooshi ga yokute, suzumu ni wa motte koi no basho nan da.",
+  "arti": "Tempat ini memiliki sirkulasi udara yang baik dan sangat cocok untuk menyejukkan diri.",
+  "before": {
+   "romaji": "Koko wa kazetooshi ga yokute, suzumu ni wa mottekoi no basho nan da."
+  },
+  "n": 44
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "c2298ba0#0",
+  "table": "vocabulary",
+  "ja": "大切なことをメモします。",
+  "reading": "たいせつ な こと を メモします。",
+  "romaji": "taisetsu na koto o memo shimasu.",
+  "arti": "Saya mencatat hal-hal penting.",
+  "before": {
+   "romaji": "taisetsuna koto o memo shimasu."
+  },
+  "n": 45
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "fee473d5#0",
+  "table": "vocabulary",
+  "ja": "この部屋にはエアコンが付いています。",
+  "reading": "この へや には エアコン が ついて います。",
+  "romaji": "kono heya ni wa eakon ga tsuite imasu.",
+  "arti": "Kamar ini dilengkapi AC.",
+  "before": {
+   "romaji": "kono heya ni wa eakon ga tsuiteimasu."
+  },
+  "n": 46
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "38c9afaf#0",
+  "table": "grammar_points",
+  "ja": "褒められて、彼はまんざらでもない顔をしていた。",
+  "reading": "ほめられて、かれ は まんざら でも ない かお を して いた。",
+  "romaji": "homerarete, kare wa manzara de mo nai kao o shite ita.",
+  "arti": "Setelah dipuji, dia memasang wajah yang tampaknya tidak sepenuhnya tidak senang.",
+  "before": {
+   "romaji": "homerarete, kare wa manzara de mo nai kao o shiteita."
+  },
+  "n": 47
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "c4db26e9#0",
+  "table": "vocabulary",
+  "ja": "そのレストランは落ち着いた色と柔らかな照明を使った、シックな内装です。",
+  "reading": "その レストラン は おちついた いろ と やわらか な しょうめい を つかった、シック な ないそう です。",
+  "romaji": "Sono resutoran wa ochitsuita iro to yawaraka na shoumei o tsukatta, shikku na naisou desu.",
+  "arti": "Interior restoran itu bergaya elegan dengan warna-warna tenang dan pencahayaan lembut.",
+  "before": {
+   "romaji": "Sono resutoran wa ochitsuita iro to yawarakana shoumei o tsukatta, shikku na naisou desu."
+  },
+  "n": 48
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "e27dff43#0",
+  "table": "vocabulary_senses",
+  "ja": "あんな人になりたいです。",
+  "reading": "あんな ひと に なりたい です。",
+  "romaji": "Anna hito ni naritai desu.",
+  "arti": "Saya ingin menjadi orang seperti itu.",
+  "before": {
+   "romaji": "Anna hito ni naritaidesu."
+  },
+  "n": 49
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "9e8c0900#0",
+  "table": "vocabulary",
+  "ja": "彼 は 明るい 性格 なので、よく もてます。",
+  "reading": "かれ は あかるい せいかく な ので、よく もてます。",
+  "romaji": "kare wa akarui seikaku na no de, yoku motemasu.",
+  "arti": "Karena sifatnya ceria, dia populer di kalangan lawan jenis.",
+  "before": {
+   "romaji": "kare wa akarui seikaku nano de, yoku motemasu."
+  },
+  "n": 50
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "b94e53cc#0",
+  "table": "vocabulary_senses",
+  "ja": "症状は軽いですよ。",
+  "reading": "しょうじょう は かるい です よ。",
+  "romaji": "Shoujou wa karui desu yo.",
+  "arti": "Gejalanya ringan, kok.",
+  "before": {
+   "romaji": "Shoujou wa karuidesu yo."
+  },
+  "n": 51
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "be598ef1#0",
+  "table": "vocabulary_senses",
+  "ja": "肌寒いです。",
+  "reading": "はださむい です。",
+  "romaji": "Hadasamui desu.",
+  "arti": "Agak dingin.",
+  "before": {
+   "romaji": "Hadasamuidesu."
+  },
+  "n": 52
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "70e320c2#0",
+  "table": "vocabulary",
+  "ja": "この方法の他にもいくつか方法があります。",
+  "reading": "この ほうほう の ほか にも いくつ か ほうほう が あります。",
+  "romaji": "Kono houhou no hoka ni mo ikutsu ka houhou ga arimasu.",
+  "arti": "Selain cara ini, ada beberapa cara lainnya.",
+  "before": {
+   "romaji": "Kono houhou no hoka ni mo ikutsuka houhou ga arimasu."
+  },
+  "n": 53
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "c7ba1d91#0",
+  "table": "vocabulary_senses",
+  "ja": "彼を重視しているのですか。",
+  "reading": "かれ を じゅうしして いる の です か。",
+  "romaji": "Kare o juushi shite iru no desu ka.",
+  "arti": "Apakah Anda sangat menghargainya?",
+  "before": {
+   "romaji": "Kare o juushi shite iru nodesu ka."
+  },
+  "n": 54
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "ef5ad25d#0",
+  "table": "grammar_points",
+  "ja": "今さら謝ったところで、許してもらえない。",
+  "reading": "いまさら あやまった ところ で、ゆるして もらえない。",
+  "romaji": "imasara ayamatta tokoro de, yurushite moraenai.",
+  "arti": "Sekalipun meminta maaf sekarang, Anda tidak akan dimaafkan.",
+  "before": {
+   "romaji": "imasara ayamatta tokorode, yurushite moraenai."
+  },
+  "n": 55
+ },
+ {
+  "category": "romaji repair: spacing only (romaji boundary matches Reading)",
+  "id": "38be0fbe#1",
+  "table": "vocabulary_senses",
+  "ja": "生粋のお嬢様だからな。残念ながら悪戯とかじゃなくてあれで素だ。",
+  "reading": "きっすい の おじょうさま だから な。ざんねんながら いたずら と か じゃ なくて あれ で す だ。",
+  "romaji": "Kissui no ojousama dakara na. Zannen nagara itazura to ka ja nakute are de su da.",
+  "arti": "Dia memang putri bangsawan sejati. Sayangnya itu bukan pura-pura, memang begitulah sifat aslinya.",
+  "before": {
+   "romaji": "Kissui no ojousama dakara na. Zannen nagara itazura toka janakute are de su da."
+  },
+  "n": 56
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "f11f752b#1",
+  "table": "vocabulary_senses",
+  "ja": "百年は一世紀と呼ばれる。",
+  "reading": "ひゃくねん は いちせいき と よばれる。",
+  "romaji": "Hyakunen wa ichiseiki to yobareru.",
+  "arti": "Seratus tahun disebut satu abad.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 57
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "920a7314#0",
+  "table": "vocabulary_senses",
+  "ja": "あと五分あります。",
+  "reading": "あと ごふん あります。",
+  "romaji": "Ato gofun arimasu.",
+  "arti": "Masih tersisa lima menit.",
+  "before": {
+   "reading": null,
+   "romaji": null
+  },
+  "n": 58
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "1fa57772#0",
+  "table": "vocabulary_senses",
+  "ja": "君はギター弾く？",
+  "reading": "きみ は ギター ひく？",
+  "romaji": "Kimi wa gitaa hiku?",
+  "arti": "Apakah kamu bermain gitar?",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 59
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "4af1bf7e#1",
+  "table": "vocabulary_senses",
+  "ja": "ただいま満席です。席が空くまでこちらでお待ちください。",
+  "reading": "ただいま まんせき です。せき が あく まで こちら で おまちください。",
+  "romaji": "Tadaima manseki desu. seki ga aku made kochira de omachikudasai.",
+  "arti": "Saat ini semua kursi penuh. Mohon tunggu di sini sampai ada kursi kosong.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 60
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "99ae0211#0",
+  "table": "vocabulary_senses",
+  "ja": "曇ってきた。",
+  "reading": "くもって きた。",
+  "romaji": "Kumotte kita.",
+  "arti": "Langit mulai berawan.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 61
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "a67a43a8#1",
+  "table": "vocabulary_senses",
+  "ja": "その合併は１対１で行われた。",
+  "reading": "その がっぺい は いちたいいち で おこなわれた。",
+  "romaji": "Sono gappei wa ichitaiichi de okonawareta.",
+  "arti": "Penggabungan itu dilakukan dengan rasio 1 banding 1.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 62
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "68406e59#1",
+  "table": "vocabulary_senses",
+  "ja": "費用は最低一万円です。",
+  "reading": "ひよう は さいてい いちまんえん です。",
+  "romaji": "Hiyou wa saitei ichiman'en desu.",
+  "arti": "Biayanya minimal 10.000 yen.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 63
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "bd95db3e#0",
+  "table": "vocabulary_senses",
+  "ja": "３日連続して雨が降った。",
+  "reading": "みっか れんぞくして あめ が ふった。",
+  "romaji": "Mikka renzokushite ame ga futta.",
+  "arti": "Hujan turun tiga hari berturut-turut.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 64
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "af77f0f9#0",
+  "table": "vocabulary_senses",
+  "ja": "彼は賢者だ。",
+  "reading": "かれ は けんじゃ だ。",
+  "romaji": "Kare wa kenja da.",
+  "arti": "Dia seorang bijak.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 65
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "e67abebd#1",
+  "table": "vocabulary_senses",
+  "ja": "血便がでます。",
+  "reading": "けつべん が でます。",
+  "romaji": "Ketsuben ga demasu.",
+  "arti": "Saya buang air besar berdarah.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 66
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "5bb02d74#1",
+  "table": "vocabulary_senses",
+  "ja": "十二は偶数だ。",
+  "reading": "じゅうに は ぐうすう だ。",
+  "romaji": "Juuni wa guusuu da.",
+  "arti": "Dua belas adalah bilangan genap.",
+  "before": {
+   "reading": null,
+   "romaji": null
+  },
+  "n": 67
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "951d0aeb#1",
+  "table": "vocabulary_senses",
+  "ja": "牛の尻尾は長い。",
+  "reading": "うし の しっぽ は ながい。",
+  "romaji": "Ushi no shippo wa nagai.",
+  "arti": "Ekor sapi itu panjang.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 68
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "d3637245#1",
+  "table": "vocabulary_senses",
+  "ja": "涙が一筋頬を流れた。",
+  "reading": "なみだ が ひとすじ ほお を ながれた。",
+  "romaji": "Namida ga hitosuji hoo o nagareta.",
+  "arti": "Seuntai air mata mengalir di pipinya.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 69
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "4af1bf7e#0",
+  "table": "vocabulary_senses",
+  "ja": "あと１０分で手が空く。",
+  "reading": "あと じゅっぷん で て が あく。",
+  "romaji": "Ato juppun de te ga aku.",
+  "arti": "Sepuluh menit lagi saya luang.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 70
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "82d6bfa9#0",
+  "table": "vocabulary_senses",
+  "ja": "駅まで三キロメートルです。",
+  "reading": "えき まで さんキロメートル です。",
+  "romaji": "Eki made sankiromeetoru desu.",
+  "arti": "Jarak ke stasiun tiga kilometer.",
+  "before": {
+   "reading": null,
+   "romaji": null
+  },
+  "n": 71
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "abb6f50e#1",
+  "table": "vocabulary_senses",
+  "ja": "一年中雨が多い。",
+  "reading": "いちねんじゅう あめ が おおい。",
+  "romaji": "Ichinenjuu ame ga ooi.",
+  "arti": "Hujan banyak turun sepanjang tahun.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 72
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "95064334#0",
+  "table": "vocabulary_senses",
+  "ja": "歯茎がはれています。",
+  "reading": "はぐき が はれて います。",
+  "romaji": "Haguki ga harete imasu.",
+  "arti": "Gusi saya bengkak.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 73
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "9407394f#0",
+  "table": "vocabulary_senses",
+  "ja": "水は100度で沸騰する。",
+  "reading": "みず は ひゃくど で ふっとうする。",
+  "romaji": "Mizu wa hyakudo de futtousuru.",
+  "arti": "Air mendidih pada 100 derajat.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 74
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "500b7f6f#1",
+  "table": "vocabulary_senses",
+  "ja": "一寸の虫にも五分の魂。",
+  "reading": "いっすん の むし にも ごぶ の たましい。",
+  "romaji": "Issun no mushi ni mo gobu no tamashii.",
+  "arti": "Bahkan serangga kecil pun punya harga diri.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 75
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "af83e598#1",
+  "table": "vocabulary_senses",
+  "ja": "いつか私の夢は実現する。",
+  "reading": "いつか わたし の ゆめ は じつげんする。",
+  "romaji": "Itsuka watashi no yume wa jitsugensuru.",
+  "arti": "Suatu hari nanti mimpiku akan terwujud.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 76
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "94ced9ea#1",
+  "table": "vocabulary_senses",
+  "ja": "大抵１０時には寝るよ。",
+  "reading": "たいてい じゅうじ には ねる よ。",
+  "romaji": "Taitei juuji ni wa neru yo.",
+  "arti": "Biasanya saya tidur pukul sepuluh.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 77
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "d3637245#0",
+  "table": "vocabulary_senses",
+  "ja": "頬にキスしたいな。",
+  "reading": "ほお に キスしたいな。",
+  "romaji": "Hoo ni kisushitaina.",
+  "arti": "Aku ingin mencium pipimu.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 78
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "3f938f09#1",
+  "table": "vocabulary_senses",
+  "ja": "麻雀が大好きです。",
+  "reading": "マージャン が だいすき です。",
+  "romaji": "Maajan ga daisuki desu.",
+  "arti": "Saya sangat suka mahjong.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 79
+ },
+ {
+  "category": "missing-reading recovery",
+  "id": "52f048b7#0",
+  "table": "vocabulary_senses",
+  "ja": "毎年健康診断を受けます。",
+  "reading": "まいとし けんこうしんだん を うけます。",
+  "romaji": "Maitoshi kenkoushindan o ukemasu.",
+  "arti": "Saya menjalani pemeriksaan kesehatan setiap tahun.",
+  "before": {
+   "reading": null,
+   "romaji": null
+  },
+  "n": 80
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "dea414ca#1",
+  "table": "vocabulary",
+  "ja": "思想は世界中をアッという間に巡る。",
+  "reading": "しそう は せかいじゅう を あっと いう ま に めぐる。",
+  "romaji": "Shisou wa sekaijuu o atto iu ma ni meguru.",
+  "arti": "Gagasan dapat beredar ke seluruh dunia dalam sekejap.",
+  "before": {
+   "reading": "しそう は せかいじゅう を あっ と いう ま に めぐる。"
+  },
+  "n": 81
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "df554a87#0",
+  "table": "vocabulary_senses",
+  "ja": "仕事はやり残すなよ。",
+  "reading": "しごと は やりのこす な よ。",
+  "romaji": "Shigoto wa yarinokosu na yo.",
+  "arti": "Jangan tinggalkan pekerjaanmu setengah jalan.",
+  "before": {
+   "reading": "しごと はやりのこすな よ。"
+  },
+  "n": 82
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "0126d120#0",
+  "table": "vocabulary",
+  "ja": "真っ白な歯がきれいだ。",
+  "reading": "まっしろな は が きれい だ。",
+  "romaji": "Masshiro na ha ga kirei da.",
+  "arti": "Gigi yang sangat putih itu indah.",
+  "before": {
+   "reading": "まっしろなは が きれい だ。"
+  },
+  "n": 83
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "a7a638ec#0",
+  "table": "vocabulary_senses",
+  "ja": "おしゃべりはやめにして、仕事を始めましょう。",
+  "reading": "おしゃべり は やめ に して、しごと を はじめましょう。",
+  "romaji": "Oshaberi wa yame ni shite, shigoto o hajimemashou.",
+  "arti": "Ayo berhenti mengobrol dan mulai bekerja.",
+  "before": {
+   "reading": "おしゃべり はやめに して、しごと を はじめましょう。"
+  },
+  "n": 84
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "bd6a9242#0",
+  "table": "grammar_points",
+  "ja": "これは「9」ですか、「7」ですか。",
+  "reading": "これ は きゅう です か、なな です か。",
+  "romaji": "Kore wa kyuu desu ka, nana desu ka.",
+  "arti": "Apakah ini angka 9 atau angka 7?",
+  "before": {
+   "hiragana": "これ はきゅうです か、ななです か。"
+  },
+  "n": 85
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "f90a5185#0",
+  "table": "vocabulary",
+  "ja": "私の犬はしっぽが長い。",
+  "reading": "わたし の いぬ は しっぽ が ながい。",
+  "romaji": "Watashi no inu wa shippo ga nagai.",
+  "arti": "Anjing saya berekor panjang.",
+  "before": {
+   "reading": "わたし の いぬ はしっぽ が ながい。"
+  },
+  "n": 86
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "59614c4c#2",
+  "table": "grammar_points",
+  "ja": "トイレットペーパーがもうすぐなくなるから、買っとかないと。",
+  "reading": "といれっとぺーぱー が もうすぐ なくなる から、かっとかない と。",
+  "romaji": "Toiretto peepaa ga mou sugu nakunaru kara, kattokanai to.",
+  "arti": "Tisu toilet sebentar lagi habis, jadi harus beli dulu.",
+  "before": {
+   "hiragana": "といれっとぺーぱー が もうすぐ なくなる から、かっ と か ない と。"
+  },
+  "n": 87
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "d2c504c1#0",
+  "table": "vocabulary",
+  "ja": "古い町並みに江戸時代の名残が残っている。",
+  "reading": "ふるい まちなみ に えどじだい の なごり が のこって いる。",
+  "romaji": "Furui machinami ni Edo jidai no nagori ga nokotte iru.",
+  "arti": "Jejak zaman Edo masih tersisa pada kawasan kota tua itu.",
+  "before": {
+   "reading": "ふるい まちなみ に はえどじだい の なごり が のこって いる。",
+   "romaji": "Furui machinami ni wa Edo jidai no nagori ga nokotte iru."
+  },
+  "n": 88
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "01ebb6b8#1",
+  "table": "grammar_points",
+  "ja": "この部屋は自由に使えます。ただし、飲食は禁止です。",
+  "reading": "この へや は じゆうに つかえます。ただし、いんしょく は きんし です。",
+  "romaji": "Kono heya wa jiyuu ni tsukaemasu. Tadashi, inshoku wa kinshi desu.",
+  "arti": "Ruangan ini boleh digunakan bebas. Hanya saja, makan dan minum dilarang.",
+  "before": {
+   "hiragana": "この へや は じゆうに つかえます。ただし、いんしょく は 禁止 です。"
+  },
+  "n": 89
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "39f17a6f#0",
+  "table": "vocabulary_senses",
+  "ja": "その髪型は女子高生の間ではやっている。",
+  "reading": "その かみがた は じょしこうせい の あいだ で はやって いる。",
+  "romaji": "Sono kamigata wa joshikousei no aida de hayatte iru.",
+  "arti": "Gaya rambut itu cocok di kalangan siswa SMA perempuan.",
+  "before": {
+   "reading": "その かみがた は じょしこうせい の あいだ ではやって いる。",
+   "romaji": "Sono kamigata wa joshikousei no aida de wa yatte iru."
+  },
+  "n": 90
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "7fb82666#0",
+  "table": "vocabulary",
+  "ja": "祖母 に 昔話 を 聞きました。",
+  "reading": "そぼ に むかしばなし を ききました。",
+  "romaji": "sobo ni mukashibanashi o kikimashita.",
+  "arti": "Saya mendengar cerita zaman dahulu dari nenek.",
+  "before": {
+   "reading": "そぼ に むかしはなし を ききました。"
+  },
+  "n": 91
+ },
+ {
+  "category": "reading source repair: stray space / stuck particle / kanji left",
+  "id": "f90a5185#1",
+  "table": "vocabulary",
+  "ja": "あの犬はしっぽが短い。",
+  "reading": "あの いぬ は しっぽ が みじかい。",
+  "romaji": "Ano inu wa shippo ga mijikai.",
+  "arti": "Anjing itu berekor pendek.",
+  "before": {
+   "reading": "あの いぬ はしっぽ が みじかい。"
+  },
+  "n": 92
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "5fb6bcd2#0",
+  "table": "vocabulary",
+  "ja": "イベントが終わったあと、全員で会場や道具の後始末をしました。",
+  "reading": "イベント が おわった あと、ぜんいん で かいじょう や どうぐ の あとしまつ を しました。",
+  "romaji": "Ibento ga owatta ato, zenin de kaijou ya dougu no atoshimatsu o shimashita.",
+  "arti": "Setelah acara selesai, kami semua membantu membereskan ruangan dan peralatan.",
+  "before": {
+   "reading": "イベント が おわった あと、ぜんいん で かいじょう や どうぐ の あと しまつ を しました。"
+  },
+  "n": 93
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "f2ac5ff3#0",
+  "table": "vocabulary",
+  "ja": "わが党はこれに飽くまで反対します。",
+  "reading": "わがとう は これ に あくまで はんたいします。",
+  "romaji": "Wagatou wa kore ni akumade hantai shimasu.",
+  "arti": "Partai kami akan tetap menentang hal ini sampai akhir.",
+  "before": {
+   "reading": "わが とう は これ に あくまで はんたいします。"
+  },
+  "n": 94
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "b730660a#0",
+  "table": "vocabulary_senses",
+  "ja": "おじいちゃんとおばあちゃんになってもラブラブでいたいね。",
+  "reading": "おじいちゃん と おばあちゃん に なって も ラブラブ で いたい ね。",
+  "romaji": "Ojiichan to obaachan ni natte mo raburabu de itai ne.",
+  "arti": "Meskipun menjadi kakek nenek, kita harus tetap saling mencinta.",
+  "before": {
+   "reading": "おじい ちゃんと おばあちゃん に なって も ラブラブ で いたい ね。"
+  },
+  "n": 95
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "476c2a99#0",
+  "table": "grammar_points",
+  "ja": "悪天候で中止を余儀なくされた。",
+  "reading": "あくてんこう で ちゅうし を よぎなく された。",
+  "romaji": "akutenkou de chuushi o yoginaku sareta.",
+  "arti": "Karena cuaca buruk, kami terpaksa membatalkan acara.",
+  "before": {
+   "hiragana": "あくてんこう で ちゅうし を よぎ なく された。"
+  },
+  "n": 96
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "ba22f1b4#0",
+  "table": "vocabulary",
+  "ja": "彼は疾っくに帰りました。",
+  "reading": "かれ は とっくに かえりました。",
+  "romaji": "Kare wa tokkuni kaerimashita.",
+  "arti": "Dia sudah pulang sejak lama.",
+  "before": {
+   "reading": "かれ は とっく に かえりました。"
+  },
+  "n": 97
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "0a67dae1#0",
+  "table": "vocabulary",
+  "ja": "一時間 は 六十分 です。",
+  "reading": "いちじかん は ろくじゅっぷん です。",
+  "romaji": "ichijikan wa rokujuppun desu.",
+  "arti": "Satu jam sama dengan 60 menit.",
+  "before": {
+   "reading": "いちじかん は ろく じゅっぷん です。"
+  },
+  "n": 98
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "29568915#0",
+  "table": "vocabulary",
+  "ja": "出発時刻の三十分前に搭乗してください。",
+  "reading": "しゅっぱつじこく の さんじゅっぷん まえ に とうじょうして ください。",
+  "romaji": "Shuppatsu jikoku no sanjuppun mae ni toujou shite kudasai.",
+  "arti": "Silakan naik pesawat tiga puluh menit sebelum waktu keberangkatan.",
+  "before": {
+   "reading": "しゅっぱつじこく の さん じゅっぷん まえ に とうじょうして ください。"
+  },
+  "n": 99
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "3dc58eb8#0",
+  "table": "grammar_points",
+  "ja": "もう二度と彼とは会うまい。",
+  "reading": "もう にどと かれ とは あうまい。",
+  "romaji": "mou nidoto kare to wa au mai.",
+  "arti": "Saya bertekad tidak akan bertemu dengannya lagi.",
+  "before": {
+   "hiragana": "もう にど と かれ とは あうまい。",
+   "romaji": "mou nido to kare to wa au mai."
+  },
+  "n": 100
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "654b8833#2",
+  "table": "grammar_points",
+  "ja": "多少なりともご協力いたします。",
+  "reading": "たしょう なりとも ごきょうりょくいたします。",
+  "romaji": "tashou naritomo gokyouryoku itashimasu.",
+  "arti": "Saya akan memberikan setidaknya sedikit kerja sama.",
+  "before": {
+   "reading": "たしょう なり とも ごきょうりょくいたします。"
+  },
+  "n": 101
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "ad45b202#2",
+  "table": "grammar_points",
+  "ja": "彼女はめったに病気をしないのに、入院しているらしい。",
+  "reading": "かのじょ は めったに びょうき を しない の に、にゅういんして いるらしい。",
+  "romaji": "Kanojo wa mettani byouki o shinai no ni, nyuuin shite iru rashii.",
+  "arti": "Padahal dia jarang sakit, tetapi katanya sekarang sedang dirawat di rumah sakit.",
+  "before": {
+   "hiragana": "かのじょ は めった に びょうき を しない の に、にゅういんして いるらしい。",
+   "romaji": "Kanojo wa mettani byouki o shinai noni, nyuuin shite iru rashii."
+  },
+  "n": 102
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "a77abdc1#0",
+  "table": "vocabulary",
+  "ja": "彼 は めったに 怒りません。",
+  "reading": "かれ は めったに おこりません。",
+  "romaji": "kare wa mettani okorimasen.",
+  "arti": "Dia jarang sekali marah.",
+  "before": {
+   "reading": "かれ は めった に おこりません。",
+   "romaji": "kare wa metta ni okorimasen."
+  },
+  "n": 103
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "55fc77d0#0",
+  "table": "vocabulary",
+  "ja": "市場の情勢を注意深く見守る。",
+  "reading": "しじょう の じょうせい を ちゅういぶかく みまもる。",
+  "romaji": "Shijou no jousei o chuuibukaku mimamoru.",
+  "arti": "Kami mengamati situasi pasar dengan saksama.",
+  "before": {
+   "reading": "しじょう の じょうせい を ちゅうい ぶかく みまもる。"
+  },
+  "n": 104
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "f9fbc9f2#0",
+  "table": "vocabulary",
+  "ja": "毎日三十分運動します。",
+  "reading": "まいにち さんじゅっぷん うんどうします。",
+  "romaji": "Mainichi sanjuppun undou shimasu.",
+  "arti": "Saya berolahraga selama tiga puluh menit setiap hari.",
+  "before": {
+   "reading": "まいにち さん じゅっぷん うんどうします。"
+  },
+  "n": 105
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "4c522623#0",
+  "table": "vocabulary",
+  "ja": "駅まで三十分かかります。",
+  "reading": "えき まで さんじゅっぷん かかります。",
+  "romaji": "Eki made sanjuppun kakarimasu.",
+  "arti": "Perlu tiga puluh menit sampai stasiun.",
+  "before": {
+   "reading": "えき まで さん じゅっぷん かかります。"
+  },
+  "n": 106
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "cc4631ae#0",
+  "table": "grammar_points",
+  "ja": "これは努力の結果に他ならない。",
+  "reading": "これ は どりょく の けっか に ほかならない。",
+  "romaji": "kore wa doryoku no kekka ni hokanaranai.",
+  "arti": "Ini tidak lain adalah hasil dari usaha.",
+  "before": {
+   "reading": "これ は どりょく の けっか に ほか ならない。"
+  },
+  "n": 107
+ },
+ {
+  "category": "reading source repair: lexical word rejoined",
+  "id": "2c4c1666#1",
+  "table": "vocabulary_senses",
+  "ja": "興味深い文章だね。",
+  "reading": "きょうみぶかい ぶんしょう だ ね。",
+  "romaji": "Kyoumibukai bunshou da ne.",
+  "arti": "Tulisan yang menarik, ya.",
+  "before": {
+   "reading": "きょうみ ぶかい ぶんしょう だ ね。"
+  },
+  "n": 108
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "142383f2#0",
+  "table": "vocabulary_senses",
+  "ja": "出ます。",
+  "reading": "でます （が）",
+  "romaji": "demasu (ga).",
+  "arti": "Berangkat (bus).",
+  "before": {
+   "id": "Contoh penggunaan: Berangkat (bis)"
+  },
+  "n": 109
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "ffbdfbab#0",
+  "table": "vocabulary_senses",
+  "ja": "亡くなります。",
+  "reading": "なくなります",
+  "romaji": "nakunarimasu.",
+  "arti": "Meninggal.",
+  "before": {
+   "id": "Contoh penggunaan: Meninggal"
+  },
+  "n": 110
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "0fd0f9a0#0",
+  "table": "vocabulary_senses",
+  "ja": "掛けます。",
+  "reading": "かけます",
+  "romaji": "kakemasu.",
+  "arti": "Menggantungkan.",
+  "before": {
+   "id": "Contoh penggunaan: Menggantungkan"
+  },
+  "n": 111
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "b5b45727#1",
+  "table": "vocabulary_senses",
+  "ja": "遅刻します。",
+  "reading": "ちこくします",
+  "romaji": "chikokushimasu.",
+  "arti": "Terlambat.",
+  "before": {
+   "id": "Contoh penggunaan: Terlambat"
+  },
+  "n": 112
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "906613fb#0",
+  "table": "vocabulary_senses",
+  "ja": "つけます。",
+  "reading": "つけます",
+  "romaji": "tsukemasu.",
+  "arti": "Membubuhi.",
+  "before": {
+   "id": "Contoh penggunaan: Membubuhi"
+  },
+  "n": 113
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "6d0601d6#0",
+  "table": "vocabulary_senses",
+  "ja": "伺います。",
+  "reading": "うかがいます",
+  "romaji": "ukagaimasu.",
+  "arti": "Bertanya, mendengar, mengunjungi (bentuk merendah dari ききます, いきます).",
+  "before": {
+   "id": "Contoh penggunaan: Bertanya,mendengar,mengunjungi (bentuk ききます、いきます) merendah"
+  },
+  "n": 114
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "2eb18c3b#0",
+  "table": "vocabulary_senses",
+  "ja": "呼びます。",
+  "reading": "よびます",
+  "romaji": "yobimasu.",
+  "arti": "Memanggil.",
+  "before": {
+   "id": "Contoh penggunaan: Memangil"
+  },
+  "n": 115
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "8f44b0b3#0",
+  "table": "vocabulary_senses",
+  "ja": "けんかします。",
+  "reading": "けんかします",
+  "romaji": "kenkashimasu.",
+  "arti": "Bertengkar.",
+  "before": {
+   "id": "Contoh penggunaan: Bertengkar"
+  },
+  "n": 116
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "1964e177#0",
+  "table": "vocabulary_senses",
+  "ja": "到着します。",
+  "reading": "とうちゃくします",
+  "romaji": "touchakushimasu.",
+  "arti": "Tiba.",
+  "before": {
+   "id": "Contoh penggunaan: Tiba"
+  },
+  "n": 117
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "f83202ab#0",
+  "table": "vocabulary_senses",
+  "ja": "打ちます。",
+  "reading": "うちます （を）",
+  "romaji": "uchimasu (o).",
+  "arti": "Mengirim (telegram).",
+  "before": {
+   "id": "Contoh penggunaan: Mengirim (telegram)"
+  },
+  "n": 118
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "0a729f65#0",
+  "table": "vocabulary_senses",
+  "ja": "ほんとう。",
+  "reading": "ほんとう",
+  "romaji": "hontou.",
+  "arti": "Kebenaran, fakta.",
+  "before": {
+   "id": "Contoh penggunaan: Kebenaran, fakta"
+  },
+  "n": 119
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "203d7c69#0",
+  "table": "vocabulary_senses",
+  "ja": "いらっしゃいます。",
+  "reading": "いらっしゃいます",
+  "romaji": "irasshaimasu.",
+  "arti": "Ada, pergi, datang (bentuk hormat dari います, いきます, きます).",
+  "before": {
+   "id": "Contoh penggunaan: います、い Ada,pergi,datang (bentuk hormat きます、きます)"
+  },
+  "n": 120
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "d6733540#0",
+  "table": "vocabulary_senses",
+  "ja": "出席します。",
+  "reading": "しゅっせきします （に）",
+  "romaji": "shussekishimasu ni.",
+  "arti": "Menghadiri.",
+  "before": {
+   "id": "Contoh penggunaan: Menghadiri"
+  },
+  "n": 121
+ },
+ {
+  "category": "arti repair: template placeholder removed",
+  "id": "ef58892c#0",
+  "table": "vocabulary_senses",
+  "ja": "利用します。",
+  "reading": "りようします",
+  "romaji": "riyoushimasu.",
+  "arti": "Memakai, menggunakan.",
+  "before": {
+   "id": "Contoh penggunaan: Memakai,menggunakan"
+  },
+  "n": 122
+ },
+ {
+  "category": "arti repair: wrong meaning corrected",
+  "id": "6f797513#0",
+  "table": "vocabulary",
+  "ja": "スポーツ用品店でバドミントンの羽根を2個買った。",
+  "reading": "スポーツ ようひんてん で バドミントン の はね を にこ かった。",
+  "romaji": "Supootsu youhinten de badominton no hane o niko katta.",
+  "arti": "Saya membeli 2 kok bulu tangkis di toko perlengkapan olahraga.",
+  "before": {
+   "id": "Mari kita cabut dan buang bulu-bulumu."
+  },
+  "n": 123
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "b0b93ef9#1",
+  "table": "vocabulary_senses",
+  "ja": "2時半頃出た。",
+  "reading": "にじ はんごろ でた。",
+  "romaji": "Niji hangoro deta.",
+  "arti": "Saya berangkat sekitar pukul setengah tiga.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 124
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "d42f66d3#1",
+  "table": "vocabulary_senses",
+  "ja": "１年が過ぎ、彼の死体は塵と化した。",
+  "reading": "いちねん が すぎ、かれ の したい は ちり と かした。",
+  "romaji": "Ichinen ga sugi, kare no shitai wa chiri to kashita.",
+  "arti": "Setahun berlalu, dan jasadnya berubah menjadi debu.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 125
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "951ed546#1",
+  "table": "vocabulary_senses",
+  "ja": "トムは３０代半ばだよ。",
+  "reading": "トム は さんじゅうだい なかば だ よ。",
+  "romaji": "Tomu wa sanjuudai nakaba da yo.",
+  "arti": "Tom berusia pertengahan tiga puluhan.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 126
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "817e0190#0",
+  "table": "vocabulary_senses",
+  "ja": "日本人ですか。",
+  "reading": "にほんじん です か。",
+  "romaji": "Nihonjin desu ka.",
+  "arti": "Apakah Anda orang Jepang?",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 127
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "a5e499a9#1",
+  "table": "vocabulary_senses",
+  "ja": "今晩暇かな？",
+  "reading": "こんばん ひま か な？",
+  "romaji": "Konban hima ka na?",
+  "arti": "Apakah kamu luang malam ini?",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 128
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "f598e692#1",
+  "table": "vocabulary_senses",
+  "ja": "誰かの口笛が聞こえた。",
+  "reading": "だれか の くちぶえ が きこえた。",
+  "romaji": "Dareka no kuchibue ga kikoeta.",
+  "arti": "Saya mendengar seseorang bersiul.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 129
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "d9dd34fc#0",
+  "table": "vocabulary_senses",
+  "ja": "三週間経った。",
+  "reading": "さんしゅうかん たった。",
+  "romaji": "Sanshuukan tatta.",
+  "arti": "Tiga minggu telah berlalu.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 130
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "d501fdd8#0",
+  "table": "vocabulary_senses",
+  "ja": "本日定休日。",
+  "reading": "ほんじつ ていきゅうび。",
+  "romaji": "Honjitsu teikyuubi.",
+  "arti": "Hari ini libur tetap (toko tutup).",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 131
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "4e4630fa#1",
+  "table": "vocabulary_senses",
+  "ja": "気温が数度下がった。",
+  "reading": "きおん が すうど さがった。",
+  "romaji": "Kion ga suudo sagatta.",
+  "arti": "Suhu turun beberapa derajat.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 132
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "b8bd30fc#0",
+  "table": "vocabulary_senses",
+  "ja": "彼は多趣味だ。",
+  "reading": "かれ は たしゅみ だ。",
+  "romaji": "Kare wa tashumi da.",
+  "arti": "Dia punya banyak hobi.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 133
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "6a9edd4f#1",
+  "table": "vocabulary_senses",
+  "ja": "弾き方わかる？",
+  "reading": "ひきかた わかる？",
+  "romaji": "Hikikata wakaru?",
+  "arti": "Tahu cara memainkannya?",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 134
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "cd86358a#1",
+  "table": "vocabulary_senses",
+  "ja": "原子力は安全だ。",
+  "reading": "げんしりょく は あんぜん だ。",
+  "romaji": "Genshiryoku wa anzen da.",
+  "arti": "Tenaga nuklir itu aman.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 135
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "e8fad512#1",
+  "table": "vocabulary_senses",
+  "ja": "ほとんど全部分かった。",
+  "reading": "ほとんど ぜんぶ わかった。",
+  "romaji": "Hotondo zenbu wakatta.",
+  "arti": "Saya hampir mengerti semuanya.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 136
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "2f32e422#1",
+  "table": "vocabulary_senses",
+  "ja": "妻は潔癖症だ。",
+  "reading": "つま は けっぺきしょう だ。",
+  "romaji": "Tsuma wa keppekishou da.",
+  "arti": "Istri saya sangat terobsesi dengan kebersihan.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 137
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "38e82173#1",
+  "table": "vocabulary_senses",
+  "ja": "ご飯にする？",
+  "reading": "ごはん に する？",
+  "romaji": "Gohan ni suru?",
+  "arti": "Mau makan sekarang?",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 138
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "60c14caa#1",
+  "table": "vocabulary_senses",
+  "ja": "お手上げだ。",
+  "reading": "おてあげ だ。",
+  "romaji": "Oteage da.",
+  "arti": "Saya menyerah (tidak tahu harus bagaimana).",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 139
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "de0f8b76#0",
+  "table": "vocabulary_senses",
+  "ja": "この２行は省くべきだ。",
+  "reading": "この にぎょう は はぶくべき だ。",
+  "romaji": "Kono nigyou wa habukubeki da.",
+  "arti": "Kedua baris ini sebaiknya dihilangkan.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 140
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "11fbfeed#1",
+  "table": "vocabulary_senses",
+  "ja": "沖縄は１年中よい気候だ。",
+  "reading": "おきなわ は いちねんじゅう よい きこう だ。",
+  "romaji": "Okinawa wa ichinenjuu yoi kikou da.",
+  "arti": "Okinawa beriklim baik sepanjang tahun.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 141
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "a67eba14#1",
+  "table": "vocabulary_senses",
+  "ja": "思い出せない。",
+  "reading": "おもいだせない。",
+  "romaji": "Omoidasenai.",
+  "arti": "Aku tidak bisa mengingatnya.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 142
+ },
+ {
+  "category": "arti repair: empty arti filled from Japanese",
+  "id": "e2063848#1",
+  "table": "vocabulary_senses",
+  "ja": "四月一日です。",
+  "reading": "しがつ ついたち です。",
+  "romaji": "Shigatsu tsuitachi desu.",
+  "arti": "Tanggal 1 April.",
+  "before": {
+   "reading": null,
+   "romaji": null,
+   "id": null
+  },
+  "n": 143
+ },
+ {
+  "category": "particle romanization (は→wa, を→o, へ→e)",
+  "id": "ae4fdebb#0",
+  "table": "vocabulary",
+  "ja": "この会社は自動車を海外へ輸出しています。",
+  "reading": "この かいしゃ は じどうしゃ を かいがい へ ゆしゅつして います。",
+  "romaji": "Kono kaisha wa jidousha o kaigai e yushutsu shite imasu.",
+  "arti": "Perusahaan ini mengekspor mobil ke luar negeri.",
+  "before": null,
+  "n": 144
+ },
+ {
+  "category": "particle romanization (は→wa, を→o, へ→e)",
+  "id": "c6158336#0",
+  "table": "vocabulary",
+  "ja": "その船は日本から海外へ大量の貨物を運んでいる。",
+  "reading": "その ふね は にほん から かいがい へ たいりょう の かもつ を はこんで いる。",
+  "romaji": "Sono fune wa Nihon kara kaigai e tairyou no kamotsu o hakonde iru.",
+  "arti": "Kapal itu mengangkut sejumlah besar kargo dari Jepang ke luar negeri.",
+  "before": null,
+  "n": 145
+ },
+ {
+  "category": "particle romanization (は→wa, を→o, へ→e)",
+  "id": "96656f54#0",
+  "table": "vocabulary",
+  "ja": "その船は月初めに、太平洋を横断する長い航海へ出発しました。",
+  "reading": "その ふね は つきはじめ に、たいへいよう を おうだんする ながい こうかい へ しゅっぱつしました。",
+  "romaji": "Sono fune wa tsukihajime ni, Taiheiyou o oudan suru nagai koukai e shuppatsu shimashita.",
+  "arti": "Kapal itu memulai pelayaran panjang melintasi Samudra Pasifik pada awal bulan.",
+  "before": null,
+  "n": 146
+ },
+ {
+  "category": "particle romanization (は→wa, を→o, へ→e)",
+  "id": "6fae988e#0",
+  "table": "vocabulary",
+  "ja": "会社は技術者を海外へ派遣した。",
+  "reading": "かいしゃ は ぎじゅつしゃ を かいがい へ はけんした。",
+  "romaji": "Kaisha wa gijutsusha o kaigai e haken shita.",
+  "arti": "Perusahaan menugaskan teknisi ke luar negeri.",
+  "before": null,
+  "n": 147
+ },
+ {
+  "category": "particle romanization (は→wa, を→o, へ→e)",
+  "id": "7c95deb7#0",
+  "table": "vocabulary",
+  "ja": "私は毎朝、仕事へ行く前に黒い靴をはきます。",
+  "reading": "わたし は まいあさ、しごと へ いく まえ に くろい くつ を はきます。",
+  "romaji": "Watashi wa maiasa, shigoto e iku mae ni kuroi kutsu o hakimasu.",
+  "arti": "Saya memakai sepatu hitam setiap pagi sebelum pergi bekerja.",
+  "before": null,
+  "n": 148
+ },
+ {
+  "category": "particle romanization (は→wa, を→o, へ→e)",
+  "id": "5baf29d3#0",
+  "table": "vocabulary",
+  "ja": "彼は大学を卒業したあと、四月にこの会社へ入社した。",
+  "reading": "かれ は だいがく を そつぎょうした あと、しがつ に この かいしゃ へ にゅうしゃした。",
+  "romaji": "Kare wa daigaku o sotsugyou shita ato, shigatsu ni kono kaisha e nyuusha shita.",
+  "arti": "Dia mulai bekerja di perusahaan ini pada bulan April setelah lulus universitas.",
+  "before": null,
+  "n": 149
+ },
+ {
+  "category": "long vowel (ou/oo/uu/ei)",
+  "id": "9cf89981#2",
+  "table": "grammar_points",
+  "ja": "油断すると、大きな失敗をしかねない。",
+  "reading": "ゆだんする と、おおきな しっぱい を しかねない。",
+  "romaji": "yudan suru to, ookina shippai o shikanenai.",
+  "arti": "Kalau lengah, Anda bisa saja membuat kesalahan besar.",
+  "before": null,
+  "n": 150
+ },
+ {
+  "category": "long vowel (ou/oo/uu/ei)",
+  "id": "8633f6bb#1",
+  "table": "vocabulary_senses",
+  "ja": "駅は市の中央にある。",
+  "reading": "えき は し の ちゅうおう に ある。",
+  "romaji": "Eki wa shi no chuuou ni aru.",
+  "arti": "Stasiunnya ada di tengah kota.",
+  "before": null,
+  "n": 151
+ },
+ {
+  "category": "long vowel (ou/oo/uu/ei)",
+  "id": "90e1528a#1",
+  "table": "vocabulary",
+  "ja": "両天秤をかけると失敗する。",
+  "reading": "りょうてんびん を かける と しっぱいする。",
+  "romaji": "Ryoutenbin o kakeru to shippai suru.",
+  "arti": "Jika mencoba mengambil keuntungan dari kedua pihak sekaligus, bisa berakhir gagal.",
+  "before": null,
+  "n": 152
+ },
+ {
+  "category": "long vowel (ou/oo/uu/ei)",
+  "id": "7427ca3b#0",
+  "table": "vocabulary",
+  "ja": "今日は早く起きました。",
+  "reading": "きょう は はやく おきました。",
+  "romaji": "Kyou wa hayaku okimashita.",
+  "arti": "Hari ini saya bangun lebih awal.",
+  "before": null,
+  "n": 153
+ },
+ {
+  "category": "long vowel (ou/oo/uu/ei)",
+  "id": "46ea741a#1",
+  "table": "vocabulary_senses",
+  "ja": "細菌が病気を引き起こすことがある。",
+  "reading": "さいきん が びょうき を ひきおこす こと が ある。",
+  "romaji": "Saikin ga byouki o hikiokosu koto ga aru.",
+  "arti": "Bakteri dapat menyebabkan penyakit.",
+  "before": null,
+  "n": 154
+ },
+ {
+  "category": "long vowel (ou/oo/uu/ei)",
+  "id": "efd2327a#0",
+  "table": "vocabulary",
+  "ja": "１２歳以下 は 子ども料金 です。",
+  "reading": "じゅうにさい いか は こどもりょうきん です。",
+  "romaji": "juunisai ika wa kodomo ryoukin desu.",
+  "arti": "Usia 12 tahun ke bawah dikenai tarif anak-anak.",
+  "before": null,
+  "n": 155
+ },
+ {
+  "category": "small tsu (っ) gemination",
+  "id": "c2288520#2",
+  "table": "grammar_points",
+  "ja": "旅行といっても、近くへ行っただけです。",
+  "reading": "りょこう と いって も、ちかく へ いった だけ です。",
+  "romaji": "Ryokou to itte mo, chikaku e itta dake desu.",
+  "arti": "Meskipun disebut perjalanan, saya hanya pergi ke tempat yang dekat.",
+  "before": null,
+  "n": 156
+ },
+ {
+  "category": "small tsu (っ) gemination",
+  "id": "acbc111b#0",
+  "table": "grammar_points",
+  "ja": "会社をやめようと思っている。",
+  "reading": "かいしゃ を やめよう と おもって いる。",
+  "romaji": "Kaisha o yameyou to omotte iru.",
+  "arti": "Saya bermaksud ingin berhenti dari perusahaan.",
+  "before": null,
+  "n": 157
+ },
+ {
+  "category": "small tsu (っ) gemination",
+  "id": "a3cbed9e#2",
+  "table": "grammar_points",
+  "ja": "考え得る限りの対策を取った。",
+  "reading": "かんがえうる かぎり の たいさく を とった。",
+  "romaji": "kangaeuru kagiri no taisaku o totta.",
+  "arti": "Kami mengambil semua langkah yang mungkin terpikirkan.",
+  "before": null,
+  "n": 158
+ },
+ {
+  "category": "small tsu (っ) gemination",
+  "id": "2537c7da#0",
+  "table": "vocabulary",
+  "ja": "御免ください、どなたかいらっしゃいますか。",
+  "reading": "ごめんください、どなた か いらっしゃいます か。",
+  "romaji": "Gomen kudasai, donata ka irasshaimasu ka.",
+  "arti": "Permisi, apakah ada orang di rumah?",
+  "before": null,
+  "n": 159
+ },
+ {
+  "category": "small tsu (っ) gemination",
+  "id": "1ac6ea66#0",
+  "table": "vocabulary",
+  "ja": "みかんを四つください。",
+  "reading": "みかん を よっつ ください。",
+  "romaji": "Mikan o yottsu kudasai.",
+  "arti": "Tolong beri saya empat jeruk.",
+  "before": null,
+  "n": 160
+ },
+ {
+  "category": "small tsu (っ) gemination",
+  "id": "7769a4ff#0",
+  "table": "vocabulary_senses",
+  "ja": "美しい景色にうっとりしました。",
+  "reading": "うつくしい けしき に うっとりしました。",
+  "romaji": "Utsukushii keshiki ni uttori shimashita.",
+  "arti": "Saya terpesona oleh pemandangan yang indah.",
+  "before": null,
+  "n": 161
+ },
+ {
+  "category": "katakana loanword (ー long mark)",
+  "id": "b72eb86b#0",
+  "table": "vocabulary",
+  "ja": "彼はスチュワーデスと結婚した。",
+  "reading": "かれ は スチュワーデス と けっこんした。",
+  "romaji": "Kare wa suchuwaadesu to kekkon shita.",
+  "arti": "Dia menikah dengan seorang pramugari.",
+  "before": null,
+  "n": 162
+ },
+ {
+  "category": "katakana loanword (ー long mark)",
+  "id": "32a57538#1",
+  "table": "vocabulary_senses",
+  "ja": "マヨネーズの油は分離することがある。",
+  "reading": "マヨネーズ の あぶら は ぶんりする こと が ある。",
+  "romaji": "Mayoneezu no abura wa bunri suru koto ga aru.",
+  "arti": "Minyak dalam mayones kadang-kadang terpisah.",
+  "before": null,
+  "n": 163
+ },
+ {
+  "category": "katakana loanword (ー long mark)",
+  "id": "75d1b4f1#0",
+  "table": "vocabulary",
+  "ja": "朝 オレンジジュース を 飲みました。",
+  "reading": "あさ オレンジジュース を のみました。",
+  "romaji": "asa orenji juusu o nomimashita.",
+  "arti": "Pagi tadi saya minum jus jeruk.",
+  "before": null,
+  "n": 164
+ },
+ {
+  "category": "katakana loanword (ー long mark)",
+  "id": "df29d5dd#0",
+  "table": "vocabulary",
+  "ja": "スタートボタンをクリックする。",
+  "reading": "スタートボタン を クリックする。",
+  "romaji": "Sutaato botan o kurikku suru.",
+  "arti": "Mengeklik tombol mulai.",
+  "before": null,
+  "n": 165
+ },
+ {
+  "category": "katakana loanword (ー long mark)",
+  "id": "11fb80e2#0",
+  "table": "vocabulary",
+  "ja": "雨が降り始めたのでワイパーを動かしました。",
+  "reading": "あめ が ふりはじめた ので ワイパー を うごかしました。",
+  "romaji": "Ame ga furihajimeta node waipaa o ugokashimashita.",
+  "arti": "Karena mulai hujan, saya menyalakan wiper.",
+  "before": null,
+  "n": 166
+ },
+ {
+  "category": "katakana loanword (ー long mark)",
+  "id": "34ad3951#0",
+  "table": "vocabulary",
+  "ja": "日曜日にあるサッカーの試合に出ます。",
+  "reading": "にちようび に ある サッカー の しあい に でます。",
+  "romaji": "Nichiyoubi ni aru sakkaa no shiai ni demasu.",
+  "arti": "Saya akan ikut pertandingan sepak bola yang diadakan hari Minggu.",
+  "before": null,
+  "n": 167
+ },
+ {
+  "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
+  "id": "7e5717fc#0",
+  "table": "vocabulary",
+  "ja": "友達が私に本をくれました。",
+  "reading": "ともだち が わたし に ほん を くれました。",
+  "romaji": "Tomodachi ga watashi ni hon o kuremashita.",
+  "arti": "Teman memberi saya sebuah buku.",
+  "before": null,
+  "n": 168
+ },
+ {
+  "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
+  "id": "43de416d#0",
+  "table": "vocabulary",
+  "ja": "雨の勢いが急に強くなりました。",
+  "reading": "あめ の いきおい が きゅうに つよく なりました。",
+  "romaji": "Ame no ikioi ga kyuu ni tsuyoku narimashita.",
+  "arti": "Intensitas hujan tiba-tiba menjadi lebih kuat.",
+  "before": null,
+  "n": 169
+ },
+ {
+  "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
+  "id": "09f5afad#0",
+  "table": "vocabulary",
+  "ja": "寒くて指の感覚がなくなってきました。",
+  "reading": "さむくて ゆび の かんかく が なくなって きました。",
+  "romaji": "Samukute yubi no kankaku ga nakunatte kimashita.",
+  "arti": "Karena dingin, jari-jari saya mulai kehilangan rasa.",
+  "before": null,
+  "n": 170
+ },
+ {
+  "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
+  "id": "d1609bbb#0",
+  "table": "vocabulary",
+  "ja": "済みません、少しお尋ねしてもよろしいですか。",
+  "reading": "すみません、すこし おたずねして も よろしい です か。",
+  "romaji": "Sumimasen, sukoshi otazune shite mo yoroshii desu ka.",
+  "arti": "Permisi, boleh saya menanyakan sesuatu?",
+  "before": null,
+  "n": 171
+ },
+ {
+  "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
+  "id": "d5b370cc#0",
+  "table": "vocabulary_senses",
+  "ja": "水玉のスカートを買いました。",
+  "reading": "みずたま の スカート を かいました。",
+  "romaji": "Mizutama no sukaato o kaimashita.",
+  "arti": "Saya membeli rok bermotif polkadot.",
+  "before": null,
+  "n": 172
+ },
+ {
+  "category": "Group 1/2/3 verb forms (ます/て/ない kept whole)",
+  "id": "24a04b52#0",
+  "table": "vocabulary_senses",
+  "ja": "規則正しい生活をしています。",
+  "reading": "きそく ただしい せいかつ を して います。",
+  "romaji": "Kisoku tadashii seikatsu o shite imasu.",
+  "arti": "Saya menjalani hidup secara teratur.",
+  "before": null,
+  "n": 173
+ },
+ {
+  "category": "punctuation (、 。 ？ ！ attached)",
+  "id": "35a91372#1",
+  "table": "vocabulary",
+  "ja": "今、牡蠣のシーズン？",
+  "reading": "いま、かき の シーズン？",
+  "romaji": "Ima, kaki no shiizun?",
+  "arti": "Apakah sekarang sedang musim tiram?",
+  "before": null,
+  "n": 174
+ },
+ {
+  "category": "punctuation (、 。 ？ ！ attached)",
+  "id": "15082908#0",
+  "table": "vocabulary",
+  "ja": "そういえば、そこへは何時に行くの？",
+  "reading": "そういえば、そこ へは なんじ に いく の？",
+  "romaji": "Sou ieba, soko e wa nanji ni iku no?",
+  "arti": "Ngomong-ngomong, pukul berapa kamu akan pergi ke sana?",
+  "before": null,
+  "n": 175
+ },
+ {
+  "category": "punctuation (、 。 ？ ！ attached)",
+  "id": "50e3a9d3#2",
+  "table": "grammar_points",
+  "ja": "どうして行かないの？だって、今日は仕事があるんだもん。",
+  "reading": "どうして いかない の？だって、きょう は しごと が あるんだ もん。",
+  "romaji": "Doushite ikanai no? Datte, kyou wa shigoto ga arun da mon.",
+  "arti": "Kenapa tidak pergi? Soalnya hari ini saya harus bekerja.",
+  "before": null,
+  "n": 176
+ },
+ {
+  "category": "punctuation (、 。 ？ ！ attached)",
+  "id": "63b8f42a#0",
+  "table": "vocabulary_senses",
+  "ja": "本、注文した？",
+  "reading": "ほん、ちゅうもんした？",
+  "romaji": "Hon, chuumon shita?",
+  "arti": "Kamu sudah pesan bukunya?",
+  "before": null,
+  "n": 177
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "a3cbed9e#2",
+  "table": "grammar_points",
+  "ja": "考え得る限りの対策を取った。",
+  "reading": "かんがえうる かぎり の たいさく を とった。",
+  "romaji": "kangaeuru kagiri no taisaku o totta.",
+  "arti": "Kami mengambil semua langkah yang mungkin terpikirkan.",
+  "before": null,
+  "n": 178
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "3a9092ee#0",
+  "table": "grammar_points",
+  "ja": "調査した結果、新しい事実が分かった。",
+  "reading": "ちょうさした けっか、あたらしい じじつ が わかった。",
+  "romaji": "chousa shita kekka, atarashii jijitsu ga wakatta.",
+  "arti": "Sebagai hasil penyelidikan, diketahui fakta baru.",
+  "before": null,
+  "n": 179
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "1ba618ba#0",
+  "table": "grammar_points",
+  "ja": "ここに座ってもいいですか。",
+  "reading": "ここ に すわって も いい です か。",
+  "romaji": "Koko ni suwatte mo ii desu ka.",
+  "arti": "Bolehkah saya duduk di sini?",
+  "before": null,
+  "n": 180
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "271be91b#2",
+  "table": "grammar_points",
+  "ja": "会話はおろか、挨拶もできない。",
+  "reading": "かいわ は おろか、あいさつ も できない。",
+  "romaji": "kaiwa wa oroka, aisatsu mo dekinai.",
+  "arti": "Jangankan bercakap-cakap, memberi salam pun saya tidak bisa.",
+  "before": null,
+  "n": 181
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "a40ae7a2#1",
+  "table": "grammar_points",
+  "ja": "私の家は駅から遠くて、不便でかなわない。",
+  "reading": "わたし の いえ は えき から とおくて、ふべん で かなわない。",
+  "romaji": "Watashi no ie wa eki kara tookute, fuben de kanawanai.",
+  "arti": "Rumah saya jauh dari stasiun dan sangat tidak praktis sampai menyusahkan.",
+  "before": null,
+  "n": 182
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "beb938f6#0",
+  "table": "grammar_points",
+  "ja": "お金さえあれば、何でも買える。",
+  "reading": "おかね さえ あれば、なんでも かえる。",
+  "romaji": "okane sae areba, nandemo kaeru.",
+  "arti": "Asalkan punya uang, Anda bisa membeli apa saja.",
+  "before": null,
+  "n": 183
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "ec6770fe#2",
+  "table": "grammar_points",
+  "ja": "彼は医者にして作家でもある。",
+  "reading": "かれ は いしゃ に して さっか でも ある。",
+  "romaji": "kare wa isha ni shite sakka demo aru.",
+  "arti": "Dia adalah seorang dokter sekaligus penulis.",
+  "before": null,
+  "n": 184
+ },
+ {
+  "category": "grammar example (Bunpō) four fields intact",
+  "id": "2109e5e4#2",
+  "table": "grammar_points",
+  "ja": "努力は今の成功、ひいては将来の幸せをもたらす。",
+  "reading": "どりょく は いま の せいこう、ひいては しょうらい の しあわせ を もたらす。",
+  "romaji": "doryoku wa ima no seikou, hiite wa shourai no shiawase o motarasu.",
+  "arti": "Usaha membawa keberhasilan saat ini dan, lebih jauh lagi, kebahagiaan di masa depan.",
+  "before": null,
+  "n": 185
+ }
 ]
