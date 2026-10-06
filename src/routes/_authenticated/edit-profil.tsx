@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   Camera,
   Check,
-  ChevronRight,
+  ImagePlus,
   Globe2,
   Save,
   Sparkles,
@@ -24,6 +24,9 @@ import { getMyAccount, updateMyAccount } from "@/lib/profile.functions";
 import { COUNTRIES } from "@/lib/countries";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { AvatarCropDialog } from "@/components/profile/AvatarCropDialog";
+import { refreshAvatarCaches, restoreGoogleAvatar, saveAvatarFile } from "@/lib/avatar-save";
+import { AVATAR_NOT_IMAGE, isImageFile } from "@/lib/avatar-upload";
 
 export const Route = createFileRoute("/_authenticated/edit-profil")({ component: EditProfilePage });
 const LEVELS = ["N5", "N4", "N3", "N2", "N1"] as const;
@@ -42,6 +45,8 @@ function formatDate(date: string) {
   }).format(new Date(`${date}T00:00:00+09:00`));
 }
 
+class SaveStepError extends Error {}
+
 function EditProfilePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -56,6 +61,49 @@ function EditProfilePage() {
     study_days: 5,
   });
   const [saving, setSaving] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
+  const [identity, setIdentity] = useState<{ userId: string; google: string } | null>(null);
+  useEffect(() => {
+    void getAuthUser().then(({ data: auth }) => {
+      if (!auth.user) return;
+      const meta = auth.user.user_metadata ?? {};
+      setIdentity({
+        userId: auth.user.id,
+        google: String(meta["avatar_url"] ?? meta["picture"] ?? ""),
+      });
+    });
+  }, []);
+  const avatarUrl = avatarOverride ?? account.data?.profile?.avatar_url ?? null;
+  function onPickFile(file: File | undefined) {
+    if (fileInput.current) fileInput.current.value = "";
+    if (!file) return;
+    if (!isImageFile(file)) {
+      toast.error(AVATAR_NOT_IMAGE);
+      return;
+    }
+    setPickedFile(file);
+  }
+  async function applyAvatar(
+    task: () => Promise<{ ok: true; url: string } | { ok: false; message: string }>,
+  ) {
+    setAvatarBusy(true);
+    try {
+      const result = await task();
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      setAvatarOverride(result.url);
+      setPickedFile(null);
+      await refreshAvatarCaches(qc);
+      toast.success("Foto profil berhasil diperbarui.");
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
   const [initialData, setInitialData] = useState<typeof data | null>(null);
   const [plan, setPlan] = useState<{ level: string; days: number } | null>(null);
   const [initialMonths, setInitialMonths] = useState<number | null>(null);
@@ -143,7 +191,10 @@ function EditProfilePage() {
         const { error: daysError } = await client.rpc("update_study_days_per_week", {
           p_days: data.study_days,
         });
-        if (daysError) throw new Error(`Hari belajar gagal diperbarui: ${daysError.message}`);
+        if (daysError) {
+          console.error("[edit-profil] hari belajar", daysError.code);
+          throw new SaveStepError("Hari belajar belum berhasil diperbarui. Silakan coba lagi.");
+        }
       } else {
         const { error: planError } = await client.rpc("create_or_replace_study_plan", {
           p_target_level: data.target_level as (typeof LEVELS)[number],
@@ -151,10 +202,16 @@ function EditProfilePage() {
           p_daily_minutes: 45,
           p_study_days: data.study_days,
         });
-        if (planError) throw new Error(`Rencana belajar gagal dibuat: ${planError.message}`);
+        if (planError) {
+          console.error("[edit-profil] rencana", planError.code);
+          throw new SaveStepError("Rencana belajar belum berhasil dibuat. Silakan coba lagi.");
+        }
       }
       const { error: taskError } = await client.rpc("generate_weekly_study_plan");
-      if (taskError) throw new Error(`Target harian gagal dibuat: ${taskError.message}`);
+      if (taskError) {
+        console.error("[edit-profil] target harian", taskError.code);
+        throw new SaveStepError("Target harian belum berhasil dibuat. Silakan coba lagi.");
+      }
       await client.rpc("sync_daily_study_task_progress");
       const { error: metaError } = await supabase.auth.updateUser({
         data: keepPlan
@@ -187,7 +244,12 @@ function EditProfilePage() {
       );
       await navigate({ to: "/profil" });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Gagal menyimpan profil.");
+      if (!(e instanceof SaveStepError)) console.error("[edit-profil] simpan", e);
+      toast.error(
+        e instanceof SaveStepError
+          ? e.message
+          : "Profil belum berhasil disimpan. Silakan coba lagi.",
+      );
     } finally {
       setSaving(false);
     }
@@ -195,27 +257,49 @@ function EditProfilePage() {
   return (
     <AppShell title="Edit Profil" backTo="/profil" compact>
       <div className="mx-auto max-w-lg space-y-4 pb-6">
+        {pickedFile && identity && (
+          <AvatarCropDialog
+            file={pickedFile}
+            busy={avatarBusy}
+            onCancel={() => !avatarBusy && setPickedFile(null)}
+            onConfirm={(cropped) =>
+              void applyAvatar(() => saveAvatarFile(identity.userId, cropped))
+            }
+          />
+        )}
         <section className="overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/[.10] via-card to-card p-5">
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
-              {account.data?.profile?.avatar_url ? (
-                <img
-                  src={account.data.profile.avatar_url}
-                  alt="Foto profil"
-                  className="size-20 rounded-3xl border-2 border-background object-cover shadow-sm"
-                />
-              ) : (
-                <div className="grid size-20 place-items-center rounded-3xl bg-primary/10 text-primary">
-                  <UserRound className="size-8" />
-                </div>
-              )}
-              <Link
-                to="/profil-foto"
+              <button
+                type="button"
                 aria-label="Ganti foto profil"
-                className="absolute -bottom-1 -right-1 grid size-8 place-items-center rounded-xl border-2 border-background bg-primary text-primary-foreground"
+                onClick={() => fileInput.current?.click()}
+                disabled={avatarBusy}
+                className="block rounded-3xl"
               >
-                <Camera className="size-3.5" />
-              </Link>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Foto profil"
+                    className="size-20 rounded-3xl border-2 border-background object-cover shadow-sm"
+                  />
+                ) : (
+                  <div className="grid size-20 place-items-center rounded-3xl bg-primary/10 text-primary">
+                    <UserRound className="size-8" />
+                  </div>
+                )}
+                <span className="absolute -bottom-1 -right-1 grid size-8 place-items-center rounded-xl border-2 border-background bg-primary text-primary-foreground">
+                  <Camera className="size-3.5" />
+                </span>
+              </button>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*,.heic,.heif"
+                className="hidden"
+                data-testid="avatar-file-input"
+                onChange={(e) => onPickFile(e.target.files?.[0])}
+              />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
@@ -227,12 +311,26 @@ function EditProfilePage() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Target JLPT {data.target_level} · {data.study_days} hari belajar/minggu
               </p>
-              <Link
-                to="/profil-foto"
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                disabled={avatarBusy}
                 className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-primary"
               >
-                Ganti foto <ChevronRight className="size-3" />
-              </Link>
+                <ImagePlus className="size-3" /> Ganti foto
+              </button>
+              {identity?.google && identity.google !== avatarUrl && (
+                <button
+                  type="button"
+                  disabled={avatarBusy}
+                  onClick={() =>
+                    void applyAvatar(() => restoreGoogleAvatar(identity.userId, identity.google))
+                  }
+                  className="ml-3 text-[11px] font-semibold text-muted-foreground"
+                >
+                  Gunakan foto Google
+                </button>
+              )}
             </div>
           </div>
         </section>

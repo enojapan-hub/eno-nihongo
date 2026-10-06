@@ -152,7 +152,7 @@ function AuthPage() {
       if (recoverError && (isRateLimited(recoverError) || isNetworkError(recoverError)))
         throw recoverError;
       setNotice(
-        "Jika email tersebut terdaftar, tautan untuk mengatur ulang kata sandi akan dikirim ke email Anda. Periksa juga folder Spam.",
+        "Jika email tersebut terdaftar, tautan untuk mengatur ulang kata sandi akan dikirim ke email Anda. Periksa juga folder Spam, dan buka email terbaru saja.",
       );
     } catch (caught) {
       setError(authErrorMessage(caught, "recovery-request"));

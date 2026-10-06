@@ -1,3 +1,4 @@
+import { rateLimitSeconds } from "../auth-errors";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -24,7 +25,6 @@ const flow = read("src/lib/auth-flow.ts");
 const reset = read("src/routes/reset-password.tsx");
 const client = read("src/integrations/supabase/client.ts");
 const account = read("src/lib/auth-account.ts");
-const photo = read("src/routes/_authenticated/profil-foto.tsx");
 const profileFn = read("src/lib/profile.functions.ts");
 
 describe("recovery: deteksi callback dan alasan kegagalan definitif", () => {
@@ -49,7 +49,8 @@ describe("recovery: deteksi callback dan alasan kegagalan definitif", () => {
         false,
       ),
     ).toBe("wrong_browser");
-    expect(classifyRecoveryFailure({ ...base, hasCode: true }, null, false)).toBe("wrong_browser");
+    // tautan lama bergaya kode (bukti produksi: bad_code_verifier / token sudah dipakai) → arahkan ke tautan terbaru
+    expect(classifyRecoveryFailure({ ...base, hasCode: true }, null, false)).toBe("expired");
     expect(
       classifyRecoveryFailure({ ...base, hasCode: true }, { code: "flow_state_expired" }, false),
     ).toBe("expired");
@@ -62,18 +63,14 @@ describe("recovery: deteksi callback dan alasan kegagalan definitif", () => {
 });
 
 describe("recovery: mekanisme dan balapan", () => {
-  it("halaman reset menunggu inisialisasi + event resmi sebelum menilai tidak berlaku", () => {
-    expect(reset).toContain("supabase.auth.initialize()");
-    expect(reset).toContain("waitForRecoverySession(RECOVERY_EVENT_WAIT_MS)");
-    expect(reset).toContain("classifyRecoveryFailure(");
-    // keputusan invalid hanya setelah langkah tunggu: tidak ada setPhase("invalid") sebelum await waitFor...
-    const check = reset.slice(
-      reset.indexOf("const check = async"),
-      reset.indexOf("const { data: sub }"),
-    );
-    expect(check.indexOf("waitForRecoverySession")).toBeLessThan(
-      check.indexOf("setPhase((current)"),
-    );
+  it("satu mekanisme implicit: tanpa initialize()/PKCE/menunggu event; invalid hanya setelah getSession definitif", () => {
+    expect(reset).not.toContain("initialize()");
+    expect(reset).not.toContain("waitForRecoverySession");
+    expect(reset).not.toContain("onAuthStateChange");
+    const check = reset.slice(reset.indexOf("const check = async"), reset.indexOf("void check()"));
+    expect(check.indexOf("getSession()")).toBeLessThan(check.lastIndexOf('setPhase("invalid")'));
+    expect(check).toContain("isRecoverySession()");
+    expect(reset).toContain("<AuthLoader />");
   });
   it("tidak ada pertukaran kode/OTP manual; setSession hanya di halaman reset untuk tautan recovery", () => {
     for (const f of [reset, flow, read("src/routes/auth.tsx"), account]) {
@@ -113,8 +110,8 @@ describe("recovery: mekanisme dan balapan", () => {
       flow.indexOf("window.location.replace(`${RECOVERY_DESTINATION}"),
     );
   });
-  it("event PASSWORD_RECOVERY membangunkan penunggu; penanda dihapus setelah selesai (tanpa loop)", () => {
-    expect(flow).toMatch(/recoveryWaiters\.forEach\(\(notify\) => notify\(\)\)/);
+  it("penanda sesi pemulihan dihapus setelah selesai (tanpa loop)", () => {
+    expect(flow).not.toContain("recoveryWaiters");
     expect(flow).toContain("recoveryConsumed = true");
     expect(flow).toMatch(
       /!recoveryConsumed && \(isRecoverySession\(\) \|\| initialAuthCallback\.recoveryType\)/,
@@ -129,7 +126,33 @@ describe("recovery: mekanisme dan balapan", () => {
     // klien utama tetap PKCE untuk login Google/email
     expect(client).toMatch(/flowType: "pkce"/);
   });
-  it("UX 429 tidak mengarang waktu tunggu", () => {
+  it("429: detik tunggu hanya dari server (tidak dikarang), tanpa retry otomatis", () => {
+    expect(
+      rateLimitSeconds("For security purposes, you can only request this after 52 seconds."),
+    ).toBe(52);
+    expect(rateLimitSeconds("email rate limit exceeded")).toBeNull();
+    expect(
+      authErrorMessage(
+        {
+          status: 429,
+          message: "For security purposes, you can only request this after 52 seconds.",
+        },
+        "recovery-request",
+      ),
+    ).toContain("52 detik");
+    expect(account).not.toMatch(/setTimeout|setInterval|retry/i);
+  });
+  it("bukti produksi: tautan lama bergaya kode/sudah dipakai → pesan 'kedaluwarsa', bukan form", () => {
+    // Log produksi: 'One-time token not found' (tautan lama diklik ulang) dan bad_code_verifier (PKCE lintas konteks).
+    const info = parseAuthCallback("?code=old", "");
+    expect(classifyRecoveryFailure(info, null, false)).toBe("expired");
+    const fromHash = parseAuthCallback(
+      "",
+      "#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired",
+    );
+    expect(classifyRecoveryFailure(fromHash, null, false)).toBe("expired");
+  });
+  it("UX 429 tanpa detik dari server tidak mengarang waktu tunggu", () => {
     expect(authErrorMessage({ status: 429 }, "recovery-request")).toBe(RECOVERY_RATE_LIMIT_MESSAGE);
     expect(RECOVERY_RATE_LIMIT_MESSAGE).not.toMatch(/\d+\s*(detik|menit|jam)/i);
     expect(RECOVERY_RATE_LIMIT_MESSAGE).toMatch(/Spam/);
@@ -217,16 +240,18 @@ describe("foto profil: validasi, konversi, dan kegagalan", () => {
     ).toBe(AVATAR_UPLOAD_FAILED);
     expect(avatarStorageErrorMessage(new Error("db internal xyz"))).not.toContain("xyz");
   });
-  it("alur unggah: konversi, bersihkan berkas yatim, tidak klaim sukses, segarkan cache identitas", () => {
-    expect(photo).toContain("reencodeToJpeg(original)");
-    expect(photo).toMatch(/\.remove\(\[path\]\)/);
-    expect(photo).toContain("AVATAR_SAVE_FAILED");
-    expect(photo).toContain("invalidateIdentityCaches(qc)");
-    expect(photo).not.toMatch(/toast\.error\((uploadError|profileError)/);
-    expect(photo).not.toMatch(/throw uploadError|throw profileError/);
-    // sukses hanya setelah profil tersimpan
-    expect(photo.indexOf('toast.success("Foto profil berhasil diganti.")')).toBeGreaterThan(
-      photo.indexOf(".update({ avatar_url: publicUrl.publicUrl })"),
+  it("alur unggah (avatar-save + dialog crop): konversi, bersihkan berkas yatim, tidak klaim sukses, segarkan cache", () => {
+    const save = read("src/lib/avatar-save.ts");
+    const dialog = read("src/components/profile/AvatarCropDialog.tsx");
+    expect(dialog).toContain("reencodeToJpeg(original)");
+    expect(save).toMatch(/\.remove\(\[path\]\)/);
+    expect(save).toContain("AVATAR_SAVE_FAILED");
+    expect(save).toContain("invalidateIdentityCaches(qc)");
+    expect(save).not.toMatch(/throw uploadError|throw profileError/);
+    // sukses (toast) hanya setelah simpan profil berhasil
+    const edit = read("src/routes/_authenticated/edit-profil.tsx");
+    expect(edit.indexOf('toast.success("Foto profil berhasil diperbarui.")')).toBeGreaterThan(
+      edit.indexOf("result.ok"),
     );
   });
 });

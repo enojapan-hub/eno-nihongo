@@ -10,10 +10,10 @@ import {
   classifyRecoveryFailure,
   clearRecoverySession,
   initialAuthCallback,
+  isRecoverySession,
   markRecoverySession,
   readRecoveryHashTokens,
   resolveAuth,
-  waitForRecoverySession,
   type RecoveryFailure,
 } from "@/lib/auth-flow";
 import { authErrorMessage, RECOVERY_LINK_INVALID_MESSAGE } from "@/lib/auth-errors";
@@ -30,9 +30,6 @@ export const Route = createFileRoute("/reset-password")({
 });
 
 type Phase = "checking" | "ready" | "invalid";
-
-// Jendela menunggu event PASSWORD_RECOVERY resmi setelah inisialisasi Auth selesai.
-const RECOVERY_EVENT_WAIT_MS = 4000;
 
 const FAILURE_COPY: Record<RecoveryFailure, string> = {
   expired:
@@ -58,8 +55,8 @@ function ResetPasswordPage() {
   useEffect(() => {
     let active = true;
     const check = async () => {
-      // 0) Tautan bergaya implicit (fragment type=recovery): klien utama (PKCE) menolaknya, jadi sesi dipasang
-      //    lewat API resmi setSession. Token tidak disimpan/dicatat dan segera dihapus dari URL.
+      // Mekanisme tunggal: tautan implicit (fragment type=recovery) dipasang lewat API resmi setSession.
+      // Token tidak dicatat dan segera dihapus dari URL.
       const hashTokens = readRecoveryHashTokens(window.location.hash);
       if (hashTokens) {
         const { error: sessionError } = await supabase.auth.setSession(hashTokens);
@@ -78,27 +75,20 @@ function ResetPasswordPage() {
         setPhase("invalid");
         return;
       }
-      // 1) initialize() idempoten: menunggu SATU pertukaran kode/token tautan (tidak pernah dua kali).
-      const { error: initError } = await supabase.auth.initialize();
+      // 1) Tanpa fragment: muat ulang halaman ini setelah sesi pemulihan terpasang (penanda tab + sesi tersimpan).
       const { data } = await supabase.auth.getSession();
       if (!active) return;
-      // 2) PASSWORD_RECOVERY dipancarkan setelah langkah di atas; tunggu event resminya sebelum menilai.
-      if (data.session && (await waitForRecoverySession(RECOVERY_EVENT_WAIT_MS))) {
-        if (active) setPhase("ready");
+      if (data.session && isRecoverySession()) {
+        setPhase("ready");
         return;
       }
-      if (!active) return;
-      // 3) Baru di sini kegagalannya definitif.
-      setFailure(classifyRecoveryFailure(initialAuthCallback, initError, Boolean(data.session)));
-      setPhase((current) => (current === "ready" ? current : "invalid"));
+      // 2) Definitif: tidak ada tautan valid (kedaluwarsa/sudah dipakai/dibuka tanpa tautan).
+      setFailure(classifyRecoveryFailure(initialAuthCallback, null, Boolean(data.session)));
+      setPhase("invalid");
     };
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (active && event === "PASSWORD_RECOVERY") setPhase("ready");
-    });
     void check();
     return () => {
       active = false;
-      sub.subscription.unsubscribe();
     };
   }, []);
 

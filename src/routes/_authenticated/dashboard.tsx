@@ -11,6 +11,7 @@ import {
   Clock3,
   Crown,
   Flame,
+  Gem,
   Headphones,
   Languages,
   Layers3,
@@ -42,6 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { premiumStatus } from "@/lib/premium-countdown";
 import { PremiumBadge } from "@/components/membership/PremiumBadge";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -100,6 +102,7 @@ function DashboardPage() {
   const me = leaderboard.data?.find((u) => u.userId === profile?.id);
   const name = profile?.display_name?.trim() || "Pembelajar";
   const privilegedRole = ["owner", "admin", "editor", "teacher"].includes(profile?.role ?? "");
+  const premium = premiumStatus(membership.data, profile?.role, new Date());
   const plannerLocked = !privilegedRole && membership.data?.plan === "free";
   const completed = adaptive.data?.completed ?? 0;
   const target = adaptive.data?.target ?? 0;
@@ -175,10 +178,24 @@ function DashboardPage() {
               <p className="text-xs text-muted-foreground">{greeting},</p>
               <h1 className="truncate text-xl font-bold tracking-tight">{name}</h1>
               <p className="mt-0.5 text-[11px] capitalize text-muted-foreground">{todayLabel}</p>
+              {premium && (
+                <p
+                  data-testid="premium-status"
+                  className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300"
+                >
+                  <Gem className="size-3 shrink-0 fill-amber-400 text-amber-600" />
+                  <span>{premium.label}</span>
+                  {premium.kind === "timed" && (
+                    <span className="font-normal text-muted-foreground">
+                      · {premium.untilLabel}
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
           <Link
-            to="/profil"
+            to="/edit-profil"
             className="grid size-10 shrink-0 place-items-center rounded-xl border bg-card text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
             aria-label="Edit profil"
           >
