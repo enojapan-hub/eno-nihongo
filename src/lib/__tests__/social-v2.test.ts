@@ -178,7 +178,7 @@ describe("chat dock UI contract", () => {
   it("opens the profile card above the dock with a single blur layer", () => {
     const cardSrc = read("src/components/social/SocialProfileCard.tsx");
     expect(cardSrc).toMatch(/z-\[60\]/);
-    expect(cardSrc.match(/backdrop-blur/g)).toHaveLength(1);
+    expect(cardSrc.match(/backdrop-blur-\[6px\]/g)).toHaveLength(1);
     expect(dockSrc).toMatch(/!cardOpen && "backdrop-blur/);
     expect(cardSrc).not.toMatch(/\.email|uuid/i);
   });

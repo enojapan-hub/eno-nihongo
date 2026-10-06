@@ -17,6 +17,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { SocialAccountCard } from "@/components/social/SocialAccountCard";
 import { getMyAccount, updateMyAccount } from "@/lib/profile.functions";
 import { COUNTRIES } from "@/lib/countries";
@@ -49,6 +50,7 @@ function EditProfilePage() {
     target_level: "N5",
     ui_language: "id",
     country: "Indonesia",
+    bio: "",
     target_months: 3,
     study_days: 5,
   });
@@ -64,6 +66,7 @@ function EditProfilePage() {
         target_level: account.data.profile.target_level ?? "N5",
         ui_language: account.data.profile.ui_language ?? "id",
         country: account.data.profile.country ?? "Indonesia",
+        bio: account.data.profile.bio ?? "",
       }));
   }, [account.data]);
   useEffect(() => {
@@ -121,6 +124,7 @@ function EditProfilePage() {
           target_level: data.target_level as (typeof LEVELS)[number],
           ui_language: data.ui_language as "id" | "en" | "ja",
           country: data.country,
+          bio: data.bio.trim(),
           daily_kanji_target: s.daily_kanji_target ?? 5,
           daily_vocab_target: s.daily_vocab_target ?? 10,
           daily_grammar_target: s.daily_grammar_target ?? 5,
@@ -266,6 +270,20 @@ function EditProfilePage() {
                 ))}
               </select>
             </div>
+            <label className="block text-xs font-semibold">
+              Bio
+              <Textarea
+                maxLength={160}
+                rows={3}
+                placeholder="Ceritakan sedikit tentang dirimu..."
+                className="mt-1.5 min-h-[5.5rem] resize-none rounded-xl text-sm"
+                value={data.bio}
+                onChange={(e) => setData((v) => ({ ...v, bio: e.target.value }))}
+              />
+              <span className="mt-1 block text-right text-[9px] font-normal text-muted-foreground">
+                {data.bio.length}/160
+              </span>
+            </label>
             <div className="flex items-center gap-3 rounded-2xl bg-muted/40 px-3 py-3">
               <Globe2 className="size-4 shrink-0 text-primary" />
               <div>

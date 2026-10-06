@@ -1,5 +1,5 @@
 import { BadgeCheck, GraduationCap, Gem } from "lucide-react";
-import { BADGE_META, badgeKinds, useSocialBadges } from "@/lib/social/social-badges";
+import { BADGE_META, badgeKinds, useSocialIdentity } from "@/lib/social/social-badges";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,7 +15,8 @@ export function IdentityBadges({
   size?: "sm" | "md";
   className?: string;
 }) {
-  const kinds = badgeKinds(useSocialBadges(userId));
+  const identity = useSocialIdentity(userId);
+  const kinds = identity.loaded ? badgeKinds(identity.badges) : [];
   if (kinds.length === 0) return null;
   const icon = size === "md" ? "size-[18px]" : "size-3.5";
   return (
@@ -35,6 +36,21 @@ export function IdentityBadges({
               )}
             >
               <GraduationCap aria-hidden className={size === "md" ? "size-3.5" : "size-3"} />
+              {text}
+            </span>
+          );
+        if (k === "free")
+          return (
+            <span
+              key={k}
+              role="img"
+              aria-label={label}
+              title={label}
+              className={cn(
+                "inline-flex items-center rounded-full bg-muted font-bold leading-none tracking-wide text-muted-foreground",
+                size === "md" ? "px-2 py-1 text-[10px]" : "px-1.5 py-0.5 text-[8px]",
+              )}
+            >
               {text}
             </span>
           );

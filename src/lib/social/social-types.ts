@@ -13,6 +13,8 @@ export type SocialMe = {
   avatar_id?: number;
   is_moderator: boolean;
   allow_friend_requests?: boolean;
+  /** Suara pesan masuk (default aktif). */
+  sound_enabled?: boolean;
   /** ISO; null bila username boleh diubah sekarang (ditentukan server). */
   next_username_change_at?: string | null;
 };
@@ -79,6 +81,12 @@ export type ProfileCardData = {
   username: string | null;
   display_name: string | null;
   avatar_id: number;
+  /** URL foto yang sudah disaring server (Google / bucket avatars), atau null. */
+  photo: string | null;
+  bio: string | null;
+  country: string | null;
+  xp: number;
+  /** Level JLPT (N5–N1). Level Akun dihitung dari `xp` (lib/progression). */
   level: string | null;
   relation: CardRelation;
   viewer_has_username: boolean;

@@ -163,6 +163,10 @@ const sqlV2 = readFileSync(
   join(root, "supabase/migrations/20261010000000_social_chat_v2.sql"),
   "utf8",
 );
+const sqlV3 = readFileSync(
+  join(root, "supabase/migrations/20261012000000_social_profile_v3.sql"),
+  "utf8",
+);
 const TABLES = [
   "social_profiles",
   "social_global_read",
@@ -275,7 +279,7 @@ describe("social client contract", () => {
     );
     expect(called.length).toBeGreaterThanOrEqual(20);
     for (const name of called)
-      expect(sql + sqlV2, name).toMatch(
+      expect(sql + sqlV2 + sqlV3, name).toMatch(
         new RegExp(`create or replace function public\\.${name}\\(`),
       );
   });
@@ -303,9 +307,12 @@ describe("social client contract", () => {
     }
   });
 
-  it("has exactly one Realtime channel creation (no duplicate subscriptions)", () => {
+  it("has exactly one postgres_changes channel plus one Presence channel (no duplicate subscriptions)", () => {
     const channels = files.filter((f) => /\.channel\(/.test(f.text)).map((f) => f.file);
-    expect(channels).toEqual(["src/components/social/ChatDock.tsx"]);
+    expect(channels.sort()).toEqual([
+      "src/components/social/ChatDock.tsx",
+      "src/lib/social/social-presence.ts",
+    ]);
     const dock = files.find((f) => f.file.endsWith("social/ChatDock.tsx"))?.text ?? "";
     expect(dock).toMatch(/removeChannel/);
   });

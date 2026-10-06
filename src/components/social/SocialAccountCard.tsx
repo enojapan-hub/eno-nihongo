@@ -50,6 +50,15 @@ export function SocialAccountCard() {
     }
   }
 
+  async function toggleSound(next: boolean) {
+    try {
+      await socialApi.setSound(next);
+      invalidate("me");
+    } catch (err) {
+      toast.error(socialErrorMessage(err));
+    }
+  }
+
   async function togglePrivacy(next: boolean) {
     try {
       await socialApi.setPrivacy(next);
@@ -146,6 +155,25 @@ export function SocialAccountCard() {
               aria-label="Terima permintaan teman"
               checked={data.allow_friend_requests !== false}
               onChange={(e) => void togglePrivacy(e.target.checked)}
+              className="size-5 accent-[var(--color-primary,#087d48)]"
+            />
+          </label>
+        )}
+
+        {hasName && (
+          <label className="flex items-center justify-between gap-3 rounded-2xl bg-muted/40 px-3 py-3">
+            <span>
+              <span className="block text-xs font-semibold">Suara pesan</span>
+              <span className="block text-[10px] text-muted-foreground">
+                Bunyi singkat saat ada pesan pribadi baru
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              aria-label="Suara pesan"
+              checked={data.sound_enabled !== false}
+              onChange={(e) => void toggleSound(e.target.checked)}
               className="size-5 accent-[var(--color-primary,#087d48)]"
             />
           </label>

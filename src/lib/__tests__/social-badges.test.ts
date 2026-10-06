@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BADGE_META, badgeKinds, NO_BADGES, parseBadgeMap } from "../social/social-badges";
+import { BADGE_META, badgeKinds, NO_BADGES, parsePublicMeta } from "../social/social-badges";
 import {
   USERNAME_PALETTE,
   stableHash,
@@ -13,80 +13,107 @@ const root = process.cwd();
 const read = (f: string) => readFileSync(join(root, f), "utf8");
 
 describe("badge model", () => {
-  it("renders only flags that are strictly true, in a fixed order", () => {
-    expect(badgeKinds({ verified: true, sensei: true, diamond: true })).toEqual([
-      "verified",
-      "sensei",
-      "diamond",
-    ]);
-    expect(badgeKinds({ verified: false, sensei: true, diamond: true })).toEqual([
-      "sensei",
-      "diamond",
-    ]);
-    expect(badgeKinds(NO_BADGES)).toEqual([]);
+  const F = false;
+  const T = true;
+  it("Owner shows Verified only, whatever else is true", () => {
+    expect(badgeKinds({ verified: T, sensei: T, diamond: T })).toEqual(["verified"]);
+    expect(badgeKinds({ verified: T, sensei: F, diamond: T })).toEqual(["verified"]);
+    expect(badgeKinds({ verified: T, sensei: F, diamond: F })).toEqual(["verified"]);
+  });
+  it("Guru Premium → Sensei + Diamond; Guru Free → Sensei + Free", () => {
+    expect(badgeKinds({ verified: F, sensei: T, diamond: T })).toEqual(["sensei", "diamond"]);
+    expect(badgeKinds({ verified: F, sensei: T, diamond: F })).toEqual(["sensei", "free"]);
+  });
+  it("Premium user → Diamond; Free (incl. expired premium) → Free", () => {
+    expect(badgeKinds({ verified: F, sensei: F, diamond: T })).toEqual(["diamond"]);
+    expect(badgeKinds(NO_BADGES)).toEqual(["free"]);
+  });
+  it("shows no badge at all until the server has answered (never a premature Free)", () => {
     expect(badgeKinds(null)).toEqual([]);
     expect(badgeKinds(undefined)).toEqual([]);
   });
   it("does not trust truthy-but-not-true values from a response", () => {
-    const m = parseBadgeMap({
-      a: { verified: "true", sensei: 1, diamond: "yes" },
+    const m = parsePublicMeta({
+      a: { verified: "true", sensei: 1, diamond: "yes", photo: 5 },
       b: { verified: true },
-      c: { diamond: true, sensei: true },
+      c: { diamond: true, sensei: true, photo: "https://lh3.googleusercontent.com/a/x=s96-c" },
       d: null,
       e: "x",
+      f: { photo: "http://insecure.example/x.png" },
     });
-    expect(m.has("a")).toBe(false);
-    expect(badgeKinds(m.get("b"))).toEqual(["verified"]);
-    expect(badgeKinds(m.get("c"))).toEqual(["sensei", "diamond"]);
+    expect(badgeKinds(m.get("a")?.badges)).toEqual(["free"]);
+    expect(m.get("a")?.photo).toBeNull();
+    expect(badgeKinds(m.get("b")?.badges)).toEqual(["verified"]);
+    expect(badgeKinds(m.get("c")?.badges)).toEqual(["sensei", "diamond"]);
+    expect(m.get("c")?.photo).toMatch(/^https:\/\/lh3\.googleusercontent\.com\//);
+    expect(m.get("f")?.photo).toBeNull();
     expect(m.has("d") || m.has("e")).toBe(false);
   });
   it("tolerates malformed payloads", () => {
     for (const bad of [null, undefined, 5, "x", [], [{ verified: true }]])
-      expect(parseBadgeMap(bad).size).toBe(0);
+      expect(parsePublicMeta(bad).size).toBe(0);
   });
   it("uses the labels the product asked for", () => {
     expect(BADGE_META.verified.label).toBe("Akun resmi ENO NIHONGO");
     expect(BADGE_META.sensei.label).toBe("Guru ENO NIHONGO");
     expect(BADGE_META.diamond.label).toBe("Member Premium");
+    expect(BADGE_META.free.label).toBe("Akun Free");
+    expect(BADGE_META.free.text).toBe("FREE");
   });
 });
 
 describe("badge source of truth (server)", () => {
-  const sql = read("supabase/migrations/20261011000000_social_badges.sql");
+  const v3 = read("supabase/migrations/20261012000000_social_profile_v3.sql");
+  const code = (x: string) => x.replace(/--.*$/gm, "");
+  const badgesFn = code(v3).slice(
+    code(v3).indexOf("function public.social_badges"),
+    code(v3).indexOf("function public.social_me"),
+  );
   it("derives badges from role/plan, never from username or display name", () => {
-    expect(sql).toMatch(/p\.role = 'owner' as verified/);
-    expect(sql).toMatch(/p\.role = 'teacher' as sensei/);
-    expect(sql.replace(/--.*$/gm, "")).not.toMatch(/username|display_name/i);
+    expect(badgesFn).toMatch(/p\.role = 'owner' as verified/);
+    expect(badgesFn).toMatch(/p\.role = 'teacher' as sensei/);
+    expect(badgesFn).not.toMatch(/username|display_name/i);
   });
   it("counts only an active paid plan as Diamond (same rule as membership)", () => {
-    expect(sql).toMatch(
+    expect(badgesFn).toMatch(
       /p\.plan = 'lifetime' or \(p\.plan = 'premium' and \(p\.premium_until is null or p\.premium_until > now\(\)\)\)/,
     );
-    expect(sql).not.toMatch(/p\.role in \(/);
+    expect(badgesFn).not.toMatch(/p\.role in \(/);
   });
-  it("is authenticated-only, bounded, and exposes only three booleans", () => {
-    expect(sql).toMatch(
+  it("is authenticated-only, bounded, and exposes only three booleans + a vetted photo", () => {
+    expect(v3).toMatch(
       /revoke all on function public\.social_badges\(uuid\[\]\) from public, anon/,
     );
-    expect(sql).toMatch(
+    expect(v3).toMatch(
       /grant execute on function public\.social_badges\(uuid\[\]\) to authenticated/,
     );
-    expect(sql).toMatch(/auth\.uid\(\) is null then raise exception/);
-    expect(sql).toMatch(/cardinality\(p_users\) > 100/);
-    expect(sql).toMatch(/security definer/);
-    expect(sql).toMatch(/set search_path = ''/);
-    expect(sql).not.toMatch(/\b(email|premium_until,|'role'|'plan')/);
+    expect(badgesFn).toMatch(/auth\.uid\(\) is null then raise exception/);
+    expect(badgesFn).toMatch(/cardinality\(p_users\) > 100/);
+    expect(badgesFn).toMatch(/security definer/);
+    expect(badgesFn).toMatch(/set search_path = ''/);
+    expect(badgesFn).toMatch(/public\.social_safe_photo\(p\.avatar_url\)/);
+    expect(badgesFn).not.toMatch(/email|premium_until,|'role'|'plan'|\bp\.id::text,\s*'/);
   });
-  it("is additive: no table, policy or other function is touched", () => {
-    const code = sql.replace(/--.*$/gm, "");
-    expect(code).not.toMatch(
-      /create table|alter table|drop |policy|delete from|update public|insert into/i,
+  it("only forwards photos from Google or this project's avatars bucket", () => {
+    expect(v3).toMatch(/googleusercontent\\\.com/);
+    expect(v3).toMatch(/supabase\\\.co\/storage\/v1\/object\/public\/avatars\//);
+    expect(v3).toMatch(
+      /revoke all on function public\.social_safe_photo\(text\) from public, anon, authenticated/,
     );
-    expect(code.match(/create or replace function/g)).toHaveLength(1);
   });
-  it("does not add a second role/premium system (no new migration besides this one for it)", () => {
-    const files = readdirSync(join(root, "supabase/migrations")).filter((f) => f >= "20261011");
-    expect(files).toEqual(["20261011000000_social_badges.sql"]);
+  it("is additive: no policy/RLS change, no destructive statement", () => {
+    expect(code(v3)).not.toMatch(
+      /drop |policy|delete from|truncate|insert into public\.profiles|update public\.profiles/i,
+    );
+    expect(code(v3)).toMatch(/add column if not exists bio text/);
+    expect(code(v3)).toMatch(
+      /add column if not exists sound_enabled boolean not null default true/,
+    );
+  });
+  it("bio constraint: optional, <=160, plain, no whitespace-only", () => {
+    expect(v3).toMatch(/profiles_bio_check/);
+    expect(v3).toMatch(/char_length\(bio\) between 1 and 160/);
+    expect(v3).toMatch(/bio ~ '\\S'/);
   });
 });
 
@@ -138,9 +165,9 @@ describe("profile card layout contract", () => {
   const src = read("src/components/social/SocialProfileCard.tsx");
   it("is a compact centred floating card, not a sheet/fullscreen", () => {
     expect(src).toMatch(/fixed inset-0[^"]*items-center justify-center/);
-    expect(src).toMatch(/w-\[min\(86vw,21rem\)\]/);
-    expect(src).toMatch(/md:w-\[22\.5rem\]/);
-    expect(src).toMatch(/max-h-\[min\(34rem,calc\(100dvh-2rem\)\)\]/);
+    expect(src).toMatch(/w-\[min\(84vw,20\.5rem\)\]/);
+    expect(src).toMatch(/md:w-\[23rem\]/);
+    expect(src).toMatch(/max-h-\[min\(40rem,calc\(100dvh-2rem\)\)\]/);
     expect(src).toMatch(/safe-area-inset-bottom/);
     expect(src).not.toMatch(/items-end|rounded-t-3xl|slide-in-from-bottom/);
   });

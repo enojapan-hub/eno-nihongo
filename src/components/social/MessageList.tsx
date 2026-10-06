@@ -57,7 +57,7 @@ function Item({
           onClick={() => profileCard.open((m.author as { userId: string }).userId)}
           className="mt-0.5 h-fit shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <SocialAvatar avatarId={m.author.avatarId} size={28} />
+          <SocialAvatar avatarId={m.author.avatarId} userId={m.author.userId} size={28} />
         </button>
       )}
       <div

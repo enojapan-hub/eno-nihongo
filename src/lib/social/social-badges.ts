@@ -6,37 +6,47 @@ export type SocialBadges = { verified: boolean; sensei: boolean; diamond: boolea
 
 export const NO_BADGES: SocialBadges = { verified: false, sensei: false, diamond: false };
 
-export type BadgeKind = "verified" | "sensei" | "diamond";
+export type BadgeKind = "verified" | "sensei" | "diamond" | "free";
 
 export const BADGE_META: Record<BadgeKind, { label: string; text: string }> = {
   verified: { label: "Akun resmi ENO NIHONGO", text: "Verified" },
   sensei: { label: "Guru ENO NIHONGO", text: "Sensei" },
   diamond: { label: "Member Premium", text: "Premium" },
+  free: { label: "Akun Free", text: "FREE" },
 };
 
-/** Urutan tampil tetap: Verified, Sensei, Diamond. Hanya yang benar-benar bernilai true. */
+/**
+ * Aturan tampil (satu-satunya): Owner → Verified saja. Selain itu: Sensei bila Guru, lalu Diamond
+ * bila Premium aktif, jika tidak Free. `b` harus hasil server yang sudah dimuat (null = belum tahu →
+ * tidak ada badge, bukan "Free").
+ */
 export function badgeKinds(b: SocialBadges | null | undefined): BadgeKind[] {
   if (!b) return [];
+  if (b.verified === true) return ["verified"];
   const out: BadgeKind[] = [];
-  if (b.verified === true) out.push("verified");
   if (b.sensei === true) out.push("sensei");
-  if (b.diamond === true) out.push("diamond");
+  out.push(b.diamond === true ? "diamond" : "free");
   return out;
 }
 
+/** Identitas publik: badge + URL foto yang sudah disaring server (null = tidak ada foto aman). */
+export type PublicMeta = { badges: SocialBadges; photo: string | null };
+
 /** Respons RPC → peta aman. Nilai selain `true` (termasuk string/angka) diperlakukan sebagai tidak ada. */
-export function parseBadgeMap(raw: unknown): Map<string, SocialBadges> {
-  const map = new Map<string, SocialBadges>();
+export function parsePublicMeta(raw: unknown): Map<string, PublicMeta> {
+  const map = new Map<string, PublicMeta>();
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return map;
   for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
     if (!v || typeof v !== "object") continue;
-    const o = v as { verified?: unknown; sensei?: unknown; diamond?: unknown };
-    const b: SocialBadges = {
-      verified: o.verified === true,
-      sensei: o.sensei === true,
-      diamond: o.diamond === true,
-    };
-    if (badgeKinds(b).length > 0) map.set(id, b);
+    const o = v as { verified?: unknown; sensei?: unknown; diamond?: unknown; photo?: unknown };
+    map.set(id, {
+      badges: {
+        verified: o.verified === true,
+        sensei: o.sensei === true,
+        diamond: o.diamond === true,
+      },
+      photo: typeof o.photo === "string" && o.photo.startsWith("https://") ? o.photo : null,
+    });
   }
   return map;
 }
@@ -46,7 +56,9 @@ const TTL_MS = 5 * 60_000;
 const BATCH_MS = 60;
 const MAX_IDS = 100;
 
-type Entry = { badges: SocialBadges; at: number };
+/** `loaded=false` = server belum menjawab/gagal: tidak boleh menampilkan badge (termasuk "Free"). */
+type Entry = { meta: PublicMeta; loaded: boolean; at: number };
+const NOT_LOADED: PublicMeta = { badges: NO_BADGES, photo: null };
 const cache = new Map<string, Entry>();
 const pending = new Set<string>();
 const inflight = new Set<string>();
@@ -74,13 +86,17 @@ async function flush() {
         } as never,
       );
       if (error) throw new Error(error.message);
-      const found = parseBadgeMap(data);
+      const found = parsePublicMeta(data);
       const now = Date.now();
-      for (const id of ids) cache.set(id, { badges: found.get(id) ?? NO_BADGES, at: now });
+      // Id yang tidak ada di jawaban (akun tidak dikenal) tetap "belum dimuat": tanpa badge.
+      for (const id of ids) {
+        const meta = found.get(id);
+        cache.set(id, { meta: meta ?? NOT_LOADED, loaded: meta !== undefined, at: now });
+      }
     } catch {
-      // Gagal = tanpa badge (tidak pernah menebak); dicoba lagi setelah jeda singkat.
+      // Gagal = tanpa badge/foto (tidak pernah menebak); dicoba lagi setelah jeda singkat.
       const now = Date.now() - TTL_MS + 15_000;
-      for (const id of ids) cache.set(id, { badges: NO_BADGES, at: now });
+      for (const id of ids) cache.set(id, { meta: NOT_LOADED, loaded: false, at: now });
     } finally {
       ids.forEach((id) => inflight.delete(id));
     }
@@ -107,8 +123,10 @@ function subscribe(cb: () => void) {
   return () => listeners.delete(cb);
 }
 
-/** Badge milik satu user; meminta dari server bila belum ada di cache. */
-export function useSocialBadges(userId: string | null | undefined): SocialBadges {
+/** Badge + foto milik satu user; meminta dari server (batch) bila belum ada di cache. */
+export function useSocialIdentity(userId: string | null | undefined): PublicMeta & {
+  loaded: boolean;
+} {
   useSyncExternalStore(
     subscribe,
     () => version,
@@ -117,5 +135,6 @@ export function useSocialBadges(userId: string | null | undefined): SocialBadges
   useEffect(() => {
     if (userId) request(userId);
   }, [userId]);
-  return (userId && cache.get(userId)?.badges) || NO_BADGES;
+  const hit = userId ? cache.get(userId) : undefined;
+  return { ...(hit?.meta ?? NOT_LOADED), loaded: hit?.loaded ?? false };
 }

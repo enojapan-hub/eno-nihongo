@@ -3,11 +3,14 @@ import { useRouterState } from "@tanstack/react-router";
 import { MessageCircle, Minus } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useGooglePhotoSync } from "@/hooks/useGooglePhotoSync";
 import { supabase } from "@/integrations/supabase/client";
 import { dock, useDock, type DockTab } from "@/lib/social/dock-state";
 import { dockHiddenOn, unreadBadge } from "@/lib/social/message-merge";
 import { profileCard, useProfileCard } from "@/lib/social/profile-card-state";
+import { armChatSound, handleIncomingMessage, resetChatSound } from "@/lib/social/chat-sound";
 import { resetSocialBadges } from "@/lib/social/social-badges";
+import { usePresenceTracking } from "@/lib/social/social-presence";
 import { emitSocialEvent } from "@/lib/social/social-bus";
 import { cn } from "@/lib/utils";
 import { DmPanel } from "./DmPanel";
@@ -27,8 +30,10 @@ const TABS: ReadonlyArray<{ id: DockTab; label: string }> = [
  * Satu langganan Realtime untuk seluruh fitur sosial. RLS tetap berlaku pada setiap event
  * (penerima hanya menerima baris yang boleh dibacanya); event hanya memicu muat ulang halaman terbaru.
  */
-function useSocialRealtime(userId: string | null, enabled: boolean) {
+function useSocialRealtime(userId: string | null, enabled: boolean, soundEnabled: boolean) {
   const qc = useQueryClient();
+  const soundRef = useRef(soundEnabled);
+  soundRef.current = soundEnabled;
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (!userId || !enabled) return;
@@ -62,7 +67,15 @@ function useSocialRealtime(userId: string | null, enabled: boolean) {
         },
       )
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "dm_messages" }, (p) => {
-        const row = p.new as { id?: string; conversation_id?: string };
+        const row = p.new as { id?: string; conversation_id?: string; sender_id?: string };
+        // Realtime hanya mengirim baris baru setelah berlangganan (riwayat/paginasi/refetch tidak lewat sini);
+        // gate menolak id ganda, pesan sendiri, dan burst. Global Chat sengaja tanpa suara.
+        handleIncomingMessage({
+          id: row.id,
+          senderId: row.sender_id,
+          meId: userId,
+          enabled: soundRef.current,
+        });
         emitSocialEvent({
           type: "dm",
           kind: "insert",
@@ -95,6 +108,7 @@ function useSocialRealtime(userId: string | null, enabled: boolean) {
 export function ChatDock() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
+  useGooglePhotoSync(user);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const state = useDock();
   const cardOpen = useProfileCard() !== null;
@@ -107,6 +121,7 @@ export function ChatDock() {
     if (lastUser.current !== null && lastUser.current !== userId) {
       dock.reset();
       resetSocialBadges();
+      resetChatSound();
       qc.removeQueries({ queryKey: ["social"] });
     }
     lastUser.current = userId;
@@ -116,7 +131,9 @@ export function ChatDock() {
   const me = meQuery.data ?? null;
   const ready = !!me?.has_username;
   const unread = useUnread(ready && !hidden);
-  useSocialRealtime(userId, ready && !hidden);
+  useSocialRealtime(userId, ready && !hidden, me?.sound_enabled !== false);
+  usePresenceTracking(userId);
+  useEffect(() => (userId ? armChatSound() : undefined), [userId]);
 
   const visible = !!userId && !hidden;
 

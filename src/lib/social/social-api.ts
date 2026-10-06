@@ -30,6 +30,7 @@ export const socialApi = {
     rpc<SocialMe>("social_change_username", { p_username: username }),
   setPrivacy: (allowFriendRequests: boolean) =>
     rpc<SocialMe>("social_set_privacy", { p_allow_friend_requests: allowFriendRequests }),
+  setSound: (enabled: boolean) => rpc<SocialMe>("social_set_sound", { p_enabled: enabled }),
   profileCard: (userId: string) => rpc<ProfileCardData>("social_profile_card", { p_user: userId }),
   reportUser: (userId: string, reason: string | null) =>
     rpc<{ status: string }>("social_report_user", { p_user: userId, p_reason: reason }),

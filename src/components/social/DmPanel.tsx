@@ -51,7 +51,7 @@ function ConversationList({ active }: { active: boolean }) {
             onClick={() => profileCard.open(c.user_id)}
             className="shrink-0 rounded-full py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <SocialAvatar avatarId={c.avatar_id} size={40} />
+            <SocialAvatar avatarId={c.avatar_id} userId={c.user_id} size={40} />
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pl-1 pr-2">
             <div className="min-w-0 flex-1">
@@ -214,7 +214,7 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
           onClick={() => profileCard.open(other.user_id)}
           className="flex min-w-0 items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <SocialAvatar avatarId={other.avatar_id} size={30} />
+          <SocialAvatar avatarId={other.avatar_id} userId={other.user_id} size={30} />
           <span className="min-w-0">
             <span className="flex items-center gap-1">
               <span className="truncate text-[14px] font-semibold">
