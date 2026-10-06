@@ -47,10 +47,25 @@ function Certificate() {
       .getUser()
       .then(({ data }) => {
         const meta = data.user?.user_metadata as Record<string, unknown> | undefined;
-        const candidate = String(
-          meta?.["full_name"] ?? meta?.["name"] ?? data.user?.email?.split("@")[0] ?? "",
+        const fallback = String(
+          meta?.["display_name"] ??
+            meta?.["full_name"] ??
+            meta?.["name"] ??
+            data.user?.email?.split("@")[0] ??
+            "",
         ).trim();
-        if (candidate) setName(candidate);
+        if (fallback) setName(fallback);
+        // Nama ENO di profil (kanonik) mengalahkan nama Google/metadata.
+        if (!data.user?.id) return;
+        return supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", data.user.id)
+          .maybeSingle()
+          .then(({ data: profile }) => {
+            const own = profile?.display_name?.trim();
+            if (own) setName(own);
+          });
       })
       .finally(() => setLoaded(true));
   }, [level, storageKey]);

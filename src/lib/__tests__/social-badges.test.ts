@@ -20,9 +20,9 @@ describe("badge model", () => {
     expect(badgeKinds({ verified: T, sensei: F, diamond: T })).toEqual(["verified"]);
     expect(badgeKinds({ verified: T, sensei: F, diamond: F })).toEqual(["verified"]);
   });
-  it("Guru Premium → Sensei + Diamond; Guru Free → Sensei + Free", () => {
-    expect(badgeKinds({ verified: F, sensei: T, diamond: T })).toEqual(["sensei", "diamond"]);
-    expect(badgeKinds({ verified: F, sensei: T, diamond: F })).toEqual(["sensei", "free"]);
+  it("Guru → SENSEI saja (tidak pernah Diamond/Free, dengan atau tanpa langganan)", () => {
+    expect(badgeKinds({ verified: F, sensei: T, diamond: T })).toEqual(["sensei"]);
+    expect(badgeKinds({ verified: F, sensei: T, diamond: F })).toEqual(["sensei"]);
   });
   it("Premium user → Diamond; Free (incl. expired premium) → Free", () => {
     expect(badgeKinds({ verified: F, sensei: F, diamond: T })).toEqual(["diamond"]);
@@ -44,7 +44,7 @@ describe("badge model", () => {
     expect(badgeKinds(m.get("a")?.badges)).toEqual(["free"]);
     expect(m.get("a")?.photo).toBeNull();
     expect(badgeKinds(m.get("b")?.badges)).toEqual(["verified"]);
-    expect(badgeKinds(m.get("c")?.badges)).toEqual(["sensei", "diamond"]);
+    expect(badgeKinds(m.get("c")?.badges)).toEqual(["sensei"]);
     expect(m.get("c")?.photo).toMatch(/^https:\/\/lh3\.googleusercontent\.com\//);
     expect(m.get("f")?.photo).toBeNull();
     expect(m.has("d") || m.has("e")).toBe(false);

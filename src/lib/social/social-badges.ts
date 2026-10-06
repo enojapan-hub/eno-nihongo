@@ -27,19 +27,16 @@ export const BADGE_META: Record<BadgeKind, { label: string; text: string }> = {
 };
 
 /**
- * Aturan tampil (satu-satunya): Owner → Verified saja; Admin → Admin saja (role mengalahkan langganan).
- * Selain itu: Sensei bila Guru, lalu Diamond
- * bila Premium aktif, jika tidak Free. `b` harus hasil server yang sudah dimuat (null = belum tahu →
- * tidak ada badge, bukan "Free").
+ * Aturan tampil FINAL (satu-satunya): Owner → Verified saja; Admin → Admin saja; Guru → Sensei saja
+ * (entitlement Premium Guru berasal dari role, bukan badge); selain itu Premium aktif → Diamond, jika tidak Free.
+ * `b` harus hasil server yang sudah dimuat (null = belum tahu → tidak ada badge, bukan "Free").
  */
 export function badgeKinds(b: SocialBadges | null | undefined): BadgeKind[] {
   if (!b) return [];
   if (b.verified === true) return ["verified"];
   if (b.admin === true) return ["admin"];
-  const out: BadgeKind[] = [];
-  if (b.sensei === true) out.push("sensei");
-  out.push(b.diamond === true ? "diamond" : "free");
-  return out;
+  if (b.sensei === true) return ["sensei"];
+  return [b.diamond === true ? "diamond" : "free"];
 }
 
 /** Identitas publik: badge + URL foto yang sudah disaring server (null = tidak ada foto aman). */
