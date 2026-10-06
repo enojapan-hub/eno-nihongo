@@ -11,6 +11,8 @@ export type IncomingMessage = {
   senderId: string | null | undefined;
   meId: string | null | undefined;
   enabled: boolean;
+  /** Percakapan ini di-mute: pesan tetap masuk, hanya bunyi yang ditahan. */
+  muted?: boolean;
 };
 
 export function createSoundGate(opts: { cooldownMs?: number; now?: () => number } = {}) {
@@ -28,7 +30,7 @@ export function createSoundGate(opts: { cooldownMs?: number; now?: () => number 
         const first = seen.values().next().value;
         if (first !== undefined) seen.delete(first);
       }
-      if (!m.enabled || !m.meId || !m.senderId || m.senderId === m.meId) return false;
+      if (!m.enabled || m.muted || !m.meId || !m.senderId || m.senderId === m.meId) return false;
       const t = now();
       if (t - lastAt < cooldown) return false;
       lastAt = t;

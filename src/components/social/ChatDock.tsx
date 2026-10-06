@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { MessageCircle, Minus } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { MessageCircle, Minus, UserPlus } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGooglePhotoSync } from "@/hooks/useGooglePhotoSync";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,12 @@ import { dockHiddenOn, unreadBadge } from "@/lib/social/message-merge";
 import { profileCard, useProfileCard } from "@/lib/social/profile-card-state";
 import { armChatSound, handleIncomingMessage, resetChatSound } from "@/lib/social/chat-sound";
 import { resetSocialBadges } from "@/lib/social/social-badges";
-import { usePresenceTracking } from "@/lib/social/social-presence";
+import {
+  setConnectionStatus,
+  statusFromChannel,
+  useConnectionStatus,
+  usePresenceTracking,
+} from "@/lib/social/social-presence";
 import { emitSocialEvent } from "@/lib/social/social-bus";
 import { cn } from "@/lib/utils";
 import { DmPanel } from "./DmPanel";
@@ -18,7 +23,7 @@ import { FriendsPanel } from "./FriendsPanel";
 import { GlobalChatPanel } from "./GlobalChatPanel";
 import { SocialProfileHost } from "./SocialProfileCard";
 import { UsernameSetup } from "./UsernameSetup";
-import { invalidate, useSocialMe, useUnread } from "./social-queries";
+import { invalidate, useDmList, useSocialMe, useUnread } from "./social-queries";
 
 const TABS: ReadonlyArray<{ id: DockTab; label: string }> = [
   { id: "global", label: "Global" },
@@ -30,10 +35,17 @@ const TABS: ReadonlyArray<{ id: DockTab; label: string }> = [
  * Satu langganan Realtime untuk seluruh fitur sosial. RLS tetap berlaku pada setiap event
  * (penerima hanya menerima baris yang boleh dibacanya); event hanya memicu muat ulang halaman terbaru.
  */
-function useSocialRealtime(userId: string | null, enabled: boolean, soundEnabled: boolean) {
+function useSocialRealtime(
+  userId: string | null,
+  enabled: boolean,
+  soundEnabled: boolean,
+  mutedIds: ReadonlySet<string>,
+) {
   const qc = useQueryClient();
   const soundRef = useRef(soundEnabled);
   soundRef.current = soundEnabled;
+  const mutedRef = useRef(mutedIds);
+  mutedRef.current = mutedIds;
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (!userId || !enabled) return;
@@ -75,6 +87,7 @@ function useSocialRealtime(userId: string | null, enabled: boolean, soundEnabled
           senderId: row.sender_id,
           meId: userId,
           enabled: soundRef.current,
+          muted: !!row.sender_id && mutedRef.current.has(row.sender_id),
         });
         emitSocialEvent({
           type: "dm",
@@ -97,8 +110,12 @@ function useSocialRealtime(userId: string | null, enabled: boolean, soundEnabled
         emitSocialEvent({ type: "friends" });
         invalidate(qc, ["overview", "unread"]);
       })
-      .subscribe();
+      .subscribe((status) => {
+        const next = statusFromChannel(status);
+        if (next) setConnectionStatus(next);
+      });
     return () => {
+      setConnectionStatus("connecting");
       window.clearTimeout(timer.current);
       void supabase.removeChannel(channel);
     };
@@ -131,8 +148,14 @@ export function ChatDock() {
   const me = meQuery.data ?? null;
   const ready = !!me?.has_username;
   const unread = useUnread(ready && !hidden);
-  useSocialRealtime(userId, ready && !hidden, me?.sound_enabled !== false);
-  usePresenceTracking(userId);
+  const dmList = useDmList(ready && !hidden);
+  const mutedIds = useMemo(
+    () => new Set((dmList.data ?? []).filter((c) => c.muted).map((c) => c.user_id)),
+    [dmList.data],
+  );
+  useSocialRealtime(userId, ready && !hidden, me?.sound_enabled !== false, mutedIds);
+  usePresenceTracking(userId, me?.show_online !== false);
+  const connection = useConnectionStatus();
   useEffect(() => (userId ? armChatSound() : undefined), [userId]);
 
   const visible = !!userId && !hidden;
@@ -178,6 +201,7 @@ export function ChatDock() {
   if (!userId || hidden) return null;
 
   const badge = unreadBadge(unread.data);
+  const requests = Math.max(0, unread.data?.requests ?? 0);
   const tabBadge = (id: DockTab): number =>
     id === "global"
       ? (unread.data?.global ?? 0)
@@ -190,7 +214,7 @@ export function ChatDock() {
       {!state.open && (
         <button
           type="button"
-          aria-label={badge.label ? `Buka obrolan, ${badge.label} belum dibaca` : "Buka obrolan"}
+          aria-label={`Buka obrolan${badge.label ? `, ${badge.label} belum dibaca` : ""}${requests > 0 ? `, ${requests} permintaan pertemanan` : ""}`}
           aria-expanded={false}
           onClick={() => dock.open()}
           className="fixed bottom-[calc(4.15rem+env(safe-area-inset-bottom)+0.625rem)] left-3 z-40 grid size-[52px] place-items-center rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:bottom-5 md:left-5 md:size-12"
@@ -199,6 +223,15 @@ export function ChatDock() {
           {badge.label && (
             <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white">
               {badge.label}
+            </span>
+          )}
+          {requests > 0 && (
+            <span
+              aria-hidden
+              data-testid="friend-request-indicator"
+              className="absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full border-2 border-background bg-amber-500 text-white"
+            >
+              <UserPlus className="size-2.5" />
             </span>
           )}
         </button>
@@ -238,6 +271,15 @@ export function ChatDock() {
               <Minus className="size-[18px]" />
             </button>
           </div>
+          {ready && connection === "reconnecting" && (
+            <p
+              role="status"
+              data-testid="reconnecting-status"
+              className="border-b bg-amber-500/10 px-3 py-1 text-center text-[11px] font-medium text-amber-700 dark:text-amber-300"
+            >
+              Menghubungkan ulang… pesan baru mungkin tertunda.
+            </p>
+          )}
 
           {ready && me ? (
             <>

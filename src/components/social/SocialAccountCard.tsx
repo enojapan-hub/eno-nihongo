@@ -1,7 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { Eye } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
+import { profileCard } from "@/lib/social/profile-card-state";
 import { socialApi } from "@/lib/social/social-api";
+import type { DmPolicy } from "@/lib/social/social-types";
 import {
   formatCooldownDate,
   normalizeUsername,
@@ -14,6 +18,7 @@ import { useSocialInvalidate, useSocialMe } from "./social-queries";
 export function SocialAccountCard() {
   const me = useSocialMe(true);
   const invalidate = useSocialInvalidate();
+  const qc = useQueryClient();
   const [value, setValue] = useState("");
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,6 +52,19 @@ export function SocialAccountCard() {
       invalidate("me");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function saveSettings(
+    patch: Parameters<typeof socialApi.updateSettings>[0],
+  ): Promise<void> {
+    try {
+      await socialApi.updateSettings(patch);
+      invalidate("me");
+      void qc.invalidateQueries({ queryKey: ["social", "card"] });
+    } catch (err) {
+      toast.error(socialErrorMessage(err));
+      invalidate("me");
     }
   }
 
@@ -177,6 +195,62 @@ export function SocialAccountCard() {
               className="size-5 accent-[var(--color-primary,#087d48)]"
             />
           </label>
+        )}
+
+        {hasName && (
+          <div className="space-y-2" data-testid="profile-privacy">
+            <div>
+              <h3 className="text-xs font-bold">Privasi profil</h3>
+              <p className="text-[10px] text-muted-foreground">
+                Nama, username, foto, dan badge selalu terlihat agar teman bisa mengenalimu.
+              </p>
+            </div>
+            {(
+              [
+                ["show_online", "Tampilkan status online"],
+                ["show_country", "Tampilkan negara"],
+                ["show_jlpt", "Tampilkan level JLPT"],
+                ["show_xp", "Tampilkan XP dan level akun"],
+              ] as const
+            ).map(([key, label]) => (
+              <label
+                key={key}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-muted/40 px-3 py-2.5"
+              >
+                <span className="text-xs font-semibold">{label}</span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  aria-label={label}
+                  checked={data[key] !== false}
+                  onChange={(e) => void saveSettings({ [key]: e.target.checked })}
+                  className="size-5 accent-[var(--color-primary,#087d48)]"
+                />
+              </label>
+            ))}
+            <label className="block rounded-2xl bg-muted/40 px-3 py-2.5">
+              <span className="block text-xs font-semibold">Siapa yang dapat mengirim pesan</span>
+              <select
+                aria-label="Siapa yang dapat mengirim pesan"
+                value={data.dm_policy ?? "friends"}
+                onChange={(e) => void saveSettings({ dm_policy: e.target.value as DmPolicy })}
+                className="mt-1.5 h-10 w-full rounded-xl border bg-background px-2 text-[13px]"
+              >
+                <option value="friends">Semua teman</option>
+                <option value="started_by_me">Hanya percakapan yang saya mulai</option>
+                <option value="none">Nonaktifkan pesan pribadi</option>
+              </select>
+            </label>
+            {data.user_id && (
+              <button
+                type="button"
+                onClick={() => profileCard.open(data.user_id as string, { preview: true })}
+                className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border text-[13px] font-semibold"
+              >
+                <Eye className="size-4" /> Lihat sebagai pengguna lain
+              </button>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

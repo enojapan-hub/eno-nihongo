@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type {
   DmConversation,
+  DmPolicy,
   DmMessage,
   GlobalMessage,
   ProfileCardData,
@@ -31,7 +32,26 @@ export const socialApi = {
   setPrivacy: (allowFriendRequests: boolean) =>
     rpc<SocialMe>("social_set_privacy", { p_allow_friend_requests: allowFriendRequests }),
   setSound: (enabled: boolean) => rpc<SocialMe>("social_set_sound", { p_enabled: enabled }),
-  profileCard: (userId: string) => rpc<ProfileCardData>("social_profile_card", { p_user: userId }),
+  profileCard: (userId: string, publicView = false) =>
+    publicView
+      ? rpc<ProfileCardData>("social_profile_card", { p_user: userId, p_public: true })
+      : rpc<ProfileCardData>("social_profile_card", { p_user: userId }),
+  updateSettings: (s: {
+    show_online?: boolean;
+    show_country?: boolean;
+    show_jlpt?: boolean;
+    show_xp?: boolean;
+    dm_policy?: DmPolicy;
+  }) =>
+    rpc<SocialMe>("social_update_settings", {
+      p_show_online: s.show_online ?? null,
+      p_show_country: s.show_country ?? null,
+      p_show_jlpt: s.show_jlpt ?? null,
+      p_show_xp: s.show_xp ?? null,
+      p_dm_policy: s.dm_policy ?? null,
+    }),
+  dmMute: (userId: string, muted: boolean) =>
+    rpc<{ muted: boolean }>("dm_set_mute", { p_user: userId, p_muted: muted }),
   reportUser: (userId: string, reason: string | null) =>
     rpc<{ status: string }>("social_report_user", { p_user: userId, p_reason: reason }),
   overview: () => rpc<SocialOverview>("social_overview"),
@@ -67,11 +87,12 @@ export const socialApi = {
       p_before_at: before?.at ?? null,
       p_before_id: before?.id ?? null,
     }),
-  dmSend: (to: string, body: string, replyTo: string | null) =>
-    rpc<{ id: string; conversation_id: string }>("dm_send", {
+  dmSend: (to: string, body: string, replyTo: string | null, clientId?: string) =>
+    rpc<{ id: string; conversation_id: string; duplicate?: boolean }>("dm_send_message", {
       p_to: to,
       p_body: body,
       p_reply_to: replyTo,
+      p_client_id: clientId ?? null,
     }),
   dmDelete: (id: string) => rpc<{ status: string }>("dm_delete_message", { p_id: id }),
   dmMarkRead: (withUser: string) => rpc<{ status: string }>("dm_mark_read", { p_with: withUser }),

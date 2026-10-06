@@ -1,11 +1,15 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bell, BellOff } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { dock, useDock } from "@/lib/social/dock-state";
 import { profileCard } from "@/lib/social/profile-card-state";
 import { onSocialEvent } from "@/lib/social/social-bus";
 import { socialApi } from "@/lib/social/social-api";
-import { DM_MESSAGE_MAX, socialErrorMessage } from "@/lib/social/social-validation";
+import {
+  DM_MESSAGE_MAX,
+  isPermanentSendError,
+  socialErrorMessage,
+} from "@/lib/social/social-validation";
 import type { DmMessage, SocialIdentity, SocialMe } from "@/lib/social/social-types";
 import { Composer } from "./Composer";
 import { IdentityBadges } from "./IdentityBadges";
@@ -64,6 +68,13 @@ function ConversationList({ active }: { active: boolean }) {
                   {c.display_name ?? c.username}
                 </span>
                 <IdentityBadges userId={c.user_id} />
+                {c.muted && (
+                  <BellOff
+                    aria-label="Suara dimatikan"
+                    role="img"
+                    className="size-3 shrink-0 text-muted-foreground"
+                  />
+                )}
               </button>
               <button
                 type="button"
@@ -91,6 +102,15 @@ function ConversationList({ active }: { active: boolean }) {
     </ul>
   );
 }
+
+type PendingDm = {
+  clientId: string;
+  body: string;
+  replyTo: string | null;
+  at: number;
+  status: "sending" | "failed";
+  error?: string;
+};
 
 function toListMessage(m: DmMessage, meId: string, other: SocialIdentity): ListMessage {
   const name = (id: string) => (id === meId ? "Kamu" : `@${other.username}`);
@@ -143,9 +163,101 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
       .catch(() => undefined);
   }, [active, newestFromOther, other.user_id, invalidate]);
 
-  const items = useMemo(
-    () => thread.messages.map((m) => toListMessage(m, meId, other)),
-    [thread.messages, meId, other],
+  // Kirim optimistik: pesan tampil langsung; gagal sementara -> "Gagal dikirim" + Coba lagi (client_id
+  // yang sama membuat server tidak pernah menyimpan dua kali).
+  const [pending, setPending] = useState<PendingDm[]>([]);
+  const items = useMemo(() => {
+    const real = thread.messages.map((m) => toListMessage(m, meId, other));
+    const local = pending
+      .filter(
+        (p) =>
+          !thread.messages.some(
+            (m) =>
+              m.sender_id === meId &&
+              m.body === p.body &&
+              new Date(m.created_at).getTime() >= p.at - 5000,
+          ),
+      )
+      .map((p): ListMessage => ({
+        id: `pending:${p.clientId}`,
+        mine: true,
+        author: null,
+        body: p.body,
+        deleted: false,
+        createdAt: new Date(p.at).toISOString(),
+        reply: null,
+        status: p.status,
+        ...(p.error ? { errorText: p.error } : {}),
+      }));
+    return [...local, ...real];
+  }, [thread.messages, pending, meId, other]);
+
+  const list = useDmList(true);
+  const muted = list.data?.find((c) => c.user_id === other.user_id)?.muted === true;
+  const toggleMute = useCallback(async () => {
+    try {
+      await socialApi.dmMute(other.user_id, !muted);
+      invalidate("dmList");
+      toast.success(muted ? "Suara percakapan diaktifkan." : "Suara percakapan dimatikan.");
+    } catch (e) {
+      toast.error(socialErrorMessage(e));
+    }
+  }, [other.user_id, muted, invalidate]);
+
+  const deliver = useCallback(
+    async (p: PendingDm) => {
+      setPending((cur) =>
+        cur.map((x) => (x.clientId === p.clientId ? { ...x, status: "sending" } : x)),
+      );
+      try {
+        await socialApi.dmSend(other.user_id, p.body, p.replyTo, p.clientId);
+        setPending((cur) => cur.filter((x) => x.clientId !== p.clientId));
+        await refreshLatest();
+        invalidate("dmList");
+      } catch (e) {
+        if (isPermanentSendError(e)) {
+          // Ditolak (kata/link terlarang, kebijakan DM, dll.): bukan kegagalan jaringan, jangan ditawari ulang.
+          setPending((cur) => cur.filter((x) => x.clientId !== p.clientId));
+          throw e;
+        }
+        setPending((cur) =>
+          cur.map((x) =>
+            x.clientId === p.clientId
+              ? { ...x, status: "failed", error: socialErrorMessage(e) }
+              : x,
+          ),
+        );
+      }
+    },
+    [other.user_id, refreshLatest, invalidate],
+  );
+
+  const send = useCallback(
+    async (body: string) => {
+      const p: PendingDm = {
+        clientId: crypto.randomUUID(),
+        body,
+        replyTo: replyTo?.id.startsWith("pending:") ? null : (replyTo?.id ?? null),
+        at: Date.now(),
+        status: "sending",
+      };
+      setPending((cur) => [p, ...cur]);
+      setReplyTo(null);
+      await deliver(p);
+    },
+    [replyTo, deliver],
+  );
+
+  const retry = useCallback(
+    (m: ListMessage) => {
+      const p = pending.find((x) => `pending:${x.clientId}` === m.id);
+      if (p) void deliver(p).catch((e) => toast.error(socialErrorMessage(e)));
+    },
+    [pending, deliver],
+  );
+  const discard = useCallback(
+    (m: ListMessage) => setPending((cur) => cur.filter((x) => `pending:${x.clientId}` !== m.id)),
+    [],
   );
 
   const actions = useMemo(
@@ -173,6 +285,8 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
           toast.error(socialErrorMessage(e));
         }
       },
+      onRetry: retry,
+      onDiscard: discard,
       onBlock: async () => {
         try {
           await socialApi.block(other.user_id);
@@ -184,17 +298,7 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
         }
       },
     }),
-    [other.user_id, refreshLatest, invalidate],
-  );
-
-  const send = useCallback(
-    async (body: string) => {
-      await socialApi.dmSend(other.user_id, body, replyTo?.id ?? null);
-      setReplyTo(null);
-      await refreshLatest();
-      invalidate("dmList");
-    },
-    [other.user_id, replyTo, refreshLatest, invalidate],
+    [other.user_id, refreshLatest, invalidate, retry, discard],
   );
 
   return (
@@ -227,6 +331,16 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
             </span>
           </span>
         </button>
+        <button
+          type="button"
+          aria-pressed={muted}
+          aria-label={muted ? "Aktifkan suara percakapan" : "Matikan suara percakapan"}
+          title={muted ? "Aktifkan suara" : "Matikan suara"}
+          onClick={() => void toggleMute()}
+          className="ml-auto grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          {muted ? <BellOff className="size-[18px]" /> : <Bell className="size-[18px]" />}
+        </button>
       </div>
       <MessageList
         messages={items}
@@ -235,6 +349,8 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
         hasMore={thread.hasMore}
         loadingMore={thread.loadingMore}
         onLoadOlder={() => void thread.loadOlder()}
+        error={thread.error}
+        onRetryLoad={() => void thread.refreshLatest()}
         empty={<p>Belum ada pesan. Mulai percakapan dengan @{other.username}.</p>}
       />
       <Composer

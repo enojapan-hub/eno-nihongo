@@ -1014,6 +1014,7 @@ export type Database = {
       dm_messages: {
         Row: {
           body: string
+          client_id: string | null
           conversation_id: string
           created_at: string
           deleted_at: string | null
@@ -1024,6 +1025,7 @@ export type Database = {
         }
         Insert: {
           body: string
+          client_id?: string | null
           conversation_id: string
           created_at?: string
           deleted_at?: string | null
@@ -1034,6 +1036,7 @@ export type Database = {
         }
         Update: {
           body?: string
+          client_id?: string | null
           conversation_id?: string
           created_at?: string
           deleted_at?: string | null
@@ -3330,6 +3333,24 @@ export type Database = {
         }
         Relationships: []
       }
+      social_dm_mutes: {
+        Row: {
+          created_at: string
+          other_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          other_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          other_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       social_friendships: {
         Row: {
           created_at: string
@@ -3456,6 +3477,11 @@ export type Database = {
       social_settings: {
         Row: {
           allow_friend_requests: boolean
+          dm_policy: string
+          show_country: boolean
+          show_jlpt: boolean
+          show_online: boolean
+          show_xp: boolean
           sound_enabled: boolean
           updated_at: string
           user_id: string
@@ -3463,6 +3489,11 @@ export type Database = {
         }
         Insert: {
           allow_friend_requests?: boolean
+          dm_policy?: string
+          show_country?: boolean
+          show_jlpt?: boolean
+          show_online?: boolean
+          show_xp?: boolean
           sound_enabled?: boolean
           updated_at?: string
           user_id: string
@@ -3470,6 +3501,11 @@ export type Database = {
         }
         Update: {
           allow_friend_requests?: boolean
+          dm_policy?: string
+          show_country?: boolean
+          show_jlpt?: boolean
+          show_online?: boolean
+          show_xp?: boolean
           sound_enabled?: boolean
           updated_at?: string
           user_id?: string
@@ -4853,6 +4889,16 @@ export type Database = {
         Args: { p_body: string; p_reply_to?: string; p_to: string }
         Returns: Json
       }
+      dm_send_message: {
+        Args: {
+          p_body: string
+          p_client_id?: string
+          p_reply_to?: string
+          p_to: string
+        }
+        Returns: Json
+      }
+      dm_set_mute: { Args: { p_muted: boolean; p_user: string }; Returns: Json }
       enroll_in_class: { Args: { p_class_id: string }; Returns: string }
       ensure_active_study_plan: {
         Args: never
@@ -5774,7 +5820,12 @@ export type Database = {
         Args: { p_code?: string; p_text: string }
         Returns: undefined
       }
+      social_assert_link_allowed: {
+        Args: { p_body: string; p_uid: string }
+        Returns: undefined
+      }
       social_assert_member: { Args: never; Returns: string }
+      social_backfill_owner_friends: { Args: never; Returns: Json }
       social_badges: { Args: { p_users: string[] }; Returns: Json }
       social_block: { Args: { p_user: string }; Returns: Json }
       social_blocked_between: {
@@ -5782,6 +5833,11 @@ export type Database = {
         Returns: boolean
       }
       social_change_username: { Args: { p_username: string }; Returns: Json }
+      social_contains_link: { Args: { p_text: string }; Returns: boolean }
+      social_dm_allowed: {
+        Args: { p_from: string; p_to: string }
+        Returns: string
+      }
       social_drop_pending: {
         Args: { p_a: string; p_b: string; p_requester: string }
         Returns: boolean
@@ -5791,9 +5847,16 @@ export type Database = {
         Returns: boolean
       }
       social_me: { Args: never; Returns: Json }
+      social_mute_remove: {
+        Args: { p_other: string; p_user: string }
+        Returns: boolean
+      }
       social_normalize_text: { Args: { p_text: string }; Returns: string }
       social_overview: { Args: never; Returns: Json }
-      social_profile_card: { Args: { p_user: string }; Returns: Json }
+      social_owner_befriend: { Args: { p_user: string }; Returns: number }
+      social_profile_card:
+        | { Args: { p_user: string }; Returns: Json }
+        | { Args: { p_public: boolean; p_user: string }; Returns: Json }
       social_report_message: {
         Args: { p_message_id: string; p_reason?: string; p_scope: string }
         Returns: Json
@@ -5815,6 +5878,16 @@ export type Database = {
       }
       social_unblock: { Args: { p_user: string }; Returns: Json }
       social_unread_summary: { Args: never; Returns: Json }
+      social_update_settings: {
+        Args: {
+          p_dm_policy?: string
+          p_show_country?: boolean
+          p_show_jlpt?: boolean
+          p_show_online?: boolean
+          p_show_xp?: boolean
+        }
+        Returns: Json
+      }
       social_username_reserved: { Args: { p_name: string }; Returns: boolean }
       start_eno_monthly_exam: { Args: { p_exam_id: string }; Returns: Json }
       start_jlpt_simulation_full: {

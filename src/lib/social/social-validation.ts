@@ -54,6 +54,13 @@ const MESSAGES: Record<string, string> = {
   username_cooldown: "Username baru bisa diubah lagi setelah masa tunggu 30 hari berakhir.",
   username_unchanged: "Itu sudah menjadi usernamemu.",
   requests_disabled: "Pengguna ini tidak menerima permintaan pertemanan.",
+  link_not_allowed: "Link tidak dapat dikirim melalui chat.",
+  dm_disabled: "Pengguna ini tidak menerima pesan pribadi.",
+  dm_not_accepted: "Pengguna ini hanya membalas percakapan yang ia mulai.",
+  dm_disabled_self: "Aktifkan pesan pribadi di Edit Profil untuk mengirim pesan.",
+  user_unavailable: "Pengguna tidak tersedia.",
+  owner_friendship_locked: "Pertemanan dengan akun resmi bersifat otomatis.",
+  invalid_setting: "Pengaturan tidak valid.",
 };
 
 export function socialErrorCode(err: unknown): string | null {
@@ -67,6 +74,28 @@ export function socialErrorCode(err: unknown): string | null {
   return code in MESSAGES ? code : null;
 }
 
+/** Galat yang pasti ditolak server (bukan jaringan): pesan tidak ditawarkan "Coba lagi" dan teks tetap di kotak ketik. */
+const PERMANENT_SEND_ERRORS = new Set([
+  "message_rejected",
+  "link_not_allowed",
+  "message_empty",
+  "message_too_long",
+  "blocked",
+  "not_friends",
+  "dm_disabled",
+  "dm_not_accepted",
+  "dm_disabled_self",
+  "user_unavailable",
+  "suspended",
+  "forbidden",
+  "username_required",
+  "auth_required",
+]);
+export function isPermanentSendError(err: unknown): boolean {
+  const code = socialErrorCode(err);
+  return code !== null && PERMANENT_SEND_ERRORS.has(code);
+}
+
 export function socialErrorMessage(err: unknown): string {
   const code = socialErrorCode(err);
   return code ? (MESSAGES[code] as string) : "Terjadi kesalahan. Coba lagi.";
@@ -78,4 +107,27 @@ export function formatCooldownDate(iso: string | null | undefined): string | nul
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+}
+
+/** "2026-09" → "Sep 2026" (hanya bulan + tahun). */
+export function formatJoined(ym: string): string | null {
+  const m = /^(\d{4})-(\d{2})$/.exec(ym);
+  if (!m) return null;
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return null;
+  const names = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Agu",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+  ];
+  return `${names[month - 1]} ${m[1]}`;
 }

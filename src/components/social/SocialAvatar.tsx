@@ -58,19 +58,27 @@ export function ProfilePhoto({
 }) {
   const identity = useSocialIdentity(userId);
   const [failed, setFailed] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<string | null>(null);
   const url = photo ?? identity.photo;
   const useFallback = !url || failed === url;
+  const src = useFallback ? DEFAULT_PHOTO : sizedPhoto(url, 640);
   return (
     <img
       alt=""
       aria-hidden
-      src={useFallback ? DEFAULT_PHOTO : sizedPhoto(url, 640)}
+      src={src}
+      onLoad={() => setLoaded(src)}
+      fetchPriority="high"
       decoding="async"
       referrerPolicy={isGooglePhotoUrl(url) ? "no-referrer" : undefined}
       onError={() => url && setFailed(url)}
       data-testid="profile-photo"
       data-fallback={useFallback ? "true" : "false"}
-      className={cn("size-full bg-primary/10 object-cover", className)}
+      className={cn(
+        "size-full bg-primary/10 object-cover transition-opacity duration-200 motion-reduce:transition-none",
+        loaded === src ? "opacity-100" : "opacity-0",
+        className,
+      )}
     />
   );
 }

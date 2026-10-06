@@ -207,9 +207,11 @@ describe("one identity entry point", () => {
       );
   });
   it("does not make arbitrary @text clickable or touch Edit Profil inputs", () => {
-    expect(read("src/components/social/SocialAccountCard.tsx")).not.toMatch(
-      /profileCard|IdentityBadges/,
-    );
+    const account = read("src/components/social/SocialAccountCard.tsx");
+    expect(account).not.toMatch(/IdentityBadges/);
+    // Satu-satunya pembuka kartu di Edit Profil: tombol eksplisit pratinjau publik milik sendiri.
+    expect(account.match(/profileCard\.open/g)).toHaveLength(1);
+    expect(account).toMatch(/profileCard\.open\(data\.user_id as string, \{ preview: true \}\)/);
     expect(read("src/routes/_authenticated/edit-profil.tsx")).not.toMatch(/profileCard\.open/);
   });
 });

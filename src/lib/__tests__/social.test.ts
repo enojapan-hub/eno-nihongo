@@ -167,6 +167,10 @@ const sqlV3 = readFileSync(
   join(root, "supabase/migrations/20261012000000_social_profile_v3.sql"),
   "utf8",
 );
+const sqlV4 = readFileSync(
+  join(root, "supabase/migrations/20261013000000_social_core_v4.sql"),
+  "utf8",
+);
 const TABLES = [
   "social_profiles",
   "social_global_read",
@@ -279,7 +283,7 @@ describe("social client contract", () => {
     );
     expect(called.length).toBeGreaterThanOrEqual(20);
     for (const name of called)
-      expect(sql + sqlV2 + sqlV3, name).toMatch(
+      expect(sql + sqlV2 + sqlV3 + sqlV4, name).toMatch(
         new RegExp(`create or replace function public\\.${name}\\(`),
       );
   });

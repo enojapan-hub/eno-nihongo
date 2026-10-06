@@ -16,9 +16,10 @@ function toListMessage(m: GlobalMessage, meId: string): ListMessage {
     mine: m.sender_id === meId,
     author: {
       userId: m.sender_id,
-      name: m.display_name ?? m.username,
-      username: m.username,
-      avatarId: m.avatar_id,
+      name: m.display_name ?? m.username ?? "Pengguna tidak tersedia",
+      username: m.username ?? "",
+      avatarId: m.avatar_id ?? 0,
+      unavailable: !m.username,
     },
     body: m.body,
     deleted: m.deleted,
@@ -125,6 +126,8 @@ export function GlobalChatPanel({ me, active }: { me: SocialMe; active: boolean 
         hasMore={thread.hasMore}
         loadingMore={thread.loadingMore}
         onLoadOlder={() => void thread.loadOlder()}
+        error={thread.error}
+        onRetryLoad={() => void thread.refreshLatest()}
         empty={<p>Belum ada pesan. Sapa semua orang di ruang global!</p>}
       />
       <Composer
