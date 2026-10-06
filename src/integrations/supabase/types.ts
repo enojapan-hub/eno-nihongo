@@ -764,6 +764,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category: string
+          chat_category: string | null
           created_at: string
           description: string | null
           id: string
@@ -772,11 +773,13 @@ export type Database = {
           resolution_note: string | null
           status: string
           subject: string
+          target_user_id: string | null
           updated_at: string
         }
         Insert: {
           assigned_to?: string | null
           category?: string
+          chat_category?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -785,11 +788,13 @@ export type Database = {
           resolution_note?: string | null
           status?: string
           subject: string
+          target_user_id?: string | null
           updated_at?: string
         }
         Update: {
           assigned_to?: string | null
           category?: string
+          chat_category?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -798,6 +803,7 @@ export type Database = {
           resolution_note?: string | null
           status?: string
           subject?: string
+          target_user_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -981,6 +987,32 @@ export type Database = {
           },
         ]
       }
+      dm_conversation_hidden: {
+        Row: {
+          conversation_id: string
+          hidden_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          hidden_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          hidden_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_conversation_hidden_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "dm_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dm_conversations: {
         Row: {
           created_at: string
@@ -1018,6 +1050,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           deleted_at: string | null
+          edited_at: string | null
           id: string
           recipient_id: string
           reply_to: string | null
@@ -1029,6 +1062,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           recipient_id: string
           reply_to?: string | null
@@ -1040,6 +1074,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           recipient_id?: string
           reply_to?: string | null
@@ -1300,6 +1335,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          edited_at: string | null
           id: string
           reply_to: string | null
           sender_id: string
@@ -1309,6 +1345,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          edited_at?: string | null
           id?: string
           reply_to?: string | null
           sender_id: string
@@ -1318,6 +1355,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          edited_at?: string | null
           id?: string
           reply_to?: string | null
           sender_id?: string
@@ -3381,6 +3419,33 @@ export type Database = {
         }
         Relationships: []
       }
+      social_global_config: {
+        Row: {
+          id: number
+          pinned_at: string | null
+          pinned_by: string | null
+          pinned_text: string | null
+          slow_mode_seconds: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          pinned_at?: string | null
+          pinned_by?: string | null
+          pinned_text?: string | null
+          slow_mode_seconds?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          pinned_at?: string | null
+          pinned_by?: string | null
+          pinned_text?: string | null
+          slow_mode_seconds?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       social_global_read: {
         Row: {
           last_read_at: string
@@ -3482,6 +3547,8 @@ export type Database = {
           show_jlpt: boolean
           show_online: boolean
           show_xp: boolean
+          social_suspended_at: string | null
+          social_suspended_reason: string | null
           sound_enabled: boolean
           updated_at: string
           user_id: string
@@ -3494,6 +3561,8 @@ export type Database = {
           show_jlpt?: boolean
           show_online?: boolean
           show_xp?: boolean
+          social_suspended_at?: string | null
+          social_suspended_reason?: string | null
           sound_enabled?: boolean
           updated_at?: string
           user_id: string
@@ -3506,6 +3575,8 @@ export type Database = {
           show_jlpt?: boolean
           show_online?: boolean
           show_xp?: boolean
+          social_suspended_at?: string | null
+          social_suspended_reason?: string | null
           sound_enabled?: boolean
           updated_at?: string
           user_id?: string
@@ -4873,8 +4944,10 @@ export type Database = {
         Returns: boolean
       }
       delete_my_read_notifications: { Args: never; Returns: number }
+      dm_conversation_hide: { Args: { p_with: string }; Returns: Json }
       dm_conversation_list: { Args: never; Returns: Json }
       dm_delete_message: { Args: { p_id: string }; Returns: Json }
+      dm_edit_message: { Args: { p_body: string; p_id: string }; Returns: Json }
       dm_history: {
         Args: {
           p_before_at?: string
@@ -5570,7 +5643,12 @@ export type Database = {
           usage_note_id: string
         }[]
       }
+      global_config: { Args: never; Returns: Json }
       global_delete_message: { Args: { p_id: string }; Returns: Json }
+      global_edit_message: {
+        Args: { p_body: string; p_id: string }
+        Returns: Json
+      }
       global_history: {
         Args: { p_before_at?: string; p_before_id?: string; p_limit?: number }
         Returns: Json
@@ -5580,6 +5658,8 @@ export type Database = {
         Args: { p_body: string; p_reply_to?: string }
         Returns: Json
       }
+      global_set_pin: { Args: { p_text: string }; Returns: Json }
+      global_set_slow_mode: { Args: { p_seconds: number }; Returns: Json }
       grade_class_submission: {
         Args: { p_feedback?: string; p_score: number; p_submission_id: string }
         Returns: undefined
@@ -5804,6 +5884,18 @@ export type Database = {
         Args: { p_enabled: boolean }
         Returns: undefined
       }
+      social_admin_report_resolve: {
+        Args: { p_action: string; p_id: string; p_note?: string }
+        Returns: Json
+      }
+      social_admin_reports: {
+        Args: { p_limit?: number; p_status?: string }
+        Returns: Json
+      }
+      social_admin_suspend: {
+        Args: { p_reason?: string; p_suspend: boolean; p_user: string }
+        Returns: Json
+      }
       social_admin_term_upsert: {
         Args: {
           p_active?: boolean
@@ -5825,6 +5917,8 @@ export type Database = {
         Returns: undefined
       }
       social_assert_member: { Args: never; Returns: string }
+      social_assert_moderator: { Args: never; Returns: string }
+      social_assert_writer: { Args: never; Returns: string }
       social_backfill_owner_friends: { Args: never; Returns: Json }
       social_badges: { Args: { p_users: string[] }; Returns: Json }
       social_block: { Args: { p_user: string }; Returns: Json }
@@ -5842,16 +5936,20 @@ export type Database = {
         Args: { p_a: string; p_b: string; p_requester: string }
         Returns: boolean
       }
+      social_effectively_empty: { Args: { p_text: string }; Returns: boolean }
       social_end_friendship: {
         Args: { p_a: string; p_b: string }
         Returns: boolean
       }
+      social_is_owner: { Args: { p_user: string }; Returns: boolean }
+      social_is_staff: { Args: { p_user: string }; Returns: boolean }
       social_me: { Args: never; Returns: Json }
       social_mute_remove: {
         Args: { p_other: string; p_user: string }
         Returns: boolean
       }
       social_normalize_text: { Args: { p_text: string }; Returns: string }
+      social_official_lookalike: { Args: { p_text: string }; Returns: boolean }
       social_overview: { Args: never; Returns: Json }
       social_owner_befriend: { Args: { p_user: string }; Returns: number }
       social_profile_card:
@@ -5859,6 +5957,15 @@ export type Database = {
         | { Args: { p_public: boolean; p_user: string }; Returns: Json }
       social_report_message: {
         Args: { p_message_id: string; p_reason?: string; p_scope: string }
+        Returns: Json
+      }
+      social_report_submit: {
+        Args: {
+          p_category: string
+          p_reason: string
+          p_scope: string
+          p_target: string
+        }
         Returns: Json
       }
       social_report_user: {
@@ -5888,6 +5995,7 @@ export type Database = {
         }
         Returns: Json
       }
+      social_user_by_username: { Args: { p_username: string }; Returns: Json }
       social_username_reserved: { Args: { p_name: string }; Returns: boolean }
       start_eno_monthly_exam: { Args: { p_exam_id: string }; Returns: Json }
       start_jlpt_simulation_full: {
