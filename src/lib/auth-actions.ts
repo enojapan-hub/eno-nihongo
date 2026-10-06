@@ -9,3 +9,14 @@ export async function signOutCleanly(queryClient: QueryClient) {
   queryClient.clear();
   await supabase.auth.signOut();
 }
+
+/**
+ * Keluar dari SEMUA perangkat: pencabutan sesi resmi Supabase (scope "global"). Daftar sesi tidak
+ * disimpan sendiri. Cache aplikasi dibuang lokal karena sesi ini pun berakhir.
+ */
+export async function signOutEverywhere(queryClient: QueryClient) {
+  await queryClient.cancelQueries();
+  const { error } = await supabase.auth.signOut({ scope: "global" });
+  if (error) throw error;
+  queryClient.clear();
+}
