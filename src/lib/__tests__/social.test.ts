@@ -50,7 +50,7 @@ describe("username rules", () => {
 describe("error mapping", () => {
   it("maps database error codes to learner messages", () => {
     expect(socialErrorCode(new Error("username_taken"))).toBe("username_taken");
-    expect(socialErrorMessage(new Error("username_taken"))).toMatch(/sudah dipakai/);
+    expect(socialErrorMessage(new Error("username_taken"))).toMatch(/sudah digunakan/);
     expect(socialErrorMessage(new Error("rate_limited"))).toMatch(/Tunggu/);
   });
   it("never leaks raw database errors", () => {
@@ -165,6 +165,10 @@ const sqlV2 = readFileSync(
 );
 const sqlV3 = readFileSync(
   join(root, "supabase/migrations/20261012000000_social_profile_v3.sql"),
+  "utf8",
+);
+const sqlV5 = readFileSync(
+  join(root, "supabase/migrations/20261014000000_social_core_v5.sql"),
   "utf8",
 );
 const sqlV4 = readFileSync(
@@ -283,7 +287,7 @@ describe("social client contract", () => {
     );
     expect(called.length).toBeGreaterThanOrEqual(20);
     for (const name of called)
-      expect(sql + sqlV2 + sqlV3 + sqlV4, name).toMatch(
+      expect(sql + sqlV2 + sqlV3 + sqlV4 + sqlV5, name).toMatch(
         new RegExp(`create or replace function public\\.${name}\\(`),
       );
   });

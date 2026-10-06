@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGooglePhotoSync } from "@/hooks/useGooglePhotoSync";
 import { supabase } from "@/integrations/supabase/client";
+import { resetDrafts } from "@/lib/social/chat-drafts";
 import { dock, useDock, type DockTab } from "@/lib/social/dock-state";
 import { dockHiddenOn, unreadBadge } from "@/lib/social/message-merge";
 import { profileCard, useProfileCard } from "@/lib/social/profile-card-state";
@@ -53,6 +54,7 @@ function useSocialRealtime(
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => invalidate(qc, ["unread", "dmList"]), 250);
     };
+    let wasDown = false;
     const channel = supabase
       .channel(`social:${userId}`)
       .on(
@@ -112,7 +114,17 @@ function useSocialRealtime(
       })
       .subscribe((status) => {
         const next = statusFromChannel(status);
-        if (next) setConnectionStatus(next);
+        if (!next) return;
+        setConnectionStatus(next);
+        if (next === "reconnecting") wasDown = true;
+        else if (wasDown) {
+          // Pulih setelah putus: kejar dari server (kursor + merge berdasarkan id, tanpa duplikat).
+          wasDown = false;
+          emitSocialEvent({ type: "global", kind: "update", id: "" });
+          emitSocialEvent({ type: "dm", kind: "update", id: "", conversationId: "" });
+          emitSocialEvent({ type: "friends" });
+          invalidate(qc, ["unread", "dmList", "overview"]);
+        }
       });
     return () => {
       setConnectionStatus("connecting");
@@ -139,6 +151,7 @@ export function ChatDock() {
       dock.reset();
       resetSocialBadges();
       resetChatSound();
+      resetDrafts();
       qc.removeQueries({ queryKey: ["social"] });
     }
     lastUser.current = userId;

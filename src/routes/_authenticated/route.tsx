@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { ChatDock } from "@/components/social/ChatDock";
+import { UsernameGate } from "@/components/social/UsernameGate";
 import { supabase } from "@/integrations/supabase/client";
 
 // beforeLoad berjalan pada SETIAP navigasi; pemeriksaan suspend ke database di-cache singkat per user
@@ -39,9 +40,9 @@ export const Route = createFileRoute("/_authenticated")({
     throw redirect({ to: "/auth" });
   },
   component: () => (
-    <>
+    <UsernameGate>
       <Outlet />
       <ChatDock />
-    </>
+    </UsernameGate>
   ),
 });

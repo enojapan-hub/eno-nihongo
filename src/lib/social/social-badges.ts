@@ -2,27 +2,40 @@ import { useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /** Status publik minimal dari RPC `social_badges` (role/plan mentah tidak pernah sampai ke klien). */
-export type SocialBadges = { verified: boolean; sensei: boolean; diamond: boolean };
+export type SocialBadges = {
+  verified: boolean;
+  admin?: boolean;
+  sensei: boolean;
+  diamond: boolean;
+};
 
-export const NO_BADGES: SocialBadges = { verified: false, sensei: false, diamond: false };
+export const NO_BADGES: SocialBadges = {
+  verified: false,
+  admin: false,
+  sensei: false,
+  diamond: false,
+};
 
-export type BadgeKind = "verified" | "sensei" | "diamond" | "free";
+export type BadgeKind = "verified" | "admin" | "sensei" | "diamond" | "free";
 
 export const BADGE_META: Record<BadgeKind, { label: string; text: string }> = {
   verified: { label: "Akun resmi ENO NIHONGO", text: "Verified" },
+  admin: { label: "Tim ENO NIHONGO", text: "Admin" },
   sensei: { label: "Guru ENO NIHONGO", text: "Sensei" },
   diamond: { label: "Member Premium", text: "Premium" },
   free: { label: "Akun Free", text: "FREE" },
 };
 
 /**
- * Aturan tampil (satu-satunya): Owner → Verified saja. Selain itu: Sensei bila Guru, lalu Diamond
+ * Aturan tampil (satu-satunya): Owner → Verified saja; Admin → Admin saja (role mengalahkan langganan).
+ * Selain itu: Sensei bila Guru, lalu Diamond
  * bila Premium aktif, jika tidak Free. `b` harus hasil server yang sudah dimuat (null = belum tahu →
  * tidak ada badge, bukan "Free").
  */
 export function badgeKinds(b: SocialBadges | null | undefined): BadgeKind[] {
   if (!b) return [];
   if (b.verified === true) return ["verified"];
+  if (b.admin === true) return ["admin"];
   const out: BadgeKind[] = [];
   if (b.sensei === true) out.push("sensei");
   out.push(b.diamond === true ? "diamond" : "free");
@@ -38,10 +51,17 @@ export function parsePublicMeta(raw: unknown): Map<string, PublicMeta> {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return map;
   for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
     if (!v || typeof v !== "object") continue;
-    const o = v as { verified?: unknown; sensei?: unknown; diamond?: unknown; photo?: unknown };
+    const o = v as {
+      verified?: unknown;
+      admin?: unknown;
+      sensei?: unknown;
+      diamond?: unknown;
+      photo?: unknown;
+    };
     map.set(id, {
       badges: {
         verified: o.verified === true,
+        admin: o.admin === true,
         sensei: o.sensei === true,
         diamond: o.diamond === true,
       },

@@ -16,6 +16,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminSocialReports } from "@/components/social/AdminSocialReports";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin-operasional")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -99,6 +100,8 @@ function Page() {
   const filtered = useMemo(
     () =>
       (list.data || []).filter((x) => {
+        // Laporan chat ditangani di antrean moderasi sosial (izin + audit di server), bukan di daftar umum.
+        if (tab === "laporan" && x.category === "chat") return false;
         const q = searchText.toLowerCase();
         if (
           q &&
@@ -113,7 +116,7 @@ function Page() {
         if (statusFilter !== "all" && x.status !== statusFilter) return false;
         return true;
       }),
-    [list.data, searchText, statusFilter],
+    [list.data, searchText, statusFilter, tab],
   );
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["ops-list"] });
@@ -345,6 +348,7 @@ function Page() {
           </>
         ) : tab === "laporan" ? (
           <div className="space-y-2">
+            <AdminSocialReports />
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />

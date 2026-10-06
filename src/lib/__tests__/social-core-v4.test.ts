@@ -193,7 +193,7 @@ describe("v4 UI contract", () => {
   const card = read("src/components/social/SocialProfileCard.tsx");
   it("Owner card: no rank, no Hapus Pertemanan, 'Akun Resmi' instead of join date", () => {
     expect(card).toMatch(/ctx\?\.rank !== undefined && !c\?\.official/);
-    expect(card).toMatch(/\{!c\.official &&/);
+    expect(card).toMatch(/caps\?\.can_unfriend/);
     expect(card).toMatch(/Akun Resmi/);
     expect(card).toMatch(/Bergabung \$\{joined\}/);
   });
@@ -212,7 +212,7 @@ describe("v4 UI contract", () => {
     expect(card).toMatch(/trigger\.focus/);
   });
   it("DM errors are shown from the server; Message button mirrors dm_blocked", () => {
-    expect(card).toMatch(/disabled=\{!!c\.dm_blocked\}/);
+    expect(card).toMatch(/disabled=\{!caps\?\.can_message\}/);
     expect(card).toMatch(/socialErrorMessage\(c\.dm_blocked\)/);
   });
   it("report cannot be spammed (disabled after success)", () => {
@@ -274,21 +274,21 @@ describe("core flow integration script", () => {
     expect(flow).toMatch(/raise exception 'FLOW_OK %'/);
     expect(flow).not.toMatch(/\bcommit\b/i);
     for (const step of [
-      "auto_friend_new_member",
-      "owner_in_leaderboard",
-      "rank_gaps",
-      "unfriend_owner",
+      "owner_autofriend_a",
+      "owner_not_in_leaderboard",
+      "rank_no_gaps",
+      "unfriend_owner_rejected",
       "owner_unread_dm",
-      "idempotent_same_id",
+      "idempotent",
       "muted_in_list",
       "free_dm_link",
       "rejected_link_rows",
       "link_allowed_owner_teacher",
       "privacy_seen_by_other",
       "preview_public",
-      "dm_after_block",
-      "backfill_after_block",
-      "suspended_send",
+      "block_owner_rejected",
+      "backfill_idempotent",
+      "suspended_global_rejected",
     ])
       expect(flow, step).toContain(step);
   });

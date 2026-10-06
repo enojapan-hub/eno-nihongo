@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type {
+  AdminChatReport,
   DmConversation,
+  GlobalConfig,
+  ReportCategory,
   DmPolicy,
   DmMessage,
   GlobalMessage,
@@ -52,8 +55,15 @@ export const socialApi = {
     }),
   dmMute: (userId: string, muted: boolean) =>
     rpc<{ muted: boolean }>("dm_set_mute", { p_user: userId, p_muted: muted }),
-  reportUser: (userId: string, reason: string | null) =>
-    rpc<{ status: string }>("social_report_user", { p_user: userId, p_reason: reason }),
+  reportUser: (userId: string, reason: string | null, category: ReportCategory = "other") =>
+    rpc<{ status: string }>("social_report_submit", {
+      p_scope: "user",
+      p_target: userId,
+      p_category: category,
+      p_reason: reason,
+    }),
+  userByUsername: (username: string) =>
+    rpc<{ user_id: string } | null>("social_user_by_username", { p_username: username }),
   overview: () => rpc<SocialOverview>("social_overview"),
   search: (query: string) => rpc<SearchResult[]>("social_search_users", { p_query: query }),
   unread: () => rpc<UnreadSummary>("social_unread_summary"),
@@ -97,10 +107,47 @@ export const socialApi = {
   dmDelete: (id: string) => rpc<{ status: string }>("dm_delete_message", { p_id: id }),
   dmMarkRead: (withUser: string) => rpc<{ status: string }>("dm_mark_read", { p_with: withUser }),
 
-  report: (scope: "global" | "dm", messageId: string, reason: string | null) =>
-    rpc<{ status: string }>("social_report_message", {
+  report: (
+    scope: "global" | "dm",
+    messageId: string,
+    reason: string | null,
+    category: ReportCategory = "other",
+  ) =>
+    rpc<{ status: string }>("social_report_submit", {
       p_scope: scope,
-      p_message_id: messageId,
+      p_target: messageId,
+      p_category: category,
+      p_reason: reason,
+    }),
+
+  globalEdit: (id: string, body: string) =>
+    rpc<{ status: string }>("global_edit_message", { p_id: id, p_body: body }),
+  dmEdit: (id: string, body: string) =>
+    rpc<{ status: string }>("dm_edit_message", { p_id: id, p_body: body }),
+  dmHide: (withUser: string) =>
+    rpc<{ status: string }>("dm_conversation_hide", { p_with: withUser }),
+
+  globalConfig: () => rpc<GlobalConfig>("global_config"),
+  setSlowMode: (seconds: number) =>
+    rpc<GlobalConfig>("global_set_slow_mode", { p_seconds: seconds }),
+  setPin: (text: string | null) => rpc<GlobalConfig>("global_set_pin", { p_text: text ?? "" }),
+
+  adminReports: (status: string) =>
+    rpc<AdminChatReport[]>("social_admin_reports", { p_status: status, p_limit: 50 }),
+  adminResolveReport: (
+    id: string,
+    action: "reviewing" | "resolve" | "reject" | "suspend",
+    note: string | null,
+  ) =>
+    rpc<{ status: string }>("social_admin_report_resolve", {
+      p_id: id,
+      p_action: action,
+      p_note: note,
+    }),
+  adminSocialSuspend: (userId: string, suspend: boolean, reason: string | null) =>
+    rpc<{ status: string }>("social_admin_suspend", {
+      p_user: userId,
+      p_suspend: suspend,
       p_reason: reason,
     }),
 };
