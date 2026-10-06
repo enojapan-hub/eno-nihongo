@@ -5955,6 +5955,7 @@ export type Database = {
       social_profile_card:
         | { Args: { p_user: string }; Returns: Json }
         | { Args: { p_public: boolean; p_user: string }; Returns: Json }
+      social_prune_logs: { Args: never; Returns: number }
       social_report_message: {
         Args: { p_message_id: string; p_reason?: string; p_scope: string }
         Returns: Json
@@ -5971,6 +5972,10 @@ export type Database = {
       social_report_user: {
         Args: { p_reason?: string; p_user: string }
         Returns: Json
+      }
+      social_resolve_request_notifications: {
+        Args: { p_requester: string; p_target: string }
+        Returns: undefined
       }
       social_safe_photo: { Args: { p_url: string }; Returns: string }
       social_search_users: { Args: { p_query: string }; Returns: Json }
