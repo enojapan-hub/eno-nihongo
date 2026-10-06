@@ -3456,18 +3456,21 @@ export type Database = {
       social_settings: {
         Row: {
           allow_friend_requests: boolean
+          sound_enabled: boolean
           updated_at: string
           user_id: string
           username_changed_at: string | null
         }
         Insert: {
           allow_friend_requests?: boolean
+          sound_enabled?: boolean
           updated_at?: string
           user_id: string
           username_changed_at?: string | null
         }
         Update: {
           allow_friend_requests?: boolean
+          sound_enabled?: boolean
           updated_at?: string
           user_id?: string
           username_changed_at?: string | null
@@ -5799,11 +5802,13 @@ export type Database = {
         Args: { p_reason?: string; p_user: string }
         Returns: Json
       }
+      social_safe_photo: { Args: { p_url: string }; Returns: string }
       social_search_users: { Args: { p_query: string }; Returns: Json }
       social_set_privacy: {
         Args: { p_allow_friend_requests: boolean }
         Returns: Json
       }
+      social_set_sound: { Args: { p_enabled: boolean }; Returns: Json }
       social_set_username: {
         Args: { p_display_name?: string; p_username: string }
         Returns: Json
