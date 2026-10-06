@@ -35,6 +35,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { AccountSecurity } from "@/components/account/AccountSecurity";
 export const Route = createFileRoute("/_authenticated/pengaturan")({ component: Page });
 function Row({
   icon: I,
@@ -329,6 +330,7 @@ function Page() {
             }}
           />
         </Section>
+        <AccountSecurity />
         <Section title="Bantuan">
           <Row
             icon={BookOpenCheck}

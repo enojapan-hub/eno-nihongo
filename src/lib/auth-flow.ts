@@ -58,6 +58,53 @@ export function canonicalAuthUrl(loc: {
   return `https://www.enonihongo.com${loc.pathname}${loc.search}${loc.hash}`;
 }
 
+/**
+ * Sesi pemulihan kata sandi. Tautan email menukar kode PKCE menjadi sesi penuh; tanpa penanda ini
+ * halaman masuk akan langsung mengirim pengguna ke dashboard sebelum sempat memasang kata sandi baru.
+ * Penanda hanya berasal dari event PASSWORD_RECOVERY milik Supabase (bukan dari URL/input pengguna),
+ * disimpan di sessionStorage tab ini, dan dihapus setelah kata sandi diganti atau keluar.
+ */
+export const RECOVERY_SESSION_KEY = "eno-recovery-session";
+let recoveryDetected = false;
+
+function readRecoveryFlag(): boolean {
+  try {
+    return (
+      typeof window !== "undefined" && window.sessionStorage.getItem(RECOVERY_SESSION_KEY) === "1"
+    );
+  } catch {
+    return false;
+  }
+}
+
+export const isRecoverySession = (): boolean => recoveryDetected || readRecoveryFlag();
+
+export function clearRecoverySession(): void {
+  recoveryDetected = false;
+  try {
+    window.sessionStorage.removeItem(RECOVERY_SESSION_KEY);
+  } catch {
+    /* penyimpanan tidak tersedia */
+  }
+}
+
+if (typeof window !== "undefined") {
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY") {
+      recoveryDetected = true;
+      try {
+        window.sessionStorage.setItem(RECOVERY_SESSION_KEY, "1");
+      } catch {
+        /* penyimpanan tidak tersedia */
+      }
+    } else if (event === "SIGNED_OUT") {
+      clearRecoverySession();
+    }
+  });
+}
+
+export const RECOVERY_DESTINATION = "/reset-password";
+
 interface DestinationProfile {
   role?: string | null;
   onboarding_completed?: boolean | null;
@@ -84,6 +131,8 @@ async function resolveOnce(): Promise<AuthResolution> {
   if (error || !user) {
     return { authenticated: false, callbackFailed: initialAuthCallback.present };
   }
+  // Sesi pemulihan: pengguna wajib menetapkan kata sandi baru, bukan masuk ke dashboard.
+  if (isRecoverySession()) return { authenticated: true, destination: RECOVERY_DESTINATION };
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("onboarding_completed, role")
