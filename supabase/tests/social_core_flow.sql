@@ -1,7 +1,7 @@
 -- Integration flow sosial inti (v4 + v5). Berjalan dalam SATU transaksi yang SELALU di-rollback
 -- (RAISE EXCEPTION di akhir), sehingga tidak meninggalkan data. Jalankan: psql / execute_sql.
 -- Hasil: galat "FLOW_OK {...}" bila semua pemeriksaan lulus, "FLOW_FAIL [...]" bila ada yang gagal.
--- Cakupan: username wajib (akun baru/lama tanpa username/OAuth = RPC yang sama, tanpa cooldown awal,
+-- Cakupan (v4-v6): username wajib (akun baru/lama tanpa username/OAuth = RPC yang sama, tanpa cooldown awal,
 -- ditolak: duplikat/reserved/invalid/tiruan resmi) → auto-friend Owner → leaderboard → perlindungan
 -- Owner/Admin (block/report) → capabilities kartu → DM Owner tanpa batas, Admin/member tidak →
 -- client_id/efektif-kosong/link → hapus percakapan per-pengguna + pemulihan + unread → suspend sosial
@@ -142,6 +142,7 @@ begin
    where cv.user_low = least(a, o) and cv.user_high = greatest(a, o);
   chk := chk || jsonb_build_object('conv_visible_before', jsonb_array_length(pg_temp.q_user(a, 'select public.dm_conversation_list()')) >= 1);
   chk := chk || jsonb_build_object('hide_ok', pg_temp.as_user(a, format('select public.dm_conversation_hide(%L)', o)) = 'ok');
+  chk := chk || jsonb_build_object('no_stale_dm_notification', (select count(*) from public.user_notifications where user_id = a and kind = 'dm' and read_at is null and action_url = 'chat:dm:' || o::text) = 0);
   chk := chk || jsonb_build_object('hidden_for_a', not exists (select 1 from jsonb_array_elements(pg_temp.q_user(a, 'select public.dm_conversation_list()')) e where e->>'user_id' = o::text));
   chk := chk || jsonb_build_object('visible_for_owner', exists (select 1 from jsonb_array_elements(pg_temp.q_user(o, 'select public.dm_conversation_list()')) e where e->>'user_id' = a::text));
   chk := chk || jsonb_build_object('no_phantom_unread', (pg_temp.q_user(a, 'select public.social_unread_summary()')->>'dm')::int = 0);
@@ -236,6 +237,106 @@ begin
   chk := chk || jsonb_build_object('no_self_or_dup_friendship', (select count(*) from public.social_friendships where user_low = user_high) = 0
         and (select count(*) from (select user_low, user_high from public.social_friendships group by 1, 2 having count(*) > 1) q) = 0);
   chk := chk || jsonb_build_object('no_orphan_messages', (select count(*) from public.dm_messages m where not exists (select 1 from public.dm_conversations c2 where c2.id = m.conversation_id)) = 0);
+
+  -- M) v6: mention Global, notifikasi usang, matriks Premium, evidence laporan, nama resmi, retensi, hak eksekusi
+  perform pg_temp.as_user(a, $q$select public.global_send_message('halo @flow_c2 dan @flow_t cek', null)$q$);
+  chk := chk || jsonb_build_object('mention_notified_c', (select count(*) from public.user_notifications where user_id = c and kind = 'mention' and read_at is null) = 1);
+  chk := chk || jsonb_build_object('mention_notified_t', (select count(*) from public.user_notifications where user_id = t and kind = 'mention' and read_at is null) = 1);
+  chk := chk || jsonb_build_object('mention_note_privacy', not exists (select 1 from public.user_notifications where kind = 'mention' and user_id in (c, t) and (body like '%cek%' or body like '%halo%'))
+        and not exists (select 1 from public.user_notifications where kind = 'mention' and user_id in (c, t) and action_url !~ '^chat:global:[0-9a-f-]{36}$'));
+  perform pg_temp.as_user(a, $q$select public.global_send_message('tes lagi @flow_c2 ya', null)$q$);
+  chk := chk || jsonb_build_object('mention_dedupe', (select count(*) from public.user_notifications where user_id = c and kind = 'mention') = 1);
+  perform pg_temp.as_user(d, $q$select public.global_send_message('catatan sendiri @adminenonihongo', null)$q$);
+  chk := chk || jsonb_build_object('mention_self_none', (select count(*) from public.user_notifications where user_id = d and kind = 'mention') = 0);
+  perform pg_temp.as_user(d, $q$select public.global_send_message('kontak a@b.com dan @tidak_ada_xyz serta @ab', null)$q$);
+  chk := chk || jsonb_build_object('mention_invalid_none', (select count(*) from public.user_notifications where kind = 'mention') = 2);
+  update public.user_notifications set read_at = now() where user_id = c and kind = 'mention';
+  perform pg_temp.as_user(c, format('select public.social_block(%L)', t));
+  perform pg_temp.as_user(t, $q$select public.global_send_message('uji blokir @flow_c2', null)$q$);
+  chk := chk || jsonb_build_object('mention_blocked_none', (select count(*) from public.user_notifications where user_id = c and kind = 'mention' and read_at is null) = 0);
+  perform pg_temp.as_user(c, format('select public.social_unblock(%L)', t));
+  update public.profiles set suspended_at = now() where id = b;
+  perform pg_temp.as_user(o, $q$select public.global_send_message('hai @flow_b suspended', null)$q$);
+  chk := chk || jsonb_build_object('mention_suspended_none', (select count(*) from public.user_notifications where user_id = b and kind = 'mention') = 0);
+  update public.profiles set suspended_at = null where id = b;
+
+  perform pg_temp.as_user(a, $q$select public.friend_request_send('flow_t')$q$);
+  chk := chk || jsonb_build_object('req_notified', (select count(*) from public.user_notifications where user_id = t and kind = 'friend_request' and read_at is null and action_url = 'chat:friends') = 1);
+  perform pg_temp.as_user(a, format('select public.friend_request_cancel(%L)', t));
+  chk := chk || jsonb_build_object('cancel_resolves_notification', (select count(*) from public.user_notifications where user_id = t and kind = 'friend_request' and (read_at is null or action_url is not null)) = 0);
+  perform pg_temp.as_user(a, $q$select public.friend_request_send('flow_t')$q$);
+  perform pg_temp.as_user(t, format('select public.friend_request_respond(%L, false)', a));
+  chk := chk || jsonb_build_object('reject_resolves_notification', (select count(*) from public.user_notifications where user_id = t and kind = 'friend_request' and (read_at is null or action_url is not null)) = 0);
+  perform pg_temp.as_user(a, $q$select public.friend_request_send('flow_t')$q$);
+  perform pg_temp.as_user(t, format('select public.friend_request_respond(%L, true)', a));
+  chk := chk || jsonb_build_object('accept_resolves_notification', (select count(*) from public.user_notifications where user_id = t and kind = 'friend_request' and (read_at is null or action_url is not null)) = 0
+        and exists (select 1 from public.social_friendships where status = 'accepted' and user_low = least(a, t) and user_high = greatest(a, t)));
+  chk := chk || jsonb_build_object('stale_request_actions_zero', (select count(*) from public.user_notifications n where n.kind = 'friend_request' and n.action_url is not null
+        and not exists (select 1 from public.social_friendships f where f.status = 'pending' and f.requester_id <> n.user_id and n.user_id in (f.user_low, f.user_high))) = 0);
+
+  -- is_premium / entitlement (kedaluwarsa dihormati; Guru = peran)
+  update public.profiles set plan = 'premium', premium_until = now() + interval '30 days' where id = c;
+  chk := chk || jsonb_build_object('normal_active_premium', (pg_temp.q_user(c, 'select to_jsonb(public.is_premium())'))::text = 'true' and (pg_temp.q_user(c, 'select public.get_my_membership()')->>'plan') = 'premium');
+  update public.profiles set plan = 'premium', premium_until = now() - interval '2 days' where id = c;
+  chk := chk || jsonb_build_object('normal_expired_free', (pg_temp.q_user(c, 'select to_jsonb(public.is_premium())'))::text = 'false' and (pg_temp.q_user(c, 'select public.get_my_membership()')->>'plan') = 'free');
+  update public.profiles set plan = 'free', premium_until = null where id = c;
+  chk := chk || jsonb_build_object('normal_none_free', (pg_temp.q_user(c, 'select to_jsonb(public.is_premium())'))::text = 'false');
+  update public.profiles set plan = 'lifetime', premium_until = null where id = c;
+  chk := chk || jsonb_build_object('normal_lifetime_premium', (pg_temp.q_user(c, 'select to_jsonb(public.is_premium())'))::text = 'true');
+  update public.profiles set plan = 'free', premium_until = null where id = c;
+  chk := chk || jsonb_build_object('is_premium_self_only', (pg_temp.q_user(c, format('select to_jsonb(public.is_premium(%L))', t)))::text = 'false');
+  update public.profiles set role = 'teacher', plan = 'free', premium_until = null where id = t;
+  chk := chk || jsonb_build_object('guru_none_is_premium', (pg_temp.q_user(t, 'select to_jsonb(public.is_premium())'))::text = 'true');
+  update public.profiles set plan = 'premium', premium_until = now() - interval '2 days' where id = t;
+  chk := chk || jsonb_build_object('guru_expired_is_premium', (pg_temp.q_user(t, 'select to_jsonb(public.is_premium())'))::text = 'true');
+  update public.profiles set plan = 'premium', premium_until = now() + interval '30 days' where id = t;
+  chk := chk || jsonb_build_object('guru_active_is_premium', (pg_temp.q_user(t, 'select to_jsonb(public.is_premium())'))::text = 'true');
+  update public.profiles set role = 'student' where id = t;
+  chk := chk || jsonb_build_object('revoked_active_is_premium', (pg_temp.q_user(t, 'select to_jsonb(public.is_premium())'))::text = 'true');
+  update public.profiles set plan = 'premium', premium_until = now() - interval '2 days' where id = t;
+  chk := chk || jsonb_build_object('revoked_expired_free', (pg_temp.q_user(t, 'select to_jsonb(public.is_premium())'))::text = 'false' and not (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean);
+  update public.profiles set role = 'teacher', plan = 'free', premium_until = null where id = t;
+
+  -- Evidence laporan tetap ada walau pesan dihapus; hanya moderator; Admin tidak bisa menelusuri DM privat
+  perform pg_temp.as_user(c, $q$select public.global_send_message('pesan c yang akan dilaporkan', null)$q$);
+  select id into v_gm from public.global_messages where sender_id = c order by created_at desc limit 1;
+  chk := chk || jsonb_build_object('report_global_ok', pg_temp.as_user(a, format($q$select public.social_report_submit('global', %L, 'harassment', 'kasar')$q$, v_gm)) = 'ok');
+  perform pg_temp.as_user(c, format('select public.global_delete_message(%L)', v_gm));
+  chk := chk || jsonb_build_object('source_message_blanked', (select body from public.global_messages where id = v_gm) = '');
+  r := pg_temp.q_user(o, $q$select public.social_admin_reports('open', 50)$q$);
+  chk := chk || jsonb_build_object('evidence_survives_delete', exists (select 1 from jsonb_array_elements(r) e where e->>'evidence' like '%pesan c yang akan dilaporkan%' and e->>'category' = 'harassment'));
+  chk := chk || jsonb_build_object('evidence_no_reporter_email', not (r::text ~* '@[a-z0-9-]+\.[a-z]{2,}'));
+  chk := chk || jsonb_build_object('evidence_member_forbidden', (pg_temp.q_user(a, $q$select public.social_admin_reports('open', 50)$q$)->>'error') = 'forbidden');
+  chk := chk || jsonb_build_object('reports_table_not_directly_readable', (pg_temp.q_user(o, $q$select to_jsonb(count(*)) from public.content_reports$q$)->>'error') is not null);
+  chk := chk || jsonb_build_object('admin_cannot_browse_dm', (pg_temp.q_user(d, format($q$select to_jsonb(count(*)) from public.dm_messages where recipient_id = %L$q$, c)))::text = '0');
+
+  -- Nama tampilan tidak boleh meniru identitas resmi (UPDATE), staf dikecualikan
+  declare v_err text;
+  begin
+    begin update public.profiles set display_name = 'ENO NIHONGO Official' where id = a; v_err := 'none';
+    exception when others then v_err := sqlerrm; end;
+    chk := chk || jsonb_build_object('display_name_lookalike_rejected', v_err = 'Nama tampilan tidak tersedia.');
+    update public.profiles set display_name = 'Sakura Chan' where id = a;
+    chk := chk || jsonb_build_object('display_name_normal_ok', (select display_name from public.profiles where id = a) = 'Sakura Chan');
+    update public.profiles set display_name = 'Admin ENO NIHONGO' where id = d;
+    chk := chk || jsonb_build_object('display_name_admin_exempt', (select display_name from public.profiles where id = d) = 'Admin ENO NIHONGO');
+  end;
+
+  -- Retensi log rate-limit saja
+  insert into public.social_request_log (requester_id, target_id, created_at) values (a, c, now() - interval '35 days'), (a, c, now() - interval '1 day');
+  chk := chk || jsonb_build_object('prune_removed_old', public.social_prune_logs() >= 1);
+  chk := chk || jsonb_build_object('prune_kept_recent', (select count(*) from public.social_request_log where created_at < now() - interval '30 days') = 0
+        and (select count(*) from public.social_request_log where created_at > now() - interval '2 days') >= 1);
+
+  -- Hak eksekusi
+  chk := chk || jsonb_build_object('internal_v6_not_executable_by_clients',
+     not has_function_privilege('anon', 'public.social_prune_logs()', 'execute') and not has_function_privilege('authenticated', 'public.social_prune_logs()', 'execute')
+     and not has_function_privilege('authenticated', 'public.social_resolve_request_notifications(uuid, uuid)', 'execute')
+     and not has_function_privilege('anon', 'public.social_resolve_request_notifications(uuid, uuid)', 'execute'));
+  chk := chk || jsonb_build_object('privileged_rpc_not_anon', not has_function_privilege('anon', 'public.social_admin_suspend(uuid, boolean, text)', 'execute')
+     and not has_function_privilege('anon', 'public.social_admin_reports(text, integer)', 'execute')
+     and not has_function_privilege('anon', 'public.global_set_pin(text)', 'execute')
+     and not has_function_privilege('anon', 'public.dm_conversation_hide(uuid)', 'execute'));
 
   -- K) Data belajar tidak berubah; audit tercatat
   select xp into xp_after from public.user_learning_stats where user_id = a;

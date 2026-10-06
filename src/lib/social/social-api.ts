@@ -26,6 +26,12 @@ async function rpc<T>(name: string, args?: Record<string, unknown>): Promise<T> 
 
 export const PAGE_SIZE = 30;
 
+/** Isolasi fitur: respons daftar yang bukan array (server bermasalah/format tak terduga) menjadi daftar kosong, bukan error render. */
+async function rpcList<T>(name: string, args?: Record<string, unknown>): Promise<T[]> {
+  const data = await rpc<unknown>(name, args);
+  return Array.isArray(data) ? (data as T[]) : [];
+}
+
 export const socialApi = {
   me: () => rpc<SocialMe | null>("social_me"),
   setUsername: (username: string, displayName: string | null) =>
@@ -65,7 +71,7 @@ export const socialApi = {
   userByUsername: (username: string) =>
     rpc<{ user_id: string } | null>("social_user_by_username", { p_username: username }),
   overview: () => rpc<SocialOverview>("social_overview"),
-  search: (query: string) => rpc<SearchResult[]>("social_search_users", { p_query: query }),
+  search: (query: string) => rpcList<SearchResult>("social_search_users", { p_query: query }),
   unread: () => rpc<UnreadSummary>("social_unread_summary"),
 
   sendRequest: (username: string) =>
@@ -79,7 +85,7 @@ export const socialApi = {
   unblock: (userId: string) => rpc<{ status: string }>("social_unblock", { p_user: userId }),
 
   globalHistory: (before?: { at: string; id: string } | null, limit = PAGE_SIZE) =>
-    rpc<GlobalMessage[]>("global_history", {
+    rpcList<GlobalMessage>("global_history", {
       p_limit: limit,
       p_before_at: before?.at ?? null,
       p_before_id: before?.id ?? null,
@@ -89,9 +95,9 @@ export const socialApi = {
   globalDelete: (id: string) => rpc<{ status: string }>("global_delete_message", { p_id: id }),
   globalMarkRead: () => rpc<{ status: string }>("global_mark_read"),
 
-  dmList: () => rpc<DmConversation[]>("dm_conversation_list"),
+  dmList: () => rpcList<DmConversation>("dm_conversation_list"),
   dmHistory: (withUser: string, before?: { at: string; id: string } | null, limit = PAGE_SIZE) =>
-    rpc<DmMessage[]>("dm_history", {
+    rpcList<DmMessage>("dm_history", {
       p_with: withUser,
       p_limit: limit,
       p_before_at: before?.at ?? null,
