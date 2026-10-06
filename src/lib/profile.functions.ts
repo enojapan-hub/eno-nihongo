@@ -9,6 +9,8 @@ const settingsSchema = z.object({
   target_level: z.enum(["N5", "N4", "N3", "N2", "N1"]),
   ui_language: z.enum(["id", "en", "ja"]),
   country: z.string().trim().min(2).max(80).optional(),
+  /** Bio publik: teks polos opsional, maks 160 (kosong/spasi saja = hapus). */
+  bio: z.string().trim().max(160).optional(),
   daily_kanji_target: z.number().int().min(0).max(100),
   daily_vocab_target: z.number().int().min(0).max(200),
   daily_grammar_target: z.number().int().min(0).max(100),
@@ -30,7 +32,7 @@ async function readMemberData(context: { supabase: SupabaseClient<Database>; use
       context.supabase
         .from("profiles")
         .select(
-          "id,display_name,avatar_url,ui_language,target_level,country,onboarding_completed,plan,premium_until,created_at,role,referral_code,referral_points",
+          "id,display_name,avatar_url,ui_language,target_level,country,bio,onboarding_completed,plan,premium_until,created_at,role,referral_code,referral_points",
         )
         .eq("id", context.userId)
         .maybeSingle(),
@@ -64,6 +66,7 @@ export const updateMyAccount = createServerFn({ method: "POST" })
       target_level: data.target_level,
       ui_language: data.ui_language,
     };
+    if (data.bio !== undefined) update.bio = data.bio === "" ? null : data.bio;
     if (data.country) {
       update.country = data.country;
       update.onboarding_completed = true;

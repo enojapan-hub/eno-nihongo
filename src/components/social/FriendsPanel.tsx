@@ -24,7 +24,7 @@ function Row({ who, children }: { who: SocialIdentity; children: ReactNode }) {
         onClick={() => profileCard.open(who.user_id)}
         className="flex min-w-0 flex-1 items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
-        <SocialAvatar avatarId={who.avatar_id} size={36} />
+        <SocialAvatar avatarId={who.avatar_id} userId={who.user_id} size={36} />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1">
             <span className="truncate text-[14px] font-semibold">

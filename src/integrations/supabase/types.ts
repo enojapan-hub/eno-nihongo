@@ -2648,6 +2648,7 @@ export type Database = {
           admin_note: string | null
           app_role_id: string | null
           avatar_url: string | null
+          bio: string | null
           country: string | null
           created_at: string
           display_name: string | null
@@ -2668,6 +2669,7 @@ export type Database = {
           admin_note?: string | null
           app_role_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
           country?: string | null
           created_at?: string
           display_name?: string | null
@@ -2688,6 +2690,7 @@ export type Database = {
           admin_note?: string | null
           app_role_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
           country?: string | null
           created_at?: string
           display_name?: string | null
