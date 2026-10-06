@@ -6,7 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { AuthLoader } from "@/components/layout/AuthLoader";
-import { clearRecoverySession, isRecoverySession, resolveAuth } from "@/lib/auth-flow";
+import {
+  classifyRecoveryFailure,
+  clearRecoverySession,
+  initialAuthCallback,
+  markRecoverySession,
+  readRecoveryHashTokens,
+  resolveAuth,
+  waitForRecoverySession,
+  type RecoveryFailure,
+} from "@/lib/auth-flow";
 import { authErrorMessage, RECOVERY_LINK_INVALID_MESSAGE } from "@/lib/auth-errors";
 import { PASSWORD_MIN_LENGTH, validateNewPassword } from "@/lib/password-policy";
 
@@ -22,21 +31,66 @@ export const Route = createFileRoute("/reset-password")({
 
 type Phase = "checking" | "ready" | "invalid";
 
+// Jendela menunggu event PASSWORD_RECOVERY resmi setelah inisialisasi Auth selesai.
+const RECOVERY_EVENT_WAIT_MS = 4000;
+
+const FAILURE_COPY: Record<RecoveryFailure, string> = {
+  expired:
+    "Tautan ini sudah kedaluwarsa atau sudah pernah dipakai. Minta tautan baru lalu buka tautan terbaru dari email.",
+  wrong_browser:
+    "Tautan ini tidak dapat diselesaikan di browser ini. Minta tautan baru dari halaman Masuk, lalu buka tautan terbaru dari email.",
+  exchange_failed:
+    "Tautan tidak dapat diverifikasi. Minta tautan baru lalu buka tautan terbaru dari email.",
+  no_callback:
+    "Halaman ini hanya dapat dibuka dari tautan atur ulang kata sandi di email. Minta tautan baru bila diperlukan.",
+  not_recovery:
+    "Halaman ini hanya dapat dibuka dari tautan atur ulang kata sandi di email. Minta tautan baru bila diperlukan.",
+};
+
 function ResetPasswordPage() {
   const [phase, setPhase] = useState<Phase>("checking");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<RecoveryFailure | null>(null);
 
   useEffect(() => {
     let active = true;
     const check = async () => {
-      // getSession menunggu pertukaran kode tautan selesai; event PASSWORD_RECOVERY menandai sesi pemulihan.
+      // 0) Tautan bergaya implicit (fragment type=recovery): klien utama (PKCE) menolaknya, jadi sesi dipasang
+      //    lewat API resmi setSession. Token tidak disimpan/dicatat dan segera dihapus dari URL.
+      const hashTokens = readRecoveryHashTokens(window.location.hash);
+      if (hashTokens) {
+        const { error: sessionError } = await supabase.auth.setSession(hashTokens);
+        window.history.replaceState(
+          window.history.state,
+          "",
+          window.location.pathname + window.location.search,
+        );
+        if (!active) return;
+        if (!sessionError) {
+          markRecoverySession();
+          setPhase("ready");
+          return;
+        }
+        setFailure(classifyRecoveryFailure(initialAuthCallback, sessionError, false));
+        setPhase("invalid");
+        return;
+      }
+      // 1) initialize() idempoten: menunggu SATU pertukaran kode/token tautan (tidak pernah dua kali).
+      const { error: initError } = await supabase.auth.initialize();
       const { data } = await supabase.auth.getSession();
       if (!active) return;
-      if (data.session && isRecoverySession()) setPhase("ready");
-      else setPhase((current) => (current === "ready" ? current : "invalid"));
+      // 2) PASSWORD_RECOVERY dipancarkan setelah langkah di atas; tunggu event resminya sebelum menilai.
+      if (data.session && (await waitForRecoverySession(RECOVERY_EVENT_WAIT_MS))) {
+        if (active) setPhase("ready");
+        return;
+      }
+      if (!active) return;
+      // 3) Baru di sini kegagalannya definitif.
+      setFailure(classifyRecoveryFailure(initialAuthCallback, initError, Boolean(data.session)));
+      setPhase((current) => (current === "ready" ? current : "invalid"));
     };
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (active && event === "PASSWORD_RECOVERY") setPhase("ready");
@@ -72,7 +126,10 @@ function ResetPasswordPage() {
     } catch (caught) {
       const message = authErrorMessage(caught, "password-update");
       setError(message);
-      if (message === RECOVERY_LINK_INVALID_MESSAGE) setPhase("invalid");
+      if (message === RECOVERY_LINK_INVALID_MESSAGE) {
+        setFailure("expired");
+        setPhase("invalid");
+      }
       setBusy(false);
     }
   }
@@ -92,8 +149,11 @@ function ResetPasswordPage() {
               Tautan tidak berlaku
             </h1>
             <p role="alert" className="mt-3 text-[13px] leading-5 text-[#63756d]">
-              {RECOVERY_LINK_INVALID_MESSAGE} Buka tautan di browser yang sama dengan saat Anda
-              memintanya.
+              {FAILURE_COPY[failure ?? "exchange_failed"]}
+            </p>
+            <p className="mt-2 text-[10px] leading-4 text-[#87958e]">
+              Meminta tautan berulang dalam waktu singkat dapat dibatasi sementara oleh sistem.
+              {failure && <span className="ml-1">Kode: {failure}</span>}
             </p>
             <a
               href="/auth?mode=lupa"

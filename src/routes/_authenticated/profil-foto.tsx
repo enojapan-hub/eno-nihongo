@@ -8,6 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { invalidateIdentityCaches } from "@/lib/identity-cache";
+import {
+  AVATAR_MAX_BYTES,
+  AVATAR_NOT_IMAGE,
+  AVATAR_PROCESS_FAILED,
+  AVATAR_SAVE_FAILED,
+  AVATAR_TOO_LARGE,
+  avatarObjectPath,
+  avatarStorageErrorMessage,
+  isImageFile,
+  needsReencode,
+  reencodeToJpeg,
+} from "@/lib/avatar-upload";
 
 export const Route = createFileRoute("/_authenticated/profil-foto")({
   component: ProfilePhotoPage,
@@ -49,54 +62,88 @@ function ProfilePhotoPage() {
         .from("profiles")
         .update({ avatar_url: query.data.google })
         .eq("id", query.data.userId);
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("[profil-foto] pulihkan Google", error.code, error.message);
+        throw new Error("Foto Google belum berhasil dipulihkan. Silakan coba lagi.");
+      }
     },
     onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["profile-photo"] }),
-        qc.invalidateQueries({ queryKey: ["my-account"] }),
-        qc.invalidateQueries({ queryKey: ["my-account-direct"] }),
-        qc.invalidateQueries({ queryKey: ["leaderboard"] }),
-      ]);
+      await refreshAll();
       toast.success("Foto profil disinkronkan kembali dengan akun Google.");
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Foto Google gagal dipulihkan."),
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Foto Google belum berhasil dipulihkan."),
   });
 
-  async function upload(file?: File) {
-    if (!file || !query.data) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Pilih file gambar.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran foto maksimal 5 MB.");
+  async function refreshAll() {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["profile-photo"] }),
+      qc.invalidateQueries({ queryKey: ["my-account"] }),
+      qc.invalidateQueries({ queryKey: ["my-account-direct"] }),
+      invalidateIdentityCaches(qc),
+    ]);
+  }
+
+  async function upload(original?: File) {
+    if (!original || !query.data) return;
+    if (!isImageFile(original)) {
+      toast.error(AVATAR_NOT_IMAGE);
+      if (inputRef.current) inputRef.current.value = "";
       return;
     }
     setUploading(true);
+    let uploadedPath: string | null = null;
     try {
-      const ext =
-        (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `${query.data.userId}/profile-${Date.now()}.${ext}`;
+      // Foto kamera iPhone sering >5 MB atau HEIC: dikecilkan/dikonversi ke JPEG di browser.
+      let file = original;
+      if (needsReencode(original)) {
+        try {
+          file = await reencodeToJpeg(original);
+        } catch {
+          toast.error(AVATAR_PROCESS_FAILED);
+          return;
+        }
+      }
+      if (file.size > AVATAR_MAX_BYTES) {
+        toast.error(AVATAR_TOO_LARGE);
+        return;
+      }
+      const path = avatarObjectPath(query.data.userId, file.name.split(".").pop() || "jpg");
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(path, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("[profil-foto] upload", uploadError.message);
+        toast.error(avatarStorageErrorMessage(uploadError));
+        return;
+      }
+      uploadedPath = path;
       const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(path);
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl.publicUrl })
         .eq("id", query.data.userId);
-      if (profileError) throw profileError;
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["profile-photo"] }),
-        qc.invalidateQueries({ queryKey: ["my-account"] }),
-        qc.invalidateQueries({ queryKey: ["my-account-direct"] }),
-        qc.invalidateQueries({ queryKey: ["leaderboard"] }),
-      ]);
+      if (profileError) {
+        console.error("[profil-foto] simpan", profileError.code, profileError.message);
+        // Jangan klaim sukses; bersihkan berkas yatim yang baru diunggah (milik sendiri, best effort).
+        await supabase.storage
+          .from("avatars")
+          .remove([path])
+          .catch(() => undefined);
+        toast.error(AVATAR_SAVE_FAILED);
+        return;
+      }
+      uploadedPath = null;
+      await refreshAll();
       toast.success("Foto profil berhasil diganti.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Foto profil gagal diunggah.");
+      console.error("[profil-foto]", e instanceof Error ? e.message : e);
+      if (uploadedPath)
+        await supabase.storage
+          .from("avatars")
+          .remove([uploadedPath])
+          .catch(() => undefined);
+      toast.error(AVATAR_SAVE_FAILED);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

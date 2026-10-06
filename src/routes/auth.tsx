@@ -23,7 +23,7 @@ import {
   isRecoverySession,
   resolveAuth,
 } from "@/lib/auth-flow";
-import { CANONICAL_ORIGIN, recoveryRedirectUrl } from "@/lib/auth-account";
+import { CANONICAL_ORIGIN, requestPasswordRecovery } from "@/lib/auth-account";
 import {
   authErrorMessage,
   INVALID_CREDENTIALS_MESSAGE,
@@ -145,16 +145,14 @@ function AuthPage() {
     }
     setLoading("recovery");
     try {
-      // redirectTo konstan (bukan dari input) agar tidak ada open redirect.
-      const { error: recoverError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: recoveryRedirectUrl(),
-      });
+      // Alur resmi Supabase; redirectTo konstan di auth-account (bukan dari input: tanpa open redirect).
+      const { error: recoverError } = await requestPasswordRecovery(normalizedEmail);
       // Hanya kegagalan umum (batas permintaan/jaringan/server) yang ditampilkan; selain itu respons
       // selalu netral agar keberadaan akun tidak bocor.
       if (recoverError && (isRateLimited(recoverError) || isNetworkError(recoverError)))
         throw recoverError;
       setNotice(
-        "Jika email tersebut terdaftar, tautan untuk mengatur ulang kata sandi akan dikirim ke email Anda. Buka tautan di browser yang sama.",
+        "Jika email tersebut terdaftar, tautan untuk mengatur ulang kata sandi akan dikirim ke email Anda. Periksa juga folder Spam.",
       );
     } catch (caught) {
       setError(authErrorMessage(caught, "recovery-request"));
