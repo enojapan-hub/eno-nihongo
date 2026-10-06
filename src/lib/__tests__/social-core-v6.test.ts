@@ -126,6 +126,12 @@ describe("v6 migration: official display names, retention", () => {
 });
 
 describe("v6 client", () => {
+  it("list RPCs are coerced to arrays so a malformed response cannot crash the app shell", () => {
+    const a = read("src/lib/social/social-api.ts");
+    for (const n of ["social_search_users", "global_history", "dm_conversation_list", "dm_history"])
+      expect(a).toMatch(new RegExp(`rpcList<[A-Za-z]+>\\("${n}"`));
+    expect(a).toMatch(/Array\.isArray\(data\) \? \(data as T\[\]\) : \[\]/);
+  });
   const id = "5845d72b-43fc-482f-a713-f4b411430b29";
   it("parses mention notification links and rejects malformed ones", () => {
     expect(parseChatLink(`chat:global:${id}`)).toEqual({ kind: "global", messageId: id });
