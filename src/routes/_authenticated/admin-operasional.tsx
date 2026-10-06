@@ -81,6 +81,7 @@ function Page() {
   const list = useQuery({
     queryKey: ["ops-list", tab],
     enabled: stats.isSuccess && tab !== "review",
+    retry: false,
     queryFn: async () => {
       if (tab === "laporan") {
         // content_reports tidak punya hak klien: moderator membaca lewat RPC (izin + batas di server).
@@ -91,14 +92,13 @@ function Page() {
         if (error) throw error;
         return (Array.isArray(data) ? data : []) as unknown as OpsRow[];
       }
-      const table = tab === "pengumuman" ? "admin_announcements" : "media_library";
-      const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100);
+      // admin_announcements / media_library tidak punya hak klien: baca lewat RPC (izin + batas di server).
+      const { data, error } =
+        tab === "pengumuman"
+          ? await supabase.rpc("admin_list_announcements" as never, { p_limit: 100 } as never)
+          : await supabase.rpc("admin_list_media" as never, { p_limit: 100 } as never);
       if (error) throw error;
-      return (data || []) as unknown as OpsRow[];
+      return (Array.isArray(data) ? data : []) as unknown as OpsRow[];
     },
   });
   const filtered = useMemo(
@@ -128,15 +128,12 @@ function Page() {
   };
   async function add() {
     if (!title.trim() || !body.trim()) return;
-    const { error } = await supabase
-      .from("admin_announcements")
-      .insert({ title: title.trim(), body: body.trim(), status: "draft", audience });
+    // Simpan draft + catatan audit dilakukan atomik di server.
+    const { error } = await supabase.rpc(
+      "admin_create_announcement" as never,
+      { p_title: title.trim(), p_body: body.trim(), p_audience: audience } as never,
+    );
     if (error) return alert(error.message);
-    await supabase.rpc("admin_log_event", {
-      p_action: "create_announcement",
-      p_entity_type: "announcement",
-      p_metadata: { title: title.trim(), audience },
-    });
     setTitle("");
     setBody("");
     setAudience("all");
@@ -317,6 +314,16 @@ function Page() {
                 <option value="published">Published</option>
               </select>
             </div>
+            {list.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Gagal memuat pengumuman.
+              </p>
+            )}
+            {list.isSuccess && filtered.length === 0 && (
+              <p className="text-xs text-muted-foreground" role="status">
+                Belum ada pengumuman.
+              </p>
+            )}
             {filtered.map((x) => (
               <Card key={x.id}>
                 <CardContent className="p-3">
@@ -420,6 +427,16 @@ function Page() {
                 onChange={(e) => setSearchText(e.target.value)}
               />
             </div>
+            {list.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Gagal memuat media.
+              </p>
+            )}
+            {list.isSuccess && filtered.length === 0 && (
+              <p className="text-xs text-muted-foreground" role="status">
+                Belum ada media.
+              </p>
+            )}
             {filtered.map((x) => (
               <Card key={x.id}>
                 <CardContent className="p-3">

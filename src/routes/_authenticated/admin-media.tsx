@@ -8,6 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/admin-media")({ component: Page });
+interface MediaRow {
+  id: string;
+  title: string | null;
+  url: string;
+  media_type: string | null;
+  mime_type: string | null;
+  created_at: string;
+}
 function Page() {
   const qc = useQueryClient(),
     [search, setSearch] = useState(""),
@@ -18,13 +26,15 @@ function Page() {
   const q = useQuery({
     queryKey: ["admin-media-library"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("media_library")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(500);
+      // media_library tidak punya hak klien: baca lewat RPC (izin + batas di server).
+      const { data, error } = await supabase.rpc(
+        "admin_list_media" as never,
+        {
+          p_limit: 500,
+        } as never,
+      );
       if (error) throw error;
-      return data || [];
+      return (Array.isArray(data) ? data : []) as unknown as MediaRow[];
     },
     retry: false,
   });
@@ -190,9 +200,14 @@ function Page() {
             </Card>
           ))}
         </div>
-        {!q.isLoading && !rows.length && (
-          <p className="rounded-xl bg-muted p-4 text-xs text-muted-foreground">
-            Tidak ada media yang cocok.
+        {q.isError && (
+          <p className="rounded-xl bg-destructive/10 p-4 text-xs text-destructive" role="alert">
+            Gagal memuat media.
+          </p>
+        )}
+        {q.isSuccess && !rows.length && (
+          <p className="rounded-xl bg-muted p-4 text-xs text-muted-foreground" role="status">
+            {q.data.length ? "Tidak ada media yang cocok." : "Belum ada media."}
           </p>
         )}
       </div>
