@@ -5,9 +5,21 @@ import { toast } from "sonner";
 import { dock, useDock } from "@/lib/social/dock-state";
 import { profileCard, useProfileCard } from "@/lib/social/profile-card-state";
 import { socialApi } from "@/lib/social/social-api";
+import {
+  TIER_FRAME,
+  TIER_LABEL,
+  TIER_LABEL_CLASS,
+  cardTier,
+  resolveCapabilities,
+} from "@/lib/social/card-role";
 import type { CardRelation } from "@/lib/social/social-types";
 import { useIsOnline } from "@/lib/social/social-presence";
-import { formatJoined, socialErrorCode, socialErrorMessage } from "@/lib/social/social-validation";
+import {
+  REPORT_CATEGORIES,
+  formatJoined,
+  socialErrorCode,
+  socialErrorMessage,
+} from "@/lib/social/social-validation";
 import { getAccountLevel } from "@/lib/progression";
 import { cn } from "@/lib/utils";
 import { IdentityBadges } from "./IdentityBadges";
@@ -36,12 +48,14 @@ export function SocialProfileHost() {
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState<"unfriend" | "block" | null>(null);
   const [reported, setReported] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
   const titleId = useId();
   const userId = open?.userId ?? null;
   const online = useIsOnline(userId);
 
   useEffect(() => {
     setConfirm(null);
+    setReporting(false);
   }, [userId]);
 
   useEffect(() => {
@@ -129,6 +143,9 @@ export function SocialProfileHost() {
   const shownPoints = c ? (ctx?.points ?? c.xp) : null;
   const joined = c?.joined ? formatJoined(c.joined) : null;
   const isReported = reported === uid;
+  const tier = c ? cardTier(c) : "free";
+  const caps = c ? resolveCapabilities(c) : null;
+  const tierLabel = TIER_LABEL[tier];
   return (
     <div
       role="dialog"
@@ -154,8 +171,15 @@ export function SocialProfileHost() {
         ref={dialogRef}
         tabIndex={-1}
         data-testid="profile-card"
-        className="relative max-h-[min(40rem,calc(100dvh-2rem))] w-[min(84vw,20.5rem)] overflow-y-auto overscroll-contain rounded-3xl border bg-background shadow-2xl outline-none motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-150 md:w-[23rem]"
+        data-tier={tier}
+        className={cn(
+          "relative max-h-[min(40rem,calc(100dvh-2rem))] w-[min(84vw,20.5rem)] overflow-y-auto overscroll-contain rounded-3xl bg-background shadow-2xl outline-none motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-150 md:w-[23rem]",
+          TIER_FRAME[tier],
+        )}
       >
+        {tier === "owner" && (
+          <span aria-hidden data-testid="owner-shimmer" className="eno-owner-shimmer" />
+        )}
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-primary/10">
           {c || gone || failed ? (
             <ProfilePhoto userId={uid} photo={c?.photo ?? null} />
@@ -239,6 +263,17 @@ export function SocialProfileHost() {
                   </span>
                   <IdentityBadges userId={uid} size="md" />
                 </div>
+                {tierLabel && (
+                  <p
+                    data-testid="tier-label"
+                    className={cn(
+                      "mt-1.5 inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-[10.5px] font-bold leading-none tracking-wide",
+                      TIER_LABEL_CLASS[tier],
+                    )}
+                  >
+                    {tierLabel}
+                  </p>
+                )}
                 {online && c.show_online && (
                   <p className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-600 dark:text-emerald-400">
                     <span aria-hidden className="size-2 rounded-full bg-emerald-500" />
@@ -310,7 +345,7 @@ export function SocialProfileHost() {
                   </p>
                 )}
 
-                {c.relation === "none" && c.can_request && c.username && (
+                {c.relation === "none" && caps?.can_friend && c.username && (
                   <button
                     type="button"
                     disabled={busy}
@@ -325,7 +360,7 @@ export function SocialProfileHost() {
                     <UserPlus className="size-4" /> Tambah Teman
                   </button>
                 )}
-                {c.relation === "none" && !c.can_request && (
+                {c.relation === "none" && !caps?.can_friend && tier !== "owner" && (
                   <p className="text-center text-[12px] leading-5 text-muted-foreground">
                     {!c.has_username
                       ? "Pengguna ini belum mengatur username, jadi belum bisa ditambahkan."
@@ -374,12 +409,12 @@ export function SocialProfileHost() {
                   </div>
                 )}
 
-                {c.relation === "friend" && c.username && (
+                {(caps?.can_message || (c.relation === "friend" && c.dm_blocked)) && c.username && (
                   <div className="space-y-1.5">
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        disabled={!!c.dm_blocked}
+                        disabled={!caps?.can_message}
                         className={cn(btn, primary)}
                         onClick={() => {
                           dock.openDm({
@@ -393,7 +428,7 @@ export function SocialProfileHost() {
                       >
                         <MessageCircle className="size-4" /> Kirim Pesan
                       </button>
-                      {!c.official &&
+                      {caps?.can_unfriend &&
                         (confirm === "unfriend" ? (
                           <button
                             type="button"
@@ -434,31 +469,21 @@ export function SocialProfileHost() {
                   </button>
                 )}
 
-                {(c.relation === "friend" ||
-                  c.relation === "outgoing" ||
-                  c.relation === "incoming" ||
-                  c.relation === "none") &&
-                  c.has_username && (
-                    <div className="flex gap-2 pt-1">
+                {(caps?.can_report || caps?.can_block) && c.has_username && (
+                  <div className="flex gap-2 pt-1">
+                    {caps.can_report && (
                       <button
                         type="button"
                         disabled={busy || isReported}
                         className={cn(btn, "min-h-10 text-[12px]")}
-                        onClick={() =>
-                          void act(async () => {
-                            const r = await socialApi.reportUser(uid, null);
-                            setReported(uid);
-                            toast.success(
-                              r.status === "already_reported"
-                                ? "Pengguna ini sudah kamu laporkan."
-                                : "Laporan terkirim. Terima kasih.",
-                            );
-                          })
-                        }
+                        onClick={() => setReporting((v) => !v)}
+                        aria-expanded={reporting}
                       >
                         <Flag className="size-3.5" /> {isReported ? "Dilaporkan" : "Laporkan"}
                       </button>
-                      {confirm === "block" ? (
+                    )}
+                    {caps.can_block &&
+                      (confirm === "block" ? (
                         <button
                           type="button"
                           disabled={busy}
@@ -478,9 +503,39 @@ export function SocialProfileHost() {
                         >
                           <Ban className="size-3.5" /> Blokir
                         </button>
-                      )}
-                    </div>
-                  )}
+                      ))}
+                  </div>
+                )}
+                {reporting && caps?.can_report && !isReported && (
+                  <div
+                    role="group"
+                    aria-label="Kategori laporan"
+                    className="grid grid-cols-2 gap-1.5"
+                  >
+                    {REPORT_CATEGORIES.map(([cat, label]) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        disabled={busy}
+                        className={cn(btn, "min-h-10 text-[12px]")}
+                        onClick={() =>
+                          void act(async () => {
+                            const r = await socialApi.reportUser(uid, null, cat);
+                            setReported(uid);
+                            setReporting(false);
+                            toast.success(
+                              r.status === "already_reported"
+                                ? "Pengguna ini sudah kamu laporkan."
+                                : "Laporan terkirim. Terima kasih.",
+                            );
+                          })
+                        }
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {confirm && (
                   <p className="text-center text-[11px] text-muted-foreground">
                     {confirm === "block"

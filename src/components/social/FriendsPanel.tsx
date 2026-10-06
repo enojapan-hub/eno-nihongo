@@ -66,6 +66,31 @@ function RemoveFriendButton({
   );
 }
 
+/** Owner/Admin tidak bisa diblokir: tombol disembunyikan (server juga menolak). */
+function BlockFriendButton({
+  who,
+  busy,
+  onBlock,
+}: {
+  who: SocialIdentity;
+  busy: boolean;
+  onBlock: () => void;
+}) {
+  const identity = useSocialIdentity(who.user_id);
+  if (!identity.loaded || identity.badges.verified || identity.badges.admin) return null;
+  return (
+    <button
+      type="button"
+      aria-label={`Blokir ${who.username}`}
+      className={pill}
+      disabled={busy}
+      onClick={onBlock}
+    >
+      <Ban className="size-3.5" />
+    </button>
+  );
+}
+
 function Section({
   title,
   count,
@@ -280,17 +305,13 @@ export function FriendsPanel({ active }: { active: boolean }) {
                         )
                       }
                     />
-                    <button
-                      type="button"
-                      aria-label={`Blokir ${w.username}`}
-                      className={pill}
-                      disabled={busy === w.user_id}
-                      onClick={() =>
+                    <BlockFriendButton
+                      who={w}
+                      busy={busy === w.user_id}
+                      onBlock={() =>
                         void act(w.user_id, () => socialApi.block(w.user_id), "Pengguna diblokir.")
                       }
-                    >
-                      <Ban className="size-3.5" />
-                    </button>
+                    />
                   </Row>
                 ))}
               </Section>

@@ -1,6 +1,7 @@
-import { ArrowLeft, Bell, BellOff } from "lucide-react";
+import { ArrowLeft, Bell, BellOff, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { setDraft } from "@/lib/social/chat-drafts";
 import { dock, useDock } from "@/lib/social/dock-state";
 import { profileCard } from "@/lib/social/profile-card-state";
 import { onSocialEvent } from "@/lib/social/social-bus";
@@ -10,7 +11,12 @@ import {
   isPermanentSendError,
   socialErrorMessage,
 } from "@/lib/social/social-validation";
-import type { DmMessage, SocialIdentity, SocialMe } from "@/lib/social/social-types";
+import type {
+  DmMessage,
+  ReportCategory,
+  SocialIdentity,
+  SocialMe,
+} from "@/lib/social/social-types";
 import { Composer } from "./Composer";
 import { IdentityBadges } from "./IdentityBadges";
 import { MessageList, type ListMessage } from "./MessageList";
@@ -121,6 +127,7 @@ function toListMessage(m: DmMessage, meId: string, other: SocialIdentity): ListM
     body: m.body,
     deleted: m.deleted,
     createdAt: m.created_at,
+    editedAt: m.edited_at ?? null,
     reply: m.reply
       ? { author: name(m.reply.sender_id ?? ""), body: m.reply.body, deleted: m.reply.deleted }
       : null,
@@ -135,10 +142,29 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
   const overview = useSocialOverview(true);
   const invalidate = useSocialInvalidate();
   const [replyTo, setReplyTo] = useState<ListMessage | null>(null);
+  const [confirmHide, setConfirmHide] = useState(false);
+  const [hiding, setHiding] = useState(false);
   const { refreshLatest } = thread;
-  const isFriend = overview.data
-    ? overview.data.friends.some((f) => f.user_id === other.user_id)
-    : true;
+  // Owner boleh menulis ke setiap anggota valid tanpa pertemanan; server tetap memvalidasi status akun target.
+  const isFriend =
+    me.unrestricted_dm === true ||
+    (overview.data ? overview.data.friends.some((f) => f.user_id === other.user_id) : true);
+
+  const hideConversation = useCallback(async () => {
+    setHiding(true);
+    try {
+      await socialApi.dmHide(other.user_id);
+      setDraft(`dm:${other.user_id}`, "");
+      invalidate("dmList", "unread");
+      dock.openDm(null);
+      toast.success("Percakapan dihapus dari daftar chat Anda.");
+    } catch (e) {
+      toast.error(socialErrorMessage(e));
+    } finally {
+      setHiding(false);
+      setConfirmHide(false);
+    }
+  }, [other.user_id, invalidate]);
 
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => {
@@ -273,9 +299,14 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
           toast.error(socialErrorMessage(e));
         }
       },
-      onReport: async (m: ListMessage) => {
+      onEdit: async (m: ListMessage, body: string) => {
+        await socialApi.dmEdit(m.id, body);
+        await refreshLatest();
+        invalidate("dmList");
+      },
+      onReport: async (m: ListMessage, category: ReportCategory) => {
         try {
-          const r = await socialApi.report("dm", m.id, null);
+          const r = await socialApi.report("dm", m.id, null, category);
           toast.success(
             r.status === "already_reported"
               ? "Pesan ini sudah kamu laporkan."
@@ -341,7 +372,43 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
         >
           {muted ? <BellOff className="size-[18px]" /> : <Bell className="size-[18px]" />}
         </button>
+        <button
+          type="button"
+          aria-label="Hapus percakapan"
+          title="Hapus percakapan"
+          onClick={() => setConfirmHide(true)}
+          className="grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Trash2 className="size-[18px]" />
+        </button>
       </div>
+      {confirmHide && (
+        <div
+          role="alertdialog"
+          aria-label="Hapus percakapan"
+          className="border-b bg-muted/40 px-3 py-2 text-[12px]"
+        >
+          <p className="font-semibold">Hapus percakapan ini dari daftar chat Anda?</p>
+          <p className="mt-0.5 text-muted-foreground">Percakapan hanya dihapus dari akun Anda.</p>
+          <div className="mt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              className="min-h-9 rounded-full border px-3 font-semibold"
+              onClick={() => setConfirmHide(false)}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              disabled={hiding}
+              className="min-h-9 rounded-full border border-destructive px-3 font-semibold text-destructive disabled:opacity-50"
+              onClick={() => void hideConversation()}
+            >
+              {hiding ? "Menghapus…" : "Hapus"}
+            </button>
+          </div>
+        </div>
+      )}
       <MessageList
         messages={items}
         actions={actions}
@@ -351,12 +418,19 @@ function Thread({ me, other, active }: { me: SocialMe; other: SocialIdentity; ac
         onLoadOlder={() => void thread.loadOlder()}
         error={thread.error}
         onRetryLoad={() => void thread.refreshLatest()}
+        peerId={other.user_id}
+        meUsername={me.username}
         empty={<p>Belum ada pesan. Mulai percakapan dengan @{other.username}.</p>}
       />
       <Composer
         max={DM_MESSAGE_MAX}
+        draftKey={`dm:${other.user_id}`}
         disabledReason={
-          isFriend ? null : "Kalian tidak lagi berteman. Pesan baru tidak bisa dikirim."
+          me.social_suspended
+            ? "Fitur sosial akunmu sedang dibatasi. Belajar tetap bisa dilakukan."
+            : isFriend
+              ? null
+              : "Kalian tidak lagi berteman. Pesan baru tidak bisa dikirim."
         }
         replyLabel={replyTo ? (replyTo.mine ? "pesanmu" : `@${other.username}`) : null}
         onCancelReply={() => setReplyTo(null)}

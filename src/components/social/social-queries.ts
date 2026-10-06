@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { socialApi } from "@/lib/social/social-api";
 
 export const socialKeys = {
@@ -8,11 +9,13 @@ export const socialKeys = {
   dmList: ["social", "dm-list"] as const,
 };
 
+/** Kunci menyertakan id pengguna: akun berbeda tidak pernah memakai cache username akun sebelumnya. */
 export function useSocialMe(enabled = true) {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: socialKeys.me,
+    queryKey: [...socialKeys.me, user?.id ?? "anon"],
     queryFn: socialApi.me,
-    enabled,
+    enabled: enabled && !!user,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
   });

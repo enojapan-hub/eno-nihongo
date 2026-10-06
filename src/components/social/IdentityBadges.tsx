@@ -1,4 +1,4 @@
-import { BadgeCheck, GraduationCap, Gem } from "lucide-react";
+import { BadgeCheck, GraduationCap, Gem, ShieldCheck } from "lucide-react";
 import { BADGE_META, badgeKinds, useSocialIdentity } from "@/lib/social/social-badges";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +54,7 @@ export function IdentityBadges({
               {text}
             </span>
           );
-        const Icon = k === "verified" ? BadgeCheck : Gem;
+        const Icon = k === "verified" ? BadgeCheck : k === "admin" ? ShieldCheck : Gem;
         return (
           <span key={k} role="img" aria-label={label} title={label} className="inline-flex">
             <Icon
@@ -63,7 +63,9 @@ export function IdentityBadges({
                 icon,
                 k === "verified"
                   ? "fill-sky-500/15 text-sky-600 dark:text-sky-400"
-                  : "fill-yellow-400/40 text-yellow-500 dark:text-yellow-400",
+                  : k === "admin"
+                    ? "fill-red-500/15 text-red-600 dark:text-red-400"
+                    : "fill-yellow-400/40 text-yellow-500 dark:text-yellow-400",
               )}
             />
           </span>
