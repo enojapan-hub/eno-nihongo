@@ -4808,6 +4808,10 @@ export type Database = {
         Args: { p_created: boolean; p_id: string; p_kind: string }
         Returns: undefined
       }
+      admin_create_announcement: {
+        Args: { p_audience?: string; p_body: string; p_title: string }
+        Returns: Json
+      }
       admin_delete_content_item: {
         Args: { p_id: string; p_kind: string }
         Returns: undefined
@@ -4826,6 +4830,8 @@ export type Database = {
         }
         Returns: string
       }
+      admin_list_announcements: { Args: { p_limit?: number }; Returns: Json }
+      admin_list_media: { Args: { p_limit?: number }; Returns: Json }
       admin_list_reports: {
         Args: { p_limit?: number; p_status?: string }
         Returns: Json
