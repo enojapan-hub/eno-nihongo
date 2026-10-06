@@ -10,11 +10,21 @@ export type ListMessage = {
   id: string;
   mine: boolean;
   /** Nama tampilan + @username (null pada DM, pengirimnya sudah jelas). */
-  author: { userId: string; name: string; username: string; avatarId: number } | null;
+  author: {
+    userId: string;
+    name: string;
+    username: string;
+    avatarId: number;
+    /** Akun sudah tidak ada: identitas aman, tidak bisa dibuka. */
+    unavailable?: boolean;
+  } | null;
   body: string;
   deleted: boolean;
   createdAt: string;
   reply: { author: string; body: string; deleted: boolean } | null;
+  /** Pesan lokal yang belum/ gagal sampai ke server (kirim optimistik). */
+  status?: "sending" | "failed";
+  errorText?: string;
 };
 
 export type MessageActions = {
@@ -24,6 +34,8 @@ export type MessageActions = {
   onBlock?: ((m: ListMessage) => void) | undefined;
   /** Boleh menghapus pesan ini (pemilik atau moderator). */
   canDelete: (m: ListMessage) => boolean;
+  onRetry?: ((m: ListMessage) => void) | undefined;
+  onDiscard?: ((m: ListMessage) => void) | undefined;
 };
 
 function formatTime(iso: string): string {
@@ -50,7 +62,8 @@ function Item({
     "flex min-h-8 items-center gap-1 rounded-full border bg-background px-2.5 text-[11px] font-semibold";
   return (
     <li className={cn("flex gap-2 px-3 py-1", m.mine ? "flex-row-reverse" : "")}>
-      {!m.mine && m.author && (
+      {!m.mine && m.author?.unavailable && <SocialAvatar size={28} className="mt-0.5 h-fit" />}
+      {!m.mine && m.author && !m.author.unavailable && (
         <button
           type="button"
           aria-label={`Lihat profil @${m.author.username}`}
@@ -63,7 +76,12 @@ function Item({
       <div
         className={cn("flex min-w-0 max-w-[82%] flex-col", m.mine ? "items-end" : "items-start")}
       >
-        {!m.mine && m.author && (
+        {!m.mine && m.author?.unavailable && (
+          <span className="mb-0.5 text-[11px] italic text-muted-foreground">
+            Pengguna tidak tersedia
+          </span>
+        )}
+        {!m.mine && m.author && !m.author.unavailable && (
           <span className="mb-0.5 flex max-w-full items-center gap-1">
             <button
               type="button"
@@ -83,10 +101,13 @@ function Item({
         )}
         <button
           type="button"
-          onClick={() => !m.deleted && setShowActions((v) => !v)}
+          disabled={!!m.status}
+          onClick={() => !m.deleted && !m.status && setShowActions((v) => !v)}
           aria-expanded={showActions}
           className={cn(
             "max-w-full rounded-2xl px-3 py-1.5 text-left text-[14px] leading-5",
+            m.status === "failed" && "ring-1 ring-destructive/60",
+            m.status === "sending" && "opacity-70",
             m.deleted
               ? "border border-dashed text-muted-foreground italic"
               : m.mine
@@ -103,7 +124,38 @@ function Item({
             {m.deleted ? "Pesan dihapus" : m.body}
           </span>
         </button>
-        <span className="mt-0.5 text-[10px] text-muted-foreground">{formatTime(m.createdAt)}</span>
+        {m.status === "sending" && (
+          <span role="status" className="mt-0.5 text-[10px] text-muted-foreground">
+            Mengirim…
+          </span>
+        )}
+        {m.status === "failed" && (
+          <span
+            role="alert"
+            className="mt-0.5 flex flex-wrap items-center justify-end gap-x-2 text-[11px]"
+          >
+            <span className="font-semibold text-destructive">Gagal dikirim</span>
+            <button
+              type="button"
+              className="min-h-8 font-semibold text-primary underline"
+              onClick={() => actions.onRetry?.(m)}
+            >
+              Coba lagi
+            </button>
+            <button
+              type="button"
+              className="min-h-8 text-muted-foreground underline"
+              onClick={() => actions.onDiscard?.(m)}
+            >
+              Hapus
+            </button>
+          </span>
+        )}
+        {!m.status && (
+          <span className="mt-0.5 text-[10px] text-muted-foreground">
+            {formatTime(m.createdAt)}
+          </span>
+        )}
         {showActions && !m.deleted && (
           <div className="mt-1 flex flex-wrap gap-1">
             <button
@@ -169,6 +221,8 @@ export function MessageList({
   onLoadOlder,
   empty,
   colorize = false,
+  error,
+  onRetryLoad,
 }: {
   messages: readonly ListMessage[];
   actions: MessageActions;
@@ -179,9 +233,27 @@ export function MessageList({
   empty: ReactNode;
   /** Warna username deterministik per akun (khusus Global Chat). */
   colorize?: boolean;
+  /** Gagal memuat (dan belum ada pesan): tampilkan status + Coba lagi. */
+  error?: string | null | undefined;
+  onRetryLoad?: (() => void) | undefined;
 }) {
   if (loading && messages.length === 0)
     return <div className="flex-1 animate-pulse bg-muted/30" aria-label="Memuat pesan" />;
+  if (messages.length === 0 && error)
+    return (
+      <div className="grid flex-1 place-items-center px-6 text-center" role="alert">
+        <div>
+          <p className="text-[13px] text-destructive">Pesan gagal dimuat.</p>
+          <button
+            type="button"
+            onClick={onRetryLoad}
+            className="mt-2 min-h-11 rounded-full border px-4 text-[12px] font-semibold"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
   if (messages.length === 0)
     return (
       <div className="grid flex-1 place-items-center px-6 text-center text-[13px] text-muted-foreground">

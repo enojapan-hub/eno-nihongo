@@ -6,6 +6,8 @@ export type ProfileCardContext = {
   points?: number;
   pointsLabel?: string;
   level?: string;
+  /** Pratinjau "Lihat sebagai pengguna lain": tampilan publik milik sendiri. */
+  preview?: boolean;
 };
 export type ProfileCardState = { userId: string; context: ProfileCardContext | null } | null;
 

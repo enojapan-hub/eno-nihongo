@@ -6,6 +6,7 @@ import { dock } from "@/lib/social/dock-state";
 import { profileCard } from "@/lib/social/profile-card-state";
 import { onSocialEvent } from "@/lib/social/social-bus";
 import { socialApi } from "@/lib/social/social-api";
+import { useSocialIdentity } from "@/lib/social/social-badges";
 import { socialErrorMessage } from "@/lib/social/social-validation";
 import type { SocialIdentity } from "@/lib/social/social-types";
 import { IdentityBadges } from "./IdentityBadges";
@@ -37,6 +38,31 @@ function Row({ who, children }: { who: SocialIdentity; children: ReactNode }) {
       </button>
       <div className="flex shrink-0 flex-wrap justify-end gap-1">{children}</div>
     </li>
+  );
+}
+
+/** Pertemanan dengan akun resmi (Owner) bersifat otomatis: tidak ada tombol hapus. */
+function RemoveFriendButton({
+  who,
+  busy,
+  onRemove,
+}: {
+  who: SocialIdentity;
+  busy: boolean;
+  onRemove: () => void;
+}) {
+  const identity = useSocialIdentity(who.user_id);
+  if (!identity.loaded || identity.badges.verified) return null;
+  return (
+    <button
+      type="button"
+      aria-label={`Hapus teman ${who.username}`}
+      className={pill}
+      disabled={busy}
+      onClick={onRemove}
+    >
+      <UserMinus className="size-3.5" />
+    </button>
   );
 }
 
@@ -243,21 +269,17 @@ export function FriendsPanel({ active }: { active: boolean }) {
                     >
                       <MessageCircle className="size-3.5" /> Chat
                     </button>
-                    <button
-                      type="button"
-                      aria-label={`Hapus teman ${w.username}`}
-                      className={pill}
-                      disabled={busy === w.user_id}
-                      onClick={() =>
+                    <RemoveFriendButton
+                      who={w}
+                      busy={busy === w.user_id}
+                      onRemove={() =>
                         void act(
                           w.user_id,
                           () => socialApi.removeFriend(w.user_id),
                           "Teman dihapus.",
                         )
                       }
-                    >
-                      <UserMinus className="size-3.5" />
-                    </button>
+                    />
                     <button
                       type="button"
                       aria-label={`Blokir ${w.username}`}

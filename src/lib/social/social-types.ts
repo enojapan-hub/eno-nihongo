@@ -5,6 +5,8 @@ export type SocialIdentity = {
   avatar_id: number;
 };
 
+export type DmPolicy = "friends" | "started_by_me" | "none";
+
 export type SocialMe = {
   has_username: boolean;
   user_id?: string;
@@ -15,6 +17,12 @@ export type SocialMe = {
   allow_friend_requests?: boolean;
   /** Suara pesan masuk (default aktif). */
   sound_enabled?: boolean;
+  /** Privasi Profile Card + kebijakan DM (default: semua tampil, DM dari semua teman). */
+  show_online?: boolean;
+  show_country?: boolean;
+  show_jlpt?: boolean;
+  show_xp?: boolean;
+  dm_policy?: DmPolicy;
   /** ISO; null bila username boleh diubah sekarang (ditentukan server). */
   next_username_change_at?: string | null;
 };
@@ -57,6 +65,7 @@ export type DmConversation = SocialIdentity & {
   last_sender_id: string;
   unread: number;
   is_friend: boolean;
+  muted?: boolean;
 };
 
 export type SearchResult = SocialIdentity & {
@@ -84,10 +93,20 @@ export type ProfileCardData = {
   /** URL foto yang sudah disaring server (Google / bucket avatars), atau null. */
   photo: string | null;
   bio: string | null;
+  /** null = disembunyikan oleh pemilik (atau memang kosong). */
   country: string | null;
-  xp: number;
+  xp: number | null;
   /** Level JLPT (N5–N1). Level Akun dihitung dari `xp` (lib/progression). */
   level: string | null;
+  /** Akun resmi (Owner): tanpa peringkat, tanpa "Hapus Pertemanan". */
+  official: boolean;
+  show_online: boolean;
+  /** Jumlah teman (agregat saja). */
+  friends: number;
+  /** "YYYY-MM" (bulan bergabung, tanpa tanggal/jam). */
+  joined: string | null;
+  /** Alasan DM tidak tersedia untuk teman (kode galat), atau null bila boleh. */
+  dm_blocked: string | null;
   relation: CardRelation;
   viewer_has_username: boolean;
   can_request: boolean;

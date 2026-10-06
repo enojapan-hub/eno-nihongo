@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -39,24 +39,70 @@ export function useIsOnline(userId: string | null | undefined): boolean {
   return !!userId && online.has(userId);
 }
 
-/** Satu channel Presence untuk seluruh aplikasi; dipasang di ChatDock saat sudah masuk. */
-export function usePresenceTracking(userId: string | null) {
+/** Status koneksi Realtime untuk UI ("Menghubungkan ulang…"), jujur terhadap kondisi sebenarnya. */
+export type ConnectionStatus = "connecting" | "online" | "reconnecting";
+let connection: ConnectionStatus = "connecting";
+const connListeners = new Set<() => void>();
+export function setConnectionStatus(next: ConnectionStatus) {
+  if (connection === next) return;
+  connection = next;
+  for (const l of connListeners) l();
+}
+export function statusFromChannel(status: string): ConnectionStatus | null {
+  if (status === "SUBSCRIBED") return "online";
+  if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED")
+    return "reconnecting";
+  return null;
+}
+export function useConnectionStatus(): ConnectionStatus {
+  return useSyncExternalStore(
+    (cb) => {
+      connListeners.add(cb);
+      return () => connListeners.delete(cb);
+    },
+    () => connection,
+    () => "connecting" as ConnectionStatus,
+  );
+}
+
+/**
+ * Satu channel Presence untuk seluruh aplikasi; dipasang di ChatDock saat sudah masuk.
+ * `share=false` (privasi "Tampilkan status online" mati): tetap membaca presence orang lain tetapi
+ * TIDAK mengumumkan diri sendiri, sehingga akun ini tidak ada di presence state siapa pun.
+ */
+export function usePresenceTracking(userId: string | null, share: boolean) {
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const subscribed = useRef(false);
+  const shareRef = useRef(share);
+  shareRef.current = share;
+
   useEffect(() => {
     if (!userId) return;
     const channel = supabase.channel(PRESENCE_CHANNEL, {
       config: { presence: { key: userId } },
     });
+    channelRef.current = channel;
     channel
       .on("presence", { event: "sync" }, () => {
         setOnline(onlineFromState(channel.presenceState() as Record<string, unknown[]>));
       })
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") void channel.track({ online: true });
+        subscribed.current = status === "SUBSCRIBED";
+        if (status === "SUBSCRIBED" && shareRef.current) void channel.track({ online: true });
       });
     return () => {
+      subscribed.current = false;
+      channelRef.current = null;
       void channel.untrack();
       void supabase.removeChannel(channel);
       setOnline(new Set());
     };
   }, [userId]);
+
+  useEffect(() => {
+    const channel = channelRef.current;
+    if (!channel || !subscribed.current) return;
+    if (share) void channel.track({ online: true });
+    else void channel.untrack();
+  }, [share]);
 }

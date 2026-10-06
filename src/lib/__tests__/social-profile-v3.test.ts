@@ -172,7 +172,9 @@ describe("presence", () => {
     expect(src).toMatch(/untrack\(\)/);
     expect(src).toMatch(/removeChannel\(channel\)/);
     expect(src).not.toMatch(/last_seen|lastSeen|\.from\(/);
-    expect(read("src/components/social/ChatDock.tsx")).toMatch(/usePresenceTracking\(userId\)/);
+    expect(read("src/components/social/ChatDock.tsx")).toMatch(
+      /usePresenceTracking\(userId, me\?\.show_online !== false\)/,
+    );
   });
 });
 
@@ -186,10 +188,10 @@ describe("profile card content + Edit Profil bio", () => {
   it("shows bio only when present and uses real data for country/levels/xp/online", () => {
     expect(card).toMatch(/\{c\.bio && \(/);
     expect(card).toMatch(/\{c\.country && \(/);
-    expect(card).toMatch(/getAccountLevel\(c\.xp\)\.level/);
+    expect(card).toMatch(/c\.xp !== null \? getAccountLevel\(c\.xp\)\.level : null/);
     expect(card).toMatch(/JLPT \{jlpt\}/);
     expect(card).toMatch(/useIsOnline\(userId\)/);
-    expect(card).toMatch(/\{online && \(/);
+    expect(card).toMatch(/\{online && c\.show_online && \(/);
     expect(card).not.toMatch(/dangerouslySetInnerHTML/);
   });
   it("Edit Profil has a 160-char bio, trimmed on save, stored via the existing profile save", () => {
