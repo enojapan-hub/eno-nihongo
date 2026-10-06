@@ -155,7 +155,8 @@ describe("kontrak UI/alur Auth", () => {
   it("Atur ulang: hanya sesi pemulihan dari event Supabase, konfirmasi, error Indonesia", () => {
     expect(flow).toContain('event === "PASSWORD_RECOVERY"');
     expect(flow).toContain("isRecoverySession()");
-    expect(resetPage).toContain("waitForRecoverySession(");
+    expect(resetPage).toContain("readRecoveryHashTokens(");
+    expect(resetPage).toContain("supabase.auth.setSession(");
     expect(resetPage).toContain("validateNewPassword(password, confirm)");
     expect(resetPage).toContain("supabase.auth.updateUser({ password })");
     expect(resetPage).toContain("RECOVERY_LINK_INVALID_MESSAGE");

@@ -102,26 +102,6 @@ function readRecoveryFlag(): boolean {
 
 export const isRecoverySession = (): boolean => recoveryDetected || readRecoveryFlag();
 
-// PASSWORD_RECOVERY dipancarkan setelah getSession()/initialize() selesai (antrean inisialisasi + setTimeout
-// di auth-js). Menilai "tautan tidak berlaku" sebelum event itu tiba adalah balapan yang salah.
-const recoveryWaiters = new Set<() => void>();
-
-/** True bila sesi pemulihan terdeteksi dalam batas waktu (menunggu event resmi Supabase). */
-export function waitForRecoverySession(timeoutMs: number): Promise<boolean> {
-  if (isRecoverySession()) return Promise.resolve(true);
-  return new Promise((resolve) => {
-    const done = () => {
-      window.clearTimeout(timer);
-      resolve(true);
-    };
-    const timer = window.setTimeout(() => {
-      recoveryWaiters.delete(done);
-      resolve(isRecoverySession());
-    }, timeoutMs);
-    recoveryWaiters.add(done);
-  });
-}
-
 /** Menandai sesi pemulihan yang sudah divalidasi server (mis. lewat setSession dari tautan email). */
 export function markRecoverySession(): void {
   recoveryDetected = true;
@@ -131,8 +111,6 @@ export function markRecoverySession(): void {
   } catch {
     /* penyimpanan tidak tersedia */
   }
-  recoveryWaiters.forEach((notify) => notify());
-  recoveryWaiters.clear();
 }
 
 /**
@@ -180,7 +158,8 @@ export function classifyRecoveryFailure(
       return "wrong_browser";
     return "exchange_failed";
   }
-  if (info.hasCode && !hasSession) return "wrong_browser";
+  // Tautan lama bergaya kode (PKCE) tidak lagi didukung: arahkan ke tautan terbaru.
+  if (info.hasCode && !hasSession) return "expired";
   if (!info.present) return hasSession ? "not_recovery" : "no_callback";
   return "exchange_failed";
 }

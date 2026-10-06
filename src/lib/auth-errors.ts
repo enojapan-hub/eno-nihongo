@@ -27,6 +27,18 @@ export const ALREADY_REGISTERED_MESSAGE = "Email ini sudah terdaftar. Silakan ma
 export const RATE_LIMIT_MESSAGE = "Terlalu banyak percobaan. Tunggu beberapa saat lalu coba lagi.";
 export const RECOVERY_RATE_LIMIT_MESSAGE =
   "Permintaan tautan terlalu sering dan dibatasi sementara oleh sistem. Jika Anda sudah meminta tautan, periksa kotak masuk dan folder Spam, lalu gunakan tautan terbaru. Coba lagi beberapa saat lagi.";
+/** Detik tunggu asli dari server ("...only request this after 52 seconds"); null bila tidak disebut. */
+export function rateLimitSeconds(message: string): number | null {
+  const match = /after\s+(\d{1,4})\s+seconds?/i.exec(message);
+  return match?.[1] ? Number(match[1]) : null;
+}
+
+export function recoveryRateLimitMessage(seconds: number | null): string {
+  return seconds === null
+    ? RECOVERY_RATE_LIMIT_MESSAGE
+    : `Permintaan tautan dibatasi sementara oleh sistem. Coba lagi dalam ${seconds} detik. Bila Anda sudah meminta tautan, periksa kotak masuk dan folder Spam, lalu buka email terbaru.`;
+}
+
 export const NETWORK_MESSAGE = "Koneksi bermasalah. Periksa internet Anda lalu coba lagi.";
 export const SERVER_MESSAGE = "Layanan sedang bermasalah. Coba lagi beberapa saat lagi.";
 export const RECOVERY_LINK_INVALID_MESSAGE =
@@ -76,7 +88,9 @@ export function authErrorMessage(error: unknown, context: AuthErrorContext): str
   const e = asLike(error);
   const message = e.message ?? "";
   if (isRateLimited(error))
-    return context === "recovery-request" ? RECOVERY_RATE_LIMIT_MESSAGE : RATE_LIMIT_MESSAGE;
+    return context === "recovery-request"
+      ? recoveryRateLimitMessage(rateLimitSeconds(message))
+      : RATE_LIMIT_MESSAGE;
   if (isNetworkError(error)) return NETWORK_MESSAGE;
   if (e.code === "invalid_credentials" || /invalid login credentials/i.test(message))
     return INVALID_CREDENTIALS_MESSAGE;

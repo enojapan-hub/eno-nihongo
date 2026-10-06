@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   CalendarDays,
-  Camera,
   Edit3,
   Flame,
   Globe2,
@@ -104,17 +103,11 @@ function ProfilePage() {
               <Stat icon={Trophy} label="Materi" value={String(mastered.length)} />
               <Stat icon={Flame} label="Streak" value={`${me?.streak ?? 0} hari`} />
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button asChild className="rounded-xl">
+            <div className="mt-4">
+              <Button asChild className="w-full rounded-xl">
                 <Link to="/edit-profil">
                   <Edit3 className="mr-2 size-4" />
                   Edit Profil
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="rounded-xl">
-                <Link to="/profil-foto">
-                  <Camera className="mr-2 size-4" />
-                  Foto
                 </Link>
               </Button>
             </div>
