@@ -44,3 +44,15 @@ export function providerLabel(p: AccountProviders): string {
   if (p.email) return "Email dan kata sandi";
   return "Penyedia lain";
 }
+
+/**
+ * Meminta email atur ulang kata sandi lewat alur resmi Supabase (resetPasswordForEmail). `redirectTo`
+ * konstan; token tidak dibuat/diproses aplikasi. Pembatasan laju tetap di sisi server Supabase.
+ */
+export async function requestPasswordRecovery(email: string): Promise<{ error: unknown }> {
+  const { createRecoveryRequestClient } = await import("@/integrations/supabase/client");
+  const { error } = await createRecoveryRequestClient().auth.resetPasswordForEmail(email, {
+    redirectTo: recoveryRedirectUrl(),
+  });
+  return { error };
+}

@@ -48,6 +48,25 @@ function createSupabaseClient() {
   });
 }
 
+/**
+ * Klien khusus PERMINTAAN tautan atur ulang kata sandi (tanpa sesi tersimpan). Memakai alur "implicit"
+ * resmi Supabase: tautan di email tidak bergantung pada penyimpanan browser yang meminta, sehingga tetap
+ * berfungsi saat dibuka dari peramban dalam-aplikasi (mis. Gmail iOS) atau perangkat/browser lain.
+ * Alur PKCE klien utama menyimpan code_verifier di localStorage browser peminta saja.
+ */
+export function createRecoveryRequestClient() {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: { fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY) },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      flowType: "implicit",
+      storageKey: "sb-eno-recovery-request",
+    },
+  });
+}
+
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
 
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {

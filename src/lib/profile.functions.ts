@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { profileSaveErrorMessage, SETTINGS_SAVE_FAILED } from "@/lib/profile-errors";
 
 const settingsSchema = z.object({
   display_name: z.string().trim().min(2).max(60),
@@ -75,7 +76,11 @@ export const updateMyAccount = createServerFn({ method: "POST" })
       .from("profiles")
       .update(update)
       .eq("id", context.userId);
-    if (profileError) throw new Error(`Profil gagal disimpan: ${profileError.message}`);
+    if (profileError) {
+      // Detail teknis hanya di log server; pengguna menerima pesan Indonesia yang aman.
+      console.error("[updateMyAccount] profil", profileError.code, profileError.message);
+      throw new Error(profileSaveErrorMessage(profileError.message));
+    }
     const { error: settingsError } = await context.supabase.from("user_settings").upsert(
       {
         user_id: context.userId,
@@ -87,6 +92,9 @@ export const updateMyAccount = createServerFn({ method: "POST" })
       },
       { onConflict: "user_id" },
     );
-    if (settingsError) throw new Error(`Pengaturan gagal disimpan: ${settingsError.message}`);
+    if (settingsError) {
+      console.error("[updateMyAccount] pengaturan", settingsError.code, settingsError.message);
+      throw new Error(SETTINGS_SAVE_FAILED);
+    }
     return { ok: true };
   });

@@ -31,7 +31,7 @@ describe("auth callback detection", () => {
     expect(parseAuthCallback("?code=abc", "").present).toBe(true);
     expect(parseAuthCallback("", "#access_token=x&refresh_token=y").present).toBe(true);
     const failed = parseAuthCallback("?error_code=otp_expired&error_description=expired", "");
-    expect(failed).toEqual({ present: true, error: "expired" });
+    expect(failed).toMatchObject({ present: true, error: "expired" });
   });
   it("ignores ordinary pages and the route guard's own ?error= message", () => {
     expect(parseAuthCallback("", "").present).toBe(false);

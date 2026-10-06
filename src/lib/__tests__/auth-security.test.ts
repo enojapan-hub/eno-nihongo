@@ -15,6 +15,7 @@ import {
   NETWORK_MESSAGE,
   RATE_LIMIT_MESSAGE,
   RECOVERY_LINK_INVALID_MESSAGE,
+  RECOVERY_RATE_LIMIT_MESSAGE,
 } from "../auth-errors";
 import { PASSWORD_MISMATCH_MESSAGE, validateNewPassword } from "../password-policy";
 
@@ -55,7 +56,7 @@ describe("pemeta error Auth → Bahasa Indonesia", () => {
   it("memetakan rate limit, jaringan, lemah, sama, kedaluwarsa, dan server", () => {
     expect(authErrorMessage({ status: 429 }, "signin")).toBe(RATE_LIMIT_MESSAGE);
     expect(authErrorMessage({ code: "over_email_send_rate_limit" }, "recovery-request")).toBe(
-      RATE_LIMIT_MESSAGE,
+      RECOVERY_RATE_LIMIT_MESSAGE,
     );
     expect(authErrorMessage({ name: "AuthRetryableFetchError", message: "x" }, "signin")).toBe(
       NETWORK_MESSAGE,
@@ -121,8 +122,9 @@ describe("provider akun dari identitas Auth (bukan tebakan email)", () => {
 describe("kontrak UI/alur Auth", () => {
   it("Lupa kata sandi: tautan, API resmi, redirect konstan, respons netral", () => {
     expect(authPage).toContain("Lupa kata sandi?");
-    expect(authPage).toContain("resetPasswordForEmail");
-    expect(authPage).toContain("redirectTo: recoveryRedirectUrl()");
+    expect(read("src/lib/auth-account.ts")).toContain("resetPasswordForEmail");
+    expect(authPage).toContain("requestPasswordRecovery(normalizedEmail)");
+    expect(read("src/lib/auth-account.ts")).toContain("redirectTo: recoveryRedirectUrl()");
     expect(authPage).toContain(
       "Jika email tersebut terdaftar, tautan untuk mengatur ulang kata sandi",
     );
@@ -153,7 +155,7 @@ describe("kontrak UI/alur Auth", () => {
   it("Atur ulang: hanya sesi pemulihan dari event Supabase, konfirmasi, error Indonesia", () => {
     expect(flow).toContain('event === "PASSWORD_RECOVERY"');
     expect(flow).toContain("isRecoverySession()");
-    expect(resetPage).toContain("isRecoverySession()");
+    expect(resetPage).toContain("waitForRecoverySession(");
     expect(resetPage).toContain("validateNewPassword(password, confirm)");
     expect(resetPage).toContain("supabase.auth.updateUser({ password })");
     expect(resetPage).toContain("RECOVERY_LINK_INVALID_MESSAGE");
