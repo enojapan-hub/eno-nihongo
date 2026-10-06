@@ -4826,6 +4826,10 @@ export type Database = {
         }
         Returns: string
       }
+      admin_list_reports: {
+        Args: { p_limit?: number; p_status?: string }
+        Returns: Json
+      }
       admin_log_event: {
         Args: {
           p_action: string
@@ -4886,6 +4890,10 @@ export type Database = {
       admin_set_user_suspended: {
         Args: { p_note?: string; p_suspended: boolean; p_user_id: string }
         Returns: undefined
+      }
+      admin_update_report: {
+        Args: { p_id: string; p_note?: string; p_status: string }
+        Returns: Json
       }
       admin_update_subscription_plan: {
         Args: { p_is_active?: boolean; p_plan_id: string; p_price?: number }

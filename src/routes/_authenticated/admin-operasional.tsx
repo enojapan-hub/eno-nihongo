@@ -82,12 +82,16 @@ function Page() {
     queryKey: ["ops-list", tab],
     enabled: stats.isSuccess && tab !== "review",
     queryFn: async () => {
-      const table =
-        tab === "laporan"
-          ? "content_reports"
-          : tab === "pengumuman"
-            ? "admin_announcements"
-            : "media_library";
+      if (tab === "laporan") {
+        // content_reports tidak punya hak klien: moderator membaca lewat RPC (izin + batas di server).
+        const { data, error } = await supabase.rpc(
+          "admin_list_reports" as never,
+          { p_limit: 100 } as never,
+        );
+        if (error) throw error;
+        return (Array.isArray(data) ? data : []) as unknown as OpsRow[];
+      }
+      const table = tab === "pengumuman" ? "admin_announcements" : "media_library";
       const { data, error } = await supabase
         .from(table)
         .select("*")
@@ -152,17 +156,11 @@ function Page() {
   async function report(id: string, status: string) {
     const resolution_note =
       status === "resolved" ? prompt("Catatan penyelesaian (opsional):") || null : null;
-    const { error } = await supabase
-      .from("content_reports")
-      .update({ status, resolution_note, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error } = await supabase.rpc(
+      "admin_update_report" as never,
+      { p_id: id, p_status: status, p_note: resolution_note } as never,
+    );
     if (error) return alert(error.message);
-    await supabase.rpc("admin_log_event", {
-      p_action: "update_report",
-      p_entity_type: "content_report",
-      p_entity_id: id,
-      p_metadata: { status, resolution_note },
-    });
     refresh();
   }
   if (stats.isLoading)
@@ -370,6 +368,16 @@ function Page() {
                 <option value="resolved">Selesai</option>
               </select>
             </div>
+            {tab === "laporan" && list.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Gagal memuat laporan.
+              </p>
+            )}
+            {tab === "laporan" && list.isSuccess && filtered.length === 0 && (
+              <p className="text-xs text-muted-foreground" role="status">
+                Belum ada laporan.
+              </p>
+            )}
             {filtered.map((x) => (
               <Card key={x.id}>
                 <CardContent className="p-3">

@@ -203,16 +203,16 @@ begin
 
   -- J) Guru = Premium efektif (tanpa langganan palsu); Owner Verified saja; Admin dari role
   r := pg_temp.q_user(a, format('select public.social_badges(array[%L, %L, %L, %L]::uuid[])', t, o, d, c));
-  chk := chk || jsonb_build_object('guru_none_premium', (r->(t::text)->>'diamond')::boolean and (r->(t::text)->>'sensei')::boolean);
+  chk := chk || jsonb_build_object('guru_none_sensei_only', not (r->(t::text)->>'diamond')::boolean and (r->(t::text)->>'sensei')::boolean);
   chk := chk || jsonb_build_object('owner_verified', (r->(o::text)->>'verified')::boolean);
   chk := chk || jsonb_build_object('admin_badge', (r->(d::text)->>'admin')::boolean and not (r->(d::text)->>'verified')::boolean);
   chk := chk || jsonb_build_object('free_not_premium', not (r->(c::text)->>'diamond')::boolean);
   update public.profiles set plan = 'premium', premium_until = now() - interval '2 days' where id = t;
-  chk := chk || jsonb_build_object('guru_expired_premium', (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean);
+  chk := chk || jsonb_build_object('guru_expired_sensei_only', not (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean and (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'sensei')::boolean);
   update public.profiles set plan = 'premium', premium_until = now() + interval '30 days' where id = t;
-  chk := chk || jsonb_build_object('guru_active_premium', (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean);
+  chk := chk || jsonb_build_object('guru_active_sub_sensei_only', not (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean and (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'sensei')::boolean);
   update public.profiles set role = 'student' where id = t;
-  chk := chk || jsonb_build_object('revoked_guru_with_sub_premium', (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean);
+  chk := chk || jsonb_build_object('revoked_guru_with_sub_diamond', (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean);
   update public.profiles set plan = 'free', premium_until = null where id = t;
   chk := chk || jsonb_build_object('revoked_guru_no_sub_free', not (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', t))->(t::text)->>'diamond')::boolean);
   update public.profiles set role = 'teacher' where id = t;
@@ -337,6 +337,71 @@ begin
      and not has_function_privilege('anon', 'public.social_admin_reports(text, integer)', 'execute')
      and not has_function_privilege('anon', 'public.global_set_pin(text)', 'execute')
      and not has_function_privilege('anon', 'public.dm_conversation_hide(uuid)', 'execute'));
+
+
+  -- N) v7: laporan admin lewat RPC, rename identitas, badge final, OAuth tidak menimpa nama ENO
+  perform pg_temp.as_user(a, $q$select public.submit_user_report('bug', 'Tombol rusak', 'Tombol tidak bisa ditekan')$q$);
+  r := pg_temp.q_user(o, $q$select public.admin_list_reports(null, 50)$q$);
+  chk := chk || jsonb_build_object('reports_owner_ok', jsonb_typeof(r) = 'array' and exists (select 1 from jsonb_array_elements(r) e where e->>'subject' = 'Tombol rusak'));
+  chk := chk || jsonb_build_object('reports_admin_ok', jsonb_typeof(pg_temp.q_user(d, $q$select public.admin_list_reports(null, 50)$q$)) = 'array');
+  chk := chk || jsonb_build_object('reports_member_rejected', (pg_temp.q_user(a, $q$select public.admin_list_reports(null, 50)$q$)->>'error') = 'forbidden');
+  chk := chk || jsonb_build_object('reports_no_chat_rows', not exists (select 1 from jsonb_array_elements(r) e where e->>'category' = 'chat'));
+  chk := chk || jsonb_build_object('reports_no_reporter_identity', not (r::text ~ 'reporter'));
+  chk := chk || jsonb_build_object('reports_bounded', jsonb_array_length(pg_temp.q_user(o, $q$select public.admin_list_reports(null, 100000)$q$)) <= 200);
+  select (e->>'id')::uuid into v_report from jsonb_array_elements(r) e where e->>'subject' = 'Tombol rusak' limit 1;
+  chk := chk || jsonb_build_object('resolve_member_rejected', pg_temp.as_user(a, format($q$select public.admin_update_report(%L, 'resolved', 'x')$q$, v_report)) = 'forbidden');
+  chk := chk || jsonb_build_object('resolve_owner_ok', pg_temp.as_user(o, format($q$select public.admin_update_report(%L, 'resolved', 'selesai')$q$, v_report)) = 'ok');
+  chk := chk || jsonb_build_object('resolve_effect_v7', (select status from public.content_reports where id = v_report) = 'resolved'
+        and exists (select 1 from public.admin_audit_log where action = 'update_report' and entity_id = v_report::text and actor_id = o));
+  chk := chk || jsonb_build_object('resolve_invalid_status', pg_temp.as_user(o, format($q$select public.admin_update_report(%L, 'deleted', null)$q$, v_report)) = 'invalid_setting');
+  select id into v_report from public.content_reports where chat_category is not null limit 1;
+  chk := chk || jsonb_build_object('resolve_chat_row_not_via_generic', pg_temp.as_user(o, format($q$select public.admin_update_report(%L, 'resolved', null)$q$, v_report)) = 'not_found');
+  chk := chk || jsonb_build_object('no_anon_report_rpcs', not has_function_privilege('anon', 'public.admin_list_reports(text, integer)', 'execute') and not has_function_privilege('anon', 'public.admin_update_report(uuid, text, text)', 'execute'));
+
+  declare xp_b int; fr_b uuid; msgs_b int; role_b text; plan_b text; uname_b text; v_ok boolean;
+  begin
+    select xp into xp_b from public.user_learning_stats where user_id = a;
+    select id into fr_b from public.social_friendships where user_low = least(o, a) and user_high = greatest(o, a);
+    select count(*) into msgs_b from public.dm_messages where sender_id = a;
+    select role, plan into role_b, plan_b from public.profiles where id = a;
+    select username into uname_b from public.social_profiles where user_id = a;
+    update public.profiles set display_name = 'Test Baru' where id = a;
+    chk := chk || jsonb_build_object('rename_profile', (select display_name from public.profiles where id = a) = 'Test Baru');
+    chk := chk || jsonb_build_object('rename_leaderboard_source', (select display_name from public.user_learning_stats where user_id = a) = 'Test Baru');
+    chk := chk || jsonb_build_object('rename_social_mirror', (select display_name from public.social_profiles where user_id = a) = 'Test Baru');
+    chk := chk || jsonb_build_object('rename_card', (pg_temp.q_user(c, format('select public.social_profile_card(%L)', a))->>'display_name') = 'Test Baru');
+    chk := chk || jsonb_build_object('rename_global_history', exists (select 1 from jsonb_array_elements(pg_temp.q_user(c, 'select public.global_history(50)')) e where e->>'sender_id' = a::text and e->>'display_name' = 'Test Baru'));
+    chk := chk || jsonb_build_object('rename_dm_list', exists (select 1 from jsonb_array_elements(pg_temp.q_user(o, 'select public.dm_conversation_list()')) e where e->>'user_id' = a::text and e->>'display_name' = 'Test Baru'));
+    chk := chk || jsonb_build_object('rename_me', (pg_temp.q_user(a, 'select public.social_me()')->>'display_name') = 'Test Baru');
+    chk := chk || jsonb_build_object('rename_username_unchanged', (select username from public.social_profiles where user_id = a) = uname_b);
+    chk := chk || jsonb_build_object('rename_xp_unchanged', (select xp from public.user_learning_stats where user_id = a) is not distinct from xp_b);
+    chk := chk || jsonb_build_object('rename_friendship_unchanged', (select id from public.social_friendships where user_low = least(o, a) and user_high = greatest(o, a)) = fr_b);
+    chk := chk || jsonb_build_object('rename_messages_unchanged', (select count(*) from public.dm_messages where sender_id = a) = msgs_b);
+    chk := chk || jsonb_build_object('rename_role_plan_unchanged', (select role from public.profiles where id = a) = role_b and (select plan from public.profiles where id = a) = plan_b);
+    chk := chk || jsonb_build_object('rename_no_duplicate_identity', (select count(*) from public.social_profiles where user_id = a) = 1 and (select count(*) from public.user_learning_stats where user_id = a) = 1);
+    begin update public.profiles set display_name = repeat('x', 60) where id = a; v_ok := true; exception when others then v_ok := false; end;
+    chk := chk || jsonb_build_object('rename_long_name_does_not_fail', v_ok and (select char_length(display_name) from public.social_profiles where user_id = a) = 40);
+    update public.profiles set display_name = 'Test Baru' where id = a;
+    update auth.users set raw_user_meta_data = jsonb_build_object('full_name', 'Nama Google Lama', 'name', 'Nama Google Lama') where id = a;
+    chk := chk || jsonb_build_object('oauth_does_not_overwrite_eno_name', (select display_name from public.profiles where id = a) = 'Test Baru'
+          and (select display_name from public.user_learning_stats where user_id = a) = 'Test Baru');
+    update public.profiles set display_name = null where id = c;
+    update auth.users set raw_user_meta_data = jsonb_build_object('full_name', 'Nama Google Awal') where id = c;
+    chk := chk || jsonb_build_object('oauth_fills_only_when_empty', (select display_name from public.profiles where id = c) = 'Nama Google Awal');
+  end;
+
+  -- Badge final: Owner/Admin/Guru tidak pernah Diamond atau Free; anggota biasa Diamond/Free dari langganan
+  update public.profiles set plan = 'lifetime', premium_until = null where id in (o, d);
+  update public.profiles set plan = 'premium', premium_until = now() + interval '30 days' where id = t;
+  update public.profiles set plan = 'premium', premium_until = now() + interval '30 days' where id = c;
+  r := pg_temp.q_user(a, format('select public.social_badges(array[%L, %L, %L, %L]::uuid[])', o, d, t, c));
+  chk := chk || jsonb_build_object('owner_verified_only', (r->(o::text)->>'verified')::boolean and not (r->(o::text)->>'diamond')::boolean and not (r->(o::text)->>'sensei')::boolean and not (r->(o::text)->>'admin')::boolean);
+  chk := chk || jsonb_build_object('admin_badge_only', (r->(d::text)->>'admin')::boolean and not (r->(d::text)->>'diamond')::boolean);
+  chk := chk || jsonb_build_object('guru_paid_sensei_only', (r->(t::text)->>'sensei')::boolean and not (r->(t::text)->>'diamond')::boolean);
+  chk := chk || jsonb_build_object('normal_active_diamond', (r->(c::text)->>'diamond')::boolean and not (r->(c::text)->>'sensei')::boolean);
+  update public.profiles set premium_until = now() - interval '1 day' where id = c;
+  chk := chk || jsonb_build_object('normal_expired_free_badge', not (pg_temp.q_user(a, format('select public.social_badges(array[%L]::uuid[])', c))->(c::text)->>'diamond')::boolean);
+  chk := chk || jsonb_build_object('guru_entitlement_from_role', (pg_temp.q_user(t, 'select to_jsonb(public.is_premium())'))::text = 'true' and (pg_temp.q_user(t, 'select public.get_my_membership()')->>'plan') = 'premium');
 
   -- K) Data belajar tidak berubah; audit tercatat
   select xp into xp_after from public.user_learning_stats where user_id = a;

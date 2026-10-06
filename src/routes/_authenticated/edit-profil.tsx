@@ -13,6 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
+import { invalidateIdentityCaches } from "@/lib/identity-cache";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -177,6 +178,7 @@ function EditProfilePage() {
         qc.invalidateQueries({ queryKey: ["my-account"] }),
         qc.invalidateQueries({ queryKey: ["my-account-profile"] }),
         qc.invalidateQueries({ queryKey: ["my-account-edit"] }),
+        invalidateIdentityCaches(qc),
       ]);
       toast.success(
         keepPlan

@@ -251,17 +251,14 @@ describe("v5 client: pure helpers", () => {
     const fb = resolveCapabilities(card({ official: true, relation: "friend" }));
     expect(fb.can_unfriend || fb.can_block || fb.can_report).toBe(false);
   });
-  it("badges: admin shows Admin only; Guru shows Sensei + Diamond when server says premium", () => {
+  it("badges: Admin shows Admin only; Guru shows Sensei only", () => {
     expect(badgeKinds({ verified: false, admin: true, sensei: false, diamond: true })).toEqual([
       "admin",
     ]);
     expect(badgeKinds({ verified: true, admin: false, sensei: false, diamond: true })).toEqual([
       "verified",
     ]);
-    expect(badgeKinds({ verified: false, sensei: true, diamond: true })).toEqual([
-      "sensei",
-      "diamond",
-    ]);
+    expect(badgeKinds({ verified: false, sensei: true, diamond: true })).toEqual(["sensei"]);
     expect(badgeKinds(null)).toEqual([]);
     const m = parsePublicMeta({
       u1: { verified: false, admin: "true", sensei: true, diamond: true },
@@ -412,7 +409,7 @@ describe("v5 UI contract", () => {
       "restored_on_new_message",
       "no_phantom_unread",
       "suspended_global_rejected",
-      "guru_none_premium",
+      "guru_none_sensei_only",
       "revoked_guru_no_sub_free",
       "initial_ok",
       "lookalike_leet_rejected",

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { invalidateIdentityCaches } from "@/lib/identity-cache";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,8 @@ function OnboardingPage() {
   useEffect(() => {
     void getAuthUser().then(({ data }) => {
       const m = data.user?.user_metadata ?? {};
-      setName(String(m["full_name"] ?? m["name"] ?? ""));
+      // Nama ENO yang sudah dipilih pengguna (display_name) selalu didahulukan; nama Google hanya awal.
+      setName(String(m["display_name"] ?? m["full_name"] ?? m["name"] ?? ""));
     });
   }, []);
   const save = async () => {
@@ -72,6 +74,7 @@ function OnboardingPage() {
       });
       if (metaError) throw metaError;
       await qc.invalidateQueries({ queryKey: ["target-level"] });
+      await invalidateIdentityCaches(qc);
       toast.success("Akun siap digunakan.");
       await navigate({ to: "/dashboard", replace: true });
     } catch (e) {
