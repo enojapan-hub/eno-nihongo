@@ -19,12 +19,7 @@ export function invalidateMaterialCaches(qc: QueryClient, kind: MaterialCacheKin
       ["materi-extra-vocab"],
       ["hafalan-vocab"],
     ],
-    grammar: [
-      ["grammar-list"],
-      ["grammar-detail"],
-      ["materi-grammar"],
-      ["hafalan-grammar"],
-    ],
+    grammar: [["grammar-list"], ["grammar-detail"], ["materi-grammar"], ["hafalan-grammar"]],
     reading: [["reading"], ["dokkai"]],
     questions: [["simulation"], ["simulasi"], ["quiz"]],
   };
