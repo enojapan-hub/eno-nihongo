@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ContentEditor } from "@/components/admin/ContentEditor";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateMaterialCaches } from "@/lib/material-cache";
 export const Route = createFileRoute("/_authenticated/admin-konten")({ component: Page });
 type Kind = "kanji" | "vocabulary" | "grammar" | "reading" | "listening" | "questions";
 const materialKinds: [Kind, string][] = [
@@ -160,7 +161,8 @@ function Page() {
     qc.invalidateQueries({ queryKey: ["content-review-summary"] });
   }
   function refresh() {
-    qc.invalidateQueries({ queryKey: ["admin-content", kind, level] });
+    void qc.invalidateQueries({ queryKey: ["admin-content", kind, level] });
+    if (kind !== "listening") void invalidateMaterialCaches(qc, kind);
   }
   if (gate.isLoading)
     return (
