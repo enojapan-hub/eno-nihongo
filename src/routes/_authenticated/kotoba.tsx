@@ -141,6 +141,7 @@ function KotobaPage() {
     if (ready && !directId && scrollY > 0)
       requestAnimationFrame(() => window.scrollTo({ top: scrollY }));
   }, [ready, directId, scrollY]);
+  const qc = useQueryClient();
   const categoryCount = useQuery({
     queryKey: ["vocab-category-count", level, category],
     queryFn: () => fetchVocabCategoryCount(level, category!),
@@ -238,7 +239,6 @@ function KotobaPage() {
       })
       .slice(0, 3);
   }, [selected, senses]);
-  const qc = useQueryClient();
   const { data: progressRows = [] } = useQuery({
     queryKey: ["mastered-items", "vocabulary", level],
     enabled: ready,
