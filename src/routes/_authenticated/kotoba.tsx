@@ -176,6 +176,21 @@ function KotobaPage() {
     refetchOnWindowFocus: false,
   });
   const cards = data as VocabRow[];
+  useEffect(() => {
+    if (!ready || currentCount <= (page + 1) * VOCAB_PAGE_SIZE) return;
+    const nextPage = page + 1;
+    const offset = nextPage * VOCAB_PAGE_SIZE;
+    void qc.prefetchQuery({
+      queryKey: category
+        ? ["vocab-category", level, category, nextPage]
+        : ["vocab-lesson", level, lesson, nextPage],
+      queryFn: () =>
+        category
+          ? fetchVocabCategoryPage(level, category, offset, VOCAB_PAGE_SIZE)
+          : fetchVocabLessonPage(level, lesson!, offset, VOCAB_PAGE_SIZE),
+      staleTime: 10 * 60 * 1000,
+    });
+  }, [category, currentCount, lesson, level, page, qc, ready]);
   const { data: directItem } = useQuery({
     queryKey: ["vocab-direct", directId],
     queryFn: () => fetchVocabById(directId!),
