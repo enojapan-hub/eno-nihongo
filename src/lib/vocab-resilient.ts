@@ -196,35 +196,39 @@ export async function fetchVocabCategoryPage(
   }));
 }
 
-export async function fetchVocabThemeCounts(level: Level) {
-  const res = await withTimeout(
-    supabase.rpc("get_vocabulary_theme_counts" as never, { p_level: level } as never),
-  );
-  if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []) as unknown as Array<{ theme_slug: string; item_count: number | string }>;
-}
-
-export async function fetchVocabThemeCount(level: Level, theme: string): Promise<number> {
+export async function fetchVocabSubcategoryCounts(level: Level, category: string) {
   const res = await withTimeout(
     supabase.rpc(
-      "get_vocabulary_count_by_theme" as never,
-      { p_level: level, p_theme_slug: theme } as never,
+      "get_vocabulary_subcategory_counts" as never,
+      { p_level: level, p_category_slug: category } as never,
+    ),
+  );
+  if (res.error) throw new Error(res.error.message);
+  return (res.data ?? []) as unknown as Array<{ subcategory_slug: string; item_count: number | string }>;
+}
+
+export async function fetchVocabSubcategoryCount(level: Level, category: string, subcategory: string): Promise<number> {
+  const res = await withTimeout(
+    supabase.rpc(
+      "get_vocabulary_count_by_subcategory" as never,
+      { p_level: level, p_category_slug: category, p_subcategory_slug: subcategory } as never,
     ),
   );
   if (res.error) throw new Error(res.error.message);
   return Number(res.data ?? 0);
 }
 
-export async function fetchVocabThemePage(
+export async function fetchVocabSubcategoryPage(
   level: Level,
-  theme: string,
+  category: string,
+  subcategory: string,
   offset = 0,
   limit = VOCAB_PAGE_SIZE,
 ) {
   const res = await withTimeout(
     supabase.rpc(
-      "get_vocabulary_page_by_theme" as never,
-      { p_level: level, p_theme_slug: theme, p_offset: offset, p_limit: limit } as never,
+      "get_vocabulary_page_by_subcategory" as never,
+      { p_level: level, p_category_slug: category, p_subcategory_slug: subcategory, p_offset: offset, p_limit: limit } as never,
     ),
   );
   if (res.error) throw new Error(res.error.message);
