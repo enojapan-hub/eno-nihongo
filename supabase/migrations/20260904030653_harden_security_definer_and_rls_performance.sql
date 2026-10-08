@@ -5,16 +5,16 @@
 
 ALTER FUNCTION public.award_referral_signup(text)
   SET search_path = 'pg_catalog, public, auth';
--- Legacy leaderboard RPC is absent on some fresh installations.
-DO $
+-- Optional legacy RPC: secure it only when present.
+DO $$
 BEGIN
   IF to_regprocedure('public.get_leaderboard(integer)') IS NOT NULL THEN
     EXECUTE 'ALTER FUNCTION public.get_leaderboard(integer) SET search_path = ''pg_catalog, public, auth''';
     EXECUTE 'REVOKE EXECUTE ON FUNCTION public.get_leaderboard(integer) FROM PUBLIC, anon';
     EXECUTE 'GRANT EXECUTE ON FUNCTION public.get_leaderboard(integer) TO authenticated';
-          END IF;
+  END IF;
 END;
-$;
+$$;
 ALTER FUNCTION public.is_premium(uuid)
   SET search_path = 'pg_catalog, public, auth';
 ALTER FUNCTION public.record_learning_activity(text, integer, integer, jsonb)
@@ -26,14 +26,12 @@ ALTER FUNCTION public.submit_quiz_attempt(uuid, public.jlpt_level, public.conten
 
 -- Remove implicit PUBLIC/anon execution, then explicitly allow signed-in users.
 REVOKE EXECUTE ON FUNCTION public.award_referral_signup(text) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION public.get_leaderboard(integer) FROM PUBLIC, anon;
 REVOKE EXECUTE ON FUNCTION public.is_premium(uuid) FROM PUBLIC, anon;
 REVOKE EXECUTE ON FUNCTION public.record_learning_activity(text, integer, integer, jsonb) FROM PUBLIC, anon;
 REVOKE EXECUTE ON FUNCTION public.redeem_referral_points(integer) FROM PUBLIC, anon;
 REVOKE EXECUTE ON FUNCTION public.submit_quiz_attempt(uuid, public.jlpt_level, public.content_skill, jsonb, integer) FROM PUBLIC, anon;
 
 GRANT EXECUTE ON FUNCTION public.award_referral_signup(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.get_leaderboard(integer) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_premium(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.record_learning_activity(text, integer, integer, jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.redeem_referral_points(integer) TO authenticated;
