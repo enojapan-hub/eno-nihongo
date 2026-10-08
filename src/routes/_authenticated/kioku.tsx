@@ -261,7 +261,7 @@ function KiokuPage() {
             <ArrowLeft className="size-4" /> Kembali ke Materi
           </a>
           <FeatureGuide
-            storageKey="eno:guide:kioku:v1"
+            storageKey="eno:guide:kioku:v2"
             title="Kioku untuk Menguji Ingatan"
             intro="Kioku bukan Flashcard. Kioku hanya menguji materi yang sudah tercatat pernah kamu pelajari dan memilih latihan secara adaptif."
             steps={[
@@ -270,12 +270,16 @@ function KiokuPage() {
                 body: "Materi yang ditandai Dipelajari atau sudah kamu kerjakan di Flashcard dapat masuk ke pool Kioku. Materi yang masih benar-benar baru tidak dipilih.",
               },
               {
-                title: "Soal dipilih adaptif",
-                body: "Materi lemah, jatuh tempo, pernah salah, atau belum lama diuji diprioritaskan. Materi dengan prioritas sama dirotasi agar sesi tidak terus berisi item yang sama.",
+                title: "Pilih Yakin atau Ragu dulu",
+                body: "Sebelum menjawab, pilih Yakin jika kamu merasa tahu jawabannya atau Ragu jika belum yakin. Benar + Yakin memperkuat interval lebih besar, Benar + Ragu naik lebih pelan, dan Salah + Yakin dianggap sinyal miskonsepsi yang perlu diuji lebih cepat.",
+              },
+              {
+                title: "Soal dan waktunya adaptif",
+                body: "Materi lemah, jatuh tempo, lambat dijawab, memakai petunjuk, atau pernah salah diprioritaskan. Jika sering benar, jarak tes diperpanjang; materi kuat tetap diuji lagi setelah beberapa waktu.",
               },
               {
                 title: "Kioku menguji dari beberapa sisi",
-                body: "Arti, bacaan, arah Indonesia ke Jepang, penggunaan, konteks, dan tes ulang dapat muncul sesuai tahap kemampuanmu.",
+                body: "Arti, bacaan, arah Indonesia ke Jepang, penggunaan, konteks, dan tes ulang dinilai terpisah agar sisi yang masih lemah lebih sering dilatih.",
               },
             ]}
           />
@@ -405,6 +409,11 @@ function KiokuPage() {
                     {pill("yakin", "Yakin")}
                   </div>
                 )}
+                {!answered && !confidence && (
+                  <p className="text-center text-[9px] text-muted-foreground md:col-span-2">
+                    Pilih Ragu atau Yakin sebelum memilih jawaban.
+                  </p>
+                )}
                 {ex.options.map((o) => {
                   const isAnswer = o.text === ex.answer;
                   const chosen = picked === o.id;
@@ -418,7 +427,7 @@ function KiokuPage() {
                   return (
                     <button
                       key={o.id}
-                      disabled={answered}
+                      disabled={answered || !confidence}
                       onClick={() => {
                         setPicked(o.id);
                         record(ex, {
@@ -429,7 +438,7 @@ function KiokuPage() {
                           responseMs: Math.max(0, Date.now() - shownAt.current),
                         });
                       }}
-                      className={`flex min-h-12 items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold md:min-h-14 md:text-[15px] ${tone}`}
+                      className={`flex min-h-12 items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold md:min-h-14 md:text-[15px] disabled:cursor-not-allowed disabled:opacity-50 ${tone}`}
                     >
                       <span>{o.text}</span>
                       {answered && isAnswer && <CheckCircle2 className="size-4 text-emerald-600" />}
