@@ -16,7 +16,7 @@ import {
 import { parseMasteryTraining } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
-import { reinsertDifficultCard, separateSameItemCards } from "@/lib/flashcard-deck";
+import { retryAfterGap, separateSameItemCards } from "@/lib/flashcard-deck";
 import { FitContent } from "@/components/learn/FitContent";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 export const Route = createFileRoute("/_authenticated/hafalan")({
@@ -201,7 +201,7 @@ function HafalanPage() {
     [hint, setHint] = useState(false),
     [typed, setTyped] = useState(""),
     [results, setResults] = useState<Rating[]>([]),
-    [retryQueue, setRetryQueue] = useState<Card[]>([]),
+    [retryQueue, setRetryQueue] = useState<Array<{ card: Card; rating: 0 | 1; after: number }>>([]),
     [wrong, setWrong] = useState<Card[]>([]),
     [retryWrong, setRetryWrong] = useState(false),
     [undoing, setUndoing] = useState(false),
@@ -259,8 +259,8 @@ function HafalanPage() {
     const n = study === "quick" ? a.length : study === "exam" ? Math.min(30, limit) : limit;
     return separateSameItemCards(a.slice(0, n));
   }, [source, progress.data, kind, study, limit, retryWrong, wrong, targeted]);
-  const activeDeck = [...all.slice(index), ...retryQueue];
-  const card = activeDeck[0],
+  const dueRetry = retryQueue.find((x) => retryAfterGap(x.card, x.rating, results.length - x.after));
+  const card = dueRetry?.card ?? all[index],
     done =
       (study === "quick" && quickExpired) ||
       (index >= all.length && retryQueue.length === 0 && all.length > 0);
@@ -390,16 +390,18 @@ function HafalanPage() {
       responseMs = Date.now() - started.current;
     if (r < 2) {
       setWrong((v) => [...v, ratedCard]);
-      const future = [...all.slice(index + 1), ...retryQueue];
-      const spaced = reinsertDifficultCard(future, ratedCard, r as 0 | 1);
-      const originalRemaining = all.slice(index + 1).length;
-      setRetryQueue(spaced.slice(originalRemaining));
-    } else if (retryQueue.length > 0 && index >= all.length) {
-      setRetryQueue((v) => v.slice(1));
+      if (!dueRetry)
+        setRetryQueue((v) => [
+          ...v.filter((x) => !(x.card.kind === ratedCard.kind && x.card.id === ratedCard.id)),
+          { card: ratedCard, rating: r as 0 | 1, after: results.length + 1 },
+        ]);
+    }
+    if (dueRetry) {
+      setRetryQueue((v) => v.filter((x) => x !== dueRetry));
+    } else {
+      setIndex((i) => i + 1);
     }
     setResults((v) => [...v, r]);
-    if (index < all.length) setIndex((i) => i + 1);
-    else setRetryQueue((v) => v.slice(1));
     setRevealed(false);
     setHint(false);
     setTyped("");
