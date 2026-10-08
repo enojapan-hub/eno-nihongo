@@ -43,7 +43,7 @@ declare
   v_ref public.referrals%rowtype;
 begin
   -- Ignore passive/system activity; only validated learning events may unlock a reward.
-  if new.activity_type not in ('material_learned', 'quiz_completed', 'simulation_completed') then return new; end if;
+  if new.activity_type not in ('lesson_completed') then return new; end if;
 
   select * into v_ref
   from public.referrals
