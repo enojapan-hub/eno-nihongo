@@ -39,6 +39,7 @@ export type CompetitionUser = {
   avatarUrl: string | null;
   jlptLevel: string;
   periodXp: number;
+  periodPoints: number;
   totalXp: number;
   points: number;
   streak: number;
@@ -65,6 +66,12 @@ export async function fetchLeaderboard(limit = 10): Promise<LeaderboardUser[]> {
   }));
 }
 
+type CompetitionRow = {
+  rank: number | null; user_id: string; display_name: string | null; avatar_url: string | null;
+  jlpt_level: string | null; period_xp: number | null; period_points?: number | null;
+  total_xp: number | null; total_points: number | null; current_streak: number | null;
+};
+
 export async function fetchCompetitionLeaderboard(
   period: "weekly" | "monthly",
   limit = 50,
@@ -75,13 +82,14 @@ export async function fetchCompetitionLeaderboard(
     p_limit: safeLimit,
   });
   if (error || !data) return [];
-  return data.map((row) => ({
+  return (data as CompetitionRow[]).map((row) => ({
     rank: Number(row.rank ?? 0),
     userId: String(row.user_id),
     displayName: String(row.display_name || "Pengguna ENO NIHONGO"),
     avatarUrl: row.avatar_url ?? null,
     jlptLevel: String(row.jlpt_level || "N5"),
     periodXp: Number(row.period_xp ?? 0),
+    periodPoints: Number(row.period_points ?? 0),
     totalXp: Number(row.total_xp ?? 0),
     points: Number(row.total_points ?? 0),
     streak: Number(row.current_streak ?? 0),
