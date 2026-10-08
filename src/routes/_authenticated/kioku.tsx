@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BrainCircuit, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { supabase } from "@/integrations/supabase/client";
 import { classifyError, SLOW_MS } from "@/lib/kioku/classify";
 import { createOutbox } from "@/lib/kioku/outbox";
@@ -252,12 +253,33 @@ function KiokuPage() {
         data-layout="wide"
         className="mx-auto w-full max-w-md space-y-3 pb-4 md:max-w-2xl md:space-y-4 lg:max-w-3xl"
       >
-        <a
-          href="/belajar"
-          className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
-        >
-          <ArrowLeft className="size-4" /> Kembali ke Materi
-        </a>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <a
+            href="/belajar"
+            className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
+          >
+            <ArrowLeft className="size-4" /> Kembali ke Materi
+          </a>
+          <FeatureGuide
+            storageKey="eno:guide:kioku:v1"
+            title="Kioku untuk Menguji Ingatan"
+            intro="Kioku bukan Flashcard. Kioku hanya menguji materi yang sudah tercatat pernah kamu pelajari dan memilih latihan secara adaptif."
+            steps={[
+              {
+                title: "Pool berasal dari progresmu",
+                body: "Materi yang ditandai Dipelajari atau sudah kamu kerjakan di Flashcard dapat masuk ke pool Kioku. Materi yang masih benar-benar baru tidak dipilih.",
+              },
+              {
+                title: "Soal dipilih adaptif",
+                body: "Materi lemah, jatuh tempo, pernah salah, atau belum lama diuji diprioritaskan. Materi dengan prioritas sama dirotasi agar sesi tidak terus berisi item yang sama.",
+              },
+              {
+                title: "Kioku menguji dari beberapa sisi",
+                body: "Arti, bacaan, arah Indonesia ke Jepang, penggunaan, konteks, dan tes ulang dapat muncul sesuai tahap kemampuanmu.",
+              },
+            ]}
+          />
+        </div>
         {!session && (
           <section className="overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.08] to-card p-6 text-center md:p-10 shadow-[0_18px_50px_-34px_rgba(0,0,0,.55)]">
             <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10">
