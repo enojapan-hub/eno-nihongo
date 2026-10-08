@@ -40,6 +40,24 @@ async function fetchReviews(level: Level) {
   return (data ?? []) as Review[];
 }
 
+type MemoryRow = {
+  stage: number;
+  due_at: string;
+  overconfident_wrong: number;
+  last_error_type: string | null;
+};
+
+async function fetchMemory() {
+  const { data: userData } = await getAuthUser();
+  if (!userData.user) return [] as MemoryRow[];
+  const { data, error } = await supabase
+    .from("memory_state")
+    .select("stage,due_at,overconfident_wrong,last_error_type")
+    .eq("user_id", userData.user.id);
+  if (error) throw error;
+  return (data ?? []) as MemoryRow[];
+}
+
 function dayKey(value: string) {
   return new Date(value).toLocaleDateString("id-ID", { weekday: "short", day: "numeric" });
 }
@@ -58,6 +76,11 @@ function HafalanHistoryPage() {
   const reviews = useQuery({
     queryKey: ["hafalan-history", level],
     queryFn: () => fetchReviews(level!),
+    enabled: ready,
+  });
+  const memory = useQuery({
+    queryKey: ["kioku-memory-report"],
+    queryFn: fetchMemory,
     enabled: ready,
   });
   const kanji = useQuery({
@@ -93,7 +116,21 @@ function HafalanHistoryPage() {
   const kiokuRows = rows.filter((row) => row.meta?.["source"] === "kioku");
   const total = rows.length;
   const correct = rows.filter((row) => row.rating >= 2).length;
-  const accuracy = total ? Math.round((correct / total) * 100) : 0;
+  const flashcardRemembered = flashcardRows.filter((row) => row.rating >= 2).length;
+  const flashcardRetention = flashcardRows.length
+    ? Math.round((flashcardRemembered / flashcardRows.length) * 100)
+    : 0;
+  const kiokuCorrect = kiokuRows.filter((row) => row.rating >= 2).length;
+  const kiokuAccuracy = kiokuRows.length ? Math.round((kiokuCorrect / kiokuRows.length) * 100) : 0;
+  const memoryRows = memory.data ?? [];
+  const now = Date.now();
+  const memorySummary = {
+    strong: memoryRows.filter((row) => row.stage >= 4).length,
+    growing: memoryRows.filter((row) => row.stage >= 2 && row.stage < 4).length,
+    weak: memoryRows.filter((row) => row.stage < 2).length,
+    due: memoryRows.filter((row) => new Date(row.due_at).getTime() <= now).length,
+    misconception: memoryRows.filter((row) => row.overconfident_wrong > 0).length,
+  };
   const averageSeconds = total
     ? Math.round(rows.reduce((sum, row) => sum + Number(row.response_ms ?? 0), 0) / total / 1000)
     : 0;
@@ -187,13 +224,19 @@ function HafalanHistoryPage() {
           </section>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-2">
-              <Metric label="Flashcard" value={flashcardRows.length} />
-              <Metric label="Kioku" value={kiokuRows.length} />
-              <Metric label="Akurasi gabungan" value={`${accuracy}%`} />
+            <div className="grid grid-cols-2 gap-2">
+              <Metric label="Flashcard · Ingat/Mudah" value={`${flashcardRetention}%`} />
+              <Metric label="Kioku · Jawaban benar" value={`${kiokuAccuracy}%`} />
+            </div>
+            <div className="grid grid-cols-5 gap-1.5">
+              <Metric label="Kuat" value={memorySummary.strong} />
+              <Metric label="Mulai kuat" value={memorySummary.growing} />
+              <Metric label="Perlu diperkuat" value={memorySummary.weak} />
+              <Metric label="Jatuh tempo" value={memorySummary.due} />
+              <Metric label="Yakin tapi salah" value={memorySummary.misconception} />
             </div>
             <p className="text-center text-[8px] text-muted-foreground">
-              {total} aktivitas tersimpan · rata-rata respons {averageSeconds} dtk
+              {flashcardRows.length} Flashcard · {kiokuRows.length} Kioku · {total} aktivitas tersimpan · rata-rata respons {averageSeconds} dtk
             </p>
             <section className="rounded-3xl border bg-card p-4">
               <div className="flex items-center justify-between">
