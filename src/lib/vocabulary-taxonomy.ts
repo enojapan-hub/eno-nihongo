@@ -1,18 +1,19 @@
 export const VOCAB_PRIMARY_CATEGORIES = [
-  { slug: "kata-benda", label: "Kata Benda", hint: "Waktu · Penghitung · Nama diri" },
+  { slug: "kata-benda", labelJa: "名詞", label: "Kata Benda", hint: "Waktu · Penghitung · Nama diri" },
   {
     slug: "kata-kerja",
+    labelJa: "動詞",
     label: "Kata Kerja",
     hint: "Kel. 1 · Kel. 2 · Kel. 3 · Transitif · Intransitif · する",
   },
-  { slug: "kata-sifat-i", label: "Kata Sifat い", hint: "i-keiyoushi" },
-  { slug: "kata-sifat-na", label: "Kata Sifat な", hint: "na-keiyoushi" },
-  { slug: "kata-keterangan", label: "Kata Keterangan", hint: "Waktu · Jumlah" },
-  { slug: "kata-ganti", label: "Kata Ganti", hint: "Orang · Penunjuk" },
-  { slug: "kata-sambung", label: "Kata Sambung", hint: "Penghubung · Konjungsi" },
-  { slug: "kata-seru", label: "Kata Seru", hint: "Seruan · Respons" },
-  { slug: "ungkapan", label: "Ungkapan", hint: "Frasa · Salam · Permintaan" },
-  { slug: "lainnya", label: "Lainnya", hint: "Partikel · Awalan · Akhiran · Penentu · Onomatope" },
+  { slug: "kata-sifat-i", labelJa: "い形容詞", label: "Kata Sifat い", hint: "i-keiyoushi" },
+  { slug: "kata-sifat-na", labelJa: "な形容詞", label: "Kata Sifat な", hint: "na-keiyoushi" },
+  { slug: "kata-keterangan", labelJa: "副詞", label: "Kata Keterangan", hint: "Waktu · Jumlah" },
+  { slug: "kata-ganti", labelJa: "代名詞", label: "Kata Ganti", hint: "Orang · Penunjuk" },
+  { slug: "kata-sambung", labelJa: "接続詞", label: "Kata Sambung", hint: "Penghubung · Konjungsi" },
+  { slug: "kata-seru", labelJa: "感動詞", label: "Kata Seru", hint: "Seruan · Respons" },
+  { slug: "ungkapan", labelJa: "表現", label: "Ungkapan", hint: "Frasa · Salam · Permintaan" },
+  { slug: "lainnya", labelJa: "その他", label: "Lainnya", hint: "Partikel · Awalan · Akhiran · Penentu · Onomatope" },
 ] as const;
 
 export type VocabPrimaryCategorySlug = (typeof VOCAB_PRIMARY_CATEGORIES)[number]["slug"];
