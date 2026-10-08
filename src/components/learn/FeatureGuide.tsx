@@ -42,7 +42,7 @@ export function FeatureGuide({ storageKey, title, intro, steps }: FeatureGuidePr
       <button
         type="button"
         onClick={show}
-        className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border bg-card px-3 text-[10px] font-bold"
+        className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-primary/25 bg-primary/10 px-3 text-[10px] font-black text-primary shadow-sm transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         <HelpCircle className="size-3.5" />
         Cara menggunakan
