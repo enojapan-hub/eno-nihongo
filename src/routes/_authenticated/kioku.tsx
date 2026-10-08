@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { supabase } from "@/integrations/supabase/client";
 import { classifyError, SLOW_MS } from "@/lib/kioku/classify";
+import { fatigueSuggested } from "@/lib/kioku/insights";
 import { createOutbox } from "@/lib/kioku/outbox";
 import { prefetchSession, sendEvents } from "@/lib/kioku/prefetch";
 import { queueRepeat, scheduleDelayed } from "@/lib/kioku/session";
@@ -230,6 +231,8 @@ function KiokuPage() {
     return { right: v.filter(Boolean).length, wrong: v.filter((x) => !x).length };
   }, [session]);
 
+  const fatigue = fatigueSuggested(summary.right + summary.wrong, summary.wrong);
+
   const reasonText = (reason: string) => {
     if (reason.includes("overconfident_wrong")) return "Dipilih karena sebelumnya kamu yakin tetapi salah.";
     if (reason.includes("repeated_error") || reason.includes("remediate_"))
@@ -381,6 +384,12 @@ function KiokuPage() {
                 Benar {summary.right} · Salah {summary.wrong}
               </span>
             </div>
+            {fatigue && (
+              <div className="rounded-2xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                Sesi ini sudah cukup berat. Kamu boleh berhenti setelah soal ini dan lanjutkan nanti;
+                progres yang sudah tersimpan tetap aman.
+              </div>
+            )}
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-primary"
