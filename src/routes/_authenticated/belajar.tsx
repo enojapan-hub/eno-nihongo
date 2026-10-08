@@ -19,6 +19,7 @@ import { DailyNewLimit } from "@/components/learn/DailyNewLimit";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
 import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
+import { VOCAB_PRIMARY_CATEGORIES } from "@/lib/vocabulary-taxonomy";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -38,37 +39,24 @@ const norm = (v: unknown) =>
 const pct = (a: number, b: number) => (b ? Math.min(100, Math.round((a / b) * 100)) : 0);
 type CategoryCountRow = { category_slug: string; item_count: number | string };
 async function fetchExtra(level: Level) {
-  const { data: cats, error } = await supabase
-    .from("vocabulary_categories")
-    .select("id,slug,canonical_slug,label_ja,label_id,name_id,sort_order")
-    .eq("is_active", true)
-    .order("sort_order");
-  if (error) throw error;
-  if (!cats?.length) return [];
-  // Tabel vocabulary_category_links tidak dapat dibaca langsung oleh pengguna (RLS tanpa policy);
-  // hitungan semua kategori diambil dalam satu RPC. Bila RPC batch belum tersedia, fallback ke
-  // satu RPC per kategori (perilaku lama).
   const batch = await supabase.rpc(
-    "get_vocabulary_category_counts" as never,
-    {
-      p_level: level,
-    } as never,
+    "get_vocabulary_primary_category_counts" as never,
+    { p_level: level } as never,
   );
   const batchRows = batch.error ? null : (batch.data as unknown as CategoryCountRow[] | null);
   const bySlug = new Map((batchRows ?? []).map((r) => [r.category_slug, Number(r.item_count)]));
   const counts = batchRows
-    ? cats.map((x) => bySlug.get(String(x.canonical_slug || x.slug)) ?? 0)
+    ? VOCAB_PRIMARY_CATEGORIES.map((x) => bySlug.get(x.slug) ?? 0)
     : await Promise.all(
-        cats.map((x) => fetchVocabCategoryCount(level, String(x.canonical_slug || x.slug))),
+        VOCAB_PRIMARY_CATEGORIES.map((x) => fetchVocabCategoryCount(level, x.slug)),
       );
-  return cats
-    .map((x, i: number) => ({
-      id: x.id,
-      slug: x.canonical_slug || x.slug,
-      label: x.label_id || x.name_id || x.label_ja || x.slug,
-      count: counts[i] ?? 0,
-    }))
-    .filter((x) => x.count > 0);
+
+  return VOCAB_PRIMARY_CATEGORIES.map((x, i) => ({
+    slug: x.slug,
+    label: x.label,
+    hint: x.hint,
+    count: counts[i] ?? 0,
+  }));
 }
 function BelajarPage() {
   const [search, setSearch] = useState(() =>
@@ -99,7 +87,7 @@ function BelajarPage() {
     queryFn: fetchMyProgress,
     enabled: ready,
   });
-  // 38 hitungan kategori (satu RPC per kategori) hanya dimuat saat bagiannya mendekati layar.
+  // Sepuluh kategori baku dimuat saat bagian Kotoba Tambahan mendekati layar.
   const [extraNear, setExtraNear] = useState(false);
   const extraRef = useCallback((node: HTMLElement | null) => {
     if (!node) return;
@@ -442,7 +430,7 @@ function BelajarPage() {
                     <div>
                       <p className="text-[12px] font-bold">Kotoba Tambahan {level}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        Kata benda, kerja, sifat, keterangan, tema, dan lainnya
+                        Kategori yang sama untuk N5 sampai N1
                       </p>
                     </div>
                   </div>
@@ -455,16 +443,21 @@ function BelajarPage() {
                       Kategori belum dapat dimuat.
                     </p>
                   ) : (
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                       {(extra.data ?? []).map((cat) => (
                         <Link
-                          key={cat.id}
+                          key={cat.slug}
                           to="/kotoba"
                           search={{ category: String(cat.slug) }}
-                          className="flex min-w-0 items-center justify-between gap-2 rounded-xl bg-muted/45 px-2.5 py-2"
+                          className="flex min-w-0 items-center gap-2 rounded-xl bg-muted/45 px-2.5 py-2"
                         >
-                          <span className="truncate text-[10px] font-medium">{cat.label}</span>
-                          <span className="rounded-full bg-background px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                          <span className="min-w-0 flex-1">
+                            <span className="text-[10px] font-semibold">{cat.label}</span>
+                            <span className="ml-1.5 text-[8px] leading-3 text-muted-foreground">
+                              {cat.hint}
+                            </span>
+                          </span>
+                          <span className="shrink-0 rounded-full bg-background px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
                             {cat.count}
                           </span>
                         </Link>
