@@ -135,7 +135,7 @@ jobs:
         run: |
           eval "$(supabase status -o env | grep '^DB_URL=' | sed 's/^/export /')"
           psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          DO $
+          DO $$
           DECLARE v_def text;
           BEGIN
             SELECT pg_get_functiondef('public.mark_material_learned_atomic(public.content_skill,uuid,public.jlpt_level)'::regprocedure) INTO v_def;
@@ -145,7 +145,7 @@ jobs:
             IF position('record_learning_activity' in v_def)=0 THEN
               RAISE EXCEPTION 'Atomic learning no longer records activity';
             END IF;
-          END $;
+          END $$;
           SQL
       - name: Verify referral and premium transactions
         run: |
