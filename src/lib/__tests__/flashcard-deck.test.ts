@@ -83,4 +83,19 @@ describe("hafalan.tsx", () => {
       choose.indexOf("rate(ratedCard,"),
     );
   });
+
+  it("repeats Lupa after several other cards instead of immediately", () => {
+    const card = { kind: "vocabulary", id: "a" };
+    const rest = ["b", "c", "d", "e", "f"].map((id) => ({ kind: "vocabulary", id }));
+    const next = reinsertDifficultCard(rest, card, 0);
+    expect(next.findIndex((x) => x.id === "a")).toBeGreaterThanOrEqual(3);
+  });
+
+  it("spaces Sulit farther than Lupa", () => {
+    const card = { kind: "kanji", id: "a" };
+    const rest = ["b", "c", "d", "e", "f", "g"].map((id) => ({ kind: "kanji", id }));
+    const lupa = reinsertDifficultCard(rest, card, 0).findIndex((x) => x.id === "a");
+    const sulit = reinsertDifficultCard(rest, card, 1).findIndex((x) => x.id === "a");
+    expect(sulit).toBeGreaterThan(lupa);
+  });
 });
