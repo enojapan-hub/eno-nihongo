@@ -138,7 +138,7 @@ revoke all on function public.get_digital_product_finance() from public,anon;
 grant execute on function public.get_digital_product_finance() to authenticated,service_role;
 
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('digital-products','digital-products',false,52428800,array['application/pdf','application/zip'])
+values('digital-products','digital-products',false,52428800,array['application/pdf','application/zip','image/png','image/jpeg','image/webp'])
 on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 
 create policy digital_products_storage_admin_insert on storage.objects
