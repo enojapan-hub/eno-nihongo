@@ -719,11 +719,11 @@ export function buildExercise(
           ...form,
         };
     }
-    if (c.type === "grammar" && sel.stage >= 1) {
+    if (c.type === "grammar" && sel.stage >= 2 && !sel.remedy) {
       const special =
         fnv(`${seed}|grammar-special`) % 2 === 0
-          ? particleChoice(c, sel, shuffle) ?? errorSpot(c, sel, shuffle)
-          : errorSpot(c, sel, shuffle) ?? particleChoice(c, sel, shuffle);
+          ? (particleChoice(c, sel, shuffle) ?? errorSpot(c, sel, shuffle))
+          : (errorSpot(c, sel, shuffle) ?? particleChoice(c, sel, shuffle));
       if (special)
         return {
           ...base,
