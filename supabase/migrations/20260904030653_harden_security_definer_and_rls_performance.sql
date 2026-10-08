@@ -1,41 +1,26 @@
 -- ENO NIHONGO security hardening
--- 1) Pin SECURITY DEFINER search_path and restrict RPC execution.
--- Keep these functions SECURITY DEFINER because several intentionally write across
--- RLS-protected tables. A pinned path prevents search_path hijacking.
-
-ALTER FUNCTION public.award_referral_signup(text)
-  SET search_path = 'pg_catalog, public, auth';
--- Optional legacy RPC: secure it only when present.
+-- 1) Secure available RPCs without assuming optional legacy functions exist.
 DO $$
+DECLARE
+  v_signature text;
 BEGIN
-  IF to_regprocedure('public.get_leaderboard(integer)') IS NOT NULL THEN
-    EXECUTE 'ALTER FUNCTION public.get_leaderboard(integer) SET search_path = ''pg_catalog, public, auth''';
-    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.get_leaderboard(integer) FROM PUBLIC, anon';
-    EXECUTE 'GRANT EXECUTE ON FUNCTION public.get_leaderboard(integer) TO authenticated';
-  END IF;
+  FOREACH v_signature IN ARRAY ARRAY[
+    'public.award_referral_signup(text)',
+    'public.get_leaderboard(integer)',
+    'public.is_premium(uuid)',
+    'public.record_learning_activity(text, integer, integer, jsonb)',
+    'public.redeem_referral_points(integer)',
+    'public.submit_quiz_attempt(uuid, public.jlpt_level, public.content_skill, jsonb, integer)'
+  ]
+  LOOP
+    IF to_regprocedure(v_signature) IS NOT NULL THEN
+      EXECUTE format('ALTER FUNCTION %s SET search_path = %L', v_signature, 'pg_catalog, public, auth');
+      EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC, anon', v_signature);
+      EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO authenticated', v_signature);
+    END IF;
+  END LOOP;
 END;
 $$;
-ALTER FUNCTION public.is_premium(uuid)
-  SET search_path = 'pg_catalog, public, auth';
-ALTER FUNCTION public.record_learning_activity(text, integer, integer, jsonb)
-  SET search_path = 'pg_catalog, public, auth';
-ALTER FUNCTION public.redeem_referral_points(integer)
-  SET search_path = 'pg_catalog, public, auth';
-ALTER FUNCTION public.submit_quiz_attempt(uuid, public.jlpt_level, public.content_skill, jsonb, integer)
-  SET search_path = 'pg_catalog, public, auth';
-
--- Remove implicit PUBLIC/anon execution, then explicitly allow signed-in users.
-REVOKE EXECUTE ON FUNCTION public.award_referral_signup(text) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION public.is_premium(uuid) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION public.record_learning_activity(text, integer, integer, jsonb) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION public.redeem_referral_points(integer) FROM PUBLIC, anon;
-REVOKE EXECUTE ON FUNCTION public.submit_quiz_attempt(uuid, public.jlpt_level, public.content_skill, jsonb, integer) FROM PUBLIC, anon;
-
-GRANT EXECUTE ON FUNCTION public.award_referral_signup(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.is_premium(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.record_learning_activity(text, integer, integer, jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.redeem_referral_points(integer) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.submit_quiz_attempt(uuid, public.jlpt_level, public.content_skill, jsonb, integer) TO authenticated;
 
 -- 2) Cache auth.uid() once per statement in RLS policies.
 DROP POLICY IF EXISTS "Users can insert own learning activity" ON public.learning_activity;
