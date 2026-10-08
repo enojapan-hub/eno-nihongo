@@ -385,7 +385,13 @@ export async function markItemLearned(input: {
   level: Level;
 }) {
   // The database function commits progress and activity in one transaction.
-  const { data, error } = await supabase.rpc("mark_material_learned_atomic", {
+  // CI regenerates Supabase types from production, where this migration is not yet applied.
+  // Keep the pending RPC signature local until the migration is deployed.
+  const atomicRpc = supabase.rpc as unknown as (
+    name: "mark_material_learned_atomic",
+    args: { p_item_type: LearnableItemType; p_item_id: string; p_level: Level },
+  ) => Promise<{ data: boolean | null; error: { message: string } | null }>;
+  const { data, error } = await atomicRpc("mark_material_learned_atomic", {
     p_item_type: input.itemType,
     p_item_id: input.itemId,
     p_level: input.level,
