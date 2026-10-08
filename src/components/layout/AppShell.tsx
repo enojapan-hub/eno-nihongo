@@ -84,8 +84,18 @@ export function AppShell({
     void (async () => {
       const { data } = await getAuthUser();
       if (!active || !data.user) return;
-      const { error } = await (supabase.rpc as unknown as (name: string, args: { p_code: string }) => Promise<{ error: unknown }>)("award_referral_signup", { p_code: code });
-      if (active && !error) window.sessionStorage.removeItem("eno_referral_code");
+      const { data: accepted, error } = await (supabase.rpc as unknown as (
+        name: string,
+        args: { p_code: string },
+      ) => Promise<{ data: number | null; error: unknown }>)("award_referral_signup", { p_code: code });
+      if (!active) return;
+      if (!error && accepted === 1) {
+        window.sessionStorage.removeItem("eno_referral_code");
+      } else if (!error && accepted === 0) {
+        // Ditolak secara final oleh server (akun lama, kode salah, atau referral ganda).
+        window.sessionStorage.removeItem("eno_referral_code");
+      }
+      // Error jaringan/server: pertahankan kode agar bisa dicoba pada navigasi berikutnya.
     })().catch(() => {});
     return () => { active = false; };
   }, []);
