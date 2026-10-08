@@ -33,8 +33,8 @@ import {
   fetchVocabLessonCounts,
   fetchVocabLessonPage,
   fetchVocabSenses,
-  fetchVocabThemeCount,
-  fetchVocabThemePage,
+  fetchVocabSubcategoryCount,
+  fetchVocabSubcategoryPage,
   pickUsageNote,
   VOCAB_PAGE_SIZE,
 } from "@/lib/vocab-resilient";
@@ -49,15 +49,15 @@ import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacin
 import { exampleRomaji, wordRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
-import { formatVocabularyClass } from "@/lib/vocabulary-taxonomy";
+import { formatVocabularyClass, vocabularySubcategories } from "@/lib/vocabulary-taxonomy";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
 const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { category?: string; theme?: string; id?: string } => ({
+  ): { category?: string; subcategory?: string; id?: string } => ({
     ...(typeof search["category"] === "string" ? { category: search["category"] } : {}),
-    ...(typeof search["theme"] === "string" ? { theme: search["theme"] } : {}),
+    ...(typeof search["subcategory"] === "string" ? { subcategory: search["subcategory"] } : {}),
     ...(typeof search["id"] === "string" ? { id: search["id"] } : {}),
   }),
   component: KotobaPage,
@@ -92,7 +92,7 @@ function speak(t: string, onError?: () => void) {
 function KotobaPage() {
   const params = new URLSearchParams(window.location.search),
     category = params.get("category")?.trim() || null,
-    theme = params.get("theme")?.trim() || null,
+    subcategory = params.get("subcategory")?.trim() || null,
     directId = params.get("id")?.trim() || null;
   const { data: targetLevel, isLoading: levelLoading } = useQuery({
     queryKey: ["target-level"],
@@ -156,17 +156,17 @@ function KotobaPage() {
     enabled: ready && !!category,
     staleTime: 10 * 60 * 1000,
   });
-  const themeCount = useQuery({
-    queryKey: ["vocab-theme-count", level, theme],
-    queryFn: () => fetchVocabThemeCount(level, theme!),
-    enabled: ready && !!theme,
+  const subcategoryCount = useQuery({
+    queryKey: ["vocab-subcategory-count", level, subcategory],
+    queryFn: () => fetchVocabSubcategoryCount(level, category!, subcategory!),
+    enabled: ready && !!category && !!subcategory,
     staleTime: 10 * 60 * 1000,
   });
   const fontSizes = LIST_FONT_SIZES[clampFontStep(fontStep)] ?? LIST_FONT_SIZES[LIST_FONT_DEFAULT]!;
-  const currentCount = category
-    ? Number(categoryCount.data ?? 0)
-    : theme
-      ? Number(themeCount.data ?? 0)
+  const currentCount = subcategory
+    ? Number(subcategoryCount.data ?? 0)
+    : category
+      ? Number(categoryCount.data ?? 0)
       : Number(lessonCounts.find((x) => x.lesson_number === lesson)?.word_count ?? 0);
   const {
     data = [],
@@ -174,25 +174,25 @@ function KotobaPage() {
     error,
     refetch,
   } = useQuery({
-    queryKey: category
-      ? ["vocab-category", level, category, page]
-      : theme
-        ? ["vocab-theme", level, theme, page]
+    queryKey: subcategory
+      ? ["vocab-subcategory", level, category, subcategory, page]
+      : category
+        ? ["vocab-category", level, category, page]
         : ["vocab-lesson", level, lesson, page],
     queryFn: () =>
-      category
-        ? fetchVocabCategoryPage(level, category, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
-        : theme
-          ? fetchVocabThemePage(level, theme, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
+      subcategory
+        ? fetchVocabSubcategoryPage(level, category!, subcategory, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
+        : category
+          ? fetchVocabCategoryPage(level, category, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
           : fetchVocabLessonPage(level, lesson!, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE),
-    enabled: ready && (!!category || !!theme || lesson != null),
+    enabled: ready && (!!category || lesson != null),
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
   const { data: total = 0 } = useQuery({
     queryKey: ["vocab-count", level],
     queryFn: () => fetchVocabCount(level),
-    enabled: ready && !category && !theme,
+    enabled: ready && !category,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -202,20 +202,20 @@ function KotobaPage() {
     const nextPage = page + 1;
     const offset = nextPage * VOCAB_PAGE_SIZE;
     void qc.prefetchQuery({
-      queryKey: category
-        ? ["vocab-category", level, category, nextPage]
-        : theme
-          ? ["vocab-theme", level, theme, nextPage]
+      queryKey: subcategory
+        ? ["vocab-subcategory", level, category, subcategory, nextPage]
+        : category
+          ? ["vocab-category", level, category, nextPage]
           : ["vocab-lesson", level, lesson, nextPage],
       queryFn: () =>
-        category
-          ? fetchVocabCategoryPage(level, category, offset, VOCAB_PAGE_SIZE)
-          : theme
-            ? fetchVocabThemePage(level, theme, offset, VOCAB_PAGE_SIZE)
+        subcategory
+          ? fetchVocabSubcategoryPage(level, category!, subcategory, offset, VOCAB_PAGE_SIZE)
+          : category
+            ? fetchVocabCategoryPage(level, category, offset, VOCAB_PAGE_SIZE)
             : fetchVocabLessonPage(level, lesson!, offset, VOCAB_PAGE_SIZE),
       staleTime: 10 * 60 * 1000,
     });
-  }, [category, currentCount, lesson, level, page, qc, ready, theme]);
+  }, [category, subcategory, currentCount, lesson, level, page, qc, ready]);
   const { data: directItem } = useQuery({
     queryKey: ["vocab-direct", directId],
     queryFn: () => fetchVocabById(directId!),
@@ -499,6 +499,27 @@ function KotobaPage() {
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-3.5 size-4" />
+              </div>
+            )}
+            {category && vocabularySubcategories(category).length > 0 && (
+              <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                <Link
+                  to="/kotoba"
+                  search={{ category }}
+                  className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (!subcategory ? "border-primary bg-primary text-primary-foreground" : "bg-card")}
+                >
+                  Semua
+                </Link>
+                {vocabularySubcategories(category).map((item) => (
+                  <Link
+                    key={item.slug}
+                    to="/kotoba"
+                    search={{ category, subcategory: item.slug }}
+                    className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (subcategory === item.slug ? "border-primary bg-primary text-primary-foreground" : "bg-card")}
+                  >
+                    {item.labelJa} · {item.label}
+                  </Link>
+                ))}
               </div>
             )}
             <div className="mb-2 flex items-center justify-between gap-2">
