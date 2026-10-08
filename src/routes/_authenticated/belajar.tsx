@@ -50,6 +50,14 @@ async function fetchExtra(level: Level) {
     : await Promise.all(
         VOCAB_PRIMARY_CATEGORIES.map((x) => fetchVocabCategoryCount(level, x.slug)),
       );
+  return {
+    categories: VOCAB_PRIMARY_CATEGORIES.map((x, i) => ({
+      slug: x.slug,
+      labelJa: x.labelJa,
+      label: x.label,
+      hint: x.hint,
+      count: counts[i] ?? 0,
+    })),
   };
 }
 function BelajarPage() {
