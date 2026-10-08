@@ -313,11 +313,11 @@ function KotobaPage() {
       return { previous };
     },
     onError: () => {
-      // Progress may have been committed before activity logging failed.
-      // Do not restore a stale optimistic snapshot; reconcile with the server.
+      // The atomic RPC rolls back progress and activity together on failure.
+      // Reconcile optimistic state with the server instead of restoring stale data.
       toast.error(
         navigator.onLine
-          ? "Penyimpanan belum sepenuhnya berhasil. Periksa status materi sebelum mencoba lagi."
+          ? "Progress gagal disimpan. Status materi akan diperiksa ulang."
           : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
