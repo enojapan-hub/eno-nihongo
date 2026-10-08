@@ -728,3 +728,21 @@ describe("validated conjugation exercises", () => {
     }
   });
 });
+
+
+describe("Kanji reading matching", () => {
+  it("builds reading choices only from real Kanji readings", () => {
+    const items: Content[] = [
+      { id:"k1",type:"kanji",level:"N5",surface:"日",reading:"ニチ / ひ",meaning:"hari" },
+      { id:"k2",type:"kanji",level:"N5",surface:"月",reading:"ゲツ / つき",meaning:"bulan" },
+      { id:"k3",type:"kanji",level:"N5",surface:"火",reading:"カ / ひ",meaning:"api" },
+      { id:"k4",type:"kanji",level:"N5",surface:"水",reading:"スイ / みず",meaning:"air" },
+    ];
+    const sel: Selection = { itemType:"kanji",itemId:"k1",level:"N5",aspect:"reading",direction:"forward",exerciseType:"choice",stage:2,hintLevel:3,optionCount:4,reason:"test",score:10 };
+    const ex=buildExercise(sel,new Map(items.map(x=>[`kanji:${x.id}`,x])),items,new Set(items.map(x=>`kanji:${x.id}`)),"match",0);
+    expect(ex).not.toBeNull();
+    expect(ex!.variant).toBe("reading_match");
+    expect(items.map(x=>x.reading)).toContain(ex!.answer);
+    expect(ex!.options.every(o=>items.some(x=>x.reading===o.text))).toBe(true);
+  });
+});
