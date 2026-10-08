@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
 import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { fetchTargetLevel } from "@/lib/target-level";
@@ -215,6 +216,27 @@ function BelajarPage() {
             Kamu sedang offline. Materi yang belum tersimpan mungkin tidak dapat diperbarui.
           </div>
         )}
+        <div className="mb-3 flex justify-end">
+          <FeatureGuide
+            storageKey="eno:guide:materi:v1"
+            title="Mulai dari Materi"
+            intro="Materi adalah titik awal belajar. Pahami dulu isinya, lalu tandai progresmu agar latihan berikutnya tahu apa yang sudah kamu pelajari."
+            steps={[
+              {
+                title: "Pelajari Kanji, Kotoba, atau Bunpou",
+                body: "Buka materi sesuai target JLPT dan pahami arti, bacaan, penggunaan, serta contohnya.",
+              },
+              {
+                title: "Tandai Dipelajari",
+                body: "Setelah memahami sebuah materi, tekan Dipelajari. Materi itu masuk ke pool yang dapat diuji oleh Kioku.",
+              },
+              {
+                title: "Hafalkan lalu uji",
+                body: "Gunakan Flashcard untuk membangun hafalan. Gunakan Kioku untuk menguji apakah materi yang sudah dipelajari masih benar-benar kamu ingat.",
+              },
+            ]}
+          />
+        </div>
         <section className="mb-3 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-[22px] font-black tracking-tight">Materi</h1>
