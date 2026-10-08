@@ -1,7 +1,7 @@
 export type KiokuItemType = "kanji" | "vocabulary" | "grammar";
 export type KiokuAspect = "meaning" | "reading" | "usage" | "function_context";
 export type KiokuDirection = "forward" | "reverse";
-export type ExerciseType = "choice" | "recall_flip" | "contrast" | "usage";
+export type ExerciseType = "choice" | "recall_flip" | "contrast" | "usage" | "sentence_order";
 export type Confidence = "yakin" | "ragu";
 export type ErrorType =
   | "meaning"
