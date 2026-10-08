@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
 import { separateSameItemCards } from "@/lib/flashcard-deck";
 import { FitContent } from "@/components/learn/FitContent";
+import { FeatureGuide } from "@/components/learn/FeatureGuide";
 export const Route = createFileRoute("/_authenticated/hafalan")({
   head: () => ({ meta: [{ title: "Flashcard — ENO NIHONGO" }] }),
   component: HafalanPage,
@@ -492,6 +493,25 @@ function HafalanPage() {
           >
             Laporan
           </a>
+          <FeatureGuide
+            storageKey="eno:guide:flashcard:v1"
+            title="Flashcard untuk Menghafal"
+            intro="Flashcard membantu membangun dan memperkuat hafalan. Ini berbeda dari Kioku yang bertugas menguji ingatanmu."
+            steps={[
+              {
+                title: "Buka dan coba ingat",
+                body: "Lihat sisi depan kartu, coba jawab sendiri, lalu buka jawabannya.",
+              },
+              {
+                title: "Nilai hafalanmu",
+                body: "Pilih Lupa, Sulit, Ingat, atau Mudah. Penilaian ini mengatur jadwal review Flashcard berikutnya.",
+              },
+              {
+                title: "Kioku tetap terpisah",
+                body: "Review Flashcard yang kamu kerjakan tercatat sebagai progres belajar. Kioku kemudian dapat menguji materi yang sudah masuk progresmu dengan bentuk soal adaptif.",
+              },
+            ]}
+          />
         </div>
         <section className="flex justify-between">
           <div>
