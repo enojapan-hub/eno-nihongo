@@ -510,12 +510,6 @@ function HafalanPage() {
           >
             <ArrowLeft className="size-4" /> Kembali ke Materi
           </a>
-          <a
-            href="/hafalan-riwayat"
-            className="inline-flex items-center rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
-          >
-            Laporan
-          </a>
           <FeatureGuide
             storageKey="eno:guide:flashcard:v2"
             title="Flashcard untuk Menghafal"

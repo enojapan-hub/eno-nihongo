@@ -308,28 +308,6 @@ function BelajarPage() {
             ) : (
               <div className="space-y-4">
                 <ContinueCard level={level} loading={cont.isLoading} item={cont.data ?? null} />
-                <section className="grid grid-cols-2 gap-2">
-                  <Link
-                    to="/kioku"
-                    search={{ mode: "daily" }}
-                    className="rounded-2xl border border-primary/20 bg-primary/[.05] p-3 transition-colors hover:bg-primary/[.08]"
-                  >
-                    <p className="text-[12px] font-black text-primary">Review Hari Ini</p>
-                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                      Prioritas jatuh tempo, materi lemah, dan miskonsepsi.
-                    </p>
-                  </Link>
-                  <Link
-                    to="/kioku"
-                    search={{ mode: "boss" }}
-                    className="rounded-2xl border bg-card p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <p className="text-[12px] font-black">Boss Review</p>
-                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                      Uji campuran untuk memastikan ingatan kuat tetap bertahan.
-                    </p>
-                  </Link>
-                </section>
                 <DailyNewLimit />
                 <KiokuCard />
                 <FlashcardCard loading={metrics.isLoading} due={metrics.data?.dueReviewCount} />

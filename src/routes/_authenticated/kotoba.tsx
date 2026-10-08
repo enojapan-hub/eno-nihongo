@@ -47,6 +47,7 @@ import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacin
 import { exampleRomaji, wordRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { learnedActionLabel } from "@/lib/material-progress";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
 const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
@@ -280,16 +281,16 @@ function KotobaPage() {
       );
       return { previous };
     },
-    onError: (_e, _id, ctx) => {
+    onError: () => {
       toast.error(
         navigator.onLine
-          ? "Progress gagal disimpan. Coba lagi."
-          : "Kamu sedang offline. Progress belum tersimpan.",
+          ? "Progress gagal disimpan. Status akan diperiksa ulang."
+          : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
-      if (ctx) qc.setQueryData(["mastered-items", "vocabulary", level], ctx.previous);
+      void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
     },
-    onSuccess: () => {
-      toast.success("Progress tersimpan");
+    onSuccess: (changed) => {
+      if (changed) toast.success("Progress tersimpan");
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
@@ -311,16 +312,20 @@ function KotobaPage() {
       );
       return { previous };
     },
-    onError: (_e, _id, ctx) => {
+    onError: () => {
+      // Progress may have been committed before activity logging failed.
+      // Do not restore a stale optimistic snapshot; reconcile with the server.
       toast.error(
         navigator.onLine
-          ? "Progress gagal disimpan. Coba lagi."
-          : "Kamu sedang offline. Progress belum tersimpan.",
+          ? "Penyimpanan belum sepenuhnya berhasil. Periksa status materi sebelum mencoba lagi."
+          : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
-      if (ctx) qc.setQueryData(["mastered-items", "vocabulary", level], ctx.previous);
+      void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
+      void qc.invalidateQueries({ queryKey: ["my-progress"] });
+      void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
     },
-    onSuccess: () => {
-      toast.success("Progress tersimpan");
+    onSuccess: (changed) => {
+      if (changed) toast.success("Progress tersimpan");
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
@@ -801,7 +806,7 @@ function Detail({
             <p className="mt-2 text-xs text-muted-foreground">Contoh kalimat belum tersedia.</p>
           )}
         </section>
-        <ItemMasteryCard itemType="vocabulary" itemId={item.id} />
+        <ItemMasteryCard itemType="vocabulary" itemId={item.id} learned={learned} />
         <div className="mt-3 border-t bg-background px-1.5 py-1">
           <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
             <Button
@@ -830,12 +835,14 @@ function Detail({
             <Button
               disabled={learnPending || learned}
               onClick={onLearn}
+              variant={learned ? "secondary" : "default"}
+              aria-label={learned ? "Sudah dipelajari" : "Tandai dipelajari"}
               className="h-9 min-w-0 rounded-full px-2 text-[11px] transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
             >
               <Check
                 className={`mr-1 size-3.5 transition-transform duration-150 ${learned ? "scale-110" : ""} motion-reduce:transition-none`}
               />
-              <span className="truncate">Dipelajari</span>
+              <span className="truncate">{learnedActionLabel(learned)}</span>
             </Button>
             <Button
               variant="ghost"
