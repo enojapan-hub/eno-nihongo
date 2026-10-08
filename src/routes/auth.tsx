@@ -186,7 +186,15 @@ function AuthPage() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
-          options: { emailRedirectTo: `${CANONICAL_ORIGIN}/` },
+          // Kode referral dibawa lewat tautan verifikasi email, termasuk bila dibuka di tab lain.
+          options: {
+            emailRedirectTo: (() => {
+              const saved = window.sessionStorage.getItem("eno_referral_code");
+              return saved && /^[A-Z0-9_-]{4,40}$/.test(saved)
+                ? `${CANONICAL_ORIGIN}/auth?ref=${encodeURIComponent(saved)}`
+                : `${CANONICAL_ORIGIN}/`;
+            })(),
+          },
         });
         if (signUpError) throw signUpError;
         if (data.session) {
