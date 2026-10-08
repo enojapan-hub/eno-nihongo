@@ -830,12 +830,14 @@ function Detail({
             <Button
               disabled={learnPending || learned}
               onClick={onLearn}
+              variant={learned ? "secondary" : "default"}
+              aria-label={learned ? "Sudah dipelajari" : "Tandai dipelajari"}
               className="h-9 min-w-0 rounded-full px-2 text-[11px] transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
             >
               <Check
                 className={`mr-1 size-3.5 transition-transform duration-150 ${learned ? "scale-110" : ""} motion-reduce:transition-none`}
               />
-              <span className="truncate">Dipelajari</span>
+              <span className="truncate">{learned ? "Dipelajari" : "Tandai dipelajari"}</span>
             </Button>
             <Button
               variant="ghost"
