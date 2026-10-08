@@ -233,7 +233,8 @@ function HafalanHistoryPage() {
               Selesaikan beberapa latihan Kioku untuk melihat pola retensi dan kesalahan.
             </p>
             <a
-              href="/kioku"\n              className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-[9px] font-bold text-primary-foreground"
+              href="/kioku"
+              className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-[9px] font-bold text-primary-foreground"
             >
               Mulai Kioku
             </a>
@@ -363,7 +364,8 @@ function HafalanHistoryPage() {
               </div>
             </section>
             <a
-              href="/kioku"\n              className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[10px] font-bold text-primary-foreground"
+              href="/kioku"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[10px] font-bold text-primary-foreground"
             >
               <RotateCcw className="size-3.5" /> Kembali ke Kioku
             </a>
