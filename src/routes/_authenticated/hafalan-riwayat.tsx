@@ -216,7 +216,7 @@ function HafalanHistoryPage() {
               <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
                 ENO KIOKU · ANALISIS
               </p>
-              <h1 className="text-[18px] font-bold">Riwayat Hafalan</h1>
+              <h1 className="text-[18px] font-bold">Analisis Ingatan</h1>
               <p className="text-[9px] text-muted-foreground">
                 {level} · retensi, keyakinan, kesalahan, dan kekuatan ingatan
               </p>
@@ -233,8 +233,7 @@ function HafalanHistoryPage() {
               Selesaikan beberapa latihan Kioku untuk melihat pola retensi dan kesalahan.
             </p>
             <a
-              href="/hafalan"
-              className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-[9px] font-bold text-primary-foreground"
+              href="/kioku"\n              className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-[9px] font-bold text-primary-foreground"
             >
               Mulai Kioku
             </a>
@@ -364,8 +363,7 @@ function HafalanHistoryPage() {
               </div>
             </section>
             <a
-              href="/hafalan"
-              className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[10px] font-bold text-primary-foreground"
+              href="/kioku"\n              className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[10px] font-bold text-primary-foreground"
             >
               <RotateCcw className="size-3.5" /> Kembali ke Kioku
             </a>
