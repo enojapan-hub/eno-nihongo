@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fatigueSuggested, memoryReadiness, weeklyLearning } from "../insights";
+import { fatigueSuggested, levelReadiness, memoryReadiness, weeklyLearning } from "../insights";
 
 describe("Kioku learning insights", () => {
   it("calculates readiness from tested memory stages without claiming JLPT pass probability", () => {
@@ -29,5 +29,21 @@ describe("Kioku learning insights", () => {
     expect(fatigueSuggested(10, 8)).toBe(false);
     expect(fatigueSuggested(12, 6)).toBe(true);
     expect(fatigueSuggested(30, 2)).toBe(true);
+  });
+
+  it("maps tested memory back to the learned item level", () => {
+    const rows = levelReadiness(
+      [
+        { item_type: "kanji", item_id: "a", level: "N5", status: "learning" },
+        { item_type: "kanji", item_id: "b", level: "N4", status: "new" },
+      ],
+      [
+        { item_type: "kanji", item_id: "a", stage: 4, due_at: "2026-10-09T00:00:00Z" },
+        { item_type: "kanji", item_id: "b", stage: 4, due_at: "2026-10-09T00:00:00Z" },
+      ],
+      Date.parse("2026-10-08T00:00:00Z"),
+    );
+    expect(rows.find((x) => x.level === "N5")?.score).toBe(100);
+    expect(rows.find((x) => x.level === "N4")?.score).toBe(0);
   });
 });
