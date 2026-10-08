@@ -343,6 +343,35 @@ function errorSpot(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
   };
 }
 
+function kanjiReadingMatch(c: Content, pool: Content[], learnedIds: Set<string>, shuffle: Shuffle): Part | null {
+  if (c.type !== "kanji" || !norm(c.reading)) return null;
+  const distractors = pickDistractors(
+    c,
+    pool,
+    learnedIds,
+    new Set(),
+    (x) => x.reading,
+    (x) => x.type === "kanji" && !!norm(x.reading),
+    3,
+    new Set([norm(c.reading)]),
+  );
+  if (distractors.length < 2) return null;
+  return {
+    aspect: "reading",
+    direction: "forward",
+    prompt: c.surface,
+    promptSub: "Pasangkan Kanji dengan bacaan yang tepat.",
+    answer: c.reading,
+    options: shuffle([
+      { id: c.id, text: c.reading, confusable: false },
+      ...distractors.map((x) => ({ ...x, confusable: isConfusable(c, pool.find((p) => p.id === x.id) ?? c) })),
+    ]),
+    variant: "reading_match",
+    label: "Pasangkan Bacaan",
+    feedback: `${c.surface} → ${c.reading}`,
+  };
+}
+
 function conjugationChoice(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
   if (c.type !== "vocabulary" || !c.forms || c.forms.length < 3) return null;
   const target = c.forms[fnv(`${sel.itemId}|form`) % c.forms.length];
@@ -839,6 +868,11 @@ export function buildExercise(
   }
 
   // ---- Normal exercise (also meaning / reading / slow / guess remediation; a known partner is preferred as distractor)
+  if (c.type === "kanji" && sel.aspect === "reading" && sel.direction === "forward" && sel.stage >= 1) {
+    const match = kanjiReadingMatch(c, pool, learnedIds, shuffle);
+    if (match)
+      return { ...base, exerciseType: "choice", hintLevel: 3, hintText: "", ...match };
+  }
   const answer = answerOf(c, sel.aspect, sel.direction);
   const prefer = new Set(sel.remedy?.partnerId ? [sel.remedy.partnerId] : []);
   const need = Math.max(2, (sel.optionCount || 4) - 1);
