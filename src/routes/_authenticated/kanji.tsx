@@ -564,7 +564,6 @@ function KanjiPage() {
                 <Info label="Kunyomi" value={(item.kunyomi ?? []).join("・") || "—"} />
                 <Info label="Jumlah Coretan" value={String(item.stroke_count ?? "—")} />
               </div>
-              
               <KanjiStructureSection
                 kanjiId={item.id}
                 character={item.character}
