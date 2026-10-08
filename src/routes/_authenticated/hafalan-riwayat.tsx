@@ -7,7 +7,6 @@ import { fetchGrammarList, fetchKanjiList, type Level } from "@/lib/learn-querie
 import { fetchTargetLevel } from "@/lib/target-level";
 import { fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { masteryLabel } from "@/lib/mastery-analysis";
-import { masteryTrainingHref } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
 import { fetchMembershipAccess } from "@/lib/membership";
@@ -313,11 +312,11 @@ function HafalanHistoryPage() {
                 <div>
                   <h2 className="text-[12px] font-bold">7 hari terakhir</h2>
                   <p className="text-[8px] text-muted-foreground">
-                    Jumlah review dan akurasi per hari
+                    Aktivitas latihan dan akurasi per hari
                   </p>
                 </div>
                 <span className="text-[9px] font-bold text-primary">
-                  {correct}/{total} hafal
+                  {correct}/{total} benar
                 </span>
               </div>
               <div className="mt-4 flex h-24 items-end gap-2">
@@ -338,7 +337,7 @@ function HafalanHistoryPage() {
                   ))
                 ) : (
                   <p className="w-full text-center text-[9px] text-muted-foreground">
-                    Belum ada review dalam 7 hari terakhir.
+                    Belum ada aktivitas latihan dalam 7 hari terakhir.
                   </p>
                 )}
               </div>
@@ -374,7 +373,7 @@ function HafalanHistoryPage() {
                         </p>
                       </div>
                       <a
-                        href={masteryTrainingHref({ itemType: item.itemType, aspect })}
+                        href="/kioku"
                         className="rounded-xl border bg-card px-2.5 py-2 text-[8px] font-bold"
                       >
                         Ulangi
