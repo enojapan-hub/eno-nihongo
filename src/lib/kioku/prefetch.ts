@@ -149,7 +149,7 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
   const base = buildSignals(evs.error ? [] : toReviewEvents(evs.data ?? []), [], now);
   const signals: Signals = { ...base, relations: await fetchRelations(base) };
   const seen = seenContexts(evs.error ? [] : toReviewEvents(evs.data ?? []));
-  const ranked = rankCandidates(learned, states, now, signals).slice(0, SESSION_SIZE * 3); // per-item cap is applied while building
+  const ranked = rankCandidates(learned, states, now, signals, sessionId).slice(0, SESSION_SIZE * 3); // per-item cap is applied while building
   const ids: Record<KiokuItemType, string[]> = { kanji: [], vocabulary: [], grammar: [] };
   for (const s of ranked) {
     if (!ids[s.itemType].includes(s.itemId)) ids[s.itemType].push(s.itemId);
