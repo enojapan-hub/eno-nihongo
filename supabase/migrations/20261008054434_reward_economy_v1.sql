@@ -1,80 +1,6 @@
 -- Reward economy v1: keep XP for account/league progression and Points for ranking/spending.
 -- This migration is intentionally not applied from this PR.
 
-create table if not exists public.social_reward_claims (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  mission text not null check (mission in ('instagram_follow','tiktok_follow','share')),
-  points_awarded integer not null check (points_awarded > 0),
-  created_at timestamptz not null default now(),
-  unique (user_id, mission)
-);
-
-alter table public.social_reward_claims enable row level security;
-revoke all on table public.social_reward_claims from anon;
-grant select on table public.social_reward_claims to authenticated;
-
-drop policy if exists social_reward_claims_select_own on public.social_reward_claims;
-create policy social_reward_claims_select_own
-on public.social_reward_claims for select
-to authenticated
-using ((select auth.uid()) = user_id);
-
-create or replace function public.get_social_reward_claims()
-returns text[]
-language sql
-stable
-security definer
-set search_path = pg_catalog, public, auth
-as $
-  select coalesce(array_agg(mission order by mission), array[]::text[])
-  from public.social_reward_claims
-  where user_id=(select auth.uid());
-$;
-revoke all on function public.get_social_reward_claims() from public, anon;
-grant execute on function public.get_social_reward_claims() to authenticated;
-
-create or replace function public.claim_social_reward(p_mission text)
-returns integer
-language plpgsql
-security definer
-set search_path = pg_catalog, public, auth
-as $$
-declare
-  v_user uuid := (select auth.uid());
-  v_points integer;
-begin
-  if v_user is null then raise exception 'not_authenticated'; end if;
-  -- Reward follow/share requires independent verification; client claims are not proof.
-  raise exception 'social_reward_verification_not_available';
-  v_points := case p_mission
-    when 'instagram_follow' then 100
-    when 'tiktok_follow' then 100
-    when 'share' then 50
-    else null
-  end;
-  if v_points is null then raise exception 'invalid_mission'; end if;
-
-  insert into public.social_reward_claims(user_id, mission, points_awarded)
-  values(v_user, p_mission, v_points)
-  on conflict (user_id, mission) do nothing;
-  if not found then return 0; end if;
-
-  insert into public.user_stats(user_id, reward_points)
-  values(v_user, v_points)
-  on conflict(user_id) do update
-    set reward_points = public.user_stats.reward_points + excluded.reward_points,
-        updated_at = now();
-
-  insert into public.learning_activity(user_id, activity_type, points, xp, metadata)
-  values(v_user, 'social_reward', v_points, 0, jsonb_build_object('mission', p_mission));
-
-  return v_points;
-end;
-$$;
-revoke all on function public.claim_social_reward(text) from public, anon;
-grant execute on function public.claim_social_reward(text) to authenticated;
-
 create or replace function public.award_referral_signup(p_code text)
 returns integer
 language plpgsql
@@ -85,8 +11,13 @@ declare
   v_user uuid := (select auth.uid());
   v_referrer uuid;
   v_code text := upper(trim(p_code));
+  v_joined_at timestamptz;
 begin
   if v_user is null then raise exception 'not_authenticated'; end if;
+  -- Only newly registered accounts can attach a referral, before their first learning activity.
+  select created_at into v_joined_at from public.profiles where id = v_user;
+  if v_joined_at is null or v_joined_at < now() - interval '7 days' then return 0; end if;
+  if exists(select 1 from public.learning_activity where user_id = v_user) then return 0; end if;
   select id into v_referrer
   from public.profiles
   where upper(referral_code)=v_code and id <> v_user;
@@ -111,7 +42,8 @@ as $$
 declare
   v_ref public.referrals%rowtype;
 begin
-  if new.activity_type in ('social_reward') then return new; end if;
+  -- Ignore passive/system activity; only validated learning events may unlock a reward.
+  if new.activity_type not in ('material_learned', 'quiz_completed', 'simulation_completed') then return new; end if;
 
   select * into v_ref
   from public.referrals
