@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminEnoExamRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminImportExportRouteImport } from './routes/_authenticated/admin-import-export'
 import { Route as AuthenticatedAdminKelasRouteImport } from './routes/_authenticated/admin-kelas'
 import { Route as AuthenticatedAdminKeuanganRouteImport } from './routes/_authenticated/admin-keuangan'
+import { Route as AuthenticatedAdminProdukDigitalRouteImport } from './routes/_authenticated/admin-produk-digital'
 import { Route as AuthenticatedAdminKontenRouteImport } from './routes/_authenticated/admin-konten'
 import { Route as AuthenticatedAdminLanggananRouteImport } from './routes/_authenticated/admin-langganan'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin-media'
@@ -186,6 +187,12 @@ const AuthenticatedAdminKeuanganRoute =
   AuthenticatedAdminKeuanganRouteImport.update({
     id: '/admin-keuangan',
     path: '/admin-keuangan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminProdukDigitalRoute =
+  AuthenticatedAdminProdukDigitalRouteImport.update({
+    id: '/admin-produk-digital',
+    path: '/admin-produk-digital',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminKontenRoute =
@@ -636,6 +643,7 @@ export interface FileRoutesByFullPath {
   '/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/admin-kelas': typeof AuthenticatedAdminKelasRoute
   '/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
+  '/admin-produk-digital': typeof AuthenticatedAdminProdukDigitalRoute
   '/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
   '/admin-media': typeof AuthenticatedAdminMediaRoute
@@ -732,6 +740,7 @@ export interface FileRoutesByTo {
   '/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/admin-kelas': typeof AuthenticatedAdminKelasRoute
   '/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
+  '/admin-produk-digital': typeof AuthenticatedAdminProdukDigitalRoute
   '/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
   '/admin-media': typeof AuthenticatedAdminMediaRoute
@@ -830,6 +839,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/_authenticated/admin-kelas': typeof AuthenticatedAdminKelasRoute
   '/_authenticated/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
+  '/_authenticated/admin-produk-digital': typeof AuthenticatedAdminProdukDigitalRoute
   '/_authenticated/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/_authenticated/admin-langganan': typeof AuthenticatedAdminLanggananRoute
   '/_authenticated/admin-media': typeof AuthenticatedAdminMediaRoute
@@ -928,6 +938,7 @@ export interface FileRouteTypes {
     | '/admin-import-export'
     | '/admin-kelas'
     | '/admin-keuangan'
+    | '/admin-produk-digital'
     | '/admin-konten'
     | '/admin-langganan'
     | '/admin-media'
@@ -1024,6 +1035,7 @@ export interface FileRouteTypes {
     | '/admin-import-export'
     | '/admin-kelas'
     | '/admin-keuangan'
+    | '/admin-produk-digital'
     | '/admin-konten'
     | '/admin-langganan'
     | '/admin-media'
@@ -1121,6 +1133,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-import-export'
     | '/_authenticated/admin-kelas'
     | '/_authenticated/admin-keuangan'
+    | '/_authenticated/admin-produk-digital'
     | '/_authenticated/admin-konten'
     | '/_authenticated/admin-langganan'
     | '/_authenticated/admin-media'
@@ -1338,6 +1351,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-keuangan'
       fullPath: '/admin-keuangan'
       preLoaderRoute: typeof AuthenticatedAdminKeuanganRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-produk-digital': {
+      id: '/_authenticated/admin-produk-digital'
+      path: '/admin-produk-digital'
+      fullPath: '/admin-produk-digital'
+      preLoaderRoute: typeof AuthenticatedAdminProdukDigitalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin-konten': {
@@ -2056,6 +2076,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminImportExportRoute: typeof AuthenticatedAdminImportExportRoute
   AuthenticatedAdminKelasRoute: typeof AuthenticatedAdminKelasRoute
   AuthenticatedAdminKeuanganRoute: typeof AuthenticatedAdminKeuanganRoute
+  AuthenticatedAdminProdukDigitalRoute: typeof AuthenticatedAdminProdukDigitalRoute
   AuthenticatedAdminKontenRoute: typeof AuthenticatedAdminKontenRoute
   AuthenticatedAdminLanggananRoute: typeof AuthenticatedAdminLanggananRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
@@ -2118,6 +2139,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminImportExportRoute: AuthenticatedAdminImportExportRoute,
   AuthenticatedAdminKelasRoute: AuthenticatedAdminKelasRoute,
   AuthenticatedAdminKeuanganRoute: AuthenticatedAdminKeuanganRoute,
+  AuthenticatedAdminProdukDigitalRoute: AuthenticatedAdminProdukDigitalRoute,
   AuthenticatedAdminKontenRoute: AuthenticatedAdminKontenRoute,
   AuthenticatedAdminLanggananRoute: AuthenticatedAdminLanggananRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
