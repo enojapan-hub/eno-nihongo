@@ -165,6 +165,19 @@ function Detail() {
               />
             </div>
           </section>
+          <section aria-labelledby="digital-products" className="rounded-[20px] border border-primary/15 bg-primary/[0.04] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 id="digital-products" className="text-[18px] font-black">Produk Digital</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Materi tambahan dari guru. Pembelian dibuka setelah pembayaran aktif.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" asChild>
+                <Link to="/kelas/$classId/produk" params={{ classId }}>Lihat</Link>
+              </Button>
+            </div>
+          </section>
           <section aria-labelledby="course-list">
             <h2 id="course-list" className="text-[20px] font-black">
               Yang Anda dapatkan
