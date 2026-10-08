@@ -17,6 +17,21 @@ export const Route = createFileRoute("/_authenticated/progress")({
   component: ProgressPage,
 });
 
+type MemorySummary = { strong: number; growing: number; weak: number; due: number };
+async function fetchMemorySummary(): Promise<MemorySummary> {
+  const { data: userRes } = await getAuthUser();
+  if (!userRes.user) return { strong: 0, growing: 0, weak: 0, due: 0 };
+  const { data, error } = await supabase.from("memory_state").select("stage,due_at").eq("user_id", userRes.user.id);
+  if (error) throw error;
+  const now = Date.now();
+  return {
+    strong: (data ?? []).filter((x) => x.stage >= 4).length,
+    growing: (data ?? []).filter((x) => x.stage >= 2 && x.stage < 4).length,
+    weak: (data ?? []).filter((x) => x.stage < 2).length,
+    due: (data ?? []).filter((x) => new Date(x.due_at).getTime() <= now).length,
+  };
+}
+
 type Attempt = {
   id: string;
   level: string | null;
@@ -53,6 +68,7 @@ const skillLabels: Record<string, string> = {
 };
 
 function ProgressPage() {
+  const memory = useQuery({ queryKey: ["progress-memory"], queryFn: fetchMemorySummary, staleTime: 30_000 });
   const {
     data: attempts = [],
     isLoading,
@@ -160,6 +176,20 @@ function ProgressPage() {
             />
           </div>
         </section>
+        <Card className="rounded-3xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Gauge className="size-4 text-primary" /> Kekuatan ingatan
+            </CardTitle>
+            <CardDescription>Ringkasan Kioku berdasarkan aspek yang benar-benar sudah diuji.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <MemoryStat label="Ingat kuat" value={memory.data?.strong ?? 0} />
+            <MemoryStat label="Mulai kuat" value={memory.data?.growing ?? 0} />
+            <MemoryStat label="Perlu diperkuat" value={memory.data?.weak ?? 0} />
+            <MemoryStat label="Jatuh tempo" value={memory.data?.due ?? 0} />
+          </CardContent>
+        </Card>
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="rounded-3xl">
             <CardHeader>
@@ -285,4 +315,8 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
       <p className="mt-1 text-lg font-bold tracking-tight">{value}</p>
     </div>
   );
+}
+
+function MemoryStat({ label, value }: { label: string; value: number }) {
+  return <div className="rounded-2xl bg-muted/30 p-3 text-center"><p className="text-xl font-black">{value}</p><p className="mt-1 text-[10px] text-muted-foreground">{label}</p></div>;
 }
