@@ -3,8 +3,8 @@ import {
   classifyVocabularyPartOfSpeech,
   formatVocabularyClass,
   VOCAB_PRIMARY_CATEGORIES,
+  VOCAB_SUBCATEGORIES,
 } from "@/lib/vocabulary-taxonomy";
-import { VOCAB_THEMES } from "@/lib/vocabulary-themes";
 
 describe("vocabulary taxonomy", () => {
   it("keeps the same ten primary categories for every level", () => {
@@ -35,13 +35,13 @@ describe("vocabulary taxonomy", () => {
     ]);
   });
 
-  it("keeps semantic themes separate from grammatical classes", () => {
-    expect(VOCAB_THEMES.map((x) => x.slug)).toEqual([
+  it("nests audited semantic groups under Kata Benda", () => {
+    expect(VOCAB_SUBCATEGORIES["kata-benda"].map((x) => x.slug)).toEqual([
       "warna",
       "bilangan-penghitung",
       "alat-tulis",
     ]);
-    expect(VOCAB_THEMES.map((x) => x.labelJa)).toEqual(["色", "数・助数詞", "文房具"]);
+    expect(VOCAB_SUBCATEGORIES["kata-benda"].map((x) => x.labelJa)).toEqual(["色", "数・助数詞", "文房具"]);
   });
 
   it.each([
@@ -55,6 +55,7 @@ describe("vocabulary taxonomy", () => {
     ["Seruan", ["kata-seru"]],
     ["Ungkapan / Frasa", ["ungkapan"]],
     ["Partikel Akhir", ["lainnya"]],
+    ["Kata Bantu Bilangan", ["kata-benda"]],
   ])("%s dinormalisasi", (raw, expected) => {
     expect(classifyVocabularyPartOfSpeech(raw).categories).toEqual(expected);
   });
