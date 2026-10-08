@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BrainCircuit, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
+import { ArrowLeft, BarChart3, BrainCircuit, CheckCircle2, Crown, Lightbulb, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { supabase } from "@/integrations/supabase/client";
@@ -319,38 +319,56 @@ function KiokuPage() {
           />
         </div>
         {!session && (
-          <section className="overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.08] to-card p-6 text-center md:p-10 shadow-[0_18px_50px_-34px_rgba(0,0,0,.55)]">
-            <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10">
-              <BrainCircuit className="size-6 text-primary" />
-            </span>
-            <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">
-              ENO NIHONGO
-            </p>
-            <h1 className="mt-1 text-[22px] font-black md:text-[30px]">
-              {mode === "boss" ? "Boss Review" : mode === "daily" ? "Review Hari Ini" : "ENO Kioku"}
-            </h1>
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              {mode === "boss"
-                ? "Uji campuran untuk materi yang sudah cukup kuat, tanpa menganggapnya hafal selamanya."
-                : mode === "daily"
-                  ? "Sesi ringkas yang memprioritaskan review jatuh tempo, kelemahan, dan miskonsepsi."
-                  : "Latihan ingatan adaptif dari materi yang sudah kamu pelajari."}
-            </p>
-            {error && <p className="mt-3 text-[10px] text-red-600 dark:text-red-300">{error}</p>}
+          <>
+            <section className="relative overflow-hidden rounded-[30px] border border-primary/25 bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 p-5 text-white shadow-[0_24px_60px_-34px_rgba(6,78,59,.8)] md:p-8">
+              <div className="pointer-events-none absolute -right-10 -top-12 size-40 rounded-full bg-white/10 blur-2xl" />
+              <div className="relative flex items-start justify-between gap-3">
+                <div>
+                  <p className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[.18em] text-emerald-100">
+                    <Crown className="size-3.5" /> Premium Memory System
+                  </p>
+                  <h1 className="mt-2 text-[24px] font-black tracking-tight md:text-[32px]">ENO Kioku</h1>
+                  <p className="mt-1 max-w-md text-[10px] leading-relaxed text-emerald-50/90">
+                    Menguji, menganalisis, dan menjaga ingatan dari materi yang sudah kamu pelajari.
+                  </p>
+                </div>
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/10">
+                  <BrainCircuit className="size-6" />
+                </span>
+              </div>
+              <div className="relative mt-4 flex flex-wrap gap-1.5">
+                {["Arti", "Bacaan", "Konteks", "Susun Kalimat", "Partikel", "Konjugasi", "Perbaiki Kesalahan"].map((label) => (
+                  <span key={label} className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[8px] font-bold text-emerald-50">{label}</span>
+                ))}
+              </div>
+            </section>
+            <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
+                <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
+                <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
+              </a>
+              <button type="button" disabled={loading || !ready || ready.exercises.length === 0} onClick={start} className="rounded-2xl border border-primary/25 bg-primary p-3 text-left text-primary-foreground disabled:opacity-50">
+                <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> Kioku Adaptif</p>
+                <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
+              </button>
+              <a href="/kioku?mode=boss" className="rounded-2xl border bg-card p-3">
+                <p className="flex items-center gap-1.5 text-[11px] font-black"><ShieldCheck className="size-3.5 text-primary" /> Uji Ingatan</p>
+                <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Uji campuran untuk memastikan ingatan kuat tetap bertahan.</p>
+              </a>
+            </section>
+            <a href="/hafalan-riwayat" className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm">
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="size-4" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-black">Analisis Ingatan</span>
+                <span className="block text-[8px] text-muted-foreground">Retensi, kelemahan, keyakinan, dan pola kesalahanmu.</span>
+              </span>
+              <span className="text-[9px] font-bold text-primary">Buka</span>
+            </a>
+            {error && <p className="text-center text-[10px] text-red-600 dark:text-red-300">{error}</p>}
             {!loading && ready && ready.exercises.length === 0 && (
-              <p className="mt-4 text-[10px] text-muted-foreground">
-                Belum ada materi yang dipelajari. Pelajari Kanji, Kotoba, atau Bunpou dulu di
-                Materi.
-              </p>
+              <p className="rounded-2xl border bg-card p-3 text-center text-[9px] text-muted-foreground">Belum ada materi yang dapat diuji. Tandai Kanji, Kotoba, atau Bunpou sebagai Dipelajari terlebih dahulu.</p>
             )}
-            <button
-              disabled={loading || !ready || ready.exercises.length === 0}
-              onClick={start}
-              className="mx-auto mt-5 w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground disabled:opacity-50 md:mt-7 md:max-w-sm md:py-3.5 md:text-[13px]"
-            >
-              {loading ? "Menyiapkan…" : "Mulai Kioku"}
-            </button>
-          </section>
+          </>
         )}
         {session?.finished && (
           <section className="rounded-3xl border bg-card p-6 text-center">
