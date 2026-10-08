@@ -651,7 +651,7 @@ function KanjiPage() {
                     })}
                 </section>
               )}
-              <ItemMasteryCard itemType="kanji" itemId={item.id} />
+              <ItemMasteryCard itemType="kanji" itemId={item.id} learned={Boolean(learned[item.id])} />
               <div className="mt-3 border-t bg-background px-1.5 py-1">
                 <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
                   <Button
