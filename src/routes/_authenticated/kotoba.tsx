@@ -281,13 +281,13 @@ function KotobaPage() {
       );
       return { previous };
     },
-    onError: (_e, _id, ctx) => {
+    onError: () => {
       toast.error(
         navigator.onLine
-          ? "Progress gagal disimpan. Coba lagi."
-          : "Kamu sedang offline. Progress belum tersimpan.",
+          ? "Progress gagal disimpan. Status akan diperiksa ulang."
+          : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
-      if (ctx) qc.setQueryData(["mastered-items", "vocabulary", level], ctx.previous);
+      void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
     },
     onSuccess: (changed) => {
       if (changed) toast.success("Progress tersimpan");
