@@ -39,6 +39,7 @@ jobs:
           mv supabase/migrations/*.sql /tmp/eno-legacy-migrations/
           cp supabase/tests/pr140_referral_fixture.sql supabase/migrations/20260101000000_ci_referral_fixture.sql
           cp /tmp/eno-legacy-migrations/20261008054434_reward_economy_v1.sql supabase/migrations/
+          cp /tmp/eno-legacy-migrations/20261008090000_atomic_material_learned.sql supabase/migrations/
           cp /tmp/eno-legacy-migrations/20261008221500_secure_referral_reward.sql supabase/migrations/
       - name: Start isolated Supabase services
         run: supabase start --exclude studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
