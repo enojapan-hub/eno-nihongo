@@ -72,7 +72,7 @@ jobs:
           eval "$(supabase status -o env | grep '^DB_URL=' | sed 's/^/export /')"
           psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
           BEGIN;
-          DO $
+          DO $$
           DECLARE
             v_def text;
           BEGIN
@@ -96,22 +96,22 @@ jobs:
             IF position('eno.validated_material_learning' in v_def)=0 THEN
               RAISE EXCEPTION 'Referral activation missing validated learning guard';
             END IF;
-          END $;
+          END $$;
           -- Both user-facing RPCs must reject requests without a user identity.
-          DO $
+          DO $$
           BEGIN
             PERFORM public.award_referral_signup('ENO-INVALID');
             RAISE EXCEPTION 'Referral accepted without login';
           EXCEPTION WHEN raise_exception THEN
             IF SQLERRM <> 'not_authenticated' THEN RAISE; END IF;
-          END $;
-          DO $
+          END $$;
+          DO $$
           BEGIN
             PERFORM public.redeem_points_for_premium(1000);
             RAISE EXCEPTION 'Redemption accepted without login';
           EXCEPTION WHEN raise_exception THEN
             IF SQLERRM <> 'not_authenticated' THEN RAISE; END IF;
-          END $;
+          END $$;
           ROLLBACK;
           SQL
       - name: Verify referral and premium transactions
