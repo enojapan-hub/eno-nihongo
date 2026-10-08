@@ -290,6 +290,58 @@ export function sentenceOrderParts(ja: string): string[] | null {
   return parts.join(" ") === ja.trim().replace(/\s+/gu, " ") ? parts : null;
 }
 
+const PARTICLES = ["は", "が", "を", "に", "で", "へ", "と", "も", "の", "から", "まで", "より"];
+
+function particleChoice(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
+  if (c.type !== "grammar") return null;
+  for (const e of c.examples ?? []) {
+    const particle = PARTICLES.find((p) => indexesOf(e.ja, p).length === 1);
+    if (!particle) continue;
+    const at = e.ja.indexOf(particle);
+    const prompt = `${e.ja.slice(0, at)}${SENTENCE_BLANK}${e.ja.slice(at + particle.length)}`;
+    const distractors = PARTICLES.filter((p) => p !== particle)
+      .sort((a, b) => fnv(`${sel.itemId}|${a}`) - fnv(`${sel.itemId}|${b}`))
+      .slice(0, 3);
+    return {
+      aspect: "function_context",
+      direction: "forward",
+      prompt,
+      promptSub: e.id || "Pilih partikel yang tepat.",
+      answer: particle,
+      options: shuffle([
+        { id: c.id, text: particle, confusable: false },
+        ...distractors.map((text, i) => ({ id: `particle:${i}`, text, confusable: true })),
+      ]),
+      variant: "particle_choice",
+      label: "Partikel",
+      feedback: `Kalimat sumber: ${e.ja}`,
+      contextRef: refOf(e.ja),
+    };
+  }
+  return null;
+}
+
+function errorSpot(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
+  if (c.type !== "grammar" || !c.wrong?.length) return null;
+  const w = c.wrong[fnv(sel.itemId) % c.wrong.length];
+  if (!w?.wrong || !w.correct || norm(w.wrong) === norm(w.correct)) return null;
+  return {
+    aspect: "function_context",
+    direction: "forward",
+    prompt: w.wrong,
+    promptSub: "Kalimat di atas salah. Pilih perbaikannya.",
+    answer: w.correct,
+    options: shuffle([
+      { id: c.id, text: w.correct, confusable: false },
+      { id: "wrong:source", text: w.wrong, confusable: true },
+    ]),
+    variant: "error_spot",
+    label: "Perbaiki Kesalahan",
+    feedback: w.reason || `Bentuk yang benar: ${w.correct}`,
+    contextRef: refOf(w.wrong),
+  };
+}
+
 function sentenceOrder(
   c: Content,
   seed: string,
@@ -601,6 +653,21 @@ export function buildExercise(
   if (sel.aspect === "usage" || kind === "usage") {
     const used = seen?.get(`${c.type}:${c.id}`);
     const seed = `${sessionId}|${c.id}`;
+    if (c.type === "grammar" && sel.stage >= 1) {
+      const special =
+        fnv(`${seed}|grammar-special`) % 2 === 0
+          ? particleChoice(c, sel, shuffle) ?? errorSpot(c, sel, shuffle)
+          : errorSpot(c, sel, shuffle) ?? particleChoice(c, sel, shuffle);
+      if (special)
+        return {
+          ...base,
+          hintLevel: 3,
+          exerciseType:
+            special.variant === "particle_choice" ? "particle_choice" : "error_spot",
+          hintText: "",
+          ...special,
+        };
+    }
     // Advanced usage can become a click-to-order sentence exercise, but only when the
     // source sentence already carries trustworthy whitespace token boundaries.
     if (sel.stage >= 2 && fnv(`${seed}|sentence-order`) % 2 === 0) {
