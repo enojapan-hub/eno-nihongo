@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { classifyError } from "../classify";
 import { createOutbox, type StorageLike } from "../outbox";
-import { rankCandidates, selectExercises, toLearned } from "../selector";
+import { rankCandidates, recoveryLimit, selectExercises, toLearned } from "../selector";
 import { buildSession, queueRepeat, type Content } from "../session";
 import { loadSession, saveSession } from "../session-store";
 import type { KiokuEvent, MemoryStateRow } from "../types";
@@ -256,5 +256,20 @@ describe("outbox", () => {
     ob.push(ev(1));
     await ob.flush();
     expect(sent).toEqual(["e1"]);
+  });
+});
+
+
+describe("backlog recovery", () => {
+  it("reduces session size as overdue backlog grows", () => {
+    const mk = (n: number) => Array.from({ length: n }, (_, i) => ({
+      itemType: "vocabulary" as const, itemId: String(i), level: "N5",
+      aspect: "meaning" as const, direction: "forward" as const, exerciseType: "choice" as const,
+      stage: 1, hintLevel: 3, optionCount: 4, reason: "due_memory_state", score: 1000 - i,
+    }));
+    expect(recoveryLimit(mk(10), Date.now())).toBe(20);
+    expect(recoveryLimit(mk(25), Date.now())).toBe(16);
+    expect(recoveryLimit(mk(50), Date.now())).toBe(14);
+    expect(recoveryLimit(mk(100), Date.now())).toBe(12);
   });
 });
