@@ -107,7 +107,7 @@ async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
  * One network phase: learned items (user_item_progress) + memory_state + content of the ranked head
  * + distractor pools. Everything after this runs offline. Never selects material the user has not studied.
  */
-export async function prefetchSession(userId: string, now = Date.now()): Promise<KiokuSession> {
+export async function prefetchSession(userId: string, now = Date.now(), options?: { mode?: "normal" | "daily" | "boss" }): Promise<KiokuSession> {
   const [prog, st, evs] = await Promise.all([
     supabase
       .from("user_item_progress")
@@ -149,7 +149,9 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
   const base = buildSignals(evs.error ? [] : toReviewEvents(evs.data ?? []), [], now);
   const signals: Signals = { ...base, relations: await fetchRelations(base) };
   const seen = seenContexts(evs.error ? [] : toReviewEvents(evs.data ?? []));
-  const ranked = rankCandidates(learned, states, now, signals, sessionId).slice(0, SESSION_SIZE * 3); // per-item cap is applied while building
+  const rankedAll = rankCandidates(learned, states, now, signals, sessionId);
+  const adaptiveSize = options?.mode === "boss" ? Math.min(24, Math.max(8, Math.ceil(rankedAll.length * 0.35))) : options?.mode === "daily" ? Math.min(20, Math.max(8, rankedAll.filter((x) => x.score >= 300).length || 10)) : SESSION_SIZE;
+  const ranked = rankedAll.slice(0, adaptiveSize * 3); // per-item cap is applied while building
   const ids: Record<KiokuItemType, string[]> = { kanji: [], vocabulary: [], grammar: [] };
   for (const s of ranked) {
     if (!ids[s.itemType].includes(s.itemId)) ids[s.itemType].push(s.itemId);
@@ -189,7 +191,7 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
   );
   await attachContext(content, ids);
   await attachVerbForms(content, ids.vocabulary);
-  return buildSession(ranked, content, pool, learnedIds, sessionId, now, SESSION_SIZE, seen);
+  return buildSession(ranked, content, pool, learnedIds, sessionId, now, adaptiveSize, seen);
 }
 
 async function attachVerbForms(content: Map<string, Content>, vocabularyIds: string[]) {
