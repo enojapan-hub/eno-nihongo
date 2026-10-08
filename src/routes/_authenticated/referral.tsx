@@ -16,7 +16,7 @@ function callRpc<T = number>(fn: string, args: Record<string, unknown>): Promise
 }
 
 export const Route = createFileRoute("/_authenticated/referral")({
-  head: () => ({ meta: [{ title: "Gratis & Referral — ENO NIHONGO" }] }),
+  head: () => ({ meta: [{ title: "Ajak Teman — ENO NIHONGO" }] }),
   component: ReferralPage,
 });
 
@@ -41,7 +41,7 @@ function ReferralPage() {
   const plan = profile?.plan ?? "free";
   const premiumUntil = profile?.premium_until;
   const referralCode = profile?.referral_code ?? "";
-  const shareUrl = `${window.location.origin}/auth?ref=${referralCode}`;
+  const shareUrl = referralCode ? `${typeof window !== "undefined" ? window.location.origin : "https://www.enonihongo.com"}/auth?ref=${encodeURIComponent(referralCode)}` : "";
 
   async function copyLink() {
     await navigator.clipboard.writeText(shareUrl);
@@ -74,7 +74,7 @@ function ReferralPage() {
 
   return (
     <AppShell
-      title="Gratis & Referral"
+      title="Ajak Teman"
       description="Kumpulkan Poin dari belajar, tukarkan dengan Premium, atau ajak teman untuk mendapat Premium 30 hari."
     >
       <div className="grid gap-4 md:grid-cols-2">
