@@ -63,19 +63,10 @@ function ReferralPage() {
     }
   }
 
-  async function claimSocial(mission: "instagram_follow" | "tiktok_follow" | "share") {
-    setMessage("");
-    const { data: awarded, error } = await callRpc("claim_social_reward", { p_mission: mission });
-    if (error) setMessage(error.message);
-    else if (!awarded) setMessage("Hadiah misi ini sudah pernah diklaim.");
-    else { setMessage(`Berhasil mendapat +${awarded} Poin.`); await rewards.refetch(); }
-  }
-
   async function shareEno() {
     const url = window.location.origin;
     if (navigator.share) await navigator.share({ title: "ENO NIHONGO", text: "Belajar bahasa Jepang dari N5 sampai N1 di ENO NIHONGO.", url });
     else await navigator.clipboard.writeText(url);
-    await claimSocial("share");
   }
 
   return (
@@ -147,11 +138,11 @@ function ReferralPage() {
         </Card>
 
         <Card className="md:col-span-2">
-          <CardHeader><CardTitle>Misi ENO</CardTitle><CardDescription>Dukung akun resmi ENO NIHONGO. Setiap hadiah hanya dapat diklaim satu kali.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Misi ENO</CardTitle><CardDescription>Dukung akun resmi ENO NIHONGO. Hadiah Poin untuk follow dan share menunggu sistem verifikasi.</CardDescription></CardHeader>
           <CardContent className="grid gap-2 sm:grid-cols-3">
-            <a href="https://www.instagram.com/enonihongo/" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Instagram className="size-4" /> Follow Instagram</div><p className="mt-1 text-xs text-muted-foreground">Hadiah +100 Poin</p><Button className="mt-3 w-full" variant="outline" disabled={rewards.data?.claims.includes("instagram_follow")} onClick={(e) => { e.preventDefault(); window.open("https://www.instagram.com/enonihongo/","_blank","noopener,noreferrer"); void claimSocial("instagram_follow"); }}>{rewards.data?.claims.includes("instagram_follow") ? "Sudah diklaim" : "Buka & Klaim"}</Button></a>
-            <a href="https://www.tiktok.com/@enonihongo.id" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4" /> Follow TikTok</div><p className="mt-1 text-xs text-muted-foreground">Hadiah +100 Poin</p><Button className="mt-3 w-full" variant="outline" disabled={rewards.data?.claims.includes("tiktok_follow")} onClick={(e) => { e.preventDefault(); window.open("https://www.tiktok.com/@enonihongo.id","_blank","noopener,noreferrer"); void claimSocial("tiktok_follow"); }}>{rewards.data?.claims.includes("tiktok_follow") ? "Sudah diklaim" : "Buka & Klaim"}</Button></a>
-            <div className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Share2 className="size-4" /> Bagikan ENO</div><p className="mt-1 text-xs text-muted-foreground">Hadiah +50 Poin</p><Button className="mt-3 w-full" variant="outline" disabled={rewards.data?.claims.includes("share")} onClick={() => void shareEno()}>{rewards.data?.claims.includes("share") ? "Sudah diklaim" : "Bagikan & Klaim"}</Button></div>
+            <a href="https://www.instagram.com/enonihongo/" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Instagram className="size-4" /> Follow Instagram</div><p className="mt-1 text-xs text-muted-foreground">Hadiah menunggu verifikasi</p><span className="mt-3 block text-xs text-muted-foreground">Buka akun resmi untuk mengikuti. Hadiah belum aktif.</span></a>
+            <a href="https://www.tiktok.com/@enonihongo.id" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4" /> Follow TikTok</div><p className="mt-1 text-xs text-muted-foreground">Hadiah menunggu verifikasi</p><span className="mt-3 block text-xs text-muted-foreground">Buka akun resmi untuk mengikuti. Hadiah belum aktif.</span></a>
+            <div className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Share2 className="size-4" /> Bagikan ENO</div><p className="mt-1 text-xs text-muted-foreground">Hadiah menunggu verifikasi</p><Button className="mt-3 w-full" variant="outline" onClick={() => void shareEno()}>Bagikan ENO</Button></div>
           </CardContent>
         </Card>
 
