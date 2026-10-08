@@ -178,7 +178,7 @@ function KotobaPage() {
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
-  const cards = data as VocabRow[];
+  const cards = data as unknown as VocabRow[];
   useEffect(() => {
     if (!ready || currentCount <= (page + 1) * VOCAB_PAGE_SIZE) return;
     const nextPage = page + 1;
