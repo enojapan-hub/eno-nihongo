@@ -34,7 +34,7 @@ const clientSources = clientSourceFiles().map((file) => ({
 
 describe("kontrak record_learning_activity", () => {
   // Definisi terbaru yang membatasi tipe aktivitas yang boleh dikirim klien.
-  const latest = [...migrations].reverse().find((m) => /activity_type not in \(/i.test(m.sql));
+  const latest = [...migrations].reverse().find((m) => /create or replace function public\.record_learning_activity\(/i.test(m.sql) && /activity_type not in \(/i.test(m.sql));
 
   it("menemukan whitelist tipe aktivitas di migration", () => {
     expect(latest).toBeDefined();
