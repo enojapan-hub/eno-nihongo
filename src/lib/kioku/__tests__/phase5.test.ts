@@ -746,3 +746,40 @@ describe("Kanji reading matching", () => {
     expect(ex!.options.every(o=>items.some(x=>x.reading===o.text))).toBe(true);
   });
 });
+
+describe("source-safe particle exercise", () => {
+  it("does not turn a lexical の into a particle question for unrelated grammar", () => {
+    const grammar: Content = {
+      id: "g",
+      type: "grammar",
+      level: "N5",
+      surface: "〜たい",
+      reading: "",
+      meaning: "ingin",
+      examples: [{ ja: "日本の料理を食べたいです。", id: "Saya ingin makan masakan Jepang." }],
+    };
+    const sel: Selection = {
+      itemType: "grammar",
+      itemId: "g",
+      level: "N5",
+      aspect: "usage",
+      direction: "forward",
+      exerciseType: "choice",
+      stage: 2,
+      hintLevel: 3,
+      optionCount: 4,
+      reason: "r",
+      score: 1,
+    };
+    const built = buildExercise(
+      sel,
+      new Map([["grammar:g", grammar]]),
+      [grammar],
+      new Set(["grammar:g"]),
+      "safe",
+      0,
+    );
+    expect(built?.variant).not.toBe("particle_choice");
+  });
+});
+
