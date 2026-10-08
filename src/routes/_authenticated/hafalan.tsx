@@ -229,11 +229,15 @@ function HafalanPage() {
     if (retryWrong) return wrong;
     const p = new Map((progress.data ?? []).map((x) => [`${x.item_type}:${x.item_id}`, x])),
       now = Date.now();
-    let a = source.filter(
-      (x) =>
+    let a = source.filter((x) => {
+      const z = p.get(`${x.kind}:${x.id}`);
+      return (
+        !!z &&
+        z.status !== "new" &&
         (kind === "mixed" || x.kind === kind) &&
-        (!targeted || (x.kind === targeted.itemType && x.aspect === targeted.aspect)),
-    );
+        (!targeted || (x.kind === targeted.itemType && x.aspect === targeted.aspect))
+      );
+    });
     if (study === "weak" && !targeted)
       a = a.filter((x) => {
         const z = p.get(`${x.kind}:${x.id}`);
@@ -494,7 +498,7 @@ function HafalanPage() {
             Laporan
           </a>
           <FeatureGuide
-            storageKey="eno:guide:flashcard:v1"
+            storageKey="eno:guide:flashcard:v2"
             title="Flashcard untuk Menghafal"
             intro="Flashcard membantu membangun dan memperkuat hafalan. Ini berbeda dari Kioku yang bertugas menguji ingatanmu."
             steps={[
@@ -503,12 +507,16 @@ function HafalanPage() {
                 body: "Lihat sisi depan kartu, coba jawab sendiri, lalu buka jawabannya.",
               },
               {
-                title: "Nilai hafalanmu",
-                body: "Pilih Lupa, Sulit, Ingat, atau Mudah. Penilaian ini mengatur jadwal review Flashcard berikutnya.",
+                title: "Nilai setelah jawaban dibuka",
+                body: "Lupa = tidak ingat. Sulit = berhasil dengan susah payah. Ingat = ingat cukup lancar. Mudah = langsung ingat tanpa kesulitan. Rating baru tersedia setelah jawaban dibuka.",
               },
               {
-                title: "Kioku tetap terpisah",
-                body: "Review Flashcard yang kamu kerjakan tercatat sebagai progres belajar. Kioku kemudian dapat menguji materi yang sudah masuk progresmu dengan bentuk soal adaptif.",
+                title: "Jadwal mengikuti kemampuan",
+                body: "Lupa muncul lebih cepat, Sulit mendapat interval pendek, Ingat interval normal, dan Mudah interval lebih panjang. Petunjuk membuat kenaikan interval lebih kecil.",
+              },
+              {
+                title: "Hanya materi yang sudah dipelajari",
+                body: "Flashcard mengambil Kanji, Kotoba, dan Bunpou yang sudah masuk progres belajarmu. Flashcard membangun hafalan; Kioku tetap menguji kemampuanmu secara terpisah.",
               },
             ]}
           />
@@ -587,8 +595,10 @@ function HafalanPage() {
               {study === "quick" && quickExpired ? "Waktu 5 menit selesai" : "Sesi selesai"}
             </h2>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              {results.length} kartu · {results.filter((x) => x >= 2).length} hafal ·{" "}
-              {results.filter((x) => x < 2).length} perlu diulang
+              {results.length} kartu · Lupa {results.filter((x) => x === 0).length} · Sulit{" "}
+              {results.filter((x) => x === 1).length} · Ingat{" "}
+              {results.filter((x) => x === 2).length} · Mudah{" "}
+              {results.filter((x) => x === 3).length}
             </p>
             <div className="mt-4 flex justify-center gap-2">
               {wrong.length > 0 && !retryWrong && (
@@ -786,7 +796,7 @@ function HafalanPage() {
           </>
         ) : (
           <p className="rounded-2xl border bg-card p-5 text-center text-[10px] text-muted-foreground">
-            Belum ada kartu yang memenuhi mode ini. Coba Normal atau Campuran.
+            Belum ada kartu yang memenuhi mode ini. Tandai materi sebagai Dipelajari terlebih dahulu, atau coba Normal/Campuran.
           </p>
         )}
         <p className="text-center text-[8px] leading-4 text-muted-foreground">
