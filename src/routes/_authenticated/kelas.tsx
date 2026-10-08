@@ -64,7 +64,7 @@ function KelasPage() {
     retry: false,
   });
   useEffect(() => {
-    void getAuthUser().then((user) => setDeliveryEmail(user?.email ?? ""));
+    void getAuthUser().then(({ data }) => setDeliveryEmail(data.user?.email ?? ""));
   }, []);
   const [search, setSearch] = useState("");
   const visibleClasses = useMemo(() => {
