@@ -226,6 +226,18 @@ function KiokuPage() {
     return { right: v.filter(Boolean).length, wrong: v.filter((x) => !x).length };
   }, [session]);
 
+  const reasonText = (reason: string) => {
+    if (reason.includes("overconfident_wrong")) return "Dipilih karena sebelumnya kamu yakin tetapi salah.";
+    if (reason.includes("repeated_error") || reason.includes("remediate_"))
+      return "Dipilih untuk memperkuat bagian yang masih sering salah.";
+    if (reason.includes("due_") || reason.includes("progress_due"))
+      return "Dipilih karena review materi ini sudah jatuh tempo.";
+    if (reason.includes("retest_mastered") || reason.includes("delayed_recall"))
+      return "Dipilih untuk memastikan ingatanmu masih bertahan.";
+    if (reason.includes("context")) return "Dipilih untuk menguji penggunaan dalam konteks.";
+    return "Dipilih sebagai penguatan ingatan berdasarkan progresmu.";
+  };
+
   const pill = (value: Confidence, label: string) => (
     <button
       type="button"
@@ -373,6 +385,9 @@ function KiokuPage() {
                 className={`mt-5 font-jp font-bold leading-relaxed ${ex.prompt.length > 12 ? "text-[19px] md:text-[26px]" : "text-[30px] md:text-[44px]"}`}
               >
                 {ex.prompt}
+              </p>
+              <p className="mx-auto mt-2 max-w-lg text-[9px] leading-relaxed text-muted-foreground">
+                {reasonText(ex.reason)}
               </p>
               {ex.promptSub && (
                 <p className="mt-1 font-jp text-[11px] text-muted-foreground">{ex.promptSub}</p>
