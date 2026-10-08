@@ -9,9 +9,9 @@ export function DailyNewLimit() {
     <section className="rounded-2xl border bg-card p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold">Target materi baru</p>
+          <p className="text-[11px] font-bold">Materi Baru Harian</p>
           <p className="mt-0.5 text-[9px] leading-relaxed text-muted-foreground">
-            Batas rekomendasi harian. Tidak mengunci materi yang ingin kamu buka sendiri.
+            Rekomendasi jumlah materi baru per hari. Tidak memengaruhi antrean latihan Kioku.
           </p>
         </div>
         <span className="rounded-full bg-primary/10 px-2 py-1 text-[9px] font-bold text-primary">

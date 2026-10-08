@@ -30,7 +30,7 @@ export function PremiumUpgradeDialog({
             {feature} adalah fitur Premium
           </DialogTitle>
           <DialogDescription className="text-xs leading-5">
-            Akun Free tetap bisa belajar dari menu Materi dan Hafalan. Premium membuka rekomendasi
+            Akun Free tetap bisa belajar dari menu Materi dan Flashcard. Premium membuka rekomendasi
             latihan yang disusun dari progresmu.
           </DialogDescription>
         </DialogHeader>

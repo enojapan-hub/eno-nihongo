@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BarChart3, BrainCircuit, RotateCcw, TriangleAlert } from "lucide-react";
+import { ArrowLeft, BarChart3, BrainCircuit, Crown, RotateCcw, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { PremiumUpgradeDialog } from "@/components/membership/PremiumUpgradeDialog";
 import { fetchGrammarList, fetchKanjiList, type Level } from "@/lib/learn-queries";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { masteryLabel } from "@/lib/mastery-analysis";
-import { masteryTrainingHref } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { fetchMembershipAccess } from "@/lib/membership";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/hafalan-riwayat")({
-  head: () => ({ meta: [{ title: "Riwayat Hafalan — ENO NIHONGO" }] }),
+  head: () => ({ meta: [{ title: "Analisis Ingatan — ENO NIHONGO" }] }),
   component: HafalanHistoryPage,
 });
 
@@ -70,9 +72,12 @@ function trainingAspect(aspect: string | null) {
 }
 
 function HafalanHistoryPage() {
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const membership = useQuery({ queryKey: ["membership-access"], queryFn: fetchMembershipAccess, staleTime: 60_000 });
+  const hasPremiumAccess = membership.data?.hasPremiumAccess === true;
   const target = useQuery({ queryKey: ["target-level"], queryFn: fetchTargetLevel });
   const level = target.data as Level | undefined;
-  const ready = !!level;
+  const ready = !!level && hasPremiumAccess;
   const reviews = useQuery({
     queryKey: ["hafalan-history", level],
     queryFn: () => fetchReviews(level!),
@@ -99,9 +104,24 @@ function HafalanHistoryPage() {
     enabled: ready,
   });
 
+  if (!membership.isLoading && !hasPremiumAccess)
+    return (
+      <AppShell compact title="Analisis Ingatan">
+        <div className="mx-auto w-full max-w-md p-4">
+          <section className="rounded-3xl border border-primary/20 bg-card p-6 text-center">
+            <span className="mx-auto grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary"><Crown className="size-5" /></span>
+            <h1 className="mt-3 text-[16px] font-black">Analisis Ingatan adalah fitur Premium</h1>
+            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Analisis retensi, keyakinan, dan kelemahan tersedia sebagai bagian dari ENO Kioku.</p>
+            <button type="button" onClick={() => setUpgradeOpen(true)} className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-[10px] font-bold text-primary-foreground">Lihat Premium</button>
+          </section>
+          <PremiumUpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="Analisis Ingatan" />
+        </div>
+      </AppShell>
+    );
+
   if (!level)
     return (
-      <AppShell compact title="Riwayat Hafalan">
+      <AppShell compact title="Analisis Ingatan">
         <p className="p-6 text-center text-xs text-muted-foreground">Memuat level profil…</p>
       </AppShell>
     );
@@ -199,13 +219,13 @@ function HafalanHistoryPage() {
     .slice(0, 10);
 
   return (
-    <AppShell compact title="Riwayat Hafalan">
+    <AppShell compact title="Analisis Ingatan">
       <div className="mx-auto w-full max-w-md space-y-3 pb-6">
         <a
-          href="/hafalan"
+          href="/kioku"
           className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
         >
-          <ArrowLeft className="size-4" /> Kembali ke Hafalan
+          <ArrowLeft className="size-4" /> Kembali ke Kioku
         </a>
         <section className="rounded-3xl border bg-gradient-to-b from-violet-50 to-card p-4 dark:bg-card dark:bg-none">
           <div className="flex items-center gap-3">
@@ -214,11 +234,11 @@ function HafalanHistoryPage() {
             </span>
             <div>
               <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
-                SRS Performance
+                ENO KIOKU · ANALISIS
               </p>
-              <h1 className="text-[18px] font-bold">Riwayat Hafalan</h1>
+              <h1 className="text-[18px] font-bold">Analisis Ingatan</h1>
               <p className="text-[9px] text-muted-foreground">
-                {level} · hasil Hafalan, Rantai Ingatan, dan Jebakan Ingatan
+                {level} · retensi, keyakinan, kesalahan, dan kekuatan ingatan
               </p>
             </div>
           </div>
@@ -228,15 +248,15 @@ function HafalanHistoryPage() {
         ) : !total ? (
           <section className="rounded-3xl border bg-card p-6 text-center">
             <BrainCircuit className="mx-auto size-7 text-primary" />
-            <p className="mt-2 text-[11px] font-bold">Belum ada riwayat hafalan</p>
+            <p className="mt-2 text-[11px] font-bold">Belum ada data ingatan</p>
             <p className="mt-1 text-[9px] text-muted-foreground">
-              Selesaikan beberapa kartu untuk melihat pola performa dan kesalahan.
+              Selesaikan beberapa latihan Kioku untuk melihat pola retensi dan kesalahan.
             </p>
             <a
-              href="/hafalan"
+              href="/kioku"
               className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-[9px] font-bold text-primary-foreground"
             >
-              Mulai Hafalan
+              Mulai Kioku
             </a>
           </section>
         ) : (
@@ -292,11 +312,11 @@ function HafalanHistoryPage() {
                 <div>
                   <h2 className="text-[12px] font-bold">7 hari terakhir</h2>
                   <p className="text-[8px] text-muted-foreground">
-                    Jumlah review dan akurasi per hari
+                    Aktivitas latihan dan akurasi per hari
                   </p>
                 </div>
                 <span className="text-[9px] font-bold text-primary">
-                  {correct}/{total} hafal
+                  {correct}/{total} benar
                 </span>
               </div>
               <div className="mt-4 flex h-24 items-end gap-2">
@@ -317,7 +337,7 @@ function HafalanHistoryPage() {
                   ))
                 ) : (
                   <p className="w-full text-center text-[9px] text-muted-foreground">
-                    Belum ada review dalam 7 hari terakhir.
+                    Belum ada aktivitas latihan dalam 7 hari terakhir.
                   </p>
                 )}
               </div>
@@ -328,7 +348,7 @@ function HafalanHistoryPage() {
                   <TriangleAlert className="size-4" />
                 </span>
                 <div>
-                  <h2 className="text-[12px] font-bold">Laporan kesalahan</h2>
+                  <h2 className="text-[12px] font-bold">Analisis Kesalahan</h2>
                   <p className="text-[8px] text-muted-foreground">
                     Materi yang paling sering perlu diulang
                   </p>
@@ -353,7 +373,7 @@ function HafalanHistoryPage() {
                         </p>
                       </div>
                       <a
-                        href={masteryTrainingHref({ itemType: item.itemType, aspect })}
+                        href="/kioku"
                         className="rounded-xl border bg-card px-2.5 py-2 text-[8px] font-bold"
                       >
                         Ulangi
@@ -364,10 +384,10 @@ function HafalanHistoryPage() {
               </div>
             </section>
             <a
-              href="/hafalan"
+              href="/kioku"
               className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[10px] font-bold text-primary-foreground"
             >
-              <RotateCcw className="size-3.5" /> Lanjutkan Hafalan
+              <RotateCcw className="size-3.5" /> Kembali ke Kioku
             </a>
           </>
         )}
