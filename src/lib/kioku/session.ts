@@ -18,6 +18,7 @@ export type Content = {
   /** kanji: vocabulary compounds that contain the kanji (kanji_vocabulary_examples) */
   compounds?: Content[];
   wrong?: Array<{ wrong: string; correct: string; reason: string }>;
+  forms?: Array<{ code: string; label: string; value: string }>;
 };
 
 function fnv(s: string): number {
@@ -342,6 +343,31 @@ function errorSpot(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
   };
 }
 
+function conjugationChoice(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
+  if (c.type !== "vocabulary" || !c.forms || c.forms.length < 3) return null;
+  const target = c.forms[fnv(`${sel.itemId}|form`) % c.forms.length];
+  if (!target) return null;
+  const alternatives = c.forms
+    .filter((x) => x.code !== target.code && norm(x.value) !== norm(target.value))
+    .sort((a, b) => fnv(`${sel.itemId}|${a.code}`) - fnv(`${sel.itemId}|${b.code}`))
+    .slice(0, 3);
+  if (alternatives.length < 2) return null;
+  return {
+    aspect: "usage",
+    direction: "forward",
+    prompt: c.surface,
+    promptSub: `Pilih ${target.label}`,
+    answer: target.value,
+    options: shuffle([
+      { id: c.id, text: target.value, confusable: false },
+      ...alternatives.map((x) => ({ id: `form:${x.code}`, text: x.value, confusable: true })),
+    ]),
+    variant: "conjugation_choice",
+    label: "Konjugasi",
+    feedback: `${target.label}: ${target.value}`,
+  };
+}
+
 function sentenceOrder(
   c: Content,
   seed: string,
@@ -653,6 +679,17 @@ export function buildExercise(
   if (sel.aspect === "usage" || kind === "usage") {
     const used = seen?.get(`${c.type}:${c.id}`);
     const seed = `${sessionId}|${c.id}`;
+    if (c.type === "vocabulary" && sel.stage >= 1 && fnv(`${seed}|conjugation`) % 3 === 0) {
+      const form = conjugationChoice(c, sel, shuffle);
+      if (form)
+        return {
+          ...base,
+          hintLevel: 3,
+          exerciseType: "conjugation_choice",
+          hintText: "",
+          ...form,
+        };
+    }
     if (c.type === "grammar" && sel.stage >= 1) {
       const special =
         fnv(`${seed}|grammar-special`) % 2 === 0
