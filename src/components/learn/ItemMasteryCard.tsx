@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BrainCircuit, ChevronRight, Clock3 } from "lucide-react";
+import { BrainCircuit, ChevronDown, ChevronRight, Clock3 } from "lucide-react";
 import { getAuthUser } from "@/lib/auth-user";
 import { fetchItemMastery, type MasteryAspect } from "@/lib/kioku/mastery";
 import type { KiokuItemType } from "@/lib/kioku/types";
@@ -23,7 +24,16 @@ function directionLabel(direction: string) {
   return "JP → ID";
 }
 
-export function ItemMasteryCard({ itemType, itemId }: { itemType: KiokuItemType; itemId: string }) {
+export function ItemMasteryCard({
+  itemType,
+  itemId,
+  learned,
+}: {
+  itemType: KiokuItemType;
+  itemId: string;
+  learned: boolean;
+}) {
+  const [open, setOpen] = useState(false);
   const q = useQuery({
     queryKey: ["item-mastery", itemType, itemId],
     queryFn: async () => {
@@ -31,52 +41,78 @@ export function ItemMasteryCard({ itemType, itemId }: { itemType: KiokuItemType;
       if (!data.user) return [] as MasteryAspect[];
       return fetchItemMastery(data.user.id, itemType, itemId);
     },
+    enabled: learned,
     staleTime: 30_000,
   });
-  if (q.isLoading || !q.data?.length) return null;
 
-  const rows = [...q.data].sort((a, b) => a.stage - b.stage);
+  if (!learned) return null;
+
+  const rows = [...(q.data ?? [])].sort((a, b) => a.stage - b.stage);
+  const weakCount = rows.filter((x) => x.stage < 2).length;
+  const summary = q.isLoading
+    ? "Memuat…"
+    : rows.length === 0
+      ? "Belum diuji di Kioku"
+      : weakCount > 0
+        ? `${weakCount} perlu diperkuat`
+        : rows.every((x) => x.stage >= 4)
+          ? "Ingat kuat"
+          : "Mulai kuat";
 
   return (
-    <section className="mt-4 overflow-hidden rounded-2xl border bg-card">
-      <div className="flex items-center gap-2.5 border-b bg-primary/[.04] px-3.5 py-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-          <BrainCircuit className="size-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black">Kekuatan Ingatan</p>
-          <p className="text-[8px] leading-relaxed text-muted-foreground">
-            Hasil latihan Kioku untuk materi ini.
-          </p>
-        </div>
-        <span className="rounded-full bg-primary/10 px-2 py-1 text-[8px] font-bold text-primary">
-          Kioku
-        </span>
-      </div>
-      <div className="divide-y">
-        {rows.map((x) => (
-          <div key={`${x.aspect}:${x.direction}`} className="flex items-center gap-3 px-3.5 py-2.5">
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] font-bold">
-                {LABEL[x.aspect] ?? x.aspect}
-                <span className="ml-1.5 font-medium text-muted-foreground">
-                  · {directionLabel(x.direction)}
-                </span>
-              </p>
-              <p className="mt-0.5 flex items-center gap-1 text-[8px] text-muted-foreground">
-                <Clock3 className="size-3" /> {dueLabel(x.dueAt)}
-              </p>
-            </div>
-            <span className="shrink-0 text-[8px] font-bold text-primary">{x.label}</span>
-          </div>
-        ))}
-      </div>
-      <a
-        href="/kioku"
-        className="flex min-h-10 items-center justify-between border-t px-3.5 text-[9px] font-bold text-primary"
+    <section className="mt-3 overflow-hidden rounded-xl border bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex min-h-11 w-full items-center gap-2.5 px-3 text-left"
       >
-        Latih ingatan di Kioku <ChevronRight className="size-3.5" />
-      </a>
+        <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <BrainCircuit className="size-3.5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[10px] font-bold">Kekuatan Ingatan</span>
+          <span className="block truncate text-[8px] text-muted-foreground">{summary}</span>
+        </span>
+        <ChevronDown
+          className={`size-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="border-t">
+          {rows.length > 0 ? (
+            <div className="divide-y">
+              {rows.map((x) => (
+                <div key={`${x.aspect}:${x.direction}`} className="flex items-center gap-3 px-3 py-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[9px] font-bold">
+                      {LABEL[x.aspect] ?? x.aspect}
+                      <span className="ml-1 font-medium text-muted-foreground">
+                        · {directionLabel(x.direction)}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 flex items-center gap-1 text-[8px] text-muted-foreground">
+                      <Clock3 className="size-3" /> {dueLabel(x.dueAt)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[8px] font-bold text-primary">{x.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="px-3 py-2 text-[8px] text-muted-foreground">
+              Selesaikan latihan Kioku untuk melihat kekuatan ingatan materi ini.
+            </p>
+          )}
+          <a
+            href="/kioku"
+            className="flex min-h-9 items-center justify-between border-t px-3 text-[9px] font-bold text-primary"
+          >
+            {rows.length ? "Latih di Kioku" : "Mulai Kioku"} <ChevronRight className="size-3.5" />
+          </a>
+        </div>
+      )}
     </section>
   );
 }
