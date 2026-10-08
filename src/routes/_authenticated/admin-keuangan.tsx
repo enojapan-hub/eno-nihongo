@@ -30,6 +30,12 @@ type FinanceOrder = {
   paid_at?: string | null;
   created_at?: string | null;
 };
+type DigitalProductFinance = {
+  gross_revenue?: number | string | null;
+  teacher_commission?: number | string | null;
+  platform_revenue?: number | string | null;
+  paid_orders?: number | string | null;
+};
 type FinanceOverview = {
   gross_revenue?: number | string | null;
   pending_amount?: number | string | null;
@@ -53,7 +59,20 @@ function Page() {
     },
     retry: false,
   });
+  const digital = useQuery({
+    queryKey: ["admin-digital-product-finance"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_class_digital_product_finance" as never);
+      if (error) {
+        if (error.message.includes("Could not find the function")) return {} as DigitalProductFinance;
+        throw error;
+      }
+      return (data || {}) as DigitalProductFinance;
+    },
+    retry: false,
+  });
   const d = (q.data || {}) as FinanceOverview;
+  const df = (digital.data || {}) as DigitalProductFinance;
   const cutoff =
     period === "today"
       ? Date.now() - 86400000
@@ -72,13 +91,14 @@ function Page() {
   const items = [
     ["Pendapatan Kotor", rp(d.gross_revenue), Banknote],
     ["Pendapatan Bersih", rp(d.gross_revenue), BadgeDollarSign],
-    ["Komisi Guru", "Rp0", WalletCards],
+    ["Komisi Guru", rp(df.teacher_commission), WalletCards],
     ["Saldo Tertahan", rp(d.pending_amount), Clock3],
   ] as const;
   const sources = [
     ["Premium", d.subscription_revenue || 0, CreditCard],
     ["Lifetime", d.lifetime_revenue || 0, Landmark],
     ["Kelas Guru", d.class_revenue || 0, GraduationCap],
+    ["Produk Digital", df.gross_revenue || 0, Download],
     ["ENO Exam", d.exam_revenue || 0, ReceiptText],
   ] as const;
   return (
