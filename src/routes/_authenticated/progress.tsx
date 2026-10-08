@@ -38,7 +38,7 @@ async function fetchMemorySummary(): Promise<MemorySummary> {
       weekly: weeklyLearning([]),
     };
   const [memory, reviews] = await Promise.all([
-    supabase.from("memory_state").select("stage,due_at,level").eq("user_id", userRes.user.id),
+    supabase.from("memory_state").select("stage,due_at").eq("user_id", userRes.user.id),
     supabase
       .from("flashcard_reviews")
       .select("rating,created_at,meta")
@@ -53,7 +53,7 @@ async function fetchMemorySummary(): Promise<MemorySummary> {
   const weeklyRows = (reviews.data ?? [])
     .filter((x) => {
       const meta = x.meta && typeof x.meta === "object" && !Array.isArray(x.meta) ? x.meta : {};
-      return "source" in meta && meta.source === "kioku";
+      return "source" in meta && meta["source"] === "kioku";
     })
     .map((x) => ({
       correct: x.rating >= 2,
