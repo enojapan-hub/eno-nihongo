@@ -195,3 +195,39 @@ export async function fetchVocabCategoryPage(
     profile_level: level,
   }));
 }
+
+export async function fetchVocabThemeCounts(level: Level) {
+  const res = await withTimeout(
+    supabase.rpc("get_vocabulary_theme_counts" as never, { p_level: level } as never),
+  );
+  if (res.error) throw new Error(res.error.message);
+  return (res.data ?? []) as unknown as Array<{ theme_slug: string; item_count: number | string }>;
+}
+
+export async function fetchVocabThemeCount(level: Level, theme: string): Promise<number> {
+  const res = await withTimeout(
+    supabase.rpc(
+      "get_vocabulary_count_by_theme" as never,
+      { p_level: level, p_theme_slug: theme } as never,
+    ),
+  );
+  if (res.error) throw new Error(res.error.message);
+  return Number(res.data ?? 0);
+}
+
+export async function fetchVocabThemePage(
+  level: Level,
+  theme: string,
+  offset = 0,
+  limit = VOCAB_PAGE_SIZE,
+) {
+  const res = await withTimeout(
+    supabase.rpc(
+      "get_vocabulary_page_by_theme" as never,
+      { p_level: level, p_theme_slug: theme, p_offset: offset, p_limit: limit } as never,
+    ),
+  );
+  if (res.error) throw new Error(res.error.message);
+  const rows = (res.data ?? []) as unknown as Array<Record<string, unknown>>;
+  return rows.map((row) => ({ ...row, senses: [], curriculum: [], profile_level: level }));
+}
