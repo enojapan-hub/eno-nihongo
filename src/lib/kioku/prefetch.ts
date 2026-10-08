@@ -150,7 +150,16 @@ export async function prefetchSession(userId: string, now = Date.now(), options?
   const signals: Signals = { ...base, relations: await fetchRelations(base) };
   const seen = seenContexts(evs.error ? [] : toReviewEvents(evs.data ?? []));
   const rankedAll = rankCandidates(learned, states, now, signals, sessionId);
-  const recovery = recoveryLimit(rankedAll, now);\n  const adaptiveSize = options?.mode === "boss" ? Math.min(24, Math.max(8, Math.ceil(rankedAll.length * 0.35))) : options?.mode === "daily" ? Math.min(recovery || 20, Math.max(8, rankedAll.filter((x) => x.score >= 300).length || 10)) : Math.min(SESSION_SIZE, recovery || SESSION_SIZE);
+  const recovery = recoveryLimit(rankedAll, now);
+  const adaptiveSize =
+    options?.mode === "boss"
+      ? Math.min(24, Math.max(8, Math.ceil(rankedAll.length * 0.35)))
+      : options?.mode === "daily"
+        ? Math.min(
+            recovery || 20,
+            Math.max(8, rankedAll.filter((x) => x.score >= 300).length || 10),
+          )
+        : Math.min(SESSION_SIZE, recovery || SESSION_SIZE);
   const ranked = rankedAll.slice(0, adaptiveSize * 3); // per-item cap is applied while building
   const ids: Record<KiokuItemType, string[]> = { kanji: [], vocabulary: [], grammar: [] };
   for (const s of ranked) {
