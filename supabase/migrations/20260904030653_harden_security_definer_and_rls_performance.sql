@@ -5,8 +5,16 @@
 
 ALTER FUNCTION public.award_referral_signup(text)
   SET search_path = 'pg_catalog, public, auth';
-ALTER FUNCTION public.get_leaderboard(integer)
-  SET search_path = 'pg_catalog, public, auth';
+-- Legacy leaderboard RPC is absent on some fresh installations.
+DO $
+BEGIN
+  IF to_regprocedure('public.get_leaderboard(integer)') IS NOT NULL THEN
+    EXECUTE 'ALTER FUNCTION public.get_leaderboard(integer) SET search_path = ''pg_catalog, public, auth''';
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.get_leaderboard(integer) FROM PUBLIC, anon';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.get_leaderboard(integer) TO authenticated';
+          END IF;
+END;
+$;
 ALTER FUNCTION public.is_premium(uuid)
   SET search_path = 'pg_catalog, public, auth';
 ALTER FUNCTION public.record_learning_activity(text, integer, integer, jsonb)
