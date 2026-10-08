@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BarChart3, BrainCircuit, RotateCcw, TriangleAlert } from "lucide-react";
+import { ArrowLeft, BarChart3, BrainCircuit, Crown, RotateCcw, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { PremiumUpgradeDialog } from "@/components/membership/PremiumUpgradeDialog";
 import { fetchGrammarList, fetchKanjiList, type Level } from "@/lib/learn-queries";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { fetchVocabListResilient } from "@/lib/vocab-resilient";
@@ -9,6 +10,8 @@ import { masteryLabel } from "@/lib/mastery-analysis";
 import { masteryTrainingHref } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { fetchMembershipAccess } from "@/lib/membership";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/hafalan-riwayat")({
   head: () => ({ meta: [{ title: "Analisis Ingatan — ENO NIHONGO" }] }),
@@ -70,9 +73,12 @@ function trainingAspect(aspect: string | null) {
 }
 
 function HafalanHistoryPage() {
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const membership = useQuery({ queryKey: ["membership-access"], queryFn: fetchMembershipAccess, staleTime: 60_000 });
+  const hasPremiumAccess = membership.data?.hasPremiumAccess === true;
   const target = useQuery({ queryKey: ["target-level"], queryFn: fetchTargetLevel });
   const level = target.data as Level | undefined;
-  const ready = !!level;
+  const ready = !!level && hasPremiumAccess;
   const reviews = useQuery({
     queryKey: ["hafalan-history", level],
     queryFn: () => fetchReviews(level!),
@@ -98,6 +104,21 @@ function HafalanHistoryPage() {
     queryFn: () => fetchGrammarList(level!),
     enabled: ready,
   });
+
+  if (!membership.isLoading && !hasPremiumAccess)
+    return (
+      <AppShell compact title="Analisis Ingatan">
+        <div className="mx-auto w-full max-w-md p-4">
+          <section className="rounded-3xl border border-primary/20 bg-card p-6 text-center">
+            <span className="mx-auto grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary"><Crown className="size-5" /></span>
+            <h1 className="mt-3 text-[16px] font-black">Analisis Ingatan adalah fitur Premium</h1>
+            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Analisis retensi, keyakinan, dan kelemahan tersedia sebagai bagian dari ENO Kioku.</p>
+            <button type="button" onClick={() => setUpgradeOpen(true)} className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-[10px] font-bold text-primary-foreground">Lihat Premium</button>
+          </section>
+          <PremiumUpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="Analisis Ingatan" />
+        </div>
+      </AppShell>
+    );
 
   if (!level)
     return (
