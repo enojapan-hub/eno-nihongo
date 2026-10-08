@@ -75,3 +75,18 @@ export function formatVocabularyClass(value: string | null | undefined) {
     details: parsed.details,
   };
 }
+
+
+export const VOCAB_SUBCATEGORIES = {
+  "kata-benda": [
+    { slug: "warna", labelJa: "色", label: "Warna", hint: "Warna dasar dan warna umum" },
+    { slug: "bilangan-penghitung", labelJa: "数・助数詞", label: "Bilangan & Penghitung", hint: "Angka · nomor · jumlah · satuan penghitung" },
+    { slug: "alat-tulis", labelJa: "文房具", label: "Alat Tulis", hint: "Perlengkapan menulis dan alat kantor dasar" },
+  ],
+} as const;
+
+export type VocabSubcategorySlug = (typeof VOCAB_SUBCATEGORIES)["kata-benda"][number]["slug"];
+
+export function vocabularySubcategories(category: string) {
+  return category === "kata-benda" ? VOCAB_SUBCATEGORIES["kata-benda"] : [];
+}
