@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { BrainCircuit, Clock3 } from "lucide-react";
+import { BrainCircuit, Clock3, Dumbbell } from "lucide-react";
 import { getAuthUser } from "@/lib/auth-user";
 import { fetchItemMastery, type MasteryAspect } from "@/lib/kioku/mastery";
 import type { KiokuItemType } from "@/lib/kioku/types";
+import { masteryTrainingHref } from "@/lib/mastery-training";
 
 const LABEL: Record<string, string> = {
   meaning: "Arti",
@@ -29,6 +30,9 @@ export function ItemMasteryCard({ itemType, itemId }: { itemType: KiokuItemType;
     staleTime: 30_000,
   });
   if (q.isLoading || !q.data?.length) return null;
+  const weak = [...q.data].sort((a, b) => a.stage - b.stage)[0];
+  const trainingAspect =
+    weak?.aspect === "function_context" ? "context" : (weak?.aspect ?? "meaning");
   return (
     <section className="rounded-2xl border bg-card p-3">
       <div className="flex items-center gap-2">
@@ -53,6 +57,14 @@ export function ItemMasteryCard({ itemType, itemId }: { itemType: KiokuItemType;
           </div>
         ))}
       </div>
+      {weak && weak.stage < 4 && (
+        <a
+          href={masteryTrainingHref({ itemType, aspect: trainingAspect })}
+          className="mt-3 flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-primary/20 bg-primary/[.05] px-3 text-[9px] font-bold text-primary"
+        >
+          <Dumbbell className="size-3.5" /> Latih aspek terlemah di Flashcard
+        </a>
+      )}
     </section>
   );
 }
