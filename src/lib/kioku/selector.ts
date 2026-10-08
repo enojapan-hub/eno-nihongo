@@ -246,6 +246,24 @@ export function rankCandidates(
   });
 }
 
+export function recoveryLimit(ranked: Selection[], now: number): number {
+  if (!ranked.length) return 0;
+  const overdue = ranked.filter(
+    (x) => x.reason.startsWith("due_") || x.reason.startsWith("progress_due"),
+  ).length;
+  // Large backlogs are sampled instead of dumped into one punishing session.
+  if (overdue >= 100) return 12;
+  if (overdue >= 50) return 14;
+  if (overdue >= 25) return 16;
+  return 20;
+}
+
+export function dailyNewLimit(): 5 | 10 | 20 {
+  if (typeof window === "undefined") return 10;
+  const raw = Number(window.localStorage.getItem("eno:daily-new-limit") ?? 10);
+  return raw === 5 || raw === 20 ? raw : 10;
+}
+
 /** Applies the per-item cap while keeping ranking order. */
 export function selectExercises(ranked: Selection[], limit: number): Selection[] {
   const per = new Map<string, number>();
