@@ -15,6 +15,8 @@ import {
   X,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { DailyNewLimit } from "@/components/learn/DailyNewLimit";
+import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
 import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { fetchTargetLevel } from "@/lib/target-level";
@@ -215,6 +217,27 @@ function BelajarPage() {
             Kamu sedang offline. Materi yang belum tersimpan mungkin tidak dapat diperbarui.
           </div>
         )}
+        <div className="mb-3 flex justify-end">
+          <FeatureGuide
+            storageKey="eno:guide:materi:v1"
+            title="Mulai dari Materi"
+            intro="Materi adalah titik awal belajar. Pahami dulu isinya, lalu tandai progresmu agar latihan berikutnya tahu apa yang sudah kamu pelajari."
+            steps={[
+              {
+                title: "Pelajari Kanji, Kotoba, atau Bunpou",
+                body: "Buka materi sesuai target JLPT dan pahami arti, bacaan, penggunaan, serta contohnya.",
+              },
+              {
+                title: "Tandai Dipelajari",
+                body: "Setelah memahami sebuah materi, tekan Dipelajari. Materi itu masuk ke pool yang dapat diuji oleh Kioku.",
+              },
+              {
+                title: "Hafalkan lalu uji",
+                body: "Gunakan Flashcard untuk membangun hafalan. Gunakan Kioku untuk menguji apakah materi yang sudah dipelajari masih benar-benar kamu ingat.",
+              },
+            ]}
+          />
+        </div>
         <section className="mb-3 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-[22px] font-black tracking-tight">Materi</h1>
@@ -283,6 +306,29 @@ function BelajarPage() {
             ) : (
               <div className="space-y-4">
                 <ContinueCard level={level} loading={cont.isLoading} item={cont.data ?? null} />
+                <section className="grid grid-cols-2 gap-2">
+                  <Link
+                    to="/kioku"
+                    search={{ mode: "daily" }}
+                    className="rounded-2xl border border-primary/20 bg-primary/[.05] p-3 transition-colors hover:bg-primary/[.08]"
+                  >
+                    <p className="text-[12px] font-black text-primary">Review Hari Ini</p>
+                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
+                      Prioritas jatuh tempo, materi lemah, dan miskonsepsi.
+                    </p>
+                  </Link>
+                  <Link
+                    to="/kioku"
+                    search={{ mode: "boss" }}
+                    className="rounded-2xl border bg-card p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <p className="text-[12px] font-black">Boss Review</p>
+                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
+                      Uji campuran untuk memastikan ingatan kuat tetap bertahan.
+                    </p>
+                  </Link>
+                </section>
+                <DailyNewLimit />
                 <KiokuCard />
                 <FlashcardCard loading={metrics.isLoading} due={metrics.data?.dueReviewCount} />
                 <section>

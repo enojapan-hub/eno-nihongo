@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { ItemMasteryCard } from "@/components/learn/ItemMasteryCard";
 import { Button } from "@/components/ui/button";
 import { addItemToReview, markItemLearned, type Level } from "@/lib/learn-queries";
 import { fetchTargetLevel } from "@/lib/target-level";
@@ -694,6 +695,7 @@ function BunpoPage() {
                   </p>
                 </DetailSection>
               </div>
+              <ItemMasteryCard itemType="grammar" itemId={item.id} />
               <div className="mt-3 border-t bg-background px-1.5 py-1">
                 <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
                   <Button

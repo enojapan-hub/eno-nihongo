@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { separateSameItemCards, type DeckCard } from "../flashcard-deck";
+import { retryAfterGap, separateSameItemCards, type DeckCard } from "../flashcard-deck";
 
 type Card = DeckCard & { aspect: string };
 const card = (id: string, aspect: string): Card => ({ kind: "vocabulary", id, aspect });
@@ -82,5 +82,18 @@ describe("hafalan.tsx", () => {
     expect(choose.indexOf("setIndex((i) => i + 1)")).toBeLessThan(
       choose.indexOf("rate(ratedCard,"),
     );
+  });
+
+  it("repeats Lupa after three later answers, not immediately", () => {
+    const card = { kind: "vocabulary", id: "a" };
+    expect(retryAfterGap(card, 0, 2)).toBeNull();
+    expect(retryAfterGap(card, 0, 3)).toEqual(card);
+  });
+
+  it("spaces Sulit farther than Lupa", () => {
+    const card = { kind: "kanji", id: "a" };
+    expect(retryAfterGap(card, 0, 3)).toEqual(card);
+    expect(retryAfterGap(card, 1, 3)).toBeNull();
+    expect(retryAfterGap(card, 1, 5)).toEqual(card);
   });
 });

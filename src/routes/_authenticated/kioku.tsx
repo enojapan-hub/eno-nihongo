@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BrainCircuit, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { supabase } from "@/integrations/supabase/client";
 import { classifyError, SLOW_MS } from "@/lib/kioku/classify";
+import { fatigueSuggested } from "@/lib/kioku/insights";
 import { createOutbox } from "@/lib/kioku/outbox";
 import { prefetchSession, sendEvents } from "@/lib/kioku/prefetch";
 import { queueRepeat, scheduleDelayed } from "@/lib/kioku/session";
@@ -13,6 +15,9 @@ import type { Confidence } from "@/lib/kioku/types";
 
 export const Route = createFileRoute("/_authenticated/kioku")({
   head: () => ({ meta: [{ title: "Kioku — ENO NIHONGO" }] }),
+  validateSearch: (search: Record<string, unknown>): { mode?: "daily" | "boss" } => ({
+    ...(search["mode"] === "daily" || search["mode"] === "boss" ? { mode: search["mode"] } : {}),
+  }),
   component: KiokuPage,
 });
 
@@ -30,6 +35,7 @@ type Answer = {
 };
 
 function KiokuPage() {
+  const { mode } = Route.useSearch();
   const [userId, setUserId] = useState<string | null>(null);
   const [session, setSession] = useState<KiokuSession | null>(null);
   const [ready, setReady] = useState<KiokuSession | null>(null);
@@ -40,6 +46,7 @@ function KiokuPage() {
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [hintOpen, setHintOpen] = useState(false);
   const [usedHint, setUsedHint] = useState(false);
+  const [orderedParts, setOrderedParts] = useState<string[]>([]);
   const revealMs = useRef(0);
   const shownAt = useRef(Date.now());
   const outbox = useRef<ReturnType<typeof createOutbox> | null>(null);
@@ -64,7 +71,7 @@ function KiokuPage() {
       return undefined;
     }
     let alive = true;
-    prefetchSession(userId)
+    prefetchSession(userId, Date.now(), { mode: mode ?? "normal" })
       .then((s) => {
         if (alive) setReady(s);
       })
@@ -77,7 +84,7 @@ function KiokuPage() {
     return () => {
       alive = false;
     };
-  }, [userId]);
+  }, [userId, mode]);
 
   // Safe flush points: interval, tab hidden, page hide.
   useEffect(() => {
@@ -100,7 +107,8 @@ function KiokuPage() {
     session && !session.finished ? session.exercises[session.index] : undefined;
   const total = session?.exercises.length ?? 0;
   const answered = ex ? ex.id in (session?.results ?? {}) : false;
-  const isChoice = !!ex && ex.exerciseType !== "recall_flip";
+  const isSentenceOrder = !!ex && ex.exerciseType === "sentence_order";
+  const isChoice = !!ex && ex.exerciseType !== "recall_flip" && !isSentenceOrder;
   const showHint = !!ex && !isChoice && ex.hintLevel >= 1 && (hintOpen || ex.hintLevel === 2);
 
   const resetExerciseUi = () => {
@@ -109,6 +117,7 @@ function KiokuPage() {
     setConfidence(null);
     setHintOpen(false);
     setUsedHint(false);
+    setOrderedParts([]);
     revealMs.current = 0;
     shownAt.current = Date.now();
   };
@@ -222,6 +231,20 @@ function KiokuPage() {
     return { right: v.filter(Boolean).length, wrong: v.filter((x) => !x).length };
   }, [session]);
 
+  const fatigue = fatigueSuggested(summary.right + summary.wrong, summary.wrong);
+
+  const reasonText = (reason: string) => {
+    if (reason.includes("overconfident_wrong")) return "Dipilih karena sebelumnya kamu yakin tetapi salah.";
+    if (reason.includes("repeated_error") || reason.includes("remediate_"))
+      return "Dipilih untuk memperkuat bagian yang masih sering salah.";
+    if (reason.includes("due_") || reason.includes("progress_due"))
+      return "Dipilih karena review materi ini sudah jatuh tempo.";
+    if (reason.includes("retest_mastered") || reason.includes("delayed_recall"))
+      return "Dipilih untuk memastikan ingatanmu masih bertahan.";
+    if (reason.includes("context")) return "Dipilih untuk menguji penggunaan dalam konteks.";
+    return "Dipilih sebagai penguatan ingatan berdasarkan progresmu.";
+  };
+
   const pill = (value: Confidence, label: string) => (
     <button
       type="button"
@@ -252,12 +275,49 @@ function KiokuPage() {
         data-layout="wide"
         className="mx-auto w-full max-w-md space-y-3 pb-4 md:max-w-2xl md:space-y-4 lg:max-w-3xl"
       >
-        <a
-          href="/belajar"
-          className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
-        >
-          <ArrowLeft className="size-4" /> Kembali ke Materi
-        </a>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <a
+            href="/belajar"
+            className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
+          >
+            <ArrowLeft className="size-4" /> Kembali ke Materi
+          </a>
+          <FeatureGuide
+            storageKey="eno:guide:kioku:v2"
+            title="Kioku untuk Menguji Ingatan"
+            intro="Kioku bukan Flashcard. Kioku hanya menguji materi yang sudah tercatat pernah kamu pelajari dan memilih latihan secara adaptif."
+            steps={[
+              {
+                title: "Pool berasal dari progresmu",
+                body: "Materi yang ditandai Dipelajari atau sudah kamu kerjakan di Flashcard dapat masuk ke pool Kioku. Materi yang masih benar-benar baru tidak dipilih.",
+              },
+              {
+                title: "Pilih Yakin atau Ragu dulu",
+                body: "Sebelum menjawab, pilih Yakin jika kamu merasa tahu jawabannya atau Ragu jika belum yakin. Benar + Yakin memperkuat interval lebih besar, Benar + Ragu naik lebih pelan, dan Salah + Yakin dianggap sinyal miskonsepsi yang perlu diuji lebih cepat.",
+              },
+              {
+                title: "Soal dan waktunya adaptif",
+                body: "Materi lemah, jatuh tempo, lambat dijawab, memakai petunjuk, atau pernah salah diprioritaskan. Jika sering benar, jarak tes diperpanjang; materi kuat tetap diuji lagi setelah beberapa waktu.",
+              },
+              {
+                title: "Kioku menguji dari beberapa sisi",
+                body: "Arti, bacaan, arah Indonesia ke Jepang, penggunaan, konteks, dan tes ulang dinilai terpisah agar sisi yang masih lemah lebih sering dilatih.",
+              },
+              {
+                title: "Susun Kalimat",
+                body: "Pada latihan Susun Kalimat, pilih Ragu atau Yakin lalu tekan potongan sesuai urutan. Potongan pertama menjadi nomor ①. Tekan potongan yang sudah dipilih untuk membatalkan. Latihan ini hanya memakai kalimat sumber yang memiliki potongan tervalidasi.",
+              },
+              {
+                title: "Partikel & Perbaiki Kesalahan",
+                body: "Latihan Partikel meminta kamu melengkapi partikel pada kalimat sumber. Perbaiki Kesalahan menampilkan contoh salah yang memang tersimpan di materi Bunpou, lalu kamu memilih bentuk yang benar. Keduanya tetap memakai Yakin/Ragu dan hasilnya masuk ke statistik Kioku.",
+              },
+              {
+                title: "Konjugasi",
+                body: "Latihan Konjugasi hanya muncul untuk Kotoba yang memiliki bentuk kata kerja tervalidasi. Kioku menyebut bentuk target, lalu kamu memilih jawabannya. Jika data bentuk belum tersedia, latihan ini tidak dibuat.",
+              },
+            ]}
+          />
+        </div>
         {!session && (
           <section className="overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.08] to-card p-6 text-center md:p-10 shadow-[0_18px_50px_-34px_rgba(0,0,0,.55)]">
             <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10">
@@ -266,9 +326,15 @@ function KiokuPage() {
             <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">
               ENO NIHONGO
             </p>
-            <h1 className="mt-1 text-[22px] font-black md:text-[30px]">ENO Kioku</h1>
+            <h1 className="mt-1 text-[22px] font-black md:text-[30px]">
+              {mode === "boss" ? "Boss Review" : mode === "daily" ? "Review Hari Ini" : "ENO Kioku"}
+            </h1>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              Latihan ingatan adaptif dari materi yang sudah kamu pelajari.
+              {mode === "boss"
+                ? "Uji campuran untuk materi yang sudah cukup kuat, tanpa menganggapnya hafal selamanya."
+                : mode === "daily"
+                  ? "Sesi ringkas yang memprioritaskan review jatuh tempo, kelemahan, dan miskonsepsi."
+                  : "Latihan ingatan adaptif dari materi yang sudah kamu pelajari."}
             </p>
             {error && <p className="mt-3 text-[10px] text-red-600 dark:text-red-300">{error}</p>}
             {!loading && ready && ready.exercises.length === 0 && (
@@ -297,7 +363,7 @@ function KiokuPage() {
                 setSession(null);
                 setLoading(true);
                 if (userId)
-                  prefetchSession(userId)
+                  prefetchSession(userId, Date.now(), { mode: mode ?? "normal" })
                     .then(setReady)
                     .catch(() => setError("Gagal menyiapkan sesi."))
                     .finally(() => setLoading(false));
@@ -318,6 +384,12 @@ function KiokuPage() {
                 Benar {summary.right} · Salah {summary.wrong}
               </span>
             </div>
+            {fatigue && (
+              <div className="rounded-2xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                Sesi ini sudah cukup berat. Kamu boleh berhenti setelah soal ini dan lanjutkan nanti;
+                progres yang sudah tersimpan tetap aman.
+              </div>
+            )}
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-primary"
@@ -340,6 +412,9 @@ function KiokuPage() {
                 className={`mt-5 font-jp font-bold leading-relaxed ${ex.prompt.length > 12 ? "text-[19px] md:text-[26px]" : "text-[30px] md:text-[44px]"}`}
               >
                 {ex.prompt}
+              </p>
+              <p className="mx-auto mt-2 max-w-lg text-[9px] leading-relaxed text-muted-foreground">
+                {reasonText(ex.reason)}
               </p>
               {ex.promptSub && (
                 <p className="mt-1 font-jp text-[11px] text-muted-foreground">{ex.promptSub}</p>
@@ -371,7 +446,99 @@ function KiokuPage() {
                 </p>
               )}
             </section>
-            {isChoice ? (
+            {isSentenceOrder ? (
+              <div className="grid gap-2">
+                {!answered && (
+                  <>
+                    <div className="flex items-center gap-2" role="group" aria-label="Keyakinan">
+                      {pill("ragu", "Ragu")}
+                      {pill("yakin", "Yakin")}
+                    </div>
+                    {!confidence && (
+                      <p className="text-center text-[9px] text-muted-foreground">
+                        Pilih Ragu atau Yakin sebelum menyusun kalimat.
+                      </p>
+                    )}
+                    <div className="min-h-14 rounded-2xl border bg-muted/35 p-2">
+                      <div className="flex flex-wrap gap-2">
+                        {orderedParts.map((id, index) => {
+                          const part = ex.options.find((o) => o.id === id);
+                          if (!part) return null;
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => setOrderedParts((v) => v.filter((x) => x !== id))}
+                              className="rounded-xl border bg-card px-3 py-2 font-jp text-[11px] font-semibold"
+                            >
+                              {index + 1}. {part.text}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {ex.options
+                        .filter((o) => !orderedParts.includes(o.id))
+                        .map((o) => (
+                          <button
+                            key={o.id}
+                            type="button"
+                            disabled={!confidence}
+                            onClick={() => setOrderedParts((v) => [...v, o.id])}
+                            className="rounded-xl border bg-card px-3 py-2 font-jp text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {o.text}
+                          </button>
+                        ))}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!confidence || orderedParts.length !== ex.options.length}
+                      onClick={() => {
+                        const answer = orderedParts
+                          .map((id) => ex.options.find((o) => o.id === id)?.text ?? "")
+                          .join(" ");
+                        record(ex, {
+                          correct: answer === ex.answer,
+                          selectedId: null,
+                          confidence,
+                          usedHint: false,
+                          responseMs: Math.max(0, Date.now() - shownAt.current),
+                        });
+                      }}
+                      className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Periksa Jawaban
+                    </button>
+                  </>
+                )}
+                {answered && (
+                  <>
+                    <div className={`rounded-2xl border p-3 text-center font-jp text-[12px] font-semibold ${
+                      lastCorrect
+                        ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/[.12]"
+                        : "border-red-300 bg-red-50 dark:bg-red-500/[.12]"
+                    }`}>
+                      <p>{lastCorrect ? "Benar" : "Urutan yang benar:"}</p>
+                      <p className="mt-1">{ex.answer}</p>
+                      {ex.feedback && (
+                        <p className="mt-1 text-[10px] font-normal text-muted-foreground">
+                          {ex.feedback}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      ref={nextRef}
+                      onClick={() => advance()}
+                      className="w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground"
+                    >
+                      Lanjut
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : isChoice ? (
               <div className="grid gap-2 md:grid-cols-2">
                 {!answered && (
                   <div
@@ -382,6 +549,11 @@ function KiokuPage() {
                     {pill("ragu", "Ragu")}
                     {pill("yakin", "Yakin")}
                   </div>
+                )}
+                {!answered && !confidence && (
+                  <p className="text-center text-[9px] text-muted-foreground md:col-span-2">
+                    Pilih Ragu atau Yakin sebelum memilih jawaban.
+                  </p>
                 )}
                 {ex.options.map((o) => {
                   const isAnswer = o.text === ex.answer;
@@ -396,7 +568,7 @@ function KiokuPage() {
                   return (
                     <button
                       key={o.id}
-                      disabled={answered}
+                      disabled={answered || !confidence}
                       onClick={() => {
                         setPicked(o.id);
                         record(ex, {
@@ -407,7 +579,7 @@ function KiokuPage() {
                           responseMs: Math.max(0, Date.now() - shownAt.current),
                         });
                       }}
-                      className={`flex min-h-12 items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold md:min-h-14 md:text-[15px] ${tone}`}
+                      className={`flex min-h-12 items-center justify-between rounded-2xl border px-4 py-3 text-left font-jp text-[12px] font-semibold md:min-h-14 md:text-[15px] disabled:cursor-not-allowed disabled:opacity-50 ${tone}`}
                     >
                       <span>{o.text}</span>
                       {answered && isAnswer && <CheckCircle2 className="size-4 text-emerald-600" />}

@@ -16,8 +16,9 @@ import {
 import { parseMasteryTraining } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
-import { separateSameItemCards } from "@/lib/flashcard-deck";
+import { retryAfterGap, separateSameItemCards } from "@/lib/flashcard-deck";
 import { FitContent } from "@/components/learn/FitContent";
+import { FeatureGuide } from "@/components/learn/FeatureGuide";
 export const Route = createFileRoute("/_authenticated/hafalan")({
   head: () => ({ meta: [{ title: "Flashcard — ENO NIHONGO" }] }),
   component: HafalanPage,
@@ -200,6 +201,7 @@ function HafalanPage() {
     [hint, setHint] = useState(false),
     [typed, setTyped] = useState(""),
     [results, setResults] = useState<Rating[]>([]),
+    [retryQueue, setRetryQueue] = useState<Array<{ card: Card; rating: 0 | 1; after: number }>>([]),
     [wrong, setWrong] = useState<Card[]>([]),
     [retryWrong, setRetryWrong] = useState(false),
     [undoing, setUndoing] = useState(false),
@@ -228,11 +230,15 @@ function HafalanPage() {
     if (retryWrong) return wrong;
     const p = new Map((progress.data ?? []).map((x) => [`${x.item_type}:${x.item_id}`, x])),
       now = Date.now();
-    let a = source.filter(
-      (x) =>
+    let a = source.filter((x) => {
+      const z = p.get(`${x.kind}:${x.id}`);
+      return (
+        !!z &&
+        z.status !== "new" &&
         (kind === "mixed" || x.kind === kind) &&
-        (!targeted || (x.kind === targeted.itemType && x.aspect === targeted.aspect)),
-    );
+        (!targeted || (x.kind === targeted.itemType && x.aspect === targeted.aspect))
+      );
+    });
     if (study === "weak" && !targeted)
       a = a.filter((x) => {
         const z = p.get(`${x.kind}:${x.id}`);
@@ -253,8 +259,11 @@ function HafalanPage() {
     const n = study === "quick" ? a.length : study === "exam" ? Math.min(30, limit) : limit;
     return separateSameItemCards(a.slice(0, n));
   }, [source, progress.data, kind, study, limit, retryWrong, wrong, targeted]);
-  const card = all[index],
-    done = (study === "quick" && quickExpired) || (index >= all.length && all.length > 0);
+  const dueRetry = retryQueue.find((x) => retryAfterGap(x.card, x.rating, results.length - x.after));
+  const card = dueRetry?.card ?? all[index],
+    done =
+      (study === "quick" && quickExpired) ||
+      (index >= all.length && retryQueue.length === 0 && all.length > 0);
   const cardKey = card ? `${card.id}-${card.aspect}` : null;
   // Kartu + kontrol selalu berada di dalam viewport: gulirkan dek ke bawah header saat kartu berganti.
   useEffect(() => {
@@ -272,6 +281,7 @@ function HafalanPage() {
           setLimit(v.limit ?? 20);
           setIndex(v.index ?? 0);
           setResults(v.results ?? []);
+          setRetryQueue(v.retryQueue ?? []);
           setWrong(v.wrong ?? []);
           setRetryWrong(!!v.retryWrong);
           setRevealed(!!v.revealed);
@@ -317,6 +327,7 @@ function HafalanPage() {
         limit,
         index,
         results,
+        retryQueue,
         wrong,
         retryWrong,
         revealed,
@@ -335,6 +346,7 @@ function HafalanPage() {
     limit,
     index,
     results,
+    retryQueue,
     wrong,
     retryWrong,
     revealed,
@@ -354,6 +366,7 @@ function HafalanPage() {
     setHint(false);
     setTyped("");
     setResults([]);
+    setRetryQueue([]);
     setWrong([]);
     setRetryWrong(false);
     setQuickRemaining(QUICK_SECONDS);
@@ -375,9 +388,20 @@ function HafalanPage() {
     const ratedCard = card,
       ratedHint = hint,
       responseMs = Date.now() - started.current;
-    if (r < 2) setWrong((v) => [...v, ratedCard]);
+    if (r < 2) {
+      setWrong((v) => [...v, ratedCard]);
+      if (!dueRetry)
+        setRetryQueue((v) => [
+          ...v.filter((x) => !(x.card.kind === ratedCard.kind && x.card.id === ratedCard.id)),
+          { card: ratedCard, rating: r as 0 | 1, after: results.length + 1 },
+        ]);
+    }
+    if (dueRetry) {
+      setRetryQueue((v) => v.filter((x) => x !== dueRetry));
+    } else {
+      setIndex((i) => i + 1);
+    }
     setResults((v) => [...v, r]);
-    setIndex((i) => i + 1);
     setRevealed(false);
     setHint(false);
     setTyped("");
@@ -492,6 +516,29 @@ function HafalanPage() {
           >
             Laporan
           </a>
+          <FeatureGuide
+            storageKey="eno:guide:flashcard:v2"
+            title="Flashcard untuk Menghafal"
+            intro="Flashcard membantu membangun dan memperkuat hafalan. Ini berbeda dari Kioku yang bertugas menguji ingatanmu."
+            steps={[
+              {
+                title: "Buka dan coba ingat",
+                body: "Lihat sisi depan kartu, coba jawab sendiri, lalu buka jawabannya.",
+              },
+              {
+                title: "Nilai setelah jawaban dibuka",
+                body: "Lupa = tidak ingat. Sulit = berhasil dengan susah payah. Ingat = ingat cukup lancar. Mudah = langsung ingat tanpa kesulitan. Rating baru tersedia setelah jawaban dibuka.",
+              },
+              {
+                title: "Jadwal mengikuti kemampuan",
+                body: "Lupa muncul lebih cepat, Sulit mendapat interval pendek, Ingat interval normal, dan Mudah interval lebih panjang. Petunjuk membuat kenaikan interval lebih kecil.",
+              },
+              {
+                title: "Hanya materi yang sudah dipelajari",
+                body: "Flashcard mengambil Kanji, Kotoba, dan Bunpou yang sudah masuk progres belajarmu. Flashcard membangun hafalan; Kioku tetap menguji kemampuanmu secara terpisah.",
+              },
+            ]}
+          />
         </div>
         <section className="flex justify-between">
           <div>
@@ -567,8 +614,10 @@ function HafalanPage() {
               {study === "quick" && quickExpired ? "Waktu 5 menit selesai" : "Sesi selesai"}
             </h2>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              {results.length} kartu · {results.filter((x) => x >= 2).length} hafal ·{" "}
-              {results.filter((x) => x < 2).length} perlu diulang
+              {results.length} kartu · Lupa {results.filter((x) => x === 0).length} · Sulit{" "}
+              {results.filter((x) => x === 1).length} · Ingat{" "}
+              {results.filter((x) => x === 2).length} · Mudah{" "}
+              {results.filter((x) => x === 3).length}
             </p>
             <div className="mt-4 flex justify-center gap-2">
               {wrong.length > 0 && !retryWrong && (
@@ -766,7 +815,7 @@ function HafalanPage() {
           </>
         ) : (
           <p className="rounded-2xl border bg-card p-5 text-center text-[10px] text-muted-foreground">
-            Belum ada kartu yang memenuhi mode ini. Coba Normal atau Campuran.
+            Belum ada kartu yang memenuhi mode ini. Tandai materi sebagai Dipelajari terlebih dahulu, atau coba Normal/Campuran.
           </p>
         )}
         <p className="text-center text-[8px] leading-4 text-muted-foreground">

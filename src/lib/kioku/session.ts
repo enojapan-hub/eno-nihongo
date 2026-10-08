@@ -18,6 +18,7 @@ export type Content = {
   /** kanji: vocabulary compounds that contain the kanji (kanji_vocabulary_examples) */
   compounds?: Content[];
   wrong?: Array<{ wrong: string; correct: string; reason: string }>;
+  forms?: Array<{ code: string; label: string; value: string }>;
 };
 
 function fnv(s: string): number {
@@ -277,6 +278,156 @@ type Part = Pick<
 type Shuffle = (o: Opt[]) => Opt[];
 const meaningLine = (c: Content) =>
   `${c.surface}${c.reading && c.reading !== c.surface ? ` (${c.reading})` : ""} = ${c.meaning}`;
+
+/**
+ * Sentence ordering only uses source examples that already contain whitespace-delimited chunks.
+ * We deliberately do not guess Japanese word boundaries. This keeps every ordering exercise
+ * reversible to the exact validated source sentence.
+ */
+export function sentenceOrderParts(ja: string): string[] | null {
+  const parts = ja.trim().split(/\s+/u).filter(Boolean);
+  if (parts.length < 3 || parts.length > 8) return null;
+  if (new Set(parts).size !== parts.length) return null;
+  return parts.join(" ") === ja.trim().replace(/\s+/gu, " ") ? parts : null;
+}
+
+const PARTICLES = ["は", "が", "を", "に", "で", "へ", "と", "も", "の", "から", "まで", "より"];
+
+function particleChoice(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
+  if (c.type !== "grammar") return null;
+  const sourceParticle = simpleParticle(c.surface);
+  if (!sourceParticle || !PARTICLES.includes(sourceParticle)) return null;
+  for (const e of c.examples ?? []) {
+    const particle = sourceParticle;
+    if (indexesOf(e.ja, particle).length !== 1) continue;
+    const at = e.ja.indexOf(particle);
+    const prompt = `${e.ja.slice(0, at)}${SENTENCE_BLANK}${e.ja.slice(at + particle.length)}`;
+    const distractors = PARTICLES.filter((p) => p !== particle)
+      .sort((a, b) => fnv(`${sel.itemId}|${a}`) - fnv(`${sel.itemId}|${b}`))
+      .slice(0, 3);
+    return {
+      aspect: "function_context",
+      direction: "forward",
+      prompt,
+      promptSub: e.id || "Pilih partikel yang tepat.",
+      answer: particle,
+      options: shuffle([
+        { id: c.id, text: particle, confusable: false },
+        ...distractors.map((text, i) => ({ id: `particle:${i}`, text, confusable: true })),
+      ]),
+      variant: "particle_choice",
+      label: "Partikel",
+      feedback: `Kalimat sumber: ${e.ja}`,
+      contextRef: refOf(e.ja),
+    };
+  }
+  return null;
+}
+
+function errorSpot(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
+  if (c.type !== "grammar" || !c.wrong?.length) return null;
+  const w = c.wrong[fnv(sel.itemId) % c.wrong.length];
+  if (!w?.wrong || !w.correct || norm(w.wrong) === norm(w.correct)) return null;
+  return {
+    aspect: "function_context",
+    direction: "forward",
+    prompt: w.wrong,
+    promptSub: "Kalimat di atas salah. Pilih perbaikannya.",
+    answer: w.correct,
+    options: shuffle([
+      { id: c.id, text: w.correct, confusable: false },
+      { id: "wrong:source", text: w.wrong, confusable: true },
+    ]),
+    variant: "error_spot",
+    label: "Perbaiki Kesalahan",
+    feedback: w.reason || `Bentuk yang benar: ${w.correct}`,
+    contextRef: refOf(w.wrong),
+  };
+}
+
+function kanjiReadingMatch(c: Content, pool: Content[], learnedIds: Set<string>, shuffle: Shuffle): Part | null {
+  if (c.type !== "kanji" || !norm(c.reading)) return null;
+  const distractors = pickDistractors(
+    c,
+    pool,
+    learnedIds,
+    new Set(),
+    (x) => x.reading,
+    (x) => x.type === "kanji" && !!norm(x.reading),
+    3,
+    new Set([norm(c.reading)]),
+  );
+  if (distractors.length < 2) return null;
+  return {
+    aspect: "reading",
+    direction: "forward",
+    prompt: c.surface,
+    promptSub: "Pasangkan Kanji dengan bacaan yang tepat.",
+    answer: c.reading,
+    options: shuffle([
+      { id: c.id, text: c.reading, confusable: false },
+      ...distractors.map((x) => ({ ...x, confusable: isConfusable(c, pool.find((p) => p.id === x.id) ?? c) })),
+    ]),
+    variant: "reading_match",
+    label: "Pasangkan Bacaan",
+    feedback: `${c.surface} → ${c.reading}`,
+  };
+}
+
+function conjugationChoice(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
+  if (c.type !== "vocabulary" || !c.forms || c.forms.length < 3) return null;
+  const target = c.forms[fnv(`${sel.itemId}|form`) % c.forms.length];
+  if (!target) return null;
+  const alternatives = c.forms
+    .filter((x) => x.code !== target.code && norm(x.value) !== norm(target.value))
+    .sort((a, b) => fnv(`${sel.itemId}|${a.code}`) - fnv(`${sel.itemId}|${b.code}`))
+    .slice(0, 3);
+  if (alternatives.length < 2) return null;
+  return {
+    aspect: "usage",
+    direction: "forward",
+    prompt: c.surface,
+    promptSub: `Pilih ${target.label}`,
+    answer: target.value,
+    options: shuffle([
+      { id: c.id, text: target.value, confusable: false },
+      ...alternatives.map((x) => ({ id: `form:${x.code}`, text: x.value, confusable: true })),
+    ]),
+    variant: "conjugation_choice",
+    label: "Konjugasi",
+    feedback: `${target.label}: ${target.value}`,
+  };
+}
+
+function sentenceOrder(
+  c: Content,
+  seed: string,
+  used: Set<string> | undefined,
+  shuffle: Shuffle,
+): Part | null {
+  if (c.type === "kanji") return null;
+  const candidates = contextsOf(c)
+    .map((e) => ({ e, parts: sentenceOrderParts(e.ja) }))
+    .filter((x): x is { e: Ctx; parts: string[] } => !!x.parts);
+  const pick = pickContext(candidates, (x) => refOf(x.e.ja), used, `${seed}|order`);
+  if (!pick) return null;
+  const options = shuffle(
+    pick.parts.map((text, index) => ({ id: `part:${index}`, text, confusable: false })),
+  );
+  return {
+    aspect: "usage",
+    direction: "forward",
+    prompt: pick.e.id || "Susun potongan menjadi kalimat Jepang yang benar.",
+    promptSub: "Tekan potongan sesuai urutan. Pilihan pertama otomatis menjadi nomor ①.",
+    answer: pick.parts.join(" "),
+    options,
+    variant: "sentence_order",
+    label: "Susun Kalimat",
+    feedback: `${pick.e.ja}${c.meaning ? ` · ${c.meaning}` : ""}`,
+    ladder: 4,
+    contextRef: refOf(pick.e.ja),
+  };
+}
 
 /** Vocabulary: L2 phrase -> L3 sentence -> L4 real context (sense in a sentence, or another sentence). */
 function vocabUsage(
@@ -559,6 +710,45 @@ export function buildExercise(
   if (sel.aspect === "usage" || kind === "usage") {
     const used = seen?.get(`${c.type}:${c.id}`);
     const seed = `${sessionId}|${c.id}`;
+    if (c.type === "vocabulary" && sel.stage >= 1 && fnv(`${seed}|conjugation`) % 3 === 0) {
+      const form = conjugationChoice(c, sel, shuffle);
+      if (form)
+        return {
+          ...base,
+          hintLevel: 3,
+          exerciseType: "conjugation_choice",
+          hintText: "",
+          ...form,
+        };
+    }
+    if (c.type === "grammar" && sel.stage >= 2 && !sel.remedy) {
+      const special =
+        fnv(`${seed}|grammar-special`) % 2 === 0
+          ? (particleChoice(c, sel, shuffle) ?? errorSpot(c, sel, shuffle))
+          : (errorSpot(c, sel, shuffle) ?? particleChoice(c, sel, shuffle));
+      if (special)
+        return {
+          ...base,
+          hintLevel: 3,
+          exerciseType:
+            special.variant === "particle_choice" ? "particle_choice" : "error_spot",
+          hintText: "",
+          ...special,
+        };
+    }
+    // Advanced usage can become a click-to-order sentence exercise, but only when the
+    // source sentence already carries trustworthy whitespace token boundaries.
+    if (sel.stage >= 2 && fnv(`${seed}|sentence-order`) % 2 === 0) {
+      const ordered = sentenceOrder(c, seed, used, shuffle);
+      if (ordered)
+        return {
+          ...base,
+          hintLevel: 3,
+          exerciseType: "sentence_order",
+          hintText: "",
+          ...ordered,
+        };
+    }
     const level =
       sel.aspect === "usage"
         ? sel.stage <= 0
@@ -680,6 +870,11 @@ export function buildExercise(
   }
 
   // ---- Normal exercise (also meaning / reading / slow / guess remediation; a known partner is preferred as distractor)
+  if (c.type === "kanji" && sel.aspect === "reading" && sel.direction === "forward" && sel.stage >= 1) {
+    const match = kanjiReadingMatch(c, pool, learnedIds, shuffle);
+    if (match)
+      return { ...base, exerciseType: "choice", hintLevel: 3, hintText: "", ...match };
+  }
   const answer = answerOf(c, sel.aspect, sel.direction);
   const prefer = new Set(sel.remedy?.partnerId ? [sel.remedy.partnerId] : []);
   const need = Math.max(2, (sel.optionCount || 4) - 1);

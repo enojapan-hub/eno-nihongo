@@ -4,7 +4,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { dynamicTable, type DbRecord } from "@/lib/dynamic-db";
 import { buildSession, type Content, SESSION_SIZE } from "./session";
 import type { KiokuSession } from "./session-types";
-import { rankCandidates, toLearned } from "./selector";
+import { rankCandidates, recoveryLimit, toLearned } from "./selector";
 import type { KiokuEvent, KiokuItemType, MemoryStateRow } from "./types";
 
 const arr = (v: unknown) => (Array.isArray(v) ? v.filter(Boolean).join("、") : v ? String(v) : "");
@@ -107,7 +107,7 @@ async function fetchRelations(sig: Signals): Promise<Signals["relations"]> {
  * One network phase: learned items (user_item_progress) + memory_state + content of the ranked head
  * + distractor pools. Everything after this runs offline. Never selects material the user has not studied.
  */
-export async function prefetchSession(userId: string, now = Date.now()): Promise<KiokuSession> {
+export async function prefetchSession(userId: string, now = Date.now(), options?: { mode?: "normal" | "daily" | "boss" }): Promise<KiokuSession> {
   const [prog, st, evs] = await Promise.all([
     supabase
       .from("user_item_progress")
@@ -149,7 +149,28 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
   const base = buildSignals(evs.error ? [] : toReviewEvents(evs.data ?? []), [], now);
   const signals: Signals = { ...base, relations: await fetchRelations(base) };
   const seen = seenContexts(evs.error ? [] : toReviewEvents(evs.data ?? []));
-  const ranked = rankCandidates(learned, states, now, signals).slice(0, SESSION_SIZE * 3); // per-item cap is applied while building
+  const rankedAll = rankCandidates(learned, states, now, signals, sessionId);
+  const bossCandidates =
+    options?.mode === "boss"
+      ? rankedAll.filter(
+          (x) =>
+            x.stage >= 3 &&
+            !x.reason.includes("repeated_error") &&
+            !x.reason.includes("overconfident_wrong") &&
+            !x.reason.includes("remediate_"),
+        )
+      : rankedAll;
+  const recovery = recoveryLimit(rankedAll, now);
+  const adaptiveSize =
+    options?.mode === "boss"
+      ? Math.min(24, bossCandidates.length)
+      : options?.mode === "daily"
+        ? Math.min(
+            recovery || 20,
+            Math.max(8, rankedAll.filter((x) => x.score >= 300).length || 10),
+          )
+        : Math.min(SESSION_SIZE, recovery || SESSION_SIZE);
+  const ranked = bossCandidates.slice(0, adaptiveSize * 3); // per-item cap is applied while building
   const ids: Record<KiokuItemType, string[]> = { kanji: [], vocabulary: [], grammar: [] };
   for (const s of ranked) {
     if (!ids[s.itemType].includes(s.itemId)) ids[s.itemType].push(s.itemId);
@@ -188,7 +209,32 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
     }),
   );
   await attachContext(content, ids);
-  return buildSession(ranked, content, pool, learnedIds, sessionId, now, SESSION_SIZE, seen);
+  await attachVerbForms(content, ids.vocabulary);
+  return buildSession(ranked, content, pool, learnedIds, sessionId, now, adaptiveSize, seen);
+}
+
+async function attachVerbForms(content: Map<string, Content>, vocabularyIds: string[]) {
+  if (!vocabularyIds.length) return;
+  const [formsResult, typesResult] = await Promise.all([
+    dynamicTable("verb_forms").select("vocabulary_id,form_code,value").in("vocabulary_id", vocabularyIds),
+    dynamicTable("verb_form_types").select("form_code,label_id,is_active").eq("is_active", true),
+  ]);
+  const forms = (formsResult.data ?? []) as DbRecord[];
+  const types = (typesResult.data ?? []) as DbRecord[];
+  const labels = new Map<string, string>(
+    types.map((row) => {
+      const code = String(row["form_code"] ?? "");
+      return [code, String(row["label_id"] ?? code)];
+    }),
+  );
+  for (const row of forms) {
+    const c = content.get(`vocabulary:${String(row["vocabulary_id"] ?? "")}`);
+    const code = String(row["form_code"] ?? "");
+    const value = String(row["value"] ?? "");
+    const label = labels.get(code);
+    if (!c || !code || !value || !label) continue;
+    (c.forms ??= []).push({ code, label, value });
+  }
 }
 
 /**

@@ -23,6 +23,7 @@ type Review = {
   used_hint: boolean | null;
   response_ms: number | null;
   created_at: string;
+  meta: Record<string, unknown> | null;
 };
 
 async function fetchReviews(level: Level) {
@@ -30,13 +31,31 @@ async function fetchReviews(level: Level) {
   if (!userData.user) return [] as Review[];
   const { data, error } = await supabase
     .from("flashcard_reviews")
-    .select("item_type,item_id,rating,aspect,used_hint,response_ms,created_at")
+    .select("item_type,item_id,rating,aspect,used_hint,response_ms,created_at,meta")
     .eq("user_id", userData.user.id)
     .eq("level", level)
     .order("created_at", { ascending: false })
     .limit(500);
   if (error) throw error;
   return (data ?? []) as Review[];
+}
+
+type MemoryRow = {
+  stage: number;
+  due_at: string;
+  overconfident_wrong: number;
+  last_error_type: string | null;
+};
+
+async function fetchMemory() {
+  const { data: userData } = await getAuthUser();
+  if (!userData.user) return [] as MemoryRow[];
+  const { data, error } = await supabase
+    .from("memory_state")
+    .select("stage,due_at,overconfident_wrong,last_error_type")
+    .eq("user_id", userData.user.id);
+  if (error) throw error;
+  return (data ?? []) as MemoryRow[];
 }
 
 function dayKey(value: string) {
@@ -57,6 +76,11 @@ function HafalanHistoryPage() {
   const reviews = useQuery({
     queryKey: ["hafalan-history", level],
     queryFn: () => fetchReviews(level!),
+    enabled: ready,
+  });
+  const memory = useQuery({
+    queryKey: ["kioku-memory-report"],
+    queryFn: fetchMemory,
     enabled: ready,
   });
   const kanji = useQuery({
@@ -88,9 +112,42 @@ function HafalanHistoryPage() {
   for (const item of vocab.data ?? []) names.set(`vocabulary:${item.id}`, item.term ?? "Kotoba");
   for (const item of grammar.data ?? []) names.set(`grammar:${item.id}`, item.pattern ?? "Bunpou");
 
+  const flashcardRows = rows.filter((row) => row.meta?.["source"] !== "kioku");
+  const kiokuRows = rows.filter((row) => row.meta?.["source"] === "kioku");
   const total = rows.length;
   const correct = rows.filter((row) => row.rating >= 2).length;
-  const accuracy = total ? Math.round((correct / total) * 100) : 0;
+  const flashcardRemembered = flashcardRows.filter((row) => row.rating >= 2).length;
+  const flashcardRetention = flashcardRows.length
+    ? Math.round((flashcardRemembered / flashcardRows.length) * 100)
+    : 0;
+  const kiokuCorrect = kiokuRows.filter((row) => row.rating >= 2).length;
+  const kiokuAccuracy = kiokuRows.length ? Math.round((kiokuCorrect / kiokuRows.length) * 100) : 0;
+  const flashEasy = new Set(
+    flashcardRows
+      .filter((row) => row.rating >= 3)
+      .map((row) => `${row.item_type}:${row.item_id}`),
+  );
+  const kiokuWrong = new Set(
+    kiokuRows
+      .filter((row) => row.rating < 2)
+      .map((row) => `${row.item_type}:${row.item_id}`),
+  );
+  const falseMastery = [...flashEasy].filter((key) => kiokuWrong.has(key));
+  const yakinWrong = kiokuRows.filter(
+    (row) => row.meta?.["confidence"] === "yakin" && row.rating < 2,
+  ).length;
+  const raguCorrect = kiokuRows.filter(
+    (row) => row.meta?.["confidence"] === "ragu" && row.rating >= 2,
+  ).length;
+  const memoryRows = memory.data ?? [];
+  const now = Date.now();
+  const memorySummary = {
+    strong: memoryRows.filter((row) => row.stage >= 4).length,
+    growing: memoryRows.filter((row) => row.stage >= 2 && row.stage < 4).length,
+    weak: memoryRows.filter((row) => row.stage < 2).length,
+    due: memoryRows.filter((row) => new Date(row.due_at).getTime() <= now).length,
+    misconception: memoryRows.filter((row) => row.overconfident_wrong > 0).length,
+  };
   const averageSeconds = total
     ? Math.round(rows.reduce((sum, row) => sum + Number(row.response_ms ?? 0), 0) / total / 1000)
     : 0;
@@ -184,11 +241,52 @@ function HafalanHistoryPage() {
           </section>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-2">
-              <Metric label="Review" value={total} />
-              <Metric label="Akurasi" value={`${accuracy}%`} />
-              <Metric label="Rata-rata" value={`${averageSeconds} dtk`} />
+            <div className="grid grid-cols-2 gap-2">
+              <Metric label="Flashcard · Ingat/Mudah" value={`${flashcardRetention}%`} />
+              <Metric label="Kioku · Jawaban benar" value={`${kiokuAccuracy}%`} />
             </div>
+            <div className="grid grid-cols-5 gap-1.5">
+              <Metric label="Kuat" value={memorySummary.strong} />
+              <Metric label="Mulai kuat" value={memorySummary.growing} />
+              <Metric label="Perlu diperkuat" value={memorySummary.weak} />
+              <Metric label="Jatuh tempo" value={memorySummary.due} />
+              <Metric label="Yakin tapi salah" value={memorySummary.misconception} />
+            </div>
+            <p className="text-center text-[8px] text-muted-foreground">
+              {flashcardRows.length} Flashcard · {kiokuRows.length} Kioku · {total} aktivitas tersimpan · rata-rata respons {averageSeconds} dtk
+            </p>
+            {(falseMastery.length > 0 || yakinWrong > 0 || raguCorrect > 0) && (
+              <section className="rounded-3xl border bg-card p-4">
+                <h2 className="text-[12px] font-bold">Insight Ingatan</h2>
+                <div className="mt-2 space-y-2 text-[9px] text-muted-foreground">
+                  {falseMastery.length > 0 && (
+                    <p>
+                      <span className="font-bold text-foreground">{falseMastery.length} materi</span>{" "}
+                      terasa Mudah di Flashcard tetapi masih salah saat diuji Kioku. Materi ini perlu
+                      diuji kembali, bukan dianggap sudah kuat.
+                    </p>
+                  )}
+                  {yakinWrong > 0 && (
+                    <p>
+                      <span className="font-bold text-foreground">{yakinWrong} jawaban</span> dipilih
+                      dengan Yakin tetapi salah. Ini diprioritaskan sebagai kemungkinan miskonsepsi.
+                    </p>
+                  )}
+                  {raguCorrect > 0 && (
+                    <p>
+                      <span className="font-bold text-foreground">{raguCorrect} jawaban</span> benar
+                      meski Ragu. Ingatan ada, tetapi belum stabil sehingga interval naik lebih pelan.
+                    </p>
+                  )}
+                </div>
+                <a
+                  href="/kioku"
+                  className="mt-3 inline-flex rounded-xl bg-primary px-3 py-2 text-[8px] font-bold text-primary-foreground"
+                >
+                  Latih dengan Kioku
+                </a>
+              </section>
+            )}
             <section className="rounded-3xl border bg-card p-4">
               <div className="flex items-center justify-between">
                 <div>

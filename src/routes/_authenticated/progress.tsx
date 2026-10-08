@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { levelReadiness, memoryReadiness, weeklyLearning } from "@/lib/kioku/insights";
 
 export const Route = createFileRoute("/_authenticated/progress")({
   head: () => ({
@@ -16,6 +17,65 @@ export const Route = createFileRoute("/_authenticated/progress")({
   }),
   component: ProgressPage,
 });
+
+type MemorySummary = {
+  strong: number;
+  growing: number;
+  weak: number;
+  due: number;
+  readiness: ReturnType<typeof memoryReadiness>;
+  weekly: ReturnType<typeof weeklyLearning>;
+  levels: ReturnType<typeof levelReadiness>;
+};
+async function fetchMemorySummary(): Promise<MemorySummary> {
+  const { data: userRes } = await getAuthUser();
+  if (!userRes.user)
+    return {
+      strong: 0,
+      growing: 0,
+      weak: 0,
+      due: 0,
+      readiness: memoryReadiness([]),
+      weekly: weeklyLearning([]),
+      levels: levelReadiness([], []),
+    };
+  const [memory, reviews, progress] = await Promise.all([
+    supabase.from("memory_state").select("item_type,item_id,stage,due_at").eq("user_id", userRes.user.id),
+    supabase
+      .from("flashcard_reviews")
+      .select("rating,created_at,meta")
+      .eq("user_id", userRes.user.id)
+      .order("created_at", { ascending: false })
+      .limit(500),
+    supabase
+      .from("user_item_progress")
+      .select("item_type,item_id,level,status")
+      .eq("user_id", userRes.user.id),
+  ]);
+  if (memory.error) throw memory.error;
+  if (reviews.error) throw reviews.error;
+  if (progress.error) throw progress.error;
+  const now = Date.now();
+  const rows = memory.data ?? [];
+  const weeklyRows = (reviews.data ?? [])
+    .filter((x) => {
+      const meta = x.meta && typeof x.meta === "object" && !Array.isArray(x.meta) ? x.meta : {};
+      return "source" in meta && meta["source"] === "kioku";
+    })
+    .map((x) => ({
+      correct: x.rating >= 2,
+      created_at: x.created_at,
+    }));
+  return {
+    strong: rows.filter((x) => x.stage >= 4).length,
+    growing: rows.filter((x) => x.stage >= 2 && x.stage < 4).length,
+    weak: rows.filter((x) => x.stage < 2).length,
+    due: rows.filter((x) => new Date(x.due_at).getTime() <= now).length,
+    readiness: memoryReadiness(rows, now),
+    weekly: weeklyLearning(weeklyRows, now),
+    levels: levelReadiness(progress.data ?? [], rows, now),
+  };
+}
 
 type Attempt = {
   id: string;
@@ -53,6 +113,7 @@ const skillLabels: Record<string, string> = {
 };
 
 function ProgressPage() {
+  const memory = useQuery({ queryKey: ["progress-memory"], queryFn: fetchMemorySummary, staleTime: 30_000 });
   const {
     data: attempts = [],
     isLoading,
@@ -160,6 +221,73 @@ function ProgressPage() {
             />
           </div>
         </section>
+        <Card className="rounded-3xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Gauge className="size-4 text-primary" /> Kekuatan ingatan
+            </CardTitle>
+            <CardDescription>Ringkasan Kioku berdasarkan aspek yang benar-benar sudah diuji.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <MemoryStat label="Ingat kuat" value={memory.data?.strong ?? 0} />
+            <MemoryStat label="Mulai kuat" value={memory.data?.growing ?? 0} />
+            <MemoryStat label="Perlu diperkuat" value={memory.data?.weak ?? 0} />
+            <MemoryStat label="Jatuh tempo" value={memory.data?.due ?? 0} />
+          </CardContent>
+        </Card>
+        <Card className="rounded-3xl">
+          <CardHeader>
+            <CardTitle className="text-base">Kesiapan materi per level</CardTitle>
+            <CardDescription>
+              Hanya menghitung materi yang sudah dipelajari dan pernah diuji Kioku.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-5 gap-2">
+            {(memory.data?.levels ?? []).map((row) => (
+              <div key={row.level} className="rounded-2xl bg-muted/30 px-2 py-3 text-center">
+                <p className="text-[10px] font-bold text-muted-foreground">{row.level}</p>
+                <p className="mt-1 text-lg font-black">{row.score}%</p>
+                <p className="mt-0.5 truncate text-[8px] text-primary">{row.label}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="rounded-3xl">
+            <CardHeader>
+              <CardTitle className="text-base">Laporan 7 hari</CardTitle>
+              <CardDescription>Aktivitas Kioku tujuh hari terakhir.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-3 gap-2">
+              <MemoryStat label="Review" value={memory.data?.weekly.reviews ?? 0} />
+              <MemoryStat label="Akurasi" value={memory.data?.weekly.accuracy ?? 0} suffix="%" />
+              <MemoryStat label="Hari aktif" value={memory.data?.weekly.activeDays ?? 0} />
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl">
+            <CardHeader>
+              <CardTitle className="text-base">Kesiapan materi</CardTitle>
+              <CardDescription>
+                Berdasarkan aspek yang sudah diuji Kioku. Ini bukan prediksi kelulusan JLPT.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-3xl font-black">{memory.data?.readiness.score ?? 0}%</p>
+                  <p className="mt-1 text-xs font-semibold text-primary">
+                    {memory.data?.readiness.label ?? "Belum cukup data"}
+                  </p>
+                </div>
+                <p className="text-right text-[10px] leading-relaxed text-muted-foreground">
+                  {memory.data?.readiness.strong ?? 0} aspek kuat
+                  <br />
+                  {memory.data?.readiness.due ?? 0} jatuh tempo
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="rounded-3xl">
             <CardHeader>
@@ -285,4 +413,8 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
       <p className="mt-1 text-lg font-bold tracking-tight">{value}</p>
     </div>
   );
+}
+
+function MemoryStat({ label, value, suffix = "" }: { label: string; value: number; suffix?: string }) {
+  return <div className="rounded-2xl bg-muted/30 p-3 text-center"><p className="text-xl font-black">{value}{suffix}</p><p className="mt-1 text-[10px] text-muted-foreground">{label}</p></div>;
 }

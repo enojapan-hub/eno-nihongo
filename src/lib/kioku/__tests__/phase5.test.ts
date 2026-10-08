@@ -652,3 +652,134 @@ describe("sense context needs genuinely different senses", () => {
     expect(e?.variant).not.toBe("sense_context");
   });
 });
+
+
+describe("source-backed grammar exercise safety", () => {
+  it("never needs invented sentence data for grammar remediation", () => {
+    const grammar: Content = {
+      id: "g-source",
+      type: "grammar",
+      level: "N5",
+      surface: "に",
+      reading: "",
+      meaning: "di/pada",
+      examples: [{ ja: "学校に行きます。", id: "Pergi ke sekolah." }],
+      wrong: [{ wrong: "学校で行きます。", correct: "学校に行きます。", reason: "Tujuan memakai に." }],
+    };
+    const sel: Selection = {
+      itemType: "grammar",
+      itemId: grammar.id,
+      level: "N5",
+      aspect: "usage",
+      direction: "forward",
+      exerciseType: "choice",
+      stage: 2,
+      hintLevel: 3,
+      optionCount: 4,
+      reason: "test",
+      score: 10,
+    };
+    const ex = buildExercise(
+      sel,
+      new Map([[`grammar:${grammar.id}`, grammar]]),
+      [grammar],
+      new Set([`grammar:${grammar.id}`]),
+      "source-test",
+      0,
+    );
+    expect(ex).not.toBeNull();
+    expect(["particle_choice", "error_spot", "usage"]).toContain(ex!.exerciseType);
+    const sourceText = [grammar.examples![0]!.ja, grammar.wrong![0]!.wrong, grammar.wrong![0]!.correct].join(" ");
+    expect(sourceText).toContain(ex!.answer);
+  });
+});
+
+
+describe("validated conjugation exercises", () => {
+  it("uses only attached source forms and never invents a conjugation", () => {
+    const vocab: Content = {
+      id: "v-form",
+      type: "vocabulary",
+      level: "N5",
+      surface: "行きます",
+      reading: "いきます",
+      meaning: "pergi",
+      forms: [
+        { code: "dictionary", label: "Bentuk Kamus", value: "行く" },
+        { code: "masu", label: "Bentuk Masu", value: "行きます" },
+        { code: "te", label: "Bentuk Te", value: "行って" },
+        { code: "ta", label: "Bentuk Ta", value: "行った" },
+      ],
+      examples: [{ ja: "学校へ 行きます", id: "Pergi ke sekolah." }],
+    };
+    const sel: Selection = {
+      itemType: "vocabulary", itemId: vocab.id, level: "N5", aspect: "usage",
+      direction: "forward", exerciseType: "choice", stage: 2, hintLevel: 3,
+      optionCount: 4, reason: "test", score: 10,
+    };
+    let found: ReturnType<typeof buildExercise> = null;
+    for (let i = 0; i < 20 && !found; i++)
+      found = buildExercise(sel, new Map([[`vocabulary:${vocab.id}`, vocab]]), [vocab],
+        new Set([`vocabulary:${vocab.id}`]), `form-${i}`, 0);
+    expect(found).not.toBeNull();
+    if (found?.exerciseType === "conjugation_choice") {
+      expect(vocab.forms!.map((x) => x.value)).toContain(found.answer);
+      expect(found.options.every((o) => vocab.forms!.some((x) => x.value === o.text))).toBe(true);
+    }
+  });
+});
+
+
+describe("Kanji reading matching", () => {
+  it("builds reading choices only from real Kanji readings", () => {
+    const items: Content[] = [
+      { id:"k1",type:"kanji",level:"N5",surface:"日",reading:"ニチ / ひ",meaning:"hari" },
+      { id:"k2",type:"kanji",level:"N5",surface:"月",reading:"ゲツ / つき",meaning:"bulan" },
+      { id:"k3",type:"kanji",level:"N5",surface:"火",reading:"カ / ひ",meaning:"api" },
+      { id:"k4",type:"kanji",level:"N5",surface:"水",reading:"スイ / みず",meaning:"air" },
+    ];
+    const sel: Selection = { itemType:"kanji",itemId:"k1",level:"N5",aspect:"reading",direction:"forward",exerciseType:"choice",stage:2,hintLevel:3,optionCount:4,reason:"test",score:10 };
+    const ex=buildExercise(sel,new Map(items.map(x=>[`kanji:${x.id}`,x])),items,new Set(items.map(x=>`kanji:${x.id}`)),"match",0);
+    expect(ex).not.toBeNull();
+    expect(ex!.variant).toBe("reading_match");
+    expect(items.map(x=>x.reading)).toContain(ex!.answer);
+    expect(ex!.options.every(o=>items.some(x=>x.reading===o.text))).toBe(true);
+  });
+});
+
+describe("source-safe particle exercise", () => {
+  it("does not turn a lexical の into a particle question for unrelated grammar", () => {
+    const grammar: Content = {
+      id: "g",
+      type: "grammar",
+      level: "N5",
+      surface: "〜たい",
+      reading: "",
+      meaning: "ingin",
+      examples: [{ ja: "日本の料理を食べたいです。", id: "Saya ingin makan masakan Jepang." }],
+    };
+    const sel: Selection = {
+      itemType: "grammar",
+      itemId: "g",
+      level: "N5",
+      aspect: "usage",
+      direction: "forward",
+      exerciseType: "choice",
+      stage: 2,
+      hintLevel: 3,
+      optionCount: 4,
+      reason: "r",
+      score: 1,
+    };
+    const built = buildExercise(
+      sel,
+      new Map([["grammar:g", grammar]]),
+      [grammar],
+      new Set(["grammar:g"]),
+      "safe",
+      0,
+    );
+    expect(built?.variant).not.toBe("particle_choice");
+  });
+});
+

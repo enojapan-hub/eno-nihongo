@@ -38,6 +38,15 @@ export const COMBOS: Record<KiokuItemType, Combo[]> = {
 
 const KIOKU_TYPES = new Set<string>(["kanji", "vocabulary", "grammar"]);
 
+function stableHash(value: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
 /** Only items the user already studied: a `user_item_progress` row that is not still `new`. */
 export function toLearned(
   rows: Array<{
@@ -162,6 +171,7 @@ export function rankCandidates(
   states: MemoryStateRow[],
   now: number,
   signals?: Signals,
+  sessionSeed = "",
 ): Selection[] {
   const byKey = new Map(
     states.map((s) => [stateKey(s.item_type, s.item_id, s.aspect, s.direction), s]),
@@ -219,13 +229,39 @@ export function rankCandidates(
       });
     });
   }
-  return out.sort(
-    (a, b) =>
-      b.score - a.score ||
+  return out.sort((a, b) => {
+    const scoreDiff = b.score - a.score;
+    if (scoreDiff) return scoreDiff;
+
+    // Kandidat dengan prioritas sama dirotasi per sesi. Sebelumnya itemId menjadi tie-break utama,
+    // sehingga pengguna dengan banyak materi baru dapat terus melihat item awal yang sama.
+    const aKey = stableHash(`${sessionSeed}:${a.itemType}:${a.itemId}:${a.aspect}:${a.direction}`);
+    const bKey = stableHash(`${sessionSeed}:${b.itemType}:${b.itemId}:${b.aspect}:${b.direction}`);
+    return (
+      aKey - bKey ||
       a.itemId.localeCompare(b.itemId) ||
       a.aspect.localeCompare(b.aspect) ||
-      a.direction.localeCompare(b.direction),
-  );
+      a.direction.localeCompare(b.direction)
+    );
+  });
+}
+
+export function recoveryLimit(ranked: Selection[], now: number): number {
+  if (!ranked.length) return 0;
+  const overdue = ranked.filter(
+    (x) => x.reason.startsWith("due_") || x.reason.startsWith("progress_due"),
+  ).length;
+  // Large backlogs are sampled instead of dumped into one punishing session.
+  if (overdue >= 100) return 12;
+  if (overdue >= 50) return 14;
+  if (overdue >= 25) return 16;
+  return 20;
+}
+
+export function dailyNewLimit(): 5 | 10 | 20 {
+  if (typeof window === "undefined") return 10;
+  const raw = Number(window.localStorage.getItem("eno:daily-new-limit") ?? 10);
+  return raw === 5 || raw === 20 ? raw : 10;
 }
 
 /** Applies the per-item cap while keeping ranking order. */
