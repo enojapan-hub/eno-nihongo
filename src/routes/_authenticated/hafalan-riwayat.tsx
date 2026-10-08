@@ -348,7 +348,7 @@ function HafalanHistoryPage() {
                   <TriangleAlert className="size-4" />
                 </span>
                 <div>
-                  <h2 className="text-[12px] font-bold">Laporan kesalahan</h2>
+                  <h2 className="text-[12px] font-bold">Analisis Kesalahan</h2>
                   <p className="text-[8px] text-muted-foreground">
                     Materi yang paling sering perlu diulang
                   </p>
