@@ -295,9 +295,11 @@ const PARTICLES = ["は", "が", "を", "に", "で", "へ", "と", "も", "の"
 
 function particleChoice(c: Content, sel: Selection, shuffle: Shuffle): Part | null {
   if (c.type !== "grammar") return null;
+  const sourceParticle = simpleParticle(c.surface);
+  if (!sourceParticle || !PARTICLES.includes(sourceParticle)) return null;
   for (const e of c.examples ?? []) {
-    const particle = PARTICLES.find((p) => indexesOf(e.ja, p).length === 1);
-    if (!particle) continue;
+    const particle = sourceParticle;
+    if (indexesOf(e.ja, particle).length !== 1) continue;
     const at = e.ja.indexOf(particle);
     const prompt = `${e.ja.slice(0, at)}${SENTENCE_BLANK}${e.ja.slice(at + particle.length)}`;
     const distractors = PARTICLES.filter((p) => p !== particle)
