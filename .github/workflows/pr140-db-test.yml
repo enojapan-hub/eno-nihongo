@@ -122,13 +122,13 @@ jobs:
           EXCEPTION WHEN raise_exception THEN
             IF SQLERRM <> 'not_authenticated' THEN RAISE; END IF;
           END $$;
-          DO $
+          DO $$
           BEGIN
             PERFORM public.mark_material_learned_atomic('kanji', '33333333-3333-4333-8333-333333333333', 'N5');
             RAISE EXCEPTION 'Atomic learning accepted without login';
           EXCEPTION WHEN raise_exception THEN
             IF SQLERRM <> 'login_required' THEN RAISE; END IF;
-          END $;
+          END $$;
           ROLLBACK;
           SQL
       - name: Verify final atomic learning function retains referral guard
