@@ -77,6 +77,10 @@ function AuthPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("ref");
+    if (code && /^[A-Za-z0-9_-]{4,40}$/.test(code)) {
+      window.sessionStorage.setItem("eno_referral_code", code.toUpperCase());
+    }
     let active = true;
     const canonical = canonicalAuthUrl(window.location);
     if (canonical) {
