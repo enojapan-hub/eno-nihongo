@@ -300,6 +300,10 @@ function KiokuPage() {
                 title: "Susun Kalimat",
                 body: "Pada latihan Susun Kalimat, pilih Ragu atau Yakin lalu tekan potongan sesuai urutan. Potongan pertama menjadi nomor ①. Tekan potongan yang sudah dipilih untuk membatalkan. Latihan ini hanya memakai kalimat sumber yang memiliki potongan tervalidasi.",
               },
+              {
+                title: "Partikel & Perbaiki Kesalahan",
+                body: "Latihan Partikel meminta kamu melengkapi partikel pada kalimat sumber. Perbaiki Kesalahan menampilkan contoh salah yang memang tersimpan di materi Bunpou, lalu kamu memilih bentuk yang benar. Keduanya tetap memakai Yakin/Ragu dan hasilnya masuk ke statistik Kioku.",
+              },
             ]}
           />
         </div>
