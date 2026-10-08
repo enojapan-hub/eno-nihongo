@@ -22,30 +22,27 @@ BEGIN
 END;
 $$;
 
--- 2) Cache auth.uid() once per statement in RLS policies.
-DROP POLICY IF EXISTS "Users can insert own learning activity" ON public.learning_activity;
-CREATE POLICY "Users can insert own learning activity"
-  ON public.learning_activity
-  AS PERMISSIVE
-  FOR INSERT
-  TO authenticated
-  WITH CHECK ((select auth.uid()) = user_id);
-
-DROP POLICY IF EXISTS "Users can read own learning activity" ON public.learning_activity;
-CREATE POLICY "Users can read own learning activity"
-  ON public.learning_activity
-  AS PERMISSIVE
-  FOR SELECT
-  TO authenticated
-  USING ((select auth.uid()) = user_id);
-
-DROP POLICY IF EXISTS "Users can read own learning stats" ON public.user_learning_stats;
-CREATE POLICY "Users can read own learning stats"
-  ON public.user_learning_stats
-  AS PERMISSIVE
-  FOR SELECT
-  TO authenticated
-  USING ((select auth.uid()) = user_id);
+-- 2) Optimize RLS only for tables present in this database.
+DO $$
+BEGIN
+  IF to_regclass('public.learning_activity') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Users can insert own learning activity" ON public.learning_activity;
+    CREATE POLICY "Users can insert own learning activity"
+      ON public.learning_activity AS PERMISSIVE FOR INSERT TO authenticated
+      WITH CHECK ((select auth.uid()) = user_id);
+    DROP POLICY IF EXISTS "Users can read own learning activity" ON public.learning_activity;
+    CREATE POLICY "Users can read own learning activity"
+      ON public.learning_activity AS PERMISSIVE FOR SELECT TO authenticated
+      USING ((select auth.uid()) = user_id);
+  END IF;
+  IF to_regclass('public.user_learning_stats') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Users can read own learning stats" ON public.user_learning_stats;
+    CREATE POLICY "Users can read own learning stats"
+      ON public.user_learning_stats AS PERMISSIVE FOR SELECT TO authenticated
+      USING ((select auth.uid()) = user_id);
+  END IF;
+END;
+$$;
 
 -- 3) Keep future public functions opt-in rather than implicitly executable.
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
