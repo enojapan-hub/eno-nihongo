@@ -281,16 +281,16 @@ function KotobaPage() {
       );
       return { previous };
     },
-    onError: (_e, _id, ctx) => {
+    onError: () => {
       toast.error(
         navigator.onLine
-          ? "Progress gagal disimpan. Coba lagi."
-          : "Kamu sedang offline. Progress belum tersimpan.",
+          ? "Progress gagal disimpan. Status akan diperiksa ulang."
+          : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
-      if (ctx) qc.setQueryData(["mastered-items", "vocabulary", level], ctx.previous);
+      void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
     },
-    onSuccess: () => {
-      toast.success("Progress tersimpan");
+    onSuccess: (changed) => {
+      if (changed) toast.success("Progress tersimpan");
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
@@ -312,16 +312,20 @@ function KotobaPage() {
       );
       return { previous };
     },
-    onError: (_e, _id, ctx) => {
+    onError: () => {
+      // Progress may have been committed before activity logging failed.
+      // Do not restore a stale optimistic snapshot; reconcile with the server.
       toast.error(
         navigator.onLine
-          ? "Progress gagal disimpan. Coba lagi."
-          : "Kamu sedang offline. Progress belum tersimpan.",
+          ? "Penyimpanan belum sepenuhnya berhasil. Periksa status materi sebelum mencoba lagi."
+          : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
-      if (ctx) qc.setQueryData(["mastered-items", "vocabulary", level], ctx.previous);
+      void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
+      void qc.invalidateQueries({ queryKey: ["my-progress"] });
+      void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
     },
-    onSuccess: () => {
-      toast.success("Progress tersimpan");
+    onSuccess: (changed) => {
+      if (changed) toast.success("Progress tersimpan");
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
