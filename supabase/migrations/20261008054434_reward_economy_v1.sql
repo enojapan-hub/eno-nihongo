@@ -20,6 +20,20 @@ on public.social_reward_claims for select
 to authenticated
 using ((select auth.uid()) = user_id);
 
+create or replace function public.get_social_reward_claims()
+returns text[]
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, auth
+as $
+  select coalesce(array_agg(mission order by mission), array[]::text[])
+  from public.social_reward_claims
+  where user_id=(select auth.uid());
+$;
+revoke all on function public.get_social_reward_claims() from public, anon;
+grant execute on function public.get_social_reward_claims() to authenticated;
+
 create or replace function public.claim_social_reward(p_mission text)
 returns integer
 language plpgsql
