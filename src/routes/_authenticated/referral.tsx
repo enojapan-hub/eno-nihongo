@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Gift, Copy, Check, Sparkles } from "lucide-react";
+import { Gift, Copy, Check, Sparkles, Instagram, Share2, Users } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,11 +25,12 @@ export const Route = createFileRoute("/_authenticated/referral")({
 function ReferralPage() {
   const fetchAccount = useServerFn(getMyAccount);
   const { data, refetch } = useQuery({ queryKey: ["my-account"], queryFn: () => fetchAccount() });
+  const rewards = useQuery({ queryKey: ["reward-balance"], queryFn: async () => { const { data: user } = await supabase.auth.getUser(); if (!user.user) return { points: 0, claims: [] as string[] }; const [{ data: stats }, { data: claims }] = await Promise.all([supabase.from("user_stats").select("reward_points").eq("user_id", user.user.id).maybeSingle(), supabase.from("social_reward_claims").select("mission").eq("user_id", user.user.id)]); return { points: stats?.reward_points ?? 0, claims: (claims ?? []).map((x) => x.mission) }; } });
   const [copied, setCopied] = useState(false);
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const profile = data?.profile;
-  const points = profile?.referral_points ?? 0;
+  const points = rewards.data?.points ?? 0;
   const plan = profile?.plan ?? "free";
   const premiumUntil = profile?.premium_until;
   const referralCode = profile?.referral_code ?? "";
@@ -43,12 +44,12 @@ function ReferralPage() {
 
   async function redeem() {
     setMessage("");
-    const { data: days, error } = await callRpc("redeem_referral_points", { p_points: 1000 });
+    const { data: days, error } = await callRpc("redeem_points_for_premium", { p_points: 1000 });
     if (error) setMessage(error.message);
     else if (!days) setMessage("Poin belum cukup. Kumpulkan 1.000 poin terlebih dahulu.");
     else {
       setMessage(`Berhasil! Premium +${days} hari.`);
-      await refetch();
+      await Promise.all([refetch(), rewards.refetch()]);
     }
   }
 
@@ -58,16 +59,31 @@ function ReferralPage() {
     if (error) setMessage(error.message);
     else if (!awarded) setMessage("Kode referral tidak valid atau sudah digunakan.");
     else {
-      setMessage(`Referral berhasil. Poin yang diberikan: +${awarded}.`);
+      setMessage("Kode referral tersimpan. Premium 30 hari diberikan kepada pengundang setelah kamu mulai belajar.");
       setCode("");
       await refetch();
     }
   }
 
+  async function claimSocial(mission: "instagram_follow" | "tiktok_follow" | "share") {
+    setMessage("");
+    const { data: awarded, error } = await callRpc("claim_social_reward", { p_mission: mission });
+    if (error) setMessage(error.message);
+    else if (!awarded) setMessage("Hadiah misi ini sudah pernah diklaim.");
+    else { setMessage(`Berhasil mendapat +${awarded} Poin.`); await rewards.refetch(); }
+  }
+
+  async function shareEno() {
+    const url = window.location.origin;
+    if (navigator.share) await navigator.share({ title: "ENO NIHONGO", text: "Belajar bahasa Jepang dari N5 sampai N1 di ENO NIHONGO.", url });
+    else await navigator.clipboard.writeText(url);
+    await claimSocial("share");
+  }
+
   return (
     <AppShell
       title="Gratis & Referral"
-      description="Belajar gratis tetap tersedia. Ajak teman dan kumpulkan poin untuk mendapatkan Premium."
+      description="Kumpulkan Poin dari belajar dan misi ENO, tukarkan dengan Premium, atau ajak teman untuk mendapat Premium 30 hari."
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background">
@@ -96,7 +112,7 @@ function ReferralPage() {
                 Premium dari poin
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                1.000 poin referral dapat ditukar menjadi 7 hari Premium.
+                1.000 Poin dapat ditukar menjadi 7 hari Premium. XP tetap khusus untuk progres level akun.
               </p>
             </div>
             {premiumUntil ? (
@@ -110,7 +126,7 @@ function ReferralPage() {
         <Card>
           <CardHeader>
             <CardTitle>Poin kamu</CardTitle>
-            <CardDescription>Poin berasal dari referral yang berhasil.</CardDescription>
+            <CardDescription>Saldo Poin untuk hadiah. Menukar Poin tidak mengurangi catatan peringkat yang sudah diperoleh.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold tracking-tight">
@@ -133,11 +149,19 @@ function ReferralPage() {
         </Card>
 
         <Card className="md:col-span-2">
+          <CardHeader><CardTitle>Misi ENO</CardTitle><CardDescription>Dukung akun resmi ENO NIHONGO. Setiap hadiah hanya dapat diklaim satu kali.</CardDescription></CardHeader>
+          <CardContent className="grid gap-2 sm:grid-cols-3">
+            <a href="https://www.instagram.com/enonihongo/" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Instagram className="size-4" /> Follow Instagram</div><p className="mt-1 text-xs text-muted-foreground">Hadiah +100 Poin</p><Button className="mt-3 w-full" variant="outline" disabled={rewards.data?.claims.includes("instagram_follow")} onClick={(e) => { e.preventDefault(); window.open("https://www.instagram.com/enonihongo/","_blank","noopener,noreferrer"); void claimSocial("instagram_follow"); }}>{rewards.data?.claims.includes("instagram_follow") ? "Sudah diklaim" : "Buka & Klaim"}</Button></a>
+            <a href="https://www.tiktok.com/@enonihongo.id" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4" /> Follow TikTok</div><p className="mt-1 text-xs text-muted-foreground">Hadiah +100 Poin</p><Button className="mt-3 w-full" variant="outline" disabled={rewards.data?.claims.includes("tiktok_follow")} onClick={(e) => { e.preventDefault(); window.open("https://www.tiktok.com/@enonihongo.id","_blank","noopener,noreferrer"); void claimSocial("tiktok_follow"); }}>{rewards.data?.claims.includes("tiktok_follow") ? "Sudah diklaim" : "Buka & Klaim"}</Button></a>
+            <div className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Share2 className="size-4" /> Bagikan ENO</div><p className="mt-1 text-xs text-muted-foreground">Hadiah +50 Poin</p><Button className="mt-3 w-full" variant="outline" disabled={rewards.data?.claims.includes("share")} onClick={() => void shareEno()}>{rewards.data?.claims.includes("share") ? "Sudah diklaim" : "Bagikan & Klaim"}</Button></div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Ajak teman</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Users className="size-5 text-primary" /> Ajak teman · Premium 30 hari</CardTitle>
             <CardDescription>
-              Bagikan link referral pribadi kamu. Teman yang mendaftar dapat memasukkan kode
-              referral ini.
+              Bagikan link referral pribadi kamu. Setelah teman memakai kode dan mulai belajar, kamu mendapat Premium 30 hari. Premium ditambahkan ke masa aktif yang masih tersisa.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
