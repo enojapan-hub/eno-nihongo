@@ -28,7 +28,7 @@ export function classifyVocabularyPartOfSpeech(value: string | null | undefined)
     if (match) categories.push(slug);
   };
 
-  add("kata-benda", /kata benda|meishi|nomina/.test(n));
+  add("kata-benda", /kata benda|(?:^|[^a-z])meishi(?:$|[^a-z])|nomina/.test(n));
   add("kata-kerja", /kata kerja|doushi/.test(n));
   add("kata-sifat-i", /kata sifat い|sifat い|i-keiyoushi/.test(n));
   add("kata-sifat-na", /kata sifat な|sifat な|sifat-na|na-keiyoushi/.test(n));
@@ -41,7 +41,7 @@ export function classifyVocabularyPartOfSpeech(value: string | null | undefined)
   if (!categories.length) categories.push("lainnya");
 
   const recognized = [
-    /kata benda|meishi|nomina/gi,
+    /kata benda|(?:^|[^a-z])meishi(?:$|[^a-z])|nomina/gi,
     /kata kerja|doushi/gi,
     /kata sifat い|sifat い|i-keiyoushi/gi,
     /kata sifat な|sifat な|sifat-na|na-keiyoushi/gi,
