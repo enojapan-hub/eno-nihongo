@@ -24,7 +24,6 @@ import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchContinueLearning,
-  fetchTargetMetrics,
   kindLabel,
   type ContinueItem,
 } from "@/lib/learning-hub";
@@ -117,11 +116,6 @@ function BelajarPage() {
     queryKey: ["hub-continue", level],
     queryFn: () => fetchContinueLearning(level!),
     enabled: ready,
-    staleTime: 15000,
-  });
-  const metrics = useQuery({
-    queryKey: ["target-live-metrics"],
-    queryFn: fetchTargetMetrics,
     staleTime: 15000,
   });
   const rows = progress.data?.progress ?? [];
@@ -298,31 +292,9 @@ function BelajarPage() {
             ) : (
               <div className="space-y-4">
                 <ContinueCard level={level} loading={cont.isLoading} item={cont.data ?? null} />
-                <section className="grid grid-cols-2 gap-2">
-                  <Link
-                    to="/kioku"
-                    search={{ mode: "daily" }}
-                    className="rounded-2xl border border-primary/20 bg-primary/[.05] p-3 transition-colors hover:bg-primary/[.08]"
-                  >
-                    <p className="text-[12px] font-black text-primary">Review Hari Ini</p>
-                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                      Prioritas jatuh tempo, materi lemah, dan miskonsepsi.
-                    </p>
-                  </Link>
-                  <Link
-                    to="/kioku"
-                    search={{ mode: "boss" }}
-                    className="rounded-2xl border bg-card p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <p className="text-[12px] font-black">Boss Review</p>
-                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                      Uji campuran untuk memastikan ingatan kuat tetap bertahan.
-                    </p>
-                  </Link>
-                </section>
                 <DailyNewLimit />
+                <FlashcardCard />
                 <KiokuCard />
-                <FlashcardCard loading={metrics.isLoading} due={metrics.data?.dueReviewCount} />
                 <section>
                   <h2 className="mb-2 px-1 text-[13px] font-bold">Dasar Bahasa Jepang</h2>
                   <Link
@@ -532,8 +504,7 @@ function KiokuCard() {
   );
 }
 
-function FlashcardCard({ loading, due }: { loading: boolean; due: number | undefined }) {
-  const has = (due ?? 0) > 0;
+function FlashcardCard() {
   return (
     <Link to="/hafalan" className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-700">
@@ -542,17 +513,13 @@ function FlashcardCard({ loading, due }: { loading: boolean; due: number | undef
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-bold">Flashcard</p>
         <p className="mt-0.5 text-[10px] text-muted-foreground">
-          {loading
-            ? "Memuat kartu…"
-            : has
-              ? `${due} kartu perlu direview`
-              : "Tidak ada kartu jatuh tempo"}
+          Hafalkan materi yang sudah kamu pelajari sebelum mengujinya di Kioku.
         </p>
       </div>
       <span
-        className={`shrink-0 rounded-xl px-3 py-2 text-[11px] font-bold ${has ? "bg-emerald-700 text-white dark:bg-primary dark:text-primary-foreground" : "border bg-background"}`}
+        className={`shrink-0 rounded-xl px-3 py-2 text-[11px] font-bold $border bg-background`}
       >
-        {has ? "Mulai Review" : "Buka Flashcard"}
+        Buka Flashcard
       </span>
     </Link>
   );
