@@ -217,39 +217,41 @@ function BelajarPage() {
             Kamu sedang offline. Materi yang belum tersimpan mungkin tidak dapat diperbarui.
           </div>
         )}
-        <div className="mb-3 flex justify-end">
-          <FeatureGuide
-            storageKey="eno:guide:materi:v1"
-            title="Mulai dari Materi"
-            intro="Materi adalah titik awal belajar. Pahami dulu isinya, lalu tandai progresmu agar latihan berikutnya tahu apa yang sudah kamu pelajari."
-            steps={[
-              {
-                title: "Pelajari Kanji, Kotoba, atau Bunpou",
-                body: "Buka materi sesuai target JLPT dan pahami arti, bacaan, penggunaan, serta contohnya.",
-              },
-              {
-                title: "Tandai Dipelajari",
-                body: "Setelah memahami sebuah materi, tekan Dipelajari. Materi itu masuk ke pool yang dapat diuji oleh Kioku.",
-              },
-              {
-                title: "Hafalkan lalu uji",
-                body: "Gunakan Flashcard untuk membangun hafalan. Gunakan Kioku untuk menguji apakah materi yang sudah dipelajari masih benar-benar kamu ingat.",
-              },
-            ]}
-          />
-        </div>
-        <section className="mb-3 flex items-end justify-between gap-3">
-          <div>
+        <section className="mb-3">
+          <div className="flex items-center justify-between gap-3">
             <h1 className="text-[22px] font-black tracking-tight">Materi</h1>
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+        <div className="mb-3 flex justify-end">
+            <FeatureGuide
+              storageKey="eno:guide:materi:v1"
+              title="Mulai dari Materi"
+              intro="Materi adalah titik awal belajar. Pahami dulu isinya, lalu tandai progresmu agar latihan berikutnya tahu apa yang sudah kamu pelajari."
+              steps={[
+                {
+                  title: "Pelajari Kanji, Kotoba, atau Bunpou",
+                  body: "Buka materi sesuai target JLPT dan pahami arti, bacaan, penggunaan, serta contohnya.",
+                },
+                {
+                  title: "Tandai Dipelajari",
+                  body: "Setelah memahami sebuah materi, tekan Dipelajari. Materi itu masuk ke pool yang dapat diuji oleh Kioku.",
+                },
+                {
+                  title: "Hafalkan lalu uji",
+                  body: "Gunakan Flashcard untuk membangun hafalan. Gunakan Kioku untuk menguji apakah materi yang sudah dipelajari masih benar-benar kamu ingat.",
+                },
+              ]}
+            />
+        </div>
+          </div>
+          <div className="mt-1 flex items-center justify-between gap-3">
+            <p className="text-[11px] leading-4 text-muted-foreground">
               Belajar terarah sesuai target JLPT di Profil
             </p>
+            {level && (
+              <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-emerald-800 dark:text-primary">
+                {level}
+              </span>
+            )}
           </div>
-          {level && (
-            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-emerald-800 dark:text-primary">
-              {level}
-            </span>
-          )}
         </section>
         {target.isLoading ? (
           <p className="py-8 text-center text-xs text-muted-foreground">Memuat level profil…</p>
