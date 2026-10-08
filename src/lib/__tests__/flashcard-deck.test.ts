@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { separateSameItemCards, type DeckCard } from "../flashcard-deck";
+import { retryAfterGap, separateSameItemCards, type DeckCard } from "../flashcard-deck";
 
 type Card = DeckCard & { aspect: string };
 const card = (id: string, aspect: string): Card => ({ kind: "vocabulary", id, aspect });
