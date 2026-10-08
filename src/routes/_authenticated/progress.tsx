@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
-import { memoryReadiness, weeklyLearning } from "@/lib/kioku/insights";
+import { levelReadiness, memoryReadiness, weeklyLearning } from "@/lib/kioku/insights";
 
 export const Route = createFileRoute("/_authenticated/progress")({
   head: () => ({
@@ -25,6 +25,7 @@ type MemorySummary = {
   due: number;
   readiness: ReturnType<typeof memoryReadiness>;
   weekly: ReturnType<typeof weeklyLearning>;
+  levels: ReturnType<typeof levelReadiness>;
 };
 async function fetchMemorySummary(): Promise<MemorySummary> {
   const { data: userRes } = await getAuthUser();
@@ -36,18 +37,24 @@ async function fetchMemorySummary(): Promise<MemorySummary> {
       due: 0,
       readiness: memoryReadiness([]),
       weekly: weeklyLearning([]),
+      levels: levelReadiness([], []),
     };
-  const [memory, reviews] = await Promise.all([
-    supabase.from("memory_state").select("stage,due_at").eq("user_id", userRes.user.id),
+  const [memory, reviews, progress] = await Promise.all([
+    supabase.from("memory_state").select("item_type,item_id,stage,due_at").eq("user_id", userRes.user.id),
     supabase
       .from("flashcard_reviews")
       .select("rating,created_at,meta")
       .eq("user_id", userRes.user.id)
       .order("created_at", { ascending: false })
       .limit(500),
+    supabase
+      .from("user_item_progress")
+      .select("item_type,item_id,level,status")
+      .eq("user_id", userRes.user.id),
   ]);
   if (memory.error) throw memory.error;
   if (reviews.error) throw reviews.error;
+  if (progress.error) throw progress.error;
   const now = Date.now();
   const rows = memory.data ?? [];
   const weeklyRows = (reviews.data ?? [])
@@ -66,6 +73,7 @@ async function fetchMemorySummary(): Promise<MemorySummary> {
     due: rows.filter((x) => new Date(x.due_at).getTime() <= now).length,
     readiness: memoryReadiness(rows, now),
     weekly: weeklyLearning(weeklyRows, now),
+    levels: levelReadiness(progress.data ?? [], rows, now),
   };
 }
 
@@ -225,6 +233,23 @@ function ProgressPage() {
             <MemoryStat label="Mulai kuat" value={memory.data?.growing ?? 0} />
             <MemoryStat label="Perlu diperkuat" value={memory.data?.weak ?? 0} />
             <MemoryStat label="Jatuh tempo" value={memory.data?.due ?? 0} />
+          </CardContent>
+        </Card>
+        <Card className="rounded-3xl">
+          <CardHeader>
+            <CardTitle className="text-base">Kesiapan materi per level</CardTitle>
+            <CardDescription>
+              Hanya menghitung materi yang sudah dipelajari dan pernah diuji Kioku.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-5 gap-2">
+            {(memory.data?.levels ?? []).map((row) => (
+              <div key={row.level} className="rounded-2xl bg-muted/30 px-2 py-3 text-center">
+                <p className="text-[10px] font-bold text-muted-foreground">{row.level}</p>
+                <p className="mt-1 text-lg font-black">{row.score}%</p>
+                <p className="mt-0.5 truncate text-[8px] text-primary">{row.label}</p>
+              </div>
+            ))}
           </CardContent>
         </Card>
         <div className="grid gap-4 lg:grid-cols-2">
