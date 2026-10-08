@@ -77,6 +77,18 @@ export function AppShell({
   children,
 }: Props) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    const code = window.sessionStorage.getItem("eno_referral_code");
+    if (!code) return;
+    let active = true;
+    void (async () => {
+      const { data } = await getAuthUser();
+      if (!active || !data.user) return;
+      const { error } = await (supabase.rpc as unknown as (name: string, args: { p_code: string }) => Promise<{ error: unknown }>)("award_referral_signup", { p_code: code });
+      if (active && !error) window.sessionStorage.removeItem("eno_referral_code");
+    })().catch(() => {});
+    return () => { active = false; };
+  }, []);
   const [darkMode, setDarkMode] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(unreadCache?.count ?? 0);
   useEffect(() => {
