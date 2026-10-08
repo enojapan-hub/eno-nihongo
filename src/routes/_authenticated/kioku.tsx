@@ -14,6 +14,9 @@ import type { Confidence } from "@/lib/kioku/types";
 
 export const Route = createFileRoute("/_authenticated/kioku")({
   head: () => ({ meta: [{ title: "Kioku — ENO NIHONGO" }] }),
+  validateSearch: (search: Record<string, unknown>): { mode?: "daily" | "boss" } => ({
+    ...(search["mode"] === "daily" || search["mode"] === "boss" ? { mode: search["mode"] } : {}),
+  }),
   component: KiokuPage,
 });
 
@@ -31,6 +34,7 @@ type Answer = {
 };
 
 function KiokuPage() {
+  const { mode } = Route.useSearch();
   const [userId, setUserId] = useState<string | null>(null);
   const [session, setSession] = useState<KiokuSession | null>(null);
   const [ready, setReady] = useState<KiokuSession | null>(null);
@@ -66,7 +70,7 @@ function KiokuPage() {
       return undefined;
     }
     let alive = true;
-    prefetchSession(userId)
+    prefetchSession(userId, Date.now(), { mode: mode ?? "normal" })
       .then((s) => {
         if (alive) setReady(s);
       })
@@ -79,7 +83,7 @@ function KiokuPage() {
     return () => {
       alive = false;
     };
-  }, [userId]);
+  }, [userId, mode]);
 
   // Safe flush points: interval, tab hidden, page hide.
   useEffect(() => {
@@ -319,9 +323,15 @@ function KiokuPage() {
             <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">
               ENO NIHONGO
             </p>
-            <h1 className="mt-1 text-[22px] font-black md:text-[30px]">ENO Kioku</h1>
+            <h1 className="mt-1 text-[22px] font-black md:text-[30px]">
+              {mode === "boss" ? "Boss Review" : mode === "daily" ? "Review Hari Ini" : "ENO Kioku"}
+            </h1>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              Latihan ingatan adaptif dari materi yang sudah kamu pelajari.
+              {mode === "boss"
+                ? "Uji campuran untuk materi yang sudah cukup kuat, tanpa menganggapnya hafal selamanya."
+                : mode === "daily"
+                  ? "Sesi ringkas yang memprioritaskan review jatuh tempo, kelemahan, dan miskonsepsi."
+                  : "Latihan ingatan adaptif dari materi yang sudah kamu pelajari."}
             </p>
             {error && <p className="mt-3 text-[10px] text-red-600 dark:text-red-300">{error}</p>}
             {!loading && ready && ready.exercises.length === 0 && (
@@ -350,7 +360,7 @@ function KiokuPage() {
                 setSession(null);
                 setLoading(true);
                 if (userId)
-                  prefetchSession(userId)
+                  prefetchSession(userId, Date.now(), { mode: mode ?? "normal" })
                     .then(setReady)
                     .catch(() => setError("Gagal menyiapkan sesi."))
                     .finally(() => setLoading(false));
