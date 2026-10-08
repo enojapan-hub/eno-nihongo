@@ -30,6 +30,7 @@ import { normalizeJapaneseSpacing } from "@/lib/japanese-spacing";
 import { exampleRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { learnedActionLabel } from "@/lib/material-progress";
 import {
   EXTRA_LESSON,
   filterByLesson,
@@ -563,7 +564,6 @@ function KanjiPage() {
                 <Info label="Kunyomi" value={(item.kunyomi ?? []).join("・") || "—"} />
                 <Info label="Jumlah Coretan" value={String(item.stroke_count ?? "—")} />
               </div>
-              <ItemMasteryCard itemType="kanji" itemId={item.id} />
               <KanjiStructureSection
                 kanjiId={item.id}
                 character={item.character}
@@ -651,6 +651,7 @@ function KanjiPage() {
                     })}
                 </section>
               )}
+              <ItemMasteryCard itemType="kanji" itemId={item.id} learned={Boolean(learned[item.id])} />
               <div className="mt-3 border-t bg-background px-1.5 py-1">
                 <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
                   <Button
@@ -679,12 +680,14 @@ function KanjiPage() {
                   <Button
                     onClick={() => mutation.mutate(item.id)}
                     disabled={mutation.isPending || learned[item.id]}
+                    variant={learned[item.id] ? "secondary" : "default"}
+                    aria-label={learned[item.id] ? "Sudah dipelajari" : "Tandai dipelajari"}
                     className="h-9 min-w-0 rounded-full px-2 text-[11px] transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
                   >
                     <Check
                       className={`mr-1 size-3.5 transition-transform duration-150 ${learned[item.id] ? "scale-110" : ""} motion-reduce:transition-none`}
                     />
-                    <span className="truncate">Dipelajari</span>
+                    <span className="truncate">{learnedActionLabel(Boolean(learned[item.id]))}</span>
                   </Button>
                   <Button
                     variant="ghost"

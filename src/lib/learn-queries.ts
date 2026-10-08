@@ -384,54 +384,19 @@ export async function markItemLearned(input: {
   itemId: string;
   level: Level;
 }) {
-  const userId = await currentUserId();
-  const { data: existing, error: readError } = await supabase
-    .from("user_item_progress")
-    .select("id,status")
-    .eq("user_id", userId)
-    .eq("item_type", input.itemType)
-    .eq("item_id", input.itemId)
-    .maybeSingle();
-  if (readError) throw new Error(readError.message);
-  if (existing && existing.status !== "new") return false;
-  const due = new Date();
-  due.setDate(due.getDate() + 1);
-  if (existing) {
-    const { error } = await supabase
-      .from("user_item_progress")
-      .update({
-        status: "learning",
-        repetitions: 1,
-        last_reviewed_at: new Date().toISOString(),
-        due_at: due.toISOString(),
-      })
-      .eq("id", existing.id);
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await supabase.from("user_item_progress").insert({
-      user_id: userId,
-      item_type: input.itemType,
-      item_id: input.itemId,
-      level: input.level,
-      status: "learning",
-      repetitions: 1,
-      last_reviewed_at: new Date().toISOString(),
-      due_at: due.toISOString(),
-    });
-    if (error) throw new Error(error.message);
-  }
-  const { error: activityError } = await supabase.rpc("record_learning_activity", {
-    p_activity_type: "lesson_completed",
-    p_content_type: input.itemType,
-    p_content_id: input.itemId,
-    p_points: 5,
-    p_xp: 5,
-    p_correct: null,
-    p_duration_seconds: 60,
-    p_metadata: { level: input.level, repetition: 1 },
+  // The database function commits progress and activity in one transaction.
+  // Keep the RPC signature explicit to support generated types from older schemas.
+  const atomicRpc = supabase.rpc as unknown as (
+    name: "mark_material_learned_atomic",
+    args: { p_item_type: LearnableItemType; p_item_id: string; p_level: Level },
+  ) => Promise<{ data: boolean | null; error: { message: string } | null }>;
+  const { data, error } = await atomicRpc("mark_material_learned_atomic", {
+    p_item_type: input.itemType,
+    p_item_id: input.itemId,
+    p_level: input.level,
   });
-  if (activityError) throw new Error(activityError.message);
-  return true;
+  if (error) throw new Error(error.message);
+  return data === true;
 }
 export async function addItemToReview(input: {
   itemType: LearnableItemType;
