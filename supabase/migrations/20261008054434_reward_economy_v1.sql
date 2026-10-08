@@ -14,6 +14,8 @@ declare
   v_joined_at timestamptz;
 begin
   if v_user is null then raise exception 'not_authenticated'; end if;
+  -- Serialize concurrent signup attempts for the same referred account.
+  perform pg_advisory_xact_lock(hashtextextended('referral_signup:' || v_user::text, 0));
   -- Only newly registered accounts can attach a referral, before their first learning activity.
   select created_at into v_joined_at from public.profiles where id = v_user;
   if v_joined_at is null or v_joined_at < now() - interval '7 days' then return 0; end if;
