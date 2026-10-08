@@ -32,9 +32,7 @@ type FinanceOrder = {
 };
 type DigitalProductFinance = {
   gross_revenue?: number | string | null;
-  teacher_commission?: number | string | null;
-  platform_revenue?: number | string | null;
-  paid_orders?: number | string | null;
+    paid_orders?: number | string | null;
 };
 type FinanceOverview = {
   gross_revenue?: number | string | null;
@@ -62,7 +60,7 @@ function Page() {
   const digital = useQuery({
     queryKey: ["admin-digital-product-finance"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_class_digital_product_finance" as never);
+      const { data, error } = await supabase.rpc("get_digital_product_finance" as never);
       if (error) {
         if (error.message.includes("Could not find the function")) return {} as DigitalProductFinance;
         throw error;
@@ -91,7 +89,7 @@ function Page() {
   const items = [
     ["Pendapatan Kotor", rp(d.gross_revenue), Banknote],
     ["Pendapatan Bersih", rp(d.gross_revenue), BadgeDollarSign],
-    ["Komisi Guru", rp(df.teacher_commission), WalletCards],
+    ["Komisi Guru", "Rp0", WalletCards],
     ["Saldo Tertahan", rp(d.pending_amount), Clock3],
   ] as const;
   const sources = [
