@@ -188,7 +188,32 @@ export async function prefetchSession(userId: string, now = Date.now()): Promise
     }),
   );
   await attachContext(content, ids);
+  await attachVerbForms(content, ids.vocabulary);
   return buildSession(ranked, content, pool, learnedIds, sessionId, now, SESSION_SIZE, seen);
+}
+
+async function attachVerbForms(content: Map<string, Content>, vocabularyIds: string[]) {
+  if (!vocabularyIds.length) return;
+  const [forms, types] = await Promise.all([
+    dynamicTable("verb_forms")
+      .select("vocabulary_id,form_code,value")
+      .in("vocabulary_id", vocabularyIds)
+      .then((r) => r.data ?? [])
+      .catch(() => []),
+    dynamicTable("verb_form_types")
+      .select("form_code,label_id,is_active")
+      .eq("is_active", true)
+      .then((r) => r.data ?? [])
+      .catch(() => []),
+  ]);
+  const labels = new Map(types.map((x) => [String(x["form_code"]), String(x["label_id"] ?? x["form_code"])]));
+  for (const row of forms) {
+    const c = content.get(`vocabulary:${String(row["vocabulary_id"])}`);
+    const code = String(row["form_code"] ?? "");
+    const value = String(row["value"] ?? "");
+    if (!c || !code || !value || !labels.has(code)) continue;
+    (c.forms ??= []).push({ code, label: labels.get(code)!, value });
+  }
 }
 
 /**
