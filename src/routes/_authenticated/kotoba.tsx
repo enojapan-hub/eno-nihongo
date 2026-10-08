@@ -47,6 +47,7 @@ import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacin
 import { exampleRomaji, wordRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { formatVocabularyClass } from "@/lib/vocabulary-taxonomy";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
 const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
@@ -751,10 +752,7 @@ function Detail({
           <p className="mt-1 pr-2 text-lg font-semibold leading-7">{item.meaning_id}</p>
         </section>
         <div className="mt-2 grid grid-cols-2 gap-2">
-          <Info
-            label="Kelas Kata"
-            value={item.part_of_speech || senses[0]?.part_of_speech || "—"}
-          />
+          <ClassInfo value={item.part_of_speech || senses[0]?.part_of_speech || null} />
           <Info label="Arti Inggris" value={item.meaning_en || "—"} />
         </div>
         <section className="mt-2 rounded-2xl bg-primary/[.07] p-4">
@@ -849,6 +847,22 @@ function Detail({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+function ClassInfo({ value }: { value: string | null }) {
+  const { labels, details } = formatVocabularyClass(value);
+  return (
+    <div className="rounded-2xl bg-primary/[.07] p-4">
+      <p className="text-[12px] font-bold text-primary">Kelas Kata</p>
+      <p className="mt-1 break-words leading-5">
+        <span className="text-[14px] font-semibold">{labels.join(" · ") || "Lainnya"}</span>
+        {details.length > 0 && (
+          <span className="ml-1.5 text-[10px] font-medium text-muted-foreground">
+            {details.join(" · ")}
+          </span>
+        )}
+      </p>
     </div>
   );
 }
