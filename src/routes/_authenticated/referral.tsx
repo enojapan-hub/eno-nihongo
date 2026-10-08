@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Gift, Copy, Check, Sparkles, Instagram, Share2, Users } from "lucide-react";
+import { Gift, Copy, Check, Sparkles, Users } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,14 +16,23 @@ function callRpc<T = number>(fn: string, args: Record<string, unknown>): Promise
 }
 
 export const Route = createFileRoute("/_authenticated/referral")({
-  head: () => ({ meta: [{ title: "Gratis & Referral — ENO JAPAN" }] }),
+  head: () => ({ meta: [{ title: "Gratis & Referral — ENO NIHONGO" }] }),
   component: ReferralPage,
 });
 
 function ReferralPage() {
   const fetchAccount = useServerFn(getMyAccount);
   const { data, refetch } = useQuery({ queryKey: ["my-account"], queryFn: () => fetchAccount() });
-  const rewards = useQuery({ queryKey: ["reward-balance"], queryFn: async () => { const { data: user } = await supabase.auth.getUser(); if (!user.user) return { points: 0, claims: [] as string[] }; const [{ data: stats }, claims] = await Promise.all([supabase.from("user_stats").select("reward_points").eq("user_id", user.user.id).maybeSingle(), callRpc<string[]>("get_social_reward_claims", {})]); return { points: stats?.reward_points ?? 0, claims: claims.data ?? [] }; } });
+  const rewards = useQuery({
+    queryKey: ["reward-balance"],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return { points: 0 };
+      const { data: stats, error } = await supabase.from("user_stats").select("reward_points").eq("user_id", user.user.id).maybeSingle();
+      if (error) throw error;
+      return { points: stats?.reward_points ?? 0 };
+    },
+  });
   const [copied, setCopied] = useState(false);
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
@@ -63,16 +72,10 @@ function ReferralPage() {
     }
   }
 
-  async function shareEno() {
-    const url = window.location.origin;
-    if (navigator.share) await navigator.share({ title: "ENO NIHONGO", text: "Belajar bahasa Jepang dari N5 sampai N1 di ENO NIHONGO.", url });
-    else await navigator.clipboard.writeText(url);
-  }
-
   return (
     <AppShell
       title="Gratis & Referral"
-      description="Kumpulkan Poin dari belajar dan misi ENO, tukarkan dengan Premium, atau ajak teman untuk mendapat Premium 30 hari."
+      description="Kumpulkan Poin dari belajar, tukarkan dengan Premium, atau ajak teman untuk mendapat Premium 30 hari."
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background">
@@ -83,7 +86,7 @@ function ReferralPage() {
                   <Gift className="size-5 text-primary" />
                   Paket kamu
                 </CardTitle>
-                <CardDescription>Gunakan ENO JAPAN tanpa dipaksa berlangganan.</CardDescription>
+                <CardDescription>Belajar di ENO NIHONGO tanpa harus berlangganan.</CardDescription>
               </div>
               <Badge>{plan === "free" ? "FREE" : plan.toUpperCase()}</Badge>
             </div>
@@ -134,15 +137,6 @@ function ReferralPage() {
               <Sparkles className="mr-2 size-4" />
               Tukar 1.000 poin → 7 hari Premium
             </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader><CardTitle>Misi ENO</CardTitle><CardDescription>Dukung akun resmi ENO NIHONGO. Hadiah Poin untuk follow dan share menunggu sistem verifikasi.</CardDescription></CardHeader>
-          <CardContent className="grid gap-2 sm:grid-cols-3">
-            <a href="https://www.instagram.com/enonihongo/" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Instagram className="size-4" /> Follow Instagram</div><p className="mt-1 text-xs text-muted-foreground">Hadiah menunggu verifikasi</p><span className="mt-3 block text-xs text-muted-foreground">Buka akun resmi untuk mengikuti. Hadiah belum aktif.</span></a>
-            <a href="https://www.tiktok.com/@enonihongo.id" target="_blank" rel="noreferrer" className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4" /> Follow TikTok</div><p className="mt-1 text-xs text-muted-foreground">Hadiah menunggu verifikasi</p><span className="mt-3 block text-xs text-muted-foreground">Buka akun resmi untuk mengikuti. Hadiah belum aktif.</span></a>
-            <div className="rounded-xl border p-3"><div className="flex items-center gap-2 text-sm font-semibold"><Share2 className="size-4" /> Bagikan ENO</div><p className="mt-1 text-xs text-muted-foreground">Hadiah menunggu verifikasi</p><Button className="mt-3 w-full" variant="outline" onClick={() => void shareEno()}>Bagikan ENO</Button></div>
           </CardContent>
         </Card>
 
