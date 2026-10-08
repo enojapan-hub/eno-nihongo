@@ -23,6 +23,7 @@ type Review = {
   used_hint: boolean | null;
   response_ms: number | null;
   created_at: string;
+  meta: Record<string, unknown> | null;
 };
 
 async function fetchReviews(level: Level) {
@@ -30,7 +31,7 @@ async function fetchReviews(level: Level) {
   if (!userData.user) return [] as Review[];
   const { data, error } = await supabase
     .from("flashcard_reviews")
-    .select("item_type,item_id,rating,aspect,used_hint,response_ms,created_at")
+    .select("item_type,item_id,rating,aspect,used_hint,response_ms,created_at,meta")
     .eq("user_id", userData.user.id)
     .eq("level", level)
     .order("created_at", { ascending: false })
@@ -88,6 +89,8 @@ function HafalanHistoryPage() {
   for (const item of vocab.data ?? []) names.set(`vocabulary:${item.id}`, item.term ?? "Kotoba");
   for (const item of grammar.data ?? []) names.set(`grammar:${item.id}`, item.pattern ?? "Bunpou");
 
+  const flashcardRows = rows.filter((row) => row.meta?.["source"] !== "kioku");
+  const kiokuRows = rows.filter((row) => row.meta?.["source"] === "kioku");
   const total = rows.length;
   const correct = rows.filter((row) => row.rating >= 2).length;
   const accuracy = total ? Math.round((correct / total) * 100) : 0;
@@ -185,10 +188,13 @@ function HafalanHistoryPage() {
         ) : (
           <>
             <div className="grid grid-cols-3 gap-2">
-              <Metric label="Review" value={total} />
-              <Metric label="Akurasi" value={`${accuracy}%`} />
-              <Metric label="Rata-rata" value={`${averageSeconds} dtk`} />
+              <Metric label="Flashcard" value={flashcardRows.length} />
+              <Metric label="Kioku" value={kiokuRows.length} />
+              <Metric label="Akurasi gabungan" value={`${accuracy}%`} />
             </div>
+            <p className="text-center text-[8px] text-muted-foreground">
+              {total} aktivitas tersimpan · rata-rata respons {averageSeconds} dtk
+            </p>
             <section className="rounded-3xl border bg-card p-4">
               <div className="flex items-center justify-between">
                 <div>
