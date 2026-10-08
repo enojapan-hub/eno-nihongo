@@ -278,6 +278,48 @@ type Shuffle = (o: Opt[]) => Opt[];
 const meaningLine = (c: Content) =>
   `${c.surface}${c.reading && c.reading !== c.surface ? ` (${c.reading})` : ""} = ${c.meaning}`;
 
+/**
+ * Sentence ordering only uses source examples that already contain whitespace-delimited chunks.
+ * We deliberately do not guess Japanese word boundaries. This keeps every ordering exercise
+ * reversible to the exact validated source sentence.
+ */
+export function sentenceOrderParts(ja: string): string[] | null {
+  const parts = ja.trim().split(/\s+/u).filter(Boolean);
+  if (parts.length < 3 || parts.length > 8) return null;
+  if (new Set(parts).size !== parts.length) return null;
+  return parts.join(" ") === ja.trim().replace(/\s+/gu, " ") ? parts : null;
+}
+
+function sentenceOrder(
+  c: Content,
+  seed: string,
+  used: Set<string> | undefined,
+  shuffle: Shuffle,
+): Part | null {
+  if (c.type === "kanji") return null;
+  const candidates = contextsOf(c)
+    .map((e) => ({ e, parts: sentenceOrderParts(e.ja) }))
+    .filter((x): x is { e: Ctx; parts: string[] } => !!x.parts);
+  const pick = pickContext(candidates, (x) => refOf(x.e.ja), used, `${seed}|order`);
+  if (!pick) return null;
+  const options = shuffle(
+    pick.parts.map((text, index) => ({ id: `part:${index}`, text, confusable: false })),
+  );
+  return {
+    aspect: "usage",
+    direction: "forward",
+    prompt: pick.e.id || "Susun potongan menjadi kalimat Jepang yang benar.",
+    promptSub: "Tekan potongan sesuai urutan. Pilihan pertama otomatis menjadi nomor ①.",
+    answer: pick.parts.join(" "),
+    options,
+    variant: "sentence_order",
+    label: "Susun Kalimat",
+    feedback: `${pick.e.ja}${c.meaning ? ` · ${c.meaning}` : ""}`,
+    ladder: 4,
+    contextRef: refOf(pick.e.ja),
+  };
+}
+
 /** Vocabulary: L2 phrase -> L3 sentence -> L4 real context (sense in a sentence, or another sentence). */
 function vocabUsage(
   c: Content,
@@ -559,6 +601,19 @@ export function buildExercise(
   if (sel.aspect === "usage" || kind === "usage") {
     const used = seen?.get(`${c.type}:${c.id}`);
     const seed = `${sessionId}|${c.id}`;
+    // Advanced usage can become a click-to-order sentence exercise, but only when the
+    // source sentence already carries trustworthy whitespace token boundaries.
+    if (sel.stage >= 2 && fnv(`${seed}|sentence-order`) % 2 === 0) {
+      const ordered = sentenceOrder(c, seed, used, shuffle);
+      if (ordered)
+        return {
+          ...base,
+          hintLevel: 3,
+          exerciseType: "sentence_order",
+          hintText: "",
+          ...ordered,
+        };
+    }
     const level =
       sel.aspect === "usage"
         ? sel.stage <= 0
