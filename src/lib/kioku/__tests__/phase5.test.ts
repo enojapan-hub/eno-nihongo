@@ -652,3 +652,44 @@ describe("sense context needs genuinely different senses", () => {
     expect(e?.variant).not.toBe("sense_context");
   });
 });
+
+
+describe("source-backed grammar exercise safety", () => {
+  it("never needs invented sentence data for grammar remediation", () => {
+    const grammar: Content = {
+      id: "g-source",
+      type: "grammar",
+      level: "N5",
+      surface: "に",
+      reading: "",
+      meaning: "di/pada",
+      examples: [{ ja: "学校に行きます。", id: "Pergi ke sekolah." }],
+      wrong: [{ wrong: "学校で行きます。", correct: "学校に行きます。", reason: "Tujuan memakai に." }],
+    };
+    const sel: Selection = {
+      itemType: "grammar",
+      itemId: grammar.id,
+      level: "N5",
+      aspect: "usage",
+      direction: "forward",
+      exerciseType: "choice",
+      stage: 2,
+      hintLevel: 3,
+      optionCount: 4,
+      reason: "test",
+      score: 10,
+    };
+    const ex = buildExercise(
+      sel,
+      new Map([[`grammar:${grammar.id}`, grammar]]),
+      [grammar],
+      new Set([`grammar:${grammar.id}`]),
+      "source-test",
+      0,
+    );
+    expect(ex).not.toBeNull();
+    expect(["particle_choice", "error_spot", "usage"]).toContain(ex!.exerciseType);
+    const sourceText = [grammar.examples![0]!.ja, grammar.wrong![0]!.wrong, grammar.wrong![0]!.correct].join(" ");
+    expect(sourceText).toContain(ex!.answer);
+  });
+});
