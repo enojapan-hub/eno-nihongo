@@ -4,6 +4,7 @@ import {
   formatVocabularyClass,
   VOCAB_PRIMARY_CATEGORIES,
 } from "@/lib/vocabulary-taxonomy";
+import { VOCAB_THEMES } from "@/lib/vocabulary-themes";
 
 describe("vocabulary taxonomy", () => {
   it("keeps the same ten primary categories for every level", () => {
@@ -20,6 +21,27 @@ describe("vocabulary taxonomy", () => {
       "Ungkapan",
       "Lainnya",
     ]);
+    expect(VOCAB_PRIMARY_CATEGORIES.map((x) => x.labelJa)).toEqual([
+      "名詞",
+      "動詞",
+      "い形容詞",
+      "な形容詞",
+      "副詞",
+      "代名詞",
+      "接続詞",
+      "感動詞",
+      "表現",
+      "その他",
+    ]);
+  });
+
+  it("keeps semantic themes separate from grammatical classes", () => {
+    expect(VOCAB_THEMES.map((x) => x.slug)).toEqual([
+      "warna",
+      "bilangan-penghitung",
+      "alat-tulis",
+    ]);
+    expect(VOCAB_THEMES.map((x) => x.labelJa)).toEqual(["色", "数・助数詞", "文房具"]);
   });
 
   it.each([
