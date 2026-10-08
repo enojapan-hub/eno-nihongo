@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/hafalan-riwayat")({
-  head: () => ({ meta: [{ title: "Riwayat Hafalan — ENO NIHONGO" }] }),
+  head: () => ({ meta: [{ title: "Analisis Ingatan — ENO NIHONGO" }] }),
   component: HafalanHistoryPage,
 });
 
@@ -101,7 +101,7 @@ function HafalanHistoryPage() {
 
   if (!level)
     return (
-      <AppShell compact title="Riwayat Hafalan">
+      <AppShell compact title="Analisis Ingatan">
         <p className="p-6 text-center text-xs text-muted-foreground">Memuat level profil…</p>
       </AppShell>
     );
@@ -199,13 +199,13 @@ function HafalanHistoryPage() {
     .slice(0, 10);
 
   return (
-    <AppShell compact title="Riwayat Hafalan">
+    <AppShell compact title="Analisis Ingatan">
       <div className="mx-auto w-full max-w-md space-y-3 pb-6">
         <a
-          href="/hafalan"
+          href="/kioku"
           className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
         >
-          <ArrowLeft className="size-4" /> Kembali ke Hafalan
+          <ArrowLeft className="size-4" /> Kembali ke Kioku
         </a>
         <section className="rounded-3xl border bg-gradient-to-b from-violet-50 to-card p-4 dark:bg-card dark:bg-none">
           <div className="flex items-center gap-3">
@@ -214,11 +214,11 @@ function HafalanHistoryPage() {
             </span>
             <div>
               <p className="text-[9px] font-bold uppercase tracking-widest text-primary">
-                SRS Performance
+                ENO KIOKU · ANALISIS
               </p>
               <h1 className="text-[18px] font-bold">Riwayat Hafalan</h1>
               <p className="text-[9px] text-muted-foreground">
-                {level} · hasil Hafalan, Rantai Ingatan, dan Jebakan Ingatan
+                {level} · retensi, keyakinan, kesalahan, dan kekuatan ingatan
               </p>
             </div>
           </div>
@@ -228,15 +228,15 @@ function HafalanHistoryPage() {
         ) : !total ? (
           <section className="rounded-3xl border bg-card p-6 text-center">
             <BrainCircuit className="mx-auto size-7 text-primary" />
-            <p className="mt-2 text-[11px] font-bold">Belum ada riwayat hafalan</p>
+            <p className="mt-2 text-[11px] font-bold">Belum ada data ingatan</p>
             <p className="mt-1 text-[9px] text-muted-foreground">
-              Selesaikan beberapa kartu untuk melihat pola performa dan kesalahan.
+              Selesaikan beberapa latihan Kioku untuk melihat pola retensi dan kesalahan.
             </p>
             <a
               href="/hafalan"
               className="mt-4 inline-block rounded-xl bg-primary px-4 py-2 text-[9px] font-bold text-primary-foreground"
             >
-              Mulai Hafalan
+              Mulai Kioku
             </a>
           </section>
         ) : (
@@ -367,7 +367,7 @@ function HafalanHistoryPage() {
               href="/hafalan"
               className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[10px] font-bold text-primary-foreground"
             >
-              <RotateCcw className="size-3.5" /> Lanjutkan Hafalan
+              <RotateCcw className="size-3.5" /> Kembali ke Kioku
             </a>
           </>
         )}
