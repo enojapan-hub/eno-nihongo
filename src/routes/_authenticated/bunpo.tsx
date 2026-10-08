@@ -10,7 +10,7 @@ import { addItemToReview, markItemLearned, type Level } from "@/lib/learn-querie
 import { fetchTargetLevel } from "@/lib/target-level";
 import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacing";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthUser } from "@/lib/auth-user";
+import { getAuthUser } from "@/lib/auth-user";\nimport { learnedActionLabel } from "@/lib/material-progress";
 
 export const Route = createFileRoute("/_authenticated/bunpo")({ component: BunpoPage });
 const split = (v?: string | null) =>
@@ -731,7 +731,7 @@ function BunpoPage() {
                     <Check
                       className={`mr-1 size-3.5 transition-transform duration-150 ${learned[item.id] ? "scale-110" : ""} motion-reduce:transition-none`}
                     />
-                    <span className="truncate">{learned[item.id] ? "Dipelajari" : "Tandai dipelajari"}</span>
+                    <span className="truncate">{learnedActionLabel(Boolean(learned[item.id]))}</span>
                   </Button>
                   <Button
                     variant="ghost"
