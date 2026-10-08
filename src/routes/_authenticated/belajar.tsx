@@ -18,8 +18,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { DailyNewLimit } from "@/components/learn/DailyNewLimit";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
-import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
+import { fetchVocabCategoryCount, fetchVocabListResilient, fetchVocabThemeCounts } from "@/lib/vocab-resilient";
 import { VOCAB_PRIMARY_CATEGORIES } from "@/lib/vocabulary-taxonomy";
+import { VOCAB_THEMES } from "@/lib/vocabulary-themes";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -51,12 +52,22 @@ async function fetchExtra(level: Level) {
         VOCAB_PRIMARY_CATEGORIES.map((x) => fetchVocabCategoryCount(level, x.slug)),
       );
 
-  return VOCAB_PRIMARY_CATEGORIES.map((x, i) => ({
-    slug: x.slug,
-    label: x.label,
-    hint: x.hint,
-    count: counts[i] ?? 0,
-  }));
+  const themeRows = await fetchVocabThemeCounts(level);
+  const themeCounts = new Map(themeRows.map((r) => [r.theme_slug, Number(r.item_count)]));
+
+  return {
+    categories: VOCAB_PRIMARY_CATEGORIES.map((x, i) => ({
+      slug: x.slug,
+      labelJa: x.labelJa,
+      label: x.label,
+      hint: x.hint,
+      count: counts[i] ?? 0,
+    })),
+    themes: VOCAB_THEMES.map((x) => ({
+      ...x,
+      count: themeCounts.get(x.slug) ?? 0,
+    })),
+  };
 }
 function BelajarPage() {
   const [search, setSearch] = useState(() =>
@@ -444,7 +455,7 @@ function BelajarPage() {
                     </p>
                   ) : (
                     <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                      {(extra.data ?? []).map((cat) => (
+                      {(extra.data?.categories ?? []).map((cat) => (
                         <Link
                           key={cat.slug}
                           to="/kotoba"
@@ -452,8 +463,9 @@ function BelajarPage() {
                           className="flex min-w-0 items-center gap-2 rounded-xl bg-muted/45 px-2.5 py-2"
                         >
                           <span className="min-w-0 flex-1">
-                            <span className="text-[10px] font-semibold">{cat.label}</span>
-                            <span className="ml-1.5 text-[8px] leading-3 text-muted-foreground">
+                            <span lang="ja" className="block font-jp text-[13px] font-bold">{cat.labelJa}</span>
+                            <span className="block text-[9px] font-semibold">{cat.label}</span>
+                            <span className="block text-[8px] leading-3 text-muted-foreground">
                               {cat.hint}
                             </span>
                           </span>
@@ -462,6 +474,37 @@ function BelajarPage() {
                           </span>
                         </Link>
                       ))}
+                    </div>
+                  )}
+                  {!extra.isLoading && !extra.isError && (
+                    <div className="mt-3 border-t pt-3">
+                      <div className="mb-2">
+                        <p className="text-[11px] font-bold">Tema Kosakata</p>
+                        <p className="text-[9px] text-muted-foreground">
+                          Kelompok makna terpisah dari kelas kata
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                        {(extra.data?.themes ?? []).map((theme) => (
+                          <Link
+                            key={theme.slug}
+                            to="/kotoba"
+                            search={{ theme: String(theme.slug) }}
+                            className="flex min-w-0 items-center gap-2 rounded-xl bg-emerald-50/70 px-2.5 py-2 dark:bg-emerald-500/10"
+                          >
+                            <span className="min-w-0 flex-1">
+                              <span lang="ja" className="block font-jp text-[12px] font-bold">
+                                {theme.labelJa}
+                              </span>
+                              <span className="block text-[9px] font-semibold">{theme.label}</span>
+                              <span className="block text-[8px] text-muted-foreground">{theme.hint}</span>
+                            </span>
+                            <span className="shrink-0 rounded-full bg-background px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                              {theme.count}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </section>
