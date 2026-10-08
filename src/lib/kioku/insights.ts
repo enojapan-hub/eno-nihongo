@@ -32,3 +32,27 @@ export function fatigueSuggested(answered: number, wrong: number) {
   if (answered < 12) return false;
   return wrong / answered >= 0.5 || answered >= 30;
 }
+
+export function levelReadiness(
+  progress: Array<{ item_type: string; item_id: string; level: string; status: string }>,
+  memory: Array<{ item_type: string; item_id: string; stage: number; due_at: string }>,
+  now = Date.now(),
+) {
+  const levelByItem = new Map(
+    progress
+      .filter((x) => x.status !== "new")
+      .map((x) => [`${x.item_type}:${x.item_id}`, x.level]),
+  );
+  const grouped = new Map<string, MemoryRow[]>();
+  for (const row of memory) {
+    const level = levelByItem.get(`${row.item_type}:${row.item_id}`);
+    if (!level) continue;
+    const list = grouped.get(level) ?? [];
+    list.push({ stage: row.stage, due_at: row.due_at, level });
+    grouped.set(level, list);
+  }
+  return ["N5", "N4", "N3", "N2", "N1"].map((level) => ({
+    level,
+    ...memoryReadiness(grouped.get(level) ?? [], now),
+  }));
+}
