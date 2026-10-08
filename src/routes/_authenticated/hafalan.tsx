@@ -16,7 +16,7 @@ import {
 import { parseMasteryTraining } from "@/lib/mastery-training";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
-import { separateSameItemCards } from "@/lib/flashcard-deck";
+import { reinsertDifficultCard, separateSameItemCards } from "@/lib/flashcard-deck";
 import { FitContent } from "@/components/learn/FitContent";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 export const Route = createFileRoute("/_authenticated/hafalan")({
@@ -201,6 +201,7 @@ function HafalanPage() {
     [hint, setHint] = useState(false),
     [typed, setTyped] = useState(""),
     [results, setResults] = useState<Rating[]>([]),
+    [retryQueue, setRetryQueue] = useState<Card[]>([]),
     [wrong, setWrong] = useState<Card[]>([]),
     [retryWrong, setRetryWrong] = useState(false),
     [undoing, setUndoing] = useState(false),
@@ -258,8 +259,11 @@ function HafalanPage() {
     const n = study === "quick" ? a.length : study === "exam" ? Math.min(30, limit) : limit;
     return separateSameItemCards(a.slice(0, n));
   }, [source, progress.data, kind, study, limit, retryWrong, wrong, targeted]);
-  const card = all[index],
-    done = (study === "quick" && quickExpired) || (index >= all.length && all.length > 0);
+  const activeDeck = [...all.slice(index), ...retryQueue];
+  const card = activeDeck[0],
+    done =
+      (study === "quick" && quickExpired) ||
+      (index >= all.length && retryQueue.length === 0 && all.length > 0);
   const cardKey = card ? `${card.id}-${card.aspect}` : null;
   // Kartu + kontrol selalu berada di dalam viewport: gulirkan dek ke bawah header saat kartu berganti.
   useEffect(() => {
@@ -277,6 +281,7 @@ function HafalanPage() {
           setLimit(v.limit ?? 20);
           setIndex(v.index ?? 0);
           setResults(v.results ?? []);
+          setRetryQueue(v.retryQueue ?? []);
           setWrong(v.wrong ?? []);
           setRetryWrong(!!v.retryWrong);
           setRevealed(!!v.revealed);
@@ -322,6 +327,7 @@ function HafalanPage() {
         limit,
         index,
         results,
+        retryQueue,
         wrong,
         retryWrong,
         revealed,
@@ -340,6 +346,7 @@ function HafalanPage() {
     limit,
     index,
     results,
+    retryQueue,
     wrong,
     retryWrong,
     revealed,
@@ -359,6 +366,7 @@ function HafalanPage() {
     setHint(false);
     setTyped("");
     setResults([]);
+    setRetryQueue([]);
     setWrong([]);
     setRetryWrong(false);
     setQuickRemaining(QUICK_SECONDS);
@@ -380,9 +388,18 @@ function HafalanPage() {
     const ratedCard = card,
       ratedHint = hint,
       responseMs = Date.now() - started.current;
-    if (r < 2) setWrong((v) => [...v, ratedCard]);
+    if (r < 2) {
+      setWrong((v) => [...v, ratedCard]);
+      const future = [...all.slice(index + 1), ...retryQueue];
+      const spaced = reinsertDifficultCard(future, ratedCard, r as 0 | 1);
+      const originalRemaining = all.slice(index + 1).length;
+      setRetryQueue(spaced.slice(originalRemaining));
+    } else if (retryQueue.length > 0 && index >= all.length) {
+      setRetryQueue((v) => v.slice(1));
+    }
     setResults((v) => [...v, r]);
-    setIndex((i) => i + 1);
+    if (index < all.length) setIndex((i) => i + 1);
+    else setRetryQueue((v) => v.slice(1));
     setRevealed(false);
     setHint(false);
     setTyped("");
