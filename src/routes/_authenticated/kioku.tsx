@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BarChart3, BrainCircuit, CheckCircle2, Crown, Lightbulb, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
+import { PremiumUpgradeDialog } from "@/components/membership/PremiumUpgradeDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { classifyError, SLOW_MS } from "@/lib/kioku/classify";
 import { fatigueSuggested } from "@/lib/kioku/insights";
@@ -12,6 +14,7 @@ import { queueRepeat, scheduleDelayed } from "@/lib/kioku/session";
 import type { Exercise, KiokuSession } from "@/lib/kioku/session-types";
 import { clearSession, loadSession, saveSession } from "@/lib/kioku/session-store";
 import type { Confidence } from "@/lib/kioku/types";
+import { fetchMembershipAccess } from "@/lib/membership";
 
 export const Route = createFileRoute("/_authenticated/kioku")({
   head: () => ({ meta: [{ title: "Kioku — ENO NIHONGO" }] }),
@@ -37,6 +40,9 @@ type Answer = {
 function KiokuPage() {
   const { mode } = Route.useSearch();
   const [userId, setUserId] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const membership = useQuery({ queryKey: ["membership-access"], queryFn: fetchMembershipAccess, staleTime: 60_000 });
+  const hasPremiumAccess = membership.data?.hasPremiumAccess === true;
   const [session, setSession] = useState<KiokuSession | null>(null);
   const [ready, setReady] = useState<KiokuSession | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +65,10 @@ function KiokuPage() {
 
   // Restore an unfinished session, retry pending outbox events, and prefetch the next session in the background.
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || membership.isLoading || !hasPremiumAccess) {
+      if (!membership.isLoading && membership.data && !hasPremiumAccess) setLoading(false);
+      return;
+    }
     const box = createOutbox(userId, window.localStorage, sendEvents);
     outbox.current = box;
     void box.flush();
@@ -84,7 +93,7 @@ function KiokuPage() {
     return () => {
       alive = false;
     };
-  }, [userId, mode]);
+  }, [userId, mode, membership.isLoading, membership.data, hasPremiumAccess]);
 
   // Safe flush points: interval, tab hidden, page hide.
   useEffect(() => {
@@ -342,14 +351,25 @@ function KiokuPage() {
                 ))}
               </div>
             </section>
+            {!hasPremiumAccess && !membership.isLoading ? (
+              <section className="rounded-2xl border border-primary/20 bg-card p-4 text-center">
+                <p className="text-[12px] font-black">Kioku tersedia untuk Premium</p>
+                <p className="mx-auto mt-1 max-w-sm text-[9px] leading-relaxed text-muted-foreground">
+                  Materi dan Flashcard tetap dapat digunakan. Premium membuka latihan adaptif dan Analisis Ingatan.
+                </p>
+                <button type="button" onClick={() => setUpgradeOpen(true)} className="mt-3 rounded-xl bg-primary px-4 py-2.5 text-[10px] font-bold text-primary-foreground">
+                  Buka Kioku Premium
+                </button>
+              </section>
+            ) : (
             <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
               </a>
               <button type="button" disabled={loading || !ready || ready.exercises.length === 0} onClick={start} className="rounded-2xl border border-primary/25 bg-primary p-3 text-left text-primary-foreground disabled:opacity-50">
-                <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> Kioku Adaptif</p>
-                <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
+                <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> {mode === "daily" ? "Mulai Latihan Hari Ini" : mode === "boss" ? "Mulai Uji Ingatan" : "Kioku Adaptif"}</p>
+                <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : mode === "daily" ? "Mode harian dipilih. Mulai latihan yang paling perlu sekarang." : mode === "boss" ? "Mode uji dipilih. Mulai sesi campuran untuk menguji daya ingat." : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
               </button>
               <a href="/kioku?mode=boss" className="rounded-2xl border bg-card p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-black"><ShieldCheck className="size-3.5 text-primary" /> Uji Ingatan</p>
@@ -364,12 +384,14 @@ function KiokuPage() {
               </span>
               <span className="text-[9px] font-bold text-primary">Buka</span>
             </a>
+            )}
             {error && <p className="text-center text-[10px] text-red-600 dark:text-red-300">{error}</p>}
             {!loading && ready && ready.exercises.length === 0 && (
               <p className="rounded-2xl border bg-card p-3 text-center text-[9px] text-muted-foreground">Belum ada materi yang dapat diuji. Tandai Kanji, Kotoba, atau Bunpou sebagai Dipelajari terlebih dahulu.</p>
             )}
           </>
         )}
+        <PremiumUpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="ENO Kioku" />
         {session?.finished && (
           <section className="rounded-3xl border bg-card p-6 text-center">
             <h2 className="text-[16px] font-bold">Sesi selesai</h2>
