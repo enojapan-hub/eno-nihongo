@@ -33,6 +33,8 @@ import {
   fetchVocabLessonCounts,
   fetchVocabLessonPage,
   fetchVocabSenses,
+  fetchVocabThemeCount,
+  fetchVocabThemePage,
   pickUsageNote,
   VOCAB_PAGE_SIZE,
 } from "@/lib/vocab-resilient";
@@ -51,8 +53,11 @@ import { formatVocabularyClass } from "@/lib/vocabulary-taxonomy";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
 const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
-  validateSearch: (search: Record<string, unknown>): { category?: string; id?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { category?: string; theme?: string; id?: string } => ({
     ...(typeof search["category"] === "string" ? { category: search["category"] } : {}),
+    ...(typeof search["theme"] === "string" ? { theme: search["theme"] } : {}),
     ...(typeof search["id"] === "string" ? { id: search["id"] } : {}),
   }),
   component: KotobaPage,
@@ -87,6 +92,7 @@ function speak(t: string, onError?: () => void) {
 function KotobaPage() {
   const params = new URLSearchParams(window.location.search),
     category = params.get("category")?.trim() || null,
+    theme = params.get("theme")?.trim() || null,
     directId = params.get("id")?.trim() || null;
   const { data: targetLevel, isLoading: levelLoading } = useQuery({
     queryKey: ["target-level"],
@@ -150,10 +156,18 @@ function KotobaPage() {
     enabled: ready && !!category,
     staleTime: 10 * 60 * 1000,
   });
+  const themeCount = useQuery({
+    queryKey: ["vocab-theme-count", level, theme],
+    queryFn: () => fetchVocabThemeCount(level, theme!),
+    enabled: ready && !!theme,
+    staleTime: 10 * 60 * 1000,
+  });
   const fontSizes = LIST_FONT_SIZES[clampFontStep(fontStep)] ?? LIST_FONT_SIZES[LIST_FONT_DEFAULT]!;
   const currentCount = category
     ? Number(categoryCount.data ?? 0)
-    : Number(lessonCounts.find((x) => x.lesson_number === lesson)?.word_count ?? 0);
+    : theme
+      ? Number(themeCount.data ?? 0)
+      : Number(lessonCounts.find((x) => x.lesson_number === lesson)?.word_count ?? 0);
   const {
     data = [],
     isLoading,
@@ -162,19 +176,23 @@ function KotobaPage() {
   } = useQuery({
     queryKey: category
       ? ["vocab-category", level, category, page]
-      : ["vocab-lesson", level, lesson, page],
+      : theme
+        ? ["vocab-theme", level, theme, page]
+        : ["vocab-lesson", level, lesson, page],
     queryFn: () =>
       category
         ? fetchVocabCategoryPage(level, category, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
-        : fetchVocabLessonPage(level, lesson!, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE),
-    enabled: ready && (!!category || lesson != null),
+        : theme
+          ? fetchVocabThemePage(level, theme, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
+          : fetchVocabLessonPage(level, lesson!, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE),
+    enabled: ready && (!!category || !!theme || lesson != null),
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
   const { data: total = 0 } = useQuery({
     queryKey: ["vocab-count", level],
     queryFn: () => fetchVocabCount(level),
-    enabled: ready && !category,
+    enabled: ready && !category && !theme,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -186,14 +204,18 @@ function KotobaPage() {
     void qc.prefetchQuery({
       queryKey: category
         ? ["vocab-category", level, category, nextPage]
-        : ["vocab-lesson", level, lesson, nextPage],
+        : theme
+          ? ["vocab-theme", level, theme, nextPage]
+          : ["vocab-lesson", level, lesson, nextPage],
       queryFn: () =>
         category
           ? fetchVocabCategoryPage(level, category, offset, VOCAB_PAGE_SIZE)
-          : fetchVocabLessonPage(level, lesson!, offset, VOCAB_PAGE_SIZE),
+          : theme
+            ? fetchVocabThemePage(level, theme, offset, VOCAB_PAGE_SIZE)
+            : fetchVocabLessonPage(level, lesson!, offset, VOCAB_PAGE_SIZE),
       staleTime: 10 * 60 * 1000,
     });
-  }, [category, currentCount, lesson, level, page, qc, ready]);
+  }, [category, currentCount, lesson, level, page, qc, ready, theme]);
   const { data: directItem } = useQuery({
     queryKey: ["vocab-direct", directId],
     queryFn: () => fetchVocabById(directId!),
