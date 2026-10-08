@@ -114,6 +114,10 @@ jobs:
           END $;
           ROLLBACK;
           SQL
+      - name: Verify referral and premium transactions
+        run: |
+          eval "$(supabase status -o env | grep '^DB_URL=' | sed 's/^/export /')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pr140_referral_transactions.sql
       - name: Stop isolated services
         if: always()
         run: supabase stop --no-backup
