@@ -58,7 +58,7 @@ function LeaderboardPage() {
             displayName: x.displayName,
             avatarUrl: x.avatarUrl,
             level: x.jlptLevel,
-            points: x.periodXp,
+            points: x.periodPoints,
             streak: x.streak,
           }));
     return (level === "Semua" ? src : src.filter((x) => x.level === level)).map((x, i) => ({
