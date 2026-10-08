@@ -45,14 +45,7 @@ export function separateSameItemCards<T extends DeckCard>(cards: T[], gap = 3): 
  * Reinsert a difficult card after a small gap. Lupa returns sooner than Sulit.
  * The queue is capped by the caller's original session; this helper only places one retry.
  */
-export function reinsertDifficultCard<T extends DeckCard>(
-  remaining: T[],
-  card: T,
-  rating: 0 | 1,
-): T[] {
+export function retryAfterGap<T>(card: T, rating: 0 | 1, answeredAfter: number): T | null {
   const gap = rating === 0 ? 3 : 5;
-  const next = [...remaining];
-  const insertAt = Math.min(gap, next.length);
-  next.splice(insertAt, 0, card);
-  return separateSameItemCards(next, Math.min(3, gap));
+  return answeredAfter >= gap ? card : null;
 }
