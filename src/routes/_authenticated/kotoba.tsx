@@ -46,7 +46,7 @@ import {
 import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacing";
 import { exampleRomaji, wordRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthUser } from "@/lib/auth-user";
+import { getAuthUser } from "@/lib/auth-user";\nimport { learnedActionLabel } from "@/lib/material-progress";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
 const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
@@ -837,7 +837,7 @@ function Detail({
               <Check
                 className={`mr-1 size-3.5 transition-transform duration-150 ${learned ? "scale-110" : ""} motion-reduce:transition-none`}
               />
-              <span className="truncate">{learned ? "Dipelajari" : "Tandai dipelajari"}</span>
+              <span className="truncate">{learnedActionLabel(learned)}</span>
             </Button>
             <Button
               variant="ghost"
