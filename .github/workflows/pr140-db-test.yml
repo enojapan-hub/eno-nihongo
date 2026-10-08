@@ -20,8 +20,21 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Use isolated local ports
+        run: |
+          cat >> supabase/config.toml <<'TOML'
+          [api]
+          port = 55421
+          [db]
+          port = 55422
+          shadow_port = 55420
+          [studio]
+          port = 55423
+          [inbucket]
+          port = 55424
+          TOML
       - name: Start isolated Supabase services
-        run: supabase start --exclude studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor
+        run: supabase start --exclude studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
       - name: Apply repository migrations in order
         run: supabase db reset --local --yes
       - name: Check referral and redemption functions
