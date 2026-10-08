@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blankOut, stemOf } from "../session";
+import { blankOut, sentenceOrderParts, stemOf } from "../session";
 
 // 40 real vocabulary examples (term, first example sentence) sampled from the production dataset.
 const REAL: Array<[string, string]> = [
@@ -61,5 +61,21 @@ describe("cloze on real data", () => {
       expect(out.split("＿＿").join(needle)).toBe(ja);
     }
     expect(produced).toBeGreaterThan(25);
+  });
+});
+
+
+describe("sentence ordering on source data", () => {
+  it("only accepts explicit source chunks and reconstructs the sentence exactly", () => {
+    expect(sentenceOrderParts("毎日 日本語 を 勉強します。")).toEqual([
+      "毎日",
+      "日本語",
+      "を",
+      "勉強します。",
+    ]);
+    expect(sentenceOrderParts("毎日日本語を勉強します。")).toBeNull();
+    expect(sentenceOrderParts("私 は 私 が 好き")).toBeNull();
+    const source = "一瞬 目 を 閉じました。";
+    expect(sentenceOrderParts(source)?.join(" ")).toBe(source);
   });
 });
