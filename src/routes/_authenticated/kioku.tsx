@@ -351,7 +351,9 @@ function KiokuPage() {
                 ))}
               </div>
             </section>
-            {!hasPremiumAccess && !membership.isLoading ? (
+            {membership.isLoading ? (
+              <section className="h-28 animate-pulse rounded-2xl border bg-muted/40" aria-label="Memeriksa akses Kioku" />
+            ) : !hasPremiumAccess ? (
               <section className="rounded-2xl border border-primary/20 bg-card p-4 text-center">
                 <p className="text-[12px] font-black">Kioku tersedia untuk Premium</p>
                 <p className="mx-auto mt-1 max-w-sm text-[9px] leading-relaxed text-muted-foreground">
@@ -362,6 +364,7 @@ function KiokuPage() {
                 </button>
               </section>
             ) : (
+              <>
             <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
@@ -384,9 +387,10 @@ function KiokuPage() {
               </span>
               <span className="text-[9px] font-bold text-primary">Buka</span>
             </a>
+              </>
             )}
-            {error && <p className="text-center text-[10px] text-red-600 dark:text-red-300">{error}</p>}
-            {!loading && ready && ready.exercises.length === 0 && (
+            {hasPremiumAccess && error && <p className="text-center text-[10px] text-red-600 dark:text-red-300">{error}</p>}
+            {hasPremiumAccess && !loading && ready && ready.exercises.length === 0 && (
               <p className="rounded-2xl border bg-card p-3 text-center text-[9px] text-muted-foreground">Belum ada materi yang dapat diuji. Tandai Kanji, Kotoba, atau Bunpou sebagai Dipelajari terlebih dahulu.</p>
             )}
           </>
