@@ -13,7 +13,7 @@ as $$
   ), flags as (
     select
       value,
-      value like '%kata benda%' or value like '%meishi%' or value like '%nomina%' as noun,
+      value like '%kata benda%' or value ~ '(^|[^a-z])meishi([^a-z]|$)' or value like '%nomina%' as noun,
       value like '%kata kerja%' or value like '%doushi%' as verb,
       value like '%kata sifat い%' or value like '%sifat い%' or value like '%i-keiyoushi%' as adj_i,
       value like '%kata sifat な%' or value like '%sifat な%' or value like '%sifat-na%' or value like '%na-keiyoushi%' as adj_na,
