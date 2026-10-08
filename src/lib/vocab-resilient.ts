@@ -160,10 +160,10 @@ export async function fetchVocabListResilient(level: Level) {
 
 export async function fetchVocabCategoryCount(level: Level, category: string): Promise<number> {
   const res = await withTimeout(
-    supabase.rpc("get_vocabulary_count_by_category", {
-      p_level: level,
-      p_category_slug: category,
-    }),
+    supabase.rpc(
+      "get_vocabulary_count_by_primary_category" as never,
+      { p_level: level, p_category_slug: category } as never,
+    ),
   );
   if (res.error) throw new Error(res.error.message);
   return Number(res.data ?? 0);
@@ -176,12 +176,15 @@ export async function fetchVocabCategoryPage(
   limit = VOCAB_PAGE_SIZE,
 ) {
   const res = await withTimeout(
-    supabase.rpc("get_vocabulary_page_by_category", {
-      p_level: level,
-      p_category_slug: category,
-      p_offset: offset,
-      p_limit: limit,
-    }),
+    supabase.rpc(
+      "get_vocabulary_page_by_primary_category" as never,
+      {
+        p_level: level,
+        p_category_slug: category,
+        p_offset: offset,
+        p_limit: limit,
+      } as never,
+    ),
   );
   if (res.error) throw new Error(res.error.message);
   return (res.data ?? []).map((row) => ({
