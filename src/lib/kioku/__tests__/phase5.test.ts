@@ -693,3 +693,38 @@ describe("source-backed grammar exercise safety", () => {
     expect(sourceText).toContain(ex!.answer);
   });
 });
+
+
+describe("validated conjugation exercises", () => {
+  it("uses only attached source forms and never invents a conjugation", () => {
+    const vocab: Content = {
+      id: "v-form",
+      type: "vocabulary",
+      level: "N5",
+      surface: "行きます",
+      reading: "いきます",
+      meaning: "pergi",
+      forms: [
+        { code: "dictionary", label: "Bentuk Kamus", value: "行く" },
+        { code: "masu", label: "Bentuk Masu", value: "行きます" },
+        { code: "te", label: "Bentuk Te", value: "行って" },
+        { code: "ta", label: "Bentuk Ta", value: "行った" },
+      ],
+      examples: [{ ja: "学校へ 行きます", id: "Pergi ke sekolah." }],
+    };
+    const sel: Selection = {
+      itemType: "vocabulary", itemId: vocab.id, level: "N5", aspect: "usage",
+      direction: "forward", exerciseType: "choice", stage: 2, hintLevel: 3,
+      optionCount: 4, reason: "test", score: 10,
+    };
+    let found: ReturnType<typeof buildExercise> = null;
+    for (let i = 0; i < 20 && !found; i++)
+      found = buildExercise(sel, new Map([[`vocabulary:${vocab.id}`, vocab]]), [vocab],
+        new Set([`vocabulary:${vocab.id}`]), `form-${i}`, 0);
+    expect(found).not.toBeNull();
+    if (found?.exerciseType === "conjugation_choice") {
+      expect(vocab.forms!.map((x) => x.value)).toContain(found.answer);
+      expect(found.options.every((o) => vocab.forms!.some((x) => x.value === o.text))).toBe(true);
+    }
+  });
+});
