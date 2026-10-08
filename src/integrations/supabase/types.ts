@@ -5764,6 +5764,14 @@ export type Database = {
         Returns: Json
       }
       publish_admin_announcement: { Args: { p_id: string }; Returns: Json }
+      mark_material_learned_atomic: {
+        Args: {
+          p_item_type: Database["public"]["Enums"]["content_skill"]
+          p_item_id: string
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+        }
+        Returns: boolean
+      }
       record_learning_activity:
         | {
             Args: {
