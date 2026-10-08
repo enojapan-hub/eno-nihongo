@@ -10,11 +10,9 @@ import { Button } from "@/components/ui/button";
 import { getMyAccount } from "@/lib/profile.functions";
 import { supabase } from "@/lib/supabase/client";
 
-type RpcResult = { data: number | null; error: { message: string } | null };
-function callRpc(fn: string, args: Record<string, unknown>): Promise<RpcResult> {
-  return (
-    supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => Promise<RpcResult>
-  )(fn, args);
+type RpcResult<T> = { data: T | null; error: { message: string } | null };
+function callRpc<T = number>(fn: string, args: Record<string, unknown>): Promise<RpcResult<T>> {
+  return (supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => Promise<RpcResult<T>>)(fn, args);
 }
 
 export const Route = createFileRoute("/_authenticated/referral")({
@@ -25,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/referral")({
 function ReferralPage() {
   const fetchAccount = useServerFn(getMyAccount);
   const { data, refetch } = useQuery({ queryKey: ["my-account"], queryFn: () => fetchAccount() });
-  const rewards = useQuery({ queryKey: ["reward-balance"], queryFn: async () => { const { data: user } = await supabase.auth.getUser(); if (!user.user) return { points: 0, claims: [] as string[] }; const [{ data: stats }, { data: claims }] = await Promise.all([supabase.from("user_stats").select("reward_points").eq("user_id", user.user.id).maybeSingle(), supabase.from("social_reward_claims").select("mission").eq("user_id", user.user.id)]); return { points: stats?.reward_points ?? 0, claims: (claims ?? []).map((x) => x.mission) }; } });
+  const rewards = useQuery({ queryKey: ["reward-balance"], queryFn: async () => { const { data: user } = await supabase.auth.getUser(); if (!user.user) return { points: 0, claims: [] as string[] }; const [{ data: stats }, claims] = await Promise.all([supabase.from("user_stats").select("reward_points").eq("user_id", user.user.id).maybeSingle(), callRpc<string[]>("get_social_reward_claims", {})]); return { points: stats?.reward_points ?? 0, claims: claims.data ?? [] }; } });
   const [copied, setCopied] = useState(false);
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
