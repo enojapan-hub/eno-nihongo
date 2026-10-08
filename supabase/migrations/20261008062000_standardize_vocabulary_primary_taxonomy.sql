@@ -134,3 +134,145 @@ revoke all on function public.get_vocabulary_page_by_primary_category(public.jlp
 from public, anon;
 grant execute on function public.get_vocabulary_page_by_primary_category(public.jlpt_level,text,integer,integer)
 to authenticated, service_role;
+
+
+-- Themes are a separate learning dimension from grammatical class.
+-- The initial theme set below is deliberately limited to groups audited against
+-- the Minna no Nihongo vocabulary source and current production vocabulary.
+create or replace function public.vocabulary_theme_slugs(
+  p_term text,
+  p_reading text,
+  p_meaning_id text
+)
+returns text[]
+language sql
+immutable
+set search_path = ''
+as $$
+  with n as (
+    select
+      coalesce(p_term,'') as term,
+      lower(trim(coalesce(p_meaning_id,''))) as meaning
+  )
+  select array_remove(array[
+    case when term = any(array[
+      '色','赤','青','白','黒','紺','黄色','茶色','緑','紫','ピンク','オレンジ','灰色'
+    ]) then 'warna' end,
+    case when
+      term = any(array[
+        '一','二','三','四','五','六','七','八','九','十',
+        '一つ','二つ','三つ','四つ','五つ','六つ','七つ','八つ','九つ',
+        '一人','二人','零','ゼロ',
+        '～人','～台','～枚','～回','～時間','～週間','～か月','～年',
+        '～便','～号','～個','～本','～杯','～冊','匹','枚','歳','台','回','個','冊'
+      ])
+      or meaning ~ '(kata bantu bilangan|kata penghitung|satuan benda|penghitung .*|~ orang|~ unit|~ lembar|~ kali)'
+      then 'bilangan-penghitung' end,
+    case when
+      term = any(array[
+        '鉛筆','シャープペンシル','ボールペン','ノート','はさみ','鋏','パンチ',
+        'ホッチキス','セロテープ','紙','消しゴム','鉛筆削り','修正液','定規','ものさし','電卓'
+      ])
+      or (term='のり' and meaning ~ '(lem|perekat)')
+      then 'alat-tulis' end
+  ], null)
+  from n
+$$;
+
+revoke all on function public.vocabulary_theme_slugs(text,text,text)
+from public, anon, authenticated;
+
+create or replace function public.get_vocabulary_theme_counts(p_level public.jlpt_level)
+returns table(theme_slug text, item_count bigint)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with classified as (
+    select distinct r.id, t.theme_slug
+    from public.get_vocabulary_lexical_rows(p_level) r
+    cross join lateral unnest(
+      public.vocabulary_theme_slugs(r.term,r.reading,r.meaning_id)
+    ) t(theme_slug)
+  )
+  select c.theme_slug, count(*)::bigint
+  from classified c
+  group by c.theme_slug
+$$;
+
+revoke all on function public.get_vocabulary_theme_counts(public.jlpt_level)
+from public, anon;
+grant execute on function public.get_vocabulary_theme_counts(public.jlpt_level)
+to authenticated, service_role;
+
+create or replace function public.get_vocabulary_count_by_theme(
+  p_level public.jlpt_level,
+  p_theme_slug text
+)
+returns bigint
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select count(distinct r.id)
+  from public.get_vocabulary_lexical_rows(p_level) r
+  where p_theme_slug = any(public.vocabulary_theme_slugs(r.term,r.reading,r.meaning_id))
+$$;
+
+revoke all on function public.get_vocabulary_count_by_theme(public.jlpt_level,text)
+from public, anon;
+grant execute on function public.get_vocabulary_count_by_theme(public.jlpt_level,text)
+to authenticated, service_role;
+
+create or replace function public.get_vocabulary_page_by_theme(
+  p_level public.jlpt_level,
+  p_theme_slug text,
+  p_offset integer default 0,
+  p_limit integer default 60
+)
+returns table(
+  id uuid,
+  term text,
+  reading text,
+  romaji text,
+  meaning_id text,
+  meaning_en text,
+  part_of_speech text,
+  examples jsonb,
+  level public.jlpt_level,
+  sort_order integer,
+  source_book text,
+  lesson_number integer,
+  lesson_title text,
+  usage_note_id text
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with ranked as (
+    select x.*,
+      row_number() over(
+        partition by x.id
+        order by x.component_order,x.created_at,x.origin_id
+      ) as pick
+    from public.get_vocabulary_lexical_rows(p_level) x
+    where p_theme_slug = any(public.vocabulary_theme_slugs(x.term,x.reading,x.meaning_id))
+  )
+  select
+    r.id,r.term,r.reading,r.romaji,r.meaning_id,r.meaning_en,r.part_of_speech,
+    r.examples,r.level,r.sort_order,r.source_book,r.lesson_number,r.lesson_title,r.usage_note_id
+  from ranked r
+  where r.pick=1
+  order by r.sort_order nulls last,r.created_at,r.component_order,r.id
+  offset greatest(p_offset,0)
+  limit least(greatest(p_limit,1),200)
+$$;
+
+revoke all on function public.get_vocabulary_page_by_theme(public.jlpt_level,text,integer,integer)
+from public, anon;
+grant execute on function public.get_vocabulary_page_by_theme(public.jlpt_level,text,integer,integer)
+to authenticated, service_role;
