@@ -1,10 +1,11 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { ArrowRight, BookOpen, GraduationCap, Search, Sparkles, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, BookOpen, FileText, GraduationCap, Search, ShoppingBag, Sparkles, Users, X } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/_authenticated/kelas")({ component: KelasRoute });
 
@@ -13,7 +14,12 @@ function KelasRoute() {
   return pathname.replace(/\/$/, "") === "/kelas" ? <KelasPage /> : <Outlet />;
 }
 
+type DigitalProduct = { id:string; title:string; category:string; description:string|null; price_idr:number|string; file_name:string; related_class_id:string|null };
+
 function KelasPage() {
+  const [selectedProduct,setSelectedProduct]=useState<DigitalProduct|null>(null);
+  const [deliveryEmail,setDeliveryEmail]=useState("");
+  const [emailConfirmed,setEmailConfirmed]=useState(false);
   const rate = useQuery({
     queryKey: ["jpy-idr-rate"],
     queryFn: async () => {
@@ -44,6 +50,22 @@ function KelasPage() {
     },
   });
 
+  const products = useQuery({
+    queryKey: ["digital-products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("digital_products" as never)
+        .select("id,title,category,description,price_idr,file_name,related_class_id")
+        .eq("status","published")
+        .order("created_at",{ascending:false});
+      if (error) throw error;
+      return (data ?? []) as unknown as DigitalProduct[];
+    },
+    retry: false,
+  });
+  useEffect(() => {
+    void getAuthUser().then((user) => setDeliveryEmail(user?.email ?? ""));
+  }, []);
   const [search, setSearch] = useState("");
   const visibleClasses = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -188,10 +210,64 @@ function KelasPage() {
               </div>
             )}
           </section>
+
+          <section aria-labelledby="digital-products">
+            <div className="mb-3">
+              <h2 id="digital-products" className="text-lg font-black">Produk Digital</h2>
+              <p className="text-xs text-muted-foreground">Materi SSW, e-book, latihan, dan materi tambahan ENO NIHONGO.</p>
+            </div>
+            {products.isError && <p className="rounded-2xl border p-4 text-xs text-muted-foreground">Produk digital belum tersedia.</p>}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {products.data?.map((product) => (
+                <button key={product.id} type="button" onClick={() => { setSelectedProduct(product); setEmailConfirmed(false); }}
+                  className="flex gap-3 rounded-2xl border bg-card p-4 text-left shadow-sm transition hover:border-primary/40">
+                  <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary"><FileText className="size-6"/></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] font-bold uppercase tracking-wide text-primary">{product.category}</span>
+                    <strong className="mt-0.5 block truncate text-sm">{product.title}</strong>
+                    <span className="mt-1 block line-clamp-2 text-[11px] text-muted-foreground">{product.description || "Materi digital ENO NIHONGO."}</span>
+                    <span className="mt-2 block text-sm font-black text-primary">{formatIdr(product.price_idr)}</span>
+                  </span>
+                  <ShoppingBag className="size-4 shrink-0 text-muted-foreground"/>
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
+
+        {selectedProduct && (
+          <div className="fixed inset-0 z-50 grid place-items-end bg-black/45 p-0 sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="digital-product-title">
+            <div className="w-full max-w-md rounded-t-3xl bg-background p-5 shadow-xl sm:rounded-3xl">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-[10px] font-bold uppercase text-primary">{selectedProduct.category}</p><h2 id="digital-product-title" className="text-lg font-black">{selectedProduct.title}</h2></div>
+                <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setSelectedProduct(null)} aria-label="Tutup"><X className="size-4"/></Button>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">{selectedProduct.description || "Materi digital ENO NIHONGO."}</p>
+              <p className="mt-3 text-xl font-black text-primary">{formatIdr(selectedProduct.price_idr)}</p>
+              <label className="mt-5 block text-xs font-bold" htmlFor="delivery-email">Ke mana materi akan dikirim?</label>
+              <input id="delivery-email" type="email" value={deliveryEmail} onChange={(e)=>{setDeliveryEmail(e.target.value);setEmailConfirmed(false);}}
+                className="mt-2 h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+              <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                Pastikan alamat email benar dan dapat menerima email. ENO NIHONGO tidak bertanggung jawab atas kegagalan pengiriman materi yang disebabkan oleh kesalahan penulisan alamat email oleh pembeli.
+              </p>
+              <label className="mt-4 flex items-start gap-2 rounded-xl border p-3 text-xs">
+                <input type="checkbox" checked={emailConfirmed} onChange={(e)=>setEmailConfirmed(e.target.checked)} className="mt-0.5"/>
+                <span>Saya telah memeriksa dan memastikan alamat email di atas sudah benar.</span>
+              </label>
+              <Button className="mt-4 w-full" disabled title="Duitku masih dinonaktifkan">
+                Lanjut ke Pembayaran
+              </Button>
+              <p className="mt-2 text-center text-[10px] text-muted-foreground">Pembayaran akan dibuka setelah sistem pembayaran ENO NIHONGO diaktifkan.</p>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );
+}
+
+function formatIdr(value: number | string) {
+  return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(value));
 }
 
 function formatPrice(c: { price: number | string; currency: string }, rate?: number) {
