@@ -45,6 +45,8 @@ declare
   v_points integer;
 begin
   if v_user is null then raise exception 'not_authenticated'; end if;
+  -- Reward follow/share requires independent verification; client claims are not proof.
+  raise exception 'social_reward_verification_not_available';
   v_points := case p_mission
     when 'instagram_follow' then 100
     when 'tiktok_follow' then 100
