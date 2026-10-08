@@ -4,7 +4,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { dynamicTable, type DbRecord } from "@/lib/dynamic-db";
 import { buildSession, type Content, SESSION_SIZE } from "./session";
 import type { KiokuSession } from "./session-types";
-import { rankCandidates, toLearned } from "./selector";
+import { rankCandidates, recoveryLimit, toLearned } from "./selector";
 import type { KiokuEvent, KiokuItemType, MemoryStateRow } from "./types";
 
 const arr = (v: unknown) => (Array.isArray(v) ? v.filter(Boolean).join("、") : v ? String(v) : "");
