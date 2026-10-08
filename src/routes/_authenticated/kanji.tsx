@@ -12,6 +12,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { ItemMasteryCard } from "@/components/learn/ItemMasteryCard";
 import { Button } from "@/components/ui/button";
 import { KanjiGuide } from "@/components/learn/KanjiGuide";
 import { KanjiStructureSection } from "@/components/learn/KanjiStructureSection";
@@ -562,6 +563,7 @@ function KanjiPage() {
                 <Info label="Kunyomi" value={(item.kunyomi ?? []).join("・") || "—"} />
                 <Info label="Jumlah Coretan" value={String(item.stroke_count ?? "—")} />
               </div>
+              <ItemMasteryCard itemType="kanji" itemId={item.id} />
               <KanjiStructureSection
                 kanjiId={item.id}
                 character={item.character}
