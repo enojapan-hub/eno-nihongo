@@ -14,6 +14,7 @@ import {
   Sparkles,
   UsersRound,
   Video,
+  ShoppingBag,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -134,6 +135,16 @@ function Page() {
                 <Link to="/guru-kelas/$classId/konten" params={{ classId }}>
                   <BookOpenText className="size-[18px] text-primary" />
                   Konten & tugas
+                </Link>
+              </Button>
+              <Button
+                className="h-auto min-h-[4.5rem] flex-col gap-1.5 rounded-2xl px-2 text-[11px]"
+                variant="outline"
+                asChild
+              >
+                <Link to="/guru-kelas/$classId/produk" params={{ classId }}>
+                  <ShoppingBag className="size-[18px] text-primary" />
+                  Produk digital
                 </Link>
               </Button>
               <Button
