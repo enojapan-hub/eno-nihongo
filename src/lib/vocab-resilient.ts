@@ -187,7 +187,8 @@ export async function fetchVocabCategoryPage(
     ),
   );
   if (res.error) throw new Error(res.error.message);
-  return (res.data ?? []).map((row) => ({
+  const rows = (res.data ?? []) as unknown as Array<Record<string, unknown>>;
+  return rows.map((row) => ({
     ...row,
     senses: [],
     curriculum: [],
