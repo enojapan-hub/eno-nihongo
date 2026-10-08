@@ -304,6 +304,10 @@ function KiokuPage() {
                 title: "Partikel & Perbaiki Kesalahan",
                 body: "Latihan Partikel meminta kamu melengkapi partikel pada kalimat sumber. Perbaiki Kesalahan menampilkan contoh salah yang memang tersimpan di materi Bunpou, lalu kamu memilih bentuk yang benar. Keduanya tetap memakai Yakin/Ragu dan hasilnya masuk ke statistik Kioku.",
               },
+              {
+                title: "Konjugasi",
+                body: "Latihan Konjugasi hanya muncul untuk Kotoba yang memiliki bentuk kata kerja tervalidasi. Kioku menyebut bentuk target, lalu kamu memilih jawabannya. Jika data bentuk belum tersedia, latihan ini tidak dibuat.",
+              },
             ]}
           />
         </div>
