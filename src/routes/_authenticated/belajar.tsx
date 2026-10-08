@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { DailyNewLimit } from "@/components/learn/DailyNewLimit";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
 import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
@@ -327,6 +328,7 @@ function BelajarPage() {
                     </p>
                   </Link>
                 </section>
+                <DailyNewLimit />
                 <KiokuCard />
                 <FlashcardCard loading={metrics.isLoading} due={metrics.data?.dueReviewCount} />
                 <section>
