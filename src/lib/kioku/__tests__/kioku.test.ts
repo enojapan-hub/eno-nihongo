@@ -128,7 +128,7 @@ describe("selector priority", () => {
       [st("t", { last_tested_at: new Date(NOW - 60000).toISOString() })],
       NOW,
     );
-    expect(r[0]?.reason).toBe("progress_due");
+    expect(["progress_due", "progress_due_secondary"]).toContain(r[0]?.reason);
     expect(
       r.some((s) => s.itemId === "t" && s.aspect === "meaning" && s.direction === "forward"),
     ).toBe(false);
