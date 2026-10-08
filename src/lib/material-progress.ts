@@ -5,5 +5,5 @@ export function isMaterialLearned(status: string | null | undefined) {
 }
 
 export function learnedActionLabel(learned: boolean) {
-  return learned ? "Dipelajari" : "Tandai dipelajari";
+  return learned ? "Dipelajari" : "Pelajari";
 }
