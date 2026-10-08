@@ -41,6 +41,7 @@ function KiokuPage() {
   const [confidence, setConfidence] = useState<Confidence | null>(null);
   const [hintOpen, setHintOpen] = useState(false);
   const [usedHint, setUsedHint] = useState(false);
+  const [orderedParts, setOrderedParts] = useState<string[]>([]);
   const revealMs = useRef(0);
   const shownAt = useRef(Date.now());
   const outbox = useRef<ReturnType<typeof createOutbox> | null>(null);
@@ -101,7 +102,8 @@ function KiokuPage() {
     session && !session.finished ? session.exercises[session.index] : undefined;
   const total = session?.exercises.length ?? 0;
   const answered = ex ? ex.id in (session?.results ?? {}) : false;
-  const isChoice = !!ex && ex.exerciseType !== "recall_flip";
+  const isSentenceOrder = !!ex && ex.exerciseType === "sentence_order";
+  const isChoice = !!ex && ex.exerciseType !== "recall_flip" && !isSentenceOrder;
   const showHint = !!ex && !isChoice && ex.hintLevel >= 1 && (hintOpen || ex.hintLevel === 2);
 
   const resetExerciseUi = () => {
@@ -110,6 +112,7 @@ function KiokuPage() {
     setConfidence(null);
     setHintOpen(false);
     setUsedHint(false);
+    setOrderedParts([]);
     revealMs.current = 0;
     shownAt.current = Date.now();
   };
@@ -281,6 +284,10 @@ function KiokuPage() {
                 title: "Kioku menguji dari beberapa sisi",
                 body: "Arti, bacaan, arah Indonesia ke Jepang, penggunaan, konteks, dan tes ulang dinilai terpisah agar sisi yang masih lemah lebih sering dilatih.",
               },
+              {
+                title: "Susun Kalimat",
+                body: "Pada latihan Susun Kalimat, pilih Ragu atau Yakin lalu tekan potongan sesuai urutan. Potongan pertama menjadi nomor ①. Tekan potongan yang sudah dipilih untuk membatalkan. Latihan ini hanya memakai kalimat sumber yang memiliki potongan tervalidasi.",
+              },
             ]}
           />
         </div>
@@ -397,7 +404,99 @@ function KiokuPage() {
                 </p>
               )}
             </section>
-            {isChoice ? (
+            {isSentenceOrder ? (
+              <div className="grid gap-2">
+                {!answered && (
+                  <>
+                    <div className="flex items-center gap-2" role="group" aria-label="Keyakinan">
+                      {pill("ragu", "Ragu")}
+                      {pill("yakin", "Yakin")}
+                    </div>
+                    {!confidence && (
+                      <p className="text-center text-[9px] text-muted-foreground">
+                        Pilih Ragu atau Yakin sebelum menyusun kalimat.
+                      </p>
+                    )}
+                    <div className="min-h-14 rounded-2xl border bg-muted/35 p-2">
+                      <div className="flex flex-wrap gap-2">
+                        {orderedParts.map((id, index) => {
+                          const part = ex.options.find((o) => o.id === id);
+                          if (!part) return null;
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => setOrderedParts((v) => v.filter((x) => x !== id))}
+                              className="rounded-xl border bg-card px-3 py-2 font-jp text-[11px] font-semibold"
+                            >
+                              {index + 1}. {part.text}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {ex.options
+                        .filter((o) => !orderedParts.includes(o.id))
+                        .map((o) => (
+                          <button
+                            key={o.id}
+                            type="button"
+                            disabled={!confidence}
+                            onClick={() => setOrderedParts((v) => [...v, o.id])}
+                            className="rounded-xl border bg-card px-3 py-2 font-jp text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {o.text}
+                          </button>
+                        ))}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!confidence || orderedParts.length !== ex.options.length}
+                      onClick={() => {
+                        const answer = orderedParts
+                          .map((id) => ex.options.find((o) => o.id === id)?.text ?? "")
+                          .join(" ");
+                        record(ex, {
+                          correct: answer === ex.answer,
+                          selectedId: null,
+                          confidence,
+                          usedHint: false,
+                          responseMs: Math.max(0, Date.now() - shownAt.current),
+                        });
+                      }}
+                      className="min-h-12 rounded-2xl bg-primary text-[11px] font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Periksa Jawaban
+                    </button>
+                  </>
+                )}
+                {answered && (
+                  <>
+                    <div className={`rounded-2xl border p-3 text-center font-jp text-[12px] font-semibold ${
+                      lastCorrect
+                        ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/[.12]"
+                        : "border-red-300 bg-red-50 dark:bg-red-500/[.12]"
+                    }`}>
+                      <p>{lastCorrect ? "Benar" : "Urutan yang benar:"}</p>
+                      <p className="mt-1">{ex.answer}</p>
+                      {ex.feedback && (
+                        <p className="mt-1 text-[10px] font-normal text-muted-foreground">
+                          {ex.feedback}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      ref={nextRef}
+                      onClick={() => advance()}
+                      className="w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground"
+                    >
+                      Lanjut
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : isChoice ? (
               <div className="grid gap-2 md:grid-cols-2">
                 {!answered && (
                   <div
