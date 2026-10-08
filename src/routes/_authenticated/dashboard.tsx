@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { premiumStatus } from "@/lib/premium-countdown";
 import { PremiumBadge } from "@/components/membership/PremiumBadge";
+import { HomeMemorySummary } from "@/components/learn/HomeMemorySummary";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Home — ENO NIHONGO" }] }),
@@ -296,6 +297,8 @@ function DashboardPage() {
             />
           </div>
         </div>
+
+        <HomeMemorySummary />
 
         <section>
           <h2 className="mb-2 px-1 text-sm font-bold">Akses Cepat</h2>
