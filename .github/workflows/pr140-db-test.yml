@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - 'src/lib/learn-queries.ts'
+      - 'src/routes/_authenticated/kotoba.tsx'
       - '.github/workflows/pr140-db-test.yml'
   workflow_dispatch:
 
@@ -90,6 +93,12 @@ jobs:
             IF has_function_privilege('anon', 'public.award_referral_signup(text)', 'EXECUTE') THEN
               RAISE EXCEPTION 'Anonymous referral signup allowed';
             END IF;
+            IF has_function_privilege('anon', 'public.mark_material_learned_atomic(public.content_skill,uuid,public.jlpt_level)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Anonymous atomic learning allowed';
+            END IF;
+            IF NOT has_function_privilege('authenticated', 'public.mark_material_learned_atomic(public.content_skill,uuid,public.jlpt_level)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Authenticated atomic learning unavailable';
+            END IF;
             IF has_function_privilege('anon', 'public.redeem_points_for_premium(integer)', 'EXECUTE') THEN
               RAISE EXCEPTION 'Anonymous redemption allowed';
             END IF;
@@ -113,6 +122,13 @@ jobs:
           EXCEPTION WHEN raise_exception THEN
             IF SQLERRM <> 'not_authenticated' THEN RAISE; END IF;
           END $$;
+          DO $
+          BEGIN
+            PERFORM public.mark_material_learned_atomic('kanji', '33333333-3333-4333-8333-333333333333', 'N5');
+            RAISE EXCEPTION 'Atomic learning accepted without login';
+          EXCEPTION WHEN raise_exception THEN
+            IF SQLERRM <> 'login_required' THEN RAISE; END IF;
+          END $;
           ROLLBACK;
           SQL
       - name: Verify referral and premium transactions
