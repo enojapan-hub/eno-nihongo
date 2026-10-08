@@ -18,9 +18,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { DailyNewLimit } from "@/components/learn/DailyNewLimit";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
-import { fetchVocabCategoryCount, fetchVocabListResilient, fetchVocabThemeCounts } from "@/lib/vocab-resilient";
+import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
 import { VOCAB_PRIMARY_CATEGORIES } from "@/lib/vocabulary-taxonomy";
-import { VOCAB_THEMES } from "@/lib/vocabulary-themes";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -51,22 +50,6 @@ async function fetchExtra(level: Level) {
     : await Promise.all(
         VOCAB_PRIMARY_CATEGORIES.map((x) => fetchVocabCategoryCount(level, x.slug)),
       );
-
-  const themeRows = await fetchVocabThemeCounts(level);
-  const themeCounts = new Map(themeRows.map((r) => [r.theme_slug, Number(r.item_count)]));
-
-  return {
-    categories: VOCAB_PRIMARY_CATEGORIES.map((x, i) => ({
-      slug: x.slug,
-      labelJa: x.labelJa,
-      label: x.label,
-      hint: x.hint,
-      count: counts[i] ?? 0,
-    })),
-    themes: VOCAB_THEMES.map((x) => ({
-      ...x,
-      count: themeCounts.get(x.slug) ?? 0,
-    })),
   };
 }
 function BelajarPage() {
@@ -433,81 +416,7 @@ function BelajarPage() {
                     ))}
                   </div>
                 </section>
-                <section ref={extraRef} className="rounded-2xl border bg-card p-3">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="grid size-8 place-items-center rounded-xl bg-violet-100 text-violet-600">
-                      <Tags className="size-4" />
-                    </span>
-                    <div>
-                      <p className="text-[12px] font-bold">Kotoba Tambahan {level}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Kategori yang sama untuk N5 sampai N1
-                      </p>
-                    </div>
-                  </div>
-                  {extra.isLoading || extra.isPending ? (
-                    <p className="py-2 text-center text-[10px] text-muted-foreground">
-                      Memuat kategori…
-                    </p>
-                  ) : extra.isError ? (
-                    <p className="py-2 text-center text-[10px] text-muted-foreground">
-                      Kategori belum dapat dimuat.
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                      {(extra.data?.categories ?? []).map((cat) => (
-                        <Link
-                          key={cat.slug}
-                          to="/kotoba"
-                          search={{ category: String(cat.slug) }}
-                          className="flex min-w-0 items-center gap-2 rounded-xl bg-muted/45 px-2.5 py-2"
-                        >
-                          <span className="min-w-0 flex-1">
-                            <span lang="ja" className="block font-jp text-[13px] font-bold">{cat.labelJa}</span>
-                            <span className="block text-[9px] font-semibold">{cat.label}</span>
-                            <span className="block text-[8px] leading-3 text-muted-foreground">
-                              {cat.hint}
-                            </span>
-                          </span>
-                          <span className="shrink-0 rounded-full bg-background px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                            {cat.count}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                  {!extra.isLoading && !extra.isError && (
-                    <div className="mt-3 border-t pt-3">
-                      <div className="mb-2">
-                        <p className="text-[11px] font-bold">Tema Kosakata</p>
-                        <p className="text-[9px] text-muted-foreground">
-                          Kelompok makna terpisah dari kelas kata
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        {(extra.data?.themes ?? []).map((theme) => (
-                          <Link
-                            key={theme.slug}
-                            to="/kotoba"
-                            search={{ theme: String(theme.slug) }}
-                            className="flex min-w-0 items-center gap-2 rounded-xl bg-emerald-50/70 px-2.5 py-2 dark:bg-emerald-500/10"
-                          >
-                            <span className="min-w-0 flex-1">
-                              <span lang="ja" className="block font-jp text-[12px] font-bold">
-                                {theme.labelJa}
-                              </span>
-                              <span className="block text-[9px] font-semibold">{theme.label}</span>
-                              <span className="block text-[8px] text-muted-foreground">{theme.hint}</span>
-                            </span>
-                            <span className="shrink-0 rounded-full bg-background px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                              {theme.count}
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </section>
+                
               </div>
             )}
           </>
