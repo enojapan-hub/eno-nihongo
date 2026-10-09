@@ -1,5 +1,5 @@
 -- Reward economy v1: keep XP for account/league progression and Points for ranking/spending.
--- This migration is intentionally not applied from this PR.
+-- Apply only together with the secure referral reward migration in the same release.
 
 create or replace function public.award_referral_signup(p_code text)
 returns integer
@@ -35,55 +35,8 @@ $$;
 revoke all on function public.award_referral_signup(text) from public, anon;
 grant execute on function public.award_referral_signup(text) to authenticated;
 
-create or replace function public.activate_referral_reward()
-returns trigger
-language plpgsql
-security definer
-set search_path = pg_catalog, public, auth
-as $$
-declare
-  v_ref public.referrals%rowtype;
-begin
-  -- Ignore passive/system activity; only validated learning events may unlock a reward.
-  if new.activity_type not in ('lesson_completed') then return new; end if;
-
-  select * into v_ref
-  from public.referrals
-  where referred_user_id=new.user_id and status='pending'
-  order by created_at asc
-  limit 1
-  for update;
-
-  if v_ref.id is null then return new; end if;
-
-  update public.referrals set status='completed' where id=v_ref.id and status='pending';
-  if not found then return new; end if;
-
-  update public.profiles
-  set plan = case when plan='lifetime' then plan else 'premium' end,
-      premium_until = case
-        when plan='lifetime' then premium_until
-        else greatest(coalesce(premium_until,now()),now()) + interval '30 days'
-      end,
-      updated_at=now()
-  where id=v_ref.referrer_id;
-
-  insert into public.reward_grants(user_id,reward_kind,premium_days,points_spent,metadata)
-  values(v_ref.referrer_id,'referral_premium',30,0,jsonb_build_object('referral_id',v_ref.id,'referred_user_id',new.user_id));
-
-  insert into public.referral_events(referrer_id,referred_user_id,referral_code,event_type,points_awarded)
-  values(v_ref.referrer_id,new.user_id,v_ref.code,'conversion',0)
-  on conflict (referrer_id,referred_user_id,event_type) do nothing;
-
-  return new;
-end;
-$$;
-revoke all on function public.activate_referral_reward() from public, anon, authenticated;
-
-drop trigger if exists trg_activate_referral_reward on public.learning_activity;
-create trigger trg_activate_referral_reward
-after insert on public.learning_activity
-for each row execute function public.activate_referral_reward();
+-- The validated referral trigger is installed only by 20261008221500_secure_referral_reward.sql.
+-- Never install an interim trigger that can reward direct learning_activity inserts.
 
 create or replace function public.redeem_points_for_premium(p_points integer default 1000)
 returns integer
