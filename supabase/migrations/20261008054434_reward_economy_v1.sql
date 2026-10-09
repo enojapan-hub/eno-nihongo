@@ -125,9 +125,9 @@ $$;
 revoke all on function public.redeem_points_for_premium(integer) from public, anon;
 grant execute on function public.redeem_points_for_premium(integer) to authenticated;
 
-drop function if exists public.get_competition_leaderboard(text,integer);
-create function public.get_competition_leaderboard(p_period text default 'weekly', p_limit integer default 50)
-returns table(rank bigint,user_id uuid,display_name text,avatar_url text,jlpt_level text,period_xp bigint,period_points bigint,total_xp integer,total_points integer,current_streak integer)
+-- Preserve the existing RPC signature and its dependents; only replace its body.
+create or replace function public.get_competition_leaderboard(p_period text default 'weekly', p_limit integer default 50)
+returns table(rank bigint,user_id uuid,display_name text,avatar_url text,jlpt_level text,period_xp bigint,total_xp integer,total_points integer,current_streak integer)
 language sql
 stable
 security definer
@@ -147,7 +147,7 @@ with bounds as (
   group by p.id,p.display_name,p.avatar_url,p.target_level
 )
 select row_number() over(order by a.period_points desc,coalesce(s.reward_points,0) desc,a.user_id),
-  a.user_id,a.display_name,a.avatar_url,a.jlpt_level,a.period_xp,a.period_points,
+  a.user_id,a.display_name,a.avatar_url,a.jlpt_level,a.period_xp,
   coalesce(s.total_xp,0),coalesce((select sum(la.points)::int from public.learning_activity la where la.user_id=a.user_id),0),
   coalesce(s.current_streak,0)
 from agg a left join public.user_stats s on s.user_id=a.user_id
