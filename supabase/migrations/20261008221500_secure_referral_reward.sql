@@ -46,6 +46,12 @@ end;
 $$;
 revoke all on function public.activate_referral_reward() from public,anon,authenticated;
 
+-- Install only the guarded trigger after its validated function is defined.
+drop trigger if exists trg_activate_referral_reward on public.learning_activity;
+create trigger trg_activate_referral_reward
+after insert on public.learning_activity
+for each row execute function public.activate_referral_reward();
+
 create or replace function public.mark_material_learned_atomic(
   p_item_type public.content_skill, p_item_id uuid, p_level public.jlpt_level
 ) returns boolean
