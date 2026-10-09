@@ -286,10 +286,10 @@ function KiokuPage() {
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <a
-            href="/belajar"
+            href={session ? "/kioku" : "/belajar"}
             className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
           >
-            <ArrowLeft className="size-4" /> Kembali ke Materi
+            <ArrowLeft className="size-4" /> {session ? "Kembali ke Menu Kioku" : "Kembali ke Materi"}
           </a>
           <FeatureGuide
             storageKey="eno:guide:kioku:v2"
@@ -370,8 +370,8 @@ function KiokuPage() {
                 <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
               </a>
-              <button type="button" disabled={loading || !ready || ready.exercises.length === 0} onClick={start} className="rounded-2xl border border-primary/25 bg-primary p-3 text-left text-primary-foreground disabled:opacity-50">
-                <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> {mode === "daily" ? "Mulai Latihan Hari Ini" : mode === "boss" ? "Mulai Uji Ingatan" : "Kioku Adaptif"}</p>
+              <button type="button" disabled={loading || !ready || ready.exercises.length === 0} onClick={start} className="rounded-2xl border-2 border-primary bg-primary p-4 text-left text-primary-foreground shadow-md disabled:opacity-50">
+                <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> {mode === "daily" ? "Mulai Latihan Hari Ini" : mode === "boss" ? "Mulai Uji Ingatan" : "Mulai Kioku"}</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : mode === "daily" ? "Mode harian dipilih. Mulai latihan yang paling perlu sekarang." : mode === "boss" ? "Mode uji dipilih. Mulai sesi campuran untuk menguji daya ingat." : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
               </button>
               <a href="/kioku?mode=boss" className="rounded-2xl border bg-card p-3">

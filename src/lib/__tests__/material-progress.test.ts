@@ -12,7 +12,7 @@ describe("material progress semantics", () => {
   });
 
   it("does not present an unlearned item as already learned", () => {
-    expect(learnedActionLabel(false)).toBe("Pelajari");
-    expect(learnedActionLabel(true)).toBe("Dipelajari");
+    expect(learnedActionLabel(false)).toBe("Belum Dipelajari");
+    expect(learnedActionLabel(true)).toBe("Sudah Dipelajari");
   });
 });

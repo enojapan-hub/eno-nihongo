@@ -987,6 +987,128 @@ export type Database = {
           },
         ]
       }
+      digital_product_purchases: {
+        Row: {
+          amount_idr: number
+          buyer_id: string
+          created_at: string
+          delivered_at: string | null
+          delivery_attempts: number
+          delivery_email: string
+          delivery_status: string
+          id: string
+          paid_at: string | null
+          payment_order_id: string | null
+          product_id: string
+          status: string
+        }
+        Insert: {
+          amount_idr: number
+          buyer_id: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery_attempts?: number
+          delivery_email: string
+          delivery_status?: string
+          id?: string
+          paid_at?: string | null
+          payment_order_id?: string | null
+          product_id: string
+          status?: string
+        }
+        Update: {
+          amount_idr?: number
+          buyer_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery_attempts?: number
+          delivery_email?: string
+          delivery_status?: string
+          id?: string
+          paid_at?: string | null
+          payment_order_id?: string | null
+          product_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_product_purchases_payment_order_id_fkey"
+            columns: ["payment_order_id"]
+            isOneToOne: false
+            referencedRelation: "payment_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_product_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_products: {
+        Row: {
+          category: string
+          cover_path: string | null
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          mime_type: string | null
+          preview_paths: string[]
+          price_idr: number
+          related_class_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cover_path?: string | null
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          preview_paths?: string[]
+          price_idr: number
+          related_class_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cover_path?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          preview_paths?: string[]
+          price_idr?: number
+          related_class_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_products_related_class_id_fkey"
+            columns: ["related_class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dm_conversation_hidden: {
         Row: {
           conversation_id: string
@@ -4800,6 +4922,10 @@ export type Database = {
       }
     }
     Functions: {
+      activate_digital_product_purchase: {
+        Args: { p_payment_order_id: string }
+        Returns: undefined
+      }
       admin_assign_app_role: {
         Args: { p_role_id: string; p_user_id: string }
         Returns: undefined
@@ -4910,6 +5036,10 @@ export type Database = {
         Returns: Json
       }
       award_referral_signup: { Args: { p_code: string }; Returns: number }
+      can_download_digital_product: {
+        Args: { p_product_id: string }
+        Returns: boolean
+      }
       can_manage_class: { Args: { p_class_id: string }; Returns: boolean }
       can_start_full_simulation: { Args: never; Returns: Json }
       complete_jlpt_simulation_full: {
@@ -4919,6 +5049,10 @@ export type Database = {
           completed_at: string
           session_id: string
         }[]
+      }
+      create_digital_product_order: {
+        Args: { p_delivery_email: string; p_product_id: string }
+        Returns: Json
       }
       create_or_replace_study_plan: {
         Args: {
@@ -5234,6 +5368,7 @@ export type Database = {
       }
       get_content_review_summary: { Args: never; Returns: Json }
       get_content_staff_access: { Args: never; Returns: Json }
+      get_digital_product_finance: { Args: never; Returns: Json }
       get_eno_monthly_exam_admin: { Args: never; Returns: Json }
       get_eno_monthly_exam_questions: {
         Args: { p_attempt_id: string }
@@ -5556,6 +5691,21 @@ export type Database = {
         Args: { p_level: Database["public"]["Enums"]["jlpt_level"] }
         Returns: number
       }
+      get_vocabulary_count_by_primary_category: {
+        Args: {
+          p_category_slug: string
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+        }
+        Returns: number
+      }
+      get_vocabulary_count_by_subcategory: {
+        Args: {
+          p_category_slug: string
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+          p_subcategory_slug: string
+        }
+        Returns: number
+      }
       get_vocabulary_lesson_counts: {
         Args: { p_level: Database["public"]["Enums"]["jlpt_level"] }
         Returns: {
@@ -5655,6 +5805,72 @@ export type Database = {
           source_book: string
           term: string
           usage_note_id: string
+        }[]
+      }
+      get_vocabulary_page_by_primary_category: {
+        Args: {
+          p_category_slug: string
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          examples: Json
+          id: string
+          lesson_number: number
+          lesson_title: string
+          level: Database["public"]["Enums"]["jlpt_level"]
+          meaning_en: string
+          meaning_id: string
+          part_of_speech: string
+          reading: string
+          romaji: string
+          sort_order: number
+          source_book: string
+          term: string
+          usage_note_id: string
+        }[]
+      }
+      get_vocabulary_page_by_subcategory: {
+        Args: {
+          p_category_slug: string
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+          p_limit?: number
+          p_offset?: number
+          p_subcategory_slug: string
+        }
+        Returns: {
+          examples: Json
+          id: string
+          lesson_number: number
+          lesson_title: string
+          level: Database["public"]["Enums"]["jlpt_level"]
+          meaning_en: string
+          meaning_id: string
+          part_of_speech: string
+          reading: string
+          romaji: string
+          sort_order: number
+          source_book: string
+          term: string
+          usage_note_id: string
+        }[]
+      }
+      get_vocabulary_primary_category_counts: {
+        Args: { p_level: Database["public"]["Enums"]["jlpt_level"] }
+        Returns: {
+          category_slug: string
+          item_count: number
+        }[]
+      }
+      get_vocabulary_subcategory_counts: {
+        Args: {
+          p_category_slug: string
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+        }
+        Returns: {
+          item_count: number
+          subcategory_slug: string
         }[]
       }
       global_config: { Args: never; Returns: Json }
@@ -5871,6 +6087,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      redeem_points_for_premium: {
+        Args: { p_points?: number }
+        Returns: number
       }
       redeem_referral_points: { Args: { p_points?: number }; Returns: number }
       refresh_adaptive_plan: { Args: { p_date: string }; Returns: undefined }
@@ -6258,6 +6478,20 @@ export type Database = {
       verify_translation_cron_secret: {
         Args: { p_candidate: string }
         Returns: boolean
+      }
+      vocabulary_primary_category_slugs: {
+        Args: { p_part_of_speech: string }
+        Returns: string[]
+      }
+      vocabulary_subcategory_slugs: {
+        Args: {
+          p_category_slug: string
+          p_meaning_id: string
+          p_part_of_speech: string
+          p_reading: string
+          p_term: string
+        }
+        Returns: string[]
       }
     }
     Enums: {

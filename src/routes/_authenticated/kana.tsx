@@ -334,6 +334,7 @@ function KanaPage() {
       ? "k"
       : "h",
   );
+  const [practicePage, setPracticePage] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("practice") === "1");
   const [romaji, setRomaji] = useState(
       () => typeof window === "undefined" || localStorage.getItem("eno:kana:romaji") !== "0",
     ),
@@ -343,6 +344,14 @@ function KanaPage() {
     const url = new URL(window.location.href);
     url.searchParams.set("script", next);
     window.history.replaceState(null, "", url);
+  };
+  const showPractice = (enabled: boolean) => {
+    setPracticePage(enabled);
+    const url = new URL(window.location.href);
+    if (enabled) url.searchParams.set("practice", "1");
+    else url.searchParams.delete("practice");
+    window.history.replaceState(null, "", url);
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
   const toggleRomaji = () =>
     setRomaji((v) => {
@@ -359,6 +368,7 @@ function KanaPage() {
         >
           <ArrowLeft className="size-4" /> Kembali ke Materi
         </Link>
+        {practicePage && <button type="button" onClick={() => showPractice(false)} className="w-full rounded-xl border bg-card px-4 py-3 text-left text-sm font-semibold"><ArrowLeft className="mr-2 inline size-4" />Kembali ke daftar Kana</button>}
         <section className="rounded-2xl border bg-card p-4 shadow-sm">
           <h1 className="text-[22px] font-black tracking-tight">Hiragana & Katakana</h1>
           <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
@@ -366,7 +376,7 @@ function KanaPage() {
             level JLPT.
           </p>
         </section>
-        <div className="flex gap-2">
+        {!practicePage && <div className="flex gap-2">
           <div className="grid flex-1 grid-cols-2 rounded-xl bg-muted p-1">
             <button
               type="button"
@@ -391,8 +401,10 @@ function KanaPage() {
             {romaji ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             {romaji ? "Sembunyikan" : "Tampilkan"} romaji
           </button>
-        </div>
-        <KanaPractice pool={[...basic, ...voiced, ...yoon]} />
+        </div>}
+        {!practicePage && <button type="button" onClick={() => showPractice(true)} className="w-full rounded-2xl bg-primary px-4 py-4 text-sm font-bold text-primary-foreground">Mulai Latihan Kana →</button>}
+        {practicePage && <KanaPractice pool={[...basic, ...voiced, ...yoon]} />}
+        {!practicePage && <>
         {audioError && (
           <p
             role="alert"
@@ -432,6 +444,7 @@ function KanaPage() {
           Catatan: っ / ッ menandai konsonan rangkap, sedangkan ー umum dipakai di Katakana untuk
           memanjangkan bunyi vokal.
         </p>
+        </>}
       </div>
     </AppShell>
   );

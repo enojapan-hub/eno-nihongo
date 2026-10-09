@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { IdentityBadges } from "@/components/social/IdentityBadges";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -114,6 +115,10 @@ function LeaderboardPage() {
               Liga Mingguan
             </button>
           </div>
+        </section>
+        <section className="grid grid-cols-2 gap-2" aria-label="Hadiah dan poin">
+          <Link to="/referral" className="rounded-2xl border bg-card p-4 text-center text-xs font-bold">Ajak Teman</Link>
+          <Link to="/tukar-poin" className="rounded-2xl border bg-card p-4 text-center text-xs font-bold">Tukar Poin</Link>
         </section>
         {tab === "ranking" ? (
           <>

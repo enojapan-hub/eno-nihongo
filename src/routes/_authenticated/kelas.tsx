@@ -217,6 +217,13 @@ function KelasPage() {
               <p className="text-xs text-muted-foreground">Materi SSW, e-book, latihan, dan materi tambahan ENO NIHONGO.</p>
             </div>
             {products.isError && <p className="rounded-2xl border p-4 text-xs text-muted-foreground">Produk digital belum tersedia.</p>}
+            {!products.isLoading && !products.isError && !products.data?.length && (
+              <div className="rounded-2xl border border-dashed bg-card p-6 text-center">
+                <FileText className="mx-auto mb-2 size-7 text-primary/60" />
+                <p className="text-sm font-bold">Produk belum tersedia</p>
+                <p className="mt-1 text-xs text-muted-foreground">Produk digital sedang disiapkan. Silakan periksa kembali nanti.</p>
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
               {products.data?.map((product) => (
                 <button key={product.id} type="button" onClick={() => { setSelectedProduct(product); setEmailConfirmed(false); }}

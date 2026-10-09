@@ -494,7 +494,7 @@ function KiokuCard() {
           to="/kioku"
           className="shrink-0 rounded-xl bg-[#f0fdf4] px-3.5 py-2 text-[11px] font-bold text-[#065f46]"
         >
-          Mulai Kioku
+          Buka Menu Kioku
         </Link>
       </div>
       <p className="mt-3 text-[10px] leading-relaxed text-emerald-50">
