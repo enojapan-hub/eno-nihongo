@@ -62,11 +62,15 @@ function kindFor(t: AdaptiveTaskType) {
             : "review";
 }
 function studyHref(task: AdaptiveTask, id: string) {
-  if (task.task_type === "review")
-    return task.metadata?.["kiokuRecommended"] ? "/kioku" : "/hafalan";
+  // Daily new-material tasks open the actual lesson, never a flashcard.
+  if (task.task_type === "new_kanji") return `/kanji?id=${encodeURIComponent(id)}`;
+  if (task.task_type === "new_vocabulary") return `/kotoba?id=${encodeURIComponent(id)}`;
+  if (task.task_type === "new_grammar") return `/bunpo?id=${encodeURIComponent(id)}`;
+  if (task.task_type === "review") return "/hafalan";
   const ids = (task.suggestions ?? []).map((x) => x.id).join(",");
   return `/study-item?kind=${kindFor(task.task_type)}&id=${encodeURIComponent(id)}&queue=${encodeURIComponent(ids)}`;
 }
+
 function CompactTask({ task }: { task: AdaptiveTask; locked?: boolean; onUpgrade?: () => void }) {
   const done = Math.min(task.completed_count, task.target_count),
     p = task.target_count ? Math.min(100, (done / task.target_count) * 100) : 0,

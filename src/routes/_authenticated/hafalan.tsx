@@ -37,7 +37,7 @@ type Card = {
   reverse?: boolean | undefined;
   aspect?: MasteryAspect | undefined;
 };
-const labels = ["Lupa", "Sulit", "Ingat", "Mudah"] as const;
+const labels = ["Lupa", "Sulit", "Ingat", "Hafal"] as const;
 const SESSION_KEY = "eno-hafalan-session-v5",
   QUICK_SECONDS = 300,
   SWIPE_THRESHOLD = 86;
@@ -411,6 +411,7 @@ function HafalanPage() {
     void rate(ratedCard, level, r, ratedHint, responseMs)
       .then(() => {
         void qc.invalidateQueries({ queryKey: ["my-progress"] });
+        if (r === 3) window.location.assign("/kioku");
       })
       .catch((e) => console.error("Gagal menyimpan review hafalan", e));
   }

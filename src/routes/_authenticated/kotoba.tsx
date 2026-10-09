@@ -349,6 +349,7 @@ function KotobaPage() {
     },
     onSuccess: (changed) => {
       if (changed) toast.success("Progress tersimpan");
+      window.location.assign("/hafalan");
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
