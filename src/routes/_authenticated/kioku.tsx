@@ -44,6 +44,7 @@ function KiokuPage() {
   const membership = useQuery({ queryKey: ["membership-access"], queryFn: fetchMembershipAccess, staleTime: 60_000 });
   const hasPremiumAccess = membership.data?.hasPremiumAccess === true;
   const [session, setSession] = useState<KiokuSession | null>(null);
+  const [showSession, setShowSession] = useState(false);
   const [ready, setReady] = useState<KiokuSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +136,7 @@ function KiokuPage() {
     if (!ready || !userId) return;
     saveSession(window.localStorage, userId, ready);
     setSession(ready);
+    setShowSession(true);
     setReady(null);
     resetExerciseUi();
   }, [ready, userId]);
@@ -286,10 +288,11 @@ function KiokuPage() {
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <a
-            href={session ? "/kioku" : "/belajar"}
+            href={showSession ? "/kioku" : "/belajar"}
+            onClick={showSession ? (event) => { event.preventDefault(); setShowSession(false); } : undefined}
             className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold"
           >
-            <ArrowLeft className="size-4" /> {session ? "Kembali ke Menu Kioku" : "Kembali ke Materi"}
+            <ArrowLeft className="size-4" /> {showSession ? "Kembali ke Menu Kioku" : "Kembali ke Materi"}
           </a>
           <FeatureGuide
             storageKey="eno:guide:kioku:v2"
@@ -327,7 +330,7 @@ function KiokuPage() {
             ]}
           />
         </div>
-        {!session && (
+        {!showSession && (
           <>
             <section className="relative overflow-hidden rounded-[30px] border border-primary/25 bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 p-5 text-white shadow-[0_24px_60px_-34px_rgba(6,78,59,.8)] md:p-8">
               <div className="pointer-events-none absolute -right-10 -top-12 size-40 rounded-full bg-white/10 blur-2xl" />
@@ -365,6 +368,11 @@ function KiokuPage() {
               </section>
             ) : (
               <>
+            {session && !session.finished && (
+              <button type="button" onClick={() => { resetExerciseUi(); setShowSession(true); }} className="mb-3 w-full rounded-2xl border border-primary/30 bg-primary/10 p-4 text-left text-sm font-bold text-primary">
+                Lanjutkan sesi tersimpan ({session.index + 1}/{session.exercises.length})
+              </button>
+            )}
             <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
@@ -396,7 +404,7 @@ function KiokuPage() {
           </>
         )}
         <PremiumUpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="ENO Kioku" />
-        {session?.finished && (
+        {showSession && session?.finished && (
           <section className="rounded-3xl border bg-card p-6 text-center">
             <h2 className="text-[16px] font-bold">Sesi selesai</h2>
             <p className="mt-2 text-[11px]">
@@ -418,7 +426,7 @@ function KiokuPage() {
             </button>
           </section>
         )}
-        {ex && (
+        {showSession && ex && (
           <>
             <div className="flex items-center justify-between text-[9px] text-muted-foreground">
               <span>
