@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BarChart3, BrainCircuit, CheckCircle2, Crown, Lightbulb, ShieldCheck, Sparkles, XCircle } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, BarChart3, BrainCircuit, CheckCircle2, Lightbulb, LifeBuoy, RefreshCw, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { PremiumUpgradeDialog } from "@/components/membership/PremiumUpgradeDialog";
@@ -15,6 +15,7 @@ import type { Exercise, KiokuSession } from "@/lib/kioku/session-types";
 import { clearSession, loadSession, saveSession } from "@/lib/kioku/session-store";
 import type { Confidence } from "@/lib/kioku/types";
 import { fetchMembershipAccess } from "@/lib/membership";
+import { MEMORY_REPORT_KEY, fetchMemoryReport, kiokuHomeSummary } from "@/lib/kioku/memory-report";
 
 export const Route = createFileRoute("/_authenticated/kioku")({
   head: () => ({ meta: [{ title: "Kioku — ENO NIHONGO" }] }),
@@ -43,6 +44,14 @@ function KiokuPage() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const membership = useQuery({ queryKey: ["membership-access"], queryFn: fetchMembershipAccess, staleTime: 60_000 });
   const hasPremiumAccess = membership.data?.hasPremiumAccess === true;
+  const [tab, setTab] = useState<"beranda" | "latihan" | "analisis">(mode ? "latihan" : "beranda");
+  const memoryReport = useQuery({
+    queryKey: MEMORY_REPORT_KEY,
+    queryFn: fetchMemoryReport,
+    enabled: hasPremiumAccess,
+    staleTime: 60_000,
+  });
+  const home = useMemo(() => kiokuHomeSummary(memoryReport.data ?? []), [memoryReport.data]);
   const [session, setSession] = useState<KiokuSession | null>(null);
   const [showSession, setShowSession] = useState(false);
   const [ready, setReady] = useState<KiokuSession | null>(null);
@@ -371,27 +380,17 @@ function KiokuPage() {
         </div>
         {!showSession && (
           <>
-            <section className="relative overflow-hidden rounded-[30px] border border-primary/25 bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 p-5 text-white shadow-[0_24px_60px_-34px_rgba(6,78,59,.8)] md:p-8">
-              <div className="pointer-events-none absolute -right-10 -top-12 size-40 rounded-full bg-white/10 blur-2xl" />
-              <div className="relative flex items-start justify-between gap-3">
-                <div>
-                  <p className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[.18em] text-emerald-100">
-                    <Crown className="size-3.5" /> Premium Memory System
-                  </p>
-                  <h1 className="mt-2 text-[24px] font-black tracking-tight md:text-[32px]">ENO Kioku</h1>
-                  <p className="mt-1 max-w-md text-[10px] leading-relaxed text-emerald-50/90">
-                    Menguji, menganalisis, dan menjaga ingatan dari materi yang sudah kamu pelajari.
-                  </p>
-                </div>
-                <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/10">
-                  <BrainCircuit className="size-6" />
+            <section className="flex items-start justify-between gap-3 rounded-3xl border bg-card p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <BrainCircuit className="size-5" />
                 </span>
+                <div className="min-w-0">
+                  <h1 className="text-[20px] font-black tracking-tight">ENO Kioku</h1>
+                  <p className="text-[10px] text-muted-foreground">Personal Memory Intelligence</p>
+                </div>
               </div>
-              <div className="relative mt-4 flex flex-wrap gap-1.5">
-                {["Arti", "Bacaan", "Konteks", "Susun Kalimat", "Partikel", "Konjugasi", "Perbaiki Kesalahan"].map((label) => (
-                  <span key={label} className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[8px] font-bold text-emerald-50">{label}</span>
-                ))}
-              </div>
+              <span className="shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold">Premium</span>
             </section>
             {membership.isLoading ? (
               <section className="h-28 animate-pulse rounded-2xl border bg-muted/40" aria-label="Memeriksa akses Kioku" />
@@ -406,6 +405,79 @@ function KiokuPage() {
                 </button>
               </section>
             ) : (
+              <>
+            <div role="tablist" aria-label="Menu Kioku" className="grid grid-cols-3 gap-1 rounded-full border bg-card p-1">
+              {([["beranda", "Beranda"], ["latihan", "Latihan"], ["analisis", "Analisis"]] as const).map(([value, label]) => (
+                <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => setTab(value)} className={`min-h-9 rounded-full text-[11px] font-bold ${tab === value ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {tab === "beranda" && (
+              <>
+            {session && !session.finished && (
+              <button type="button" onClick={() => { resetExerciseUi(); setShowSession(true); }} className="w-full rounded-2xl border border-primary/30 bg-primary/10 p-4 text-left text-sm font-bold text-primary">
+                Lanjutkan sesi tersimpan ({session.index + 1}/{session.exercises.length})
+              </button>
+            )}
+            {memoryReport.isLoading ? (
+              <section className="h-40 animate-pulse rounded-3xl border bg-muted/40" aria-label="Memuat kesiapan ingatan" />
+            ) : memoryReport.isError ? (
+              <p className="rounded-2xl border bg-card p-3 text-center text-[10px] text-red-600 dark:text-red-300">Data ingatan gagal dimuat. Coba lagi.</p>
+            ) : !home.hasData ? (
+              <p className="rounded-2xl border bg-card p-4 text-center text-[10px] text-muted-foreground">Belum cukup data ingatan. Pelajari materi lalu kerjakan latihan Kioku untuk melihat kesiapan ingatanmu.</p>
+            ) : (
+              <>
+                <section className="rounded-3xl border bg-card p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-muted-foreground">Kesiapan Ingatan</p>
+                    <Activity className="size-4 text-primary" />
+                  </div>
+                  <p className="mt-2 flex items-baseline gap-2">
+                    <span className="text-[32px] font-black tabular-nums">{home.readinessScore}%</span>
+                    <span className="text-[12px] font-bold text-primary">{home.readinessLabel}</span>
+                  </p>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${home.readinessScore}%` }} />
+                  </div>
+                  <p className="mt-2 text-[10px] text-muted-foreground">Indikator kekuatan ingatan, bukan prediksi kelulusan JLPT.</p>
+                </section>
+                <section className="grid grid-cols-3 gap-2">
+                  {([
+                    [RefreshCw, home.needReview, "Perlu Review"],
+                    [LifeBuoy, home.needRecovery, "Perlu Dipulihkan"],
+                    [ShieldCheck, home.strong, "Ingatan Kuat"],
+                  ] as const).map(([Icon, value, label]) => (
+                    <div key={label} className="rounded-2xl border bg-card p-3 text-center">
+                      <Icon className="mx-auto size-4 text-primary" />
+                      <p className="mt-1 text-[18px] font-black tabular-nums">{value}</p>
+                      <p className="text-[9px] text-muted-foreground">{label}</p>
+                    </div>
+                  ))}
+                </section>
+                {home.recommendation && (
+                  <section className="space-y-2">
+                    <h2 className="text-[13px] font-black">Rekomendasi Hari Ini</h2>
+                    <button type="button" disabled={loading || !userId} onClick={() => void startMode("daily")} className="flex w-full items-center gap-3 rounded-2xl border bg-card p-3 text-left disabled:opacity-50">
+                      <Lightbulb className="size-4 shrink-0 text-amber-500" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[11px] font-bold">{home.recommendation.title}</span>
+                        <span className="block text-[9px] text-muted-foreground">{home.recommendation.detail}</span>
+                      </span>
+                      <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                    </button>
+                  </section>
+                )}
+              </>
+            )}
+            {!(session && !session.finished) && (
+              <button type="button" disabled={loading || !userId} onClick={() => void startMode("daily")} className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-[12px] font-bold text-primary-foreground disabled:opacity-50">
+                {loading ? "Menyiapkan latihan…" : "Mulai Latihan Hari Ini"} <ArrowRight className="size-4" />
+              </button>
+            )}
+              </>
+            )}
+            {tab === "latihan" && (
               <>
             {session && !session.finished && (
               <button type="button" onClick={() => { resetExerciseUi(); setShowSession(true); }} className="mb-3 w-full rounded-2xl border border-primary/30 bg-primary/10 p-4 text-left text-sm font-bold text-primary">
@@ -429,6 +501,10 @@ function KiokuPage() {
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Uji campuran untuk memastikan ingatan kuat tetap bertahan.</p>
               </button>
             </section>}
+              </>
+            )}
+            {tab === "analisis" && (
+              <>
             <a href="/hafalan-riwayat" className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="size-4" /></span>
               <span className="min-w-0 flex-1">
@@ -437,6 +513,8 @@ function KiokuPage() {
               </span>
               <span className="text-[9px] font-bold text-primary">Buka</span>
             </a>
+              </>
+            )}
               </>
             )}
             {hasPremiumAccess && error && <p className="text-center text-[10px] text-red-600 dark:text-red-300">{error}</p>}
