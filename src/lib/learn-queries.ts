@@ -392,6 +392,19 @@ export async function markItemLearned(input: {
     p_level: input.level,
   });
   if (error) throw new Error(error.message);
+  // Confirm the server persisted the state before updating the UI.
+  const userId = await currentUserId();
+  const { data: saved, error: verifyError } = await supabase
+    .from("user_item_progress")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("item_type", input.itemType)
+    .eq("item_id", input.itemId)
+    .maybeSingle();
+  if (verifyError) throw new Error(verifyError.message);
+  if (!saved || !["learning", "review", "mastered"].includes(saved.status)) {
+    throw new Error("Progres belum tersimpan di database. Silakan coba lagi.");
+  }
   return data === true;
 }
 export async function addItemToReview(input: {
