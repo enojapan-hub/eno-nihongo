@@ -141,6 +141,33 @@ function KiokuPage() {
     resetExerciseUi();
   }, [ready, userId]);
 
+  const startBoss = useCallback(async () => {
+    if (!userId || loading) return;
+    if (session && !session.finished) {
+      resetExerciseUi();
+      setShowSession(true);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const next = await prefetchSession(userId, Date.now(), { mode: "boss" });
+      if (next.exercises.length === 0) {
+        setError("Belum ada materi yang dapat diuji.");
+        return;
+      }
+      saveSession(window.localStorage, userId, next);
+      setSession(next);
+      setShowSession(true);
+      setReady(null);
+      resetExerciseUi();
+    } catch {
+      setError("Gagal memulai Uji Ingatan. Coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, loading, session]);
+
   // Local-first: state + outbox (sync localStorage write) only; the network flush is fire-and-forget.
   const record = useCallback(
     (exercise: Exercise, a: Answer): KiokuSession | null => {
@@ -385,10 +412,10 @@ function KiokuPage() {
                 <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> {mode === "daily" ? "Mulai Latihan Hari Ini" : mode === "boss" ? "Mulai Uji Ingatan" : "Mulai Kioku"}</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : mode === "daily" ? "Mode harian dipilih. Mulai latihan yang paling perlu sekarang." : mode === "boss" ? "Mode uji dipilih. Mulai sesi campuran untuk menguji daya ingat." : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
               </button>
-              <a href="/kioku?mode=boss" className="rounded-2xl border bg-card p-3">
+              <button type="button" disabled={loading || !userId} onClick={() => void startBoss()} className="rounded-2xl border bg-card p-3 text-left disabled:opacity-50">
                 <p className="flex items-center gap-1.5 text-[11px] font-black"><ShieldCheck className="size-3.5 text-primary" /> Uji Ingatan</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Uji campuran untuk memastikan ingatan kuat tetap bertahan.</p>
-              </a>
+              </button>
             </section>}
             <a href="/hafalan-riwayat" className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="size-4" /></span>
