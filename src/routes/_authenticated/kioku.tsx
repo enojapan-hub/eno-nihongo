@@ -373,7 +373,10 @@ function KiokuPage() {
                 Lanjutkan sesi tersimpan ({session.index + 1}/{session.exercises.length})
               </button>
             )}
-            <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {session && !session.finished && (
+              <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">Selesaikan sesi tersimpan terlebih dahulu. Progresmu tetap aman saat kembali ke menu.</p>
+            )}
+            {!session && <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
@@ -386,7 +389,7 @@ function KiokuPage() {
                 <p className="flex items-center gap-1.5 text-[11px] font-black"><ShieldCheck className="size-3.5 text-primary" /> Uji Ingatan</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Uji campuran untuk memastikan ingatan kuat tetap bertahan.</p>
               </a>
-            </section>
+            </section>}
             <a href="/hafalan-riwayat" className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="size-4" /></span>
               <span className="min-w-0 flex-1">
@@ -413,6 +416,8 @@ function KiokuPage() {
             <button
               onClick={() => {
                 setSession(null);
+                setShowSession(false);
+                if (userId) clearSession(window.localStorage, userId);
                 setLoading(true);
                 if (userId)
                   prefetchSession(userId, Date.now(), { mode: mode ?? "normal" })
