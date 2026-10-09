@@ -401,7 +401,7 @@ function KanaPage() {
             {romaji ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             {romaji ? "Sembunyikan" : "Tampilkan"} romaji
           </button>
-        </div>
+        </div>}
         {!practicePage && <button type="button" onClick={() => showPractice(true)} className="w-full rounded-2xl bg-primary px-4 py-4 text-sm font-bold text-primary-foreground">Mulai Latihan Kana →</button>}
         {practicePage && <KanaPractice pool={[...basic, ...voiced, ...yoon]} />}
         {!practicePage && <>
