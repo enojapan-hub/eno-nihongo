@@ -390,6 +390,7 @@ function BunpoPage() {
     onSuccess: (_, id) => {
       toast.success("Progress tersimpan");
       setLearned((v) => ({ ...v, [id]: true }));
+      window.location.assign("/hafalan");
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["mastered-items", "grammar", level] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
