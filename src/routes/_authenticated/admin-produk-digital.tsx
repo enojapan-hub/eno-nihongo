@@ -25,7 +25,7 @@ function Page(){
    if(error){await supabase.storage.from("digital-products").remove([path]);throw error;}
  },onSuccess:async()=>{setTitle("");setDescription("");setPrice("");setRelatedClass("");setFile(null);setMessage("Produk tersimpan sebagai Draft.");await qc.invalidateQueries({queryKey:["admin-digital-products"]})},onError:(e)=>setMessage(e instanceof Error?e.message:"Produk gagal disimpan.")});
  return <AppShell title="Produk Digital" compact><div className="mx-auto max-w-5xl space-y-5 pb-12">
-  <div><h1 className="text-xl font-black">Produk Digital</h1><p className="text-xs text-muted-foreground">Kelola materi digital ENO NIHONGO. Produk baru selalu dimulai sebagai Draft.</p></div>
+  <div className="space-y-2"><div className="flex flex-wrap items-center gap-2"><h1 className="text-xl font-black">Produk Digital</h1><span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">Segera Hadir</span></div><p className="text-xs text-muted-foreground">Produk digital sedang dipersiapkan. Pembelian dan pengiriman produk belum tersedia. Admin dapat menyiapkan produk sebagai Draft.</p></div>
   <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
    <section className="space-y-3 rounded-2xl border bg-card p-4">
     <h2 className="flex items-center gap-2 font-black"><PackagePlus className="size-4 text-primary"/>Tambah produk</h2>
