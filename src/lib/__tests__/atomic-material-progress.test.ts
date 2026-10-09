@@ -1,21 +1,35 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const rpc = vi.hoisted(() => vi.fn());
+const { rpc, getAuthUser, from } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  getAuthUser: vi.fn(),
+  from: vi.fn(),
+}));
 
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { rpc },
+  supabase: { rpc, from },
 }));
+
+vi.mock("@/lib/auth-user", () => ({ getAuthUser }));
 
 import { markItemLearned } from "../learn-queries";
 
 describe("markItemLearned atomic RPC", () => {
-  beforeEach(() => rpc.mockReset());
+  beforeEach(() => {
+    from.mockReset();
+    rpc.mockReset();
+    getAuthUser.mockResolvedValue({ data: { user: { id: "test-user" } } });
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { status: "learning" }, error: null });
+    const eq = vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle }) }) });
+    from.mockReturnValue({ select: vi.fn().mockReturnValue({ eq }) });
+  });
 
   it("uses one server-side call for progress and activity", async () => {
     rpc.mockResolvedValue({ data: true, error: null });
     await expect(
       markItemLearned({ itemType: "vocabulary", itemId: "test-id", level: "N5" }),
     ).resolves.toBe(true);
+    expect(from).toHaveBeenCalledWith("user_item_progress");
     expect(rpc).toHaveBeenCalledExactlyOnceWith("mark_material_learned_atomic", {
       p_item_type: "vocabulary",
       p_item_id: "test-id",
