@@ -315,6 +315,7 @@ function KanjiPage() {
     onSuccess: (_, id) => {
       toast.success("Progress tersimpan");
       setLearned((v) => ({ ...v, [id]: true }));
+      window.location.assign("/hafalan");
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["mastered-items", "kanji", level] });
       void qc.invalidateQueries({ queryKey: ["kanji-one-progress"] });
