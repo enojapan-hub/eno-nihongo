@@ -39,6 +39,7 @@ const sections = [
       ["Simulasi JLPT", FileQuestion, "Paket ujian, sesi dan bank soal", "/admin-konten"],
       ["ENO Exam", Trophy, "Ujian bulanan Premium dan ranking", "/admin-eno-exam"],
       ["Kelas Guru", GraduationCap, "Review kelas, peserta dan aktivitas", "/admin-kelas"],
+      ["Produk Digital", ShoppingBag, "E-book, SSW dan materi digital", "/admin-produk-digital"],
     ],
   },
   {

@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BrainCircuit, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
+import { ArrowLeft, BarChart3, BrainCircuit, CheckCircle2, Crown, Lightbulb, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
+import { PremiumUpgradeDialog } from "@/components/membership/PremiumUpgradeDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { classifyError, SLOW_MS } from "@/lib/kioku/classify";
 import { fatigueSuggested } from "@/lib/kioku/insights";
@@ -12,6 +14,7 @@ import { queueRepeat, scheduleDelayed } from "@/lib/kioku/session";
 import type { Exercise, KiokuSession } from "@/lib/kioku/session-types";
 import { clearSession, loadSession, saveSession } from "@/lib/kioku/session-store";
 import type { Confidence } from "@/lib/kioku/types";
+import { fetchMembershipAccess } from "@/lib/membership";
 
 export const Route = createFileRoute("/_authenticated/kioku")({
   head: () => ({ meta: [{ title: "Kioku — ENO NIHONGO" }] }),
@@ -37,6 +40,9 @@ type Answer = {
 function KiokuPage() {
   const { mode } = Route.useSearch();
   const [userId, setUserId] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const membership = useQuery({ queryKey: ["membership-access"], queryFn: fetchMembershipAccess, staleTime: 60_000 });
+  const hasPremiumAccess = membership.data?.hasPremiumAccess === true;
   const [session, setSession] = useState<KiokuSession | null>(null);
   const [ready, setReady] = useState<KiokuSession | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +65,10 @@ function KiokuPage() {
 
   // Restore an unfinished session, retry pending outbox events, and prefetch the next session in the background.
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || membership.isLoading || !hasPremiumAccess) {
+      if (!membership.isLoading && membership.data && !hasPremiumAccess) setLoading(false);
+      return;
+    }
     const box = createOutbox(userId, window.localStorage, sendEvents);
     outbox.current = box;
     void box.flush();
@@ -84,7 +93,7 @@ function KiokuPage() {
     return () => {
       alive = false;
     };
-  }, [userId, mode]);
+  }, [userId, mode, membership.isLoading, membership.data, hasPremiumAccess]);
 
   // Safe flush points: interval, tab hidden, page hide.
   useEffect(() => {
@@ -319,39 +328,74 @@ function KiokuPage() {
           />
         </div>
         {!session && (
-          <section className="overflow-hidden rounded-[30px] border border-primary/20 bg-gradient-to-b from-primary/[.08] to-card p-6 text-center md:p-10 shadow-[0_18px_50px_-34px_rgba(0,0,0,.55)]">
-            <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10">
-              <BrainCircuit className="size-6 text-primary" />
-            </span>
-            <p className="mt-3 text-[9px] font-black uppercase tracking-[.18em] text-primary">
-              ENO NIHONGO
-            </p>
-            <h1 className="mt-1 text-[22px] font-black md:text-[30px]">
-              {mode === "boss" ? "Boss Review" : mode === "daily" ? "Review Hari Ini" : "ENO Kioku"}
-            </h1>
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              {mode === "boss"
-                ? "Uji campuran untuk materi yang sudah cukup kuat, tanpa menganggapnya hafal selamanya."
-                : mode === "daily"
-                  ? "Sesi ringkas yang memprioritaskan review jatuh tempo, kelemahan, dan miskonsepsi."
-                  : "Latihan ingatan adaptif dari materi yang sudah kamu pelajari."}
-            </p>
-            {error && <p className="mt-3 text-[10px] text-red-600 dark:text-red-300">{error}</p>}
-            {!loading && ready && ready.exercises.length === 0 && (
-              <p className="mt-4 text-[10px] text-muted-foreground">
-                Belum ada materi yang dipelajari. Pelajari Kanji, Kotoba, atau Bunpou dulu di
-                Materi.
-              </p>
+          <>
+            <section className="relative overflow-hidden rounded-[30px] border border-primary/25 bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 p-5 text-white shadow-[0_24px_60px_-34px_rgba(6,78,59,.8)] md:p-8">
+              <div className="pointer-events-none absolute -right-10 -top-12 size-40 rounded-full bg-white/10 blur-2xl" />
+              <div className="relative flex items-start justify-between gap-3">
+                <div>
+                  <p className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[.18em] text-emerald-100">
+                    <Crown className="size-3.5" /> Premium Memory System
+                  </p>
+                  <h1 className="mt-2 text-[24px] font-black tracking-tight md:text-[32px]">ENO Kioku</h1>
+                  <p className="mt-1 max-w-md text-[10px] leading-relaxed text-emerald-50/90">
+                    Menguji, menganalisis, dan menjaga ingatan dari materi yang sudah kamu pelajari.
+                  </p>
+                </div>
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/10">
+                  <BrainCircuit className="size-6" />
+                </span>
+              </div>
+              <div className="relative mt-4 flex flex-wrap gap-1.5">
+                {["Arti", "Bacaan", "Konteks", "Susun Kalimat", "Partikel", "Konjugasi", "Perbaiki Kesalahan"].map((label) => (
+                  <span key={label} className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[8px] font-bold text-emerald-50">{label}</span>
+                ))}
+              </div>
+            </section>
+            {membership.isLoading ? (
+              <section className="h-28 animate-pulse rounded-2xl border bg-muted/40" aria-label="Memeriksa akses Kioku" />
+            ) : !hasPremiumAccess ? (
+              <section className="rounded-2xl border border-primary/20 bg-card p-4 text-center">
+                <p className="text-[12px] font-black">Kioku tersedia untuk Premium</p>
+                <p className="mx-auto mt-1 max-w-sm text-[9px] leading-relaxed text-muted-foreground">
+                  Materi dan Flashcard tetap dapat digunakan. Premium membuka latihan adaptif dan Analisis Ingatan.
+                </p>
+                <button type="button" onClick={() => setUpgradeOpen(true)} className="mt-3 rounded-xl bg-primary px-4 py-2.5 text-[10px] font-bold text-primary-foreground">
+                  Buka Kioku Premium
+                </button>
+              </section>
+            ) : (
+              <>
+            <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
+                <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
+                <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
+              </a>
+              <button type="button" disabled={loading || !ready || ready.exercises.length === 0} onClick={start} className="rounded-2xl border border-primary/25 bg-primary p-3 text-left text-primary-foreground disabled:opacity-50">
+                <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> {mode === "daily" ? "Mulai Latihan Hari Ini" : mode === "boss" ? "Mulai Uji Ingatan" : "Kioku Adaptif"}</p>
+                <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : mode === "daily" ? "Mode harian dipilih. Mulai latihan yang paling perlu sekarang." : mode === "boss" ? "Mode uji dipilih. Mulai sesi campuran untuk menguji daya ingat." : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
+              </button>
+              <a href="/kioku?mode=boss" className="rounded-2xl border bg-card p-3">
+                <p className="flex items-center gap-1.5 text-[11px] font-black"><ShieldCheck className="size-3.5 text-primary" /> Uji Ingatan</p>
+                <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Uji campuran untuk memastikan ingatan kuat tetap bertahan.</p>
+              </a>
+            </section>
+            <a href="/hafalan-riwayat" className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm">
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><BarChart3 className="size-4" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-black">Analisis Ingatan</span>
+                <span className="block text-[8px] text-muted-foreground">Retensi, kelemahan, keyakinan, dan pola kesalahanmu.</span>
+              </span>
+              <span className="text-[9px] font-bold text-primary">Buka</span>
+            </a>
+              </>
             )}
-            <button
-              disabled={loading || !ready || ready.exercises.length === 0}
-              onClick={start}
-              className="mx-auto mt-5 w-full rounded-2xl bg-primary py-3 text-[11px] font-bold text-primary-foreground disabled:opacity-50 md:mt-7 md:max-w-sm md:py-3.5 md:text-[13px]"
-            >
-              {loading ? "Menyiapkan…" : "Mulai Kioku"}
-            </button>
-          </section>
+            {hasPremiumAccess && error && <p className="text-center text-[10px] text-red-600 dark:text-red-300">{error}</p>}
+            {hasPremiumAccess && !loading && ready && ready.exercises.length === 0 && (
+              <p className="rounded-2xl border bg-card p-3 text-center text-[9px] text-muted-foreground">Belum ada materi yang dapat diuji. Tandai Kanji, Kotoba, atau Bunpou sebagai Dipelajari terlebih dahulu.</p>
+            )}
+          </>
         )}
+        <PremiumUpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="ENO Kioku" />
         {session?.finished && (
           <section className="rounded-3xl border bg-card p-6 text-center">
             <h2 className="text-[16px] font-bold">Sesi selesai</h2>

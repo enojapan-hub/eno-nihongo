@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminEnoExamRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminImportExportRouteImport } from './routes/_authenticated/admin-import-export'
 import { Route as AuthenticatedAdminKelasRouteImport } from './routes/_authenticated/admin-kelas'
 import { Route as AuthenticatedAdminKeuanganRouteImport } from './routes/_authenticated/admin-keuangan'
+import { Route as AuthenticatedAdminProdukDigitalRouteImport } from './routes/_authenticated/admin-produk-digital'
 import { Route as AuthenticatedAdminKontenRouteImport } from './routes/_authenticated/admin-konten'
 import { Route as AuthenticatedAdminLanggananRouteImport } from './routes/_authenticated/admin-langganan'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin-media'
@@ -66,6 +67,7 @@ import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedQuizRouteImport } from './routes/_authenticated/quiz'
 import { Route as AuthenticatedRantaiIngatanRouteImport } from './routes/_authenticated/rantai-ingatan'
 import { Route as AuthenticatedReferralRouteImport } from './routes/_authenticated/referral'
+import { Route as AuthenticatedTukarPoinRouteImport } from './routes/_authenticated/tukar-poin'
 import { Route as AuthenticatedSimulasiRouteImport } from './routes/_authenticated/simulasi'
 import { Route as AuthenticatedStudyItemRouteImport } from './routes/_authenticated/study-item'
 import { Route as AuthenticatedTargetRouteImport } from './routes/_authenticated/target'
@@ -186,6 +188,12 @@ const AuthenticatedAdminKeuanganRoute =
   AuthenticatedAdminKeuanganRouteImport.update({
     id: '/admin-keuangan',
     path: '/admin-keuangan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminProdukDigitalRoute =
+  AuthenticatedAdminProdukDigitalRouteImport.update({
+    id: '/admin-produk-digital',
+    path: '/admin-produk-digital',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminKontenRoute =
@@ -402,6 +410,11 @@ const AuthenticatedRantaiIngatanRoute =
     path: '/rantai-ingatan',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTukarPoinRoute = AuthenticatedTukarPoinRouteImport.update({
+  id: '/tukar-poin',
+  path: '/tukar-poin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
   id: '/referral',
   path: '/referral',
@@ -636,6 +649,7 @@ export interface FileRoutesByFullPath {
   '/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/admin-kelas': typeof AuthenticatedAdminKelasRoute
   '/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
+  '/admin-produk-digital': typeof AuthenticatedAdminProdukDigitalRoute
   '/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
   '/admin-media': typeof AuthenticatedAdminMediaRoute
@@ -677,6 +691,7 @@ export interface FileRoutesByFullPath {
   '/quiz': typeof AuthenticatedQuizRouteWithChildren
   '/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/referral': typeof AuthenticatedReferralRoute
+  '/tukar-poin': typeof AuthenticatedTukarPoinRoute
   '/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
   '/study-item': typeof AuthenticatedStudyItemRoute
   '/target': typeof AuthenticatedTargetRoute
@@ -732,6 +747,7 @@ export interface FileRoutesByTo {
   '/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/admin-kelas': typeof AuthenticatedAdminKelasRoute
   '/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
+  '/admin-produk-digital': typeof AuthenticatedAdminProdukDigitalRoute
   '/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/admin-langganan': typeof AuthenticatedAdminLanggananRoute
   '/admin-media': typeof AuthenticatedAdminMediaRoute
@@ -773,6 +789,7 @@ export interface FileRoutesByTo {
   '/quiz': typeof AuthenticatedQuizRouteWithChildren
   '/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/referral': typeof AuthenticatedReferralRoute
+  '/tukar-poin': typeof AuthenticatedTukarPoinRoute
   '/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
   '/study-item': typeof AuthenticatedStudyItemRoute
   '/target': typeof AuthenticatedTargetRoute
@@ -830,6 +847,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-import-export': typeof AuthenticatedAdminImportExportRoute
   '/_authenticated/admin-kelas': typeof AuthenticatedAdminKelasRoute
   '/_authenticated/admin-keuangan': typeof AuthenticatedAdminKeuanganRoute
+  '/_authenticated/admin-produk-digital': typeof AuthenticatedAdminProdukDigitalRoute
   '/_authenticated/admin-konten': typeof AuthenticatedAdminKontenRoute
   '/_authenticated/admin-langganan': typeof AuthenticatedAdminLanggananRoute
   '/_authenticated/admin-media': typeof AuthenticatedAdminMediaRoute
@@ -871,6 +889,7 @@ export interface FileRoutesById {
   '/_authenticated/quiz': typeof AuthenticatedQuizRouteWithChildren
   '/_authenticated/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/_authenticated/referral': typeof AuthenticatedReferralRoute
+  '/_authenticated/tukar-poin': typeof AuthenticatedTukarPoinRoute
   '/_authenticated/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
   '/_authenticated/study-item': typeof AuthenticatedStudyItemRoute
   '/_authenticated/target': typeof AuthenticatedTargetRoute
@@ -928,6 +947,7 @@ export interface FileRouteTypes {
     | '/admin-import-export'
     | '/admin-kelas'
     | '/admin-keuangan'
+    | '/admin-produk-digital'
     | '/admin-konten'
     | '/admin-langganan'
     | '/admin-media'
@@ -969,6 +989,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/rantai-ingatan'
     | '/referral'
+    | '/tukar-poin'
     | '/simulasi'
     | '/study-item'
     | '/target'
@@ -1024,6 +1045,7 @@ export interface FileRouteTypes {
     | '/admin-import-export'
     | '/admin-kelas'
     | '/admin-keuangan'
+    | '/admin-produk-digital'
     | '/admin-konten'
     | '/admin-langganan'
     | '/admin-media'
@@ -1065,6 +1087,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/rantai-ingatan'
     | '/referral'
+    | '/tukar-poin'
     | '/simulasi'
     | '/study-item'
     | '/target'
@@ -1121,6 +1144,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-import-export'
     | '/_authenticated/admin-kelas'
     | '/_authenticated/admin-keuangan'
+    | '/_authenticated/admin-produk-digital'
     | '/_authenticated/admin-konten'
     | '/_authenticated/admin-langganan'
     | '/_authenticated/admin-media'
@@ -1162,6 +1186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/quiz'
     | '/_authenticated/rantai-ingatan'
     | '/_authenticated/referral'
+    | '/_authenticated/tukar-poin'
     | '/_authenticated/simulasi'
     | '/_authenticated/study-item'
     | '/_authenticated/target'
@@ -1338,6 +1363,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-keuangan'
       fullPath: '/admin-keuangan'
       preLoaderRoute: typeof AuthenticatedAdminKeuanganRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-produk-digital': {
+      id: '/_authenticated/admin-produk-digital'
+      path: '/admin-produk-digital'
+      fullPath: '/admin-produk-digital'
+      preLoaderRoute: typeof AuthenticatedAdminProdukDigitalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin-konten': {
@@ -1618,6 +1650,13 @@ declare module '@tanstack/react-router' {
       path: '/rantai-ingatan'
       fullPath: '/rantai-ingatan'
       preLoaderRoute: typeof AuthenticatedRantaiIngatanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tukar-poin': {
+      id: '/_authenticated/tukar-poin'
+      path: '/tukar-poin'
+      fullPath: '/tukar-poin'
+      preLoaderRoute: typeof AuthenticatedTukarPoinRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/referral': {
@@ -2056,6 +2095,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminImportExportRoute: typeof AuthenticatedAdminImportExportRoute
   AuthenticatedAdminKelasRoute: typeof AuthenticatedAdminKelasRoute
   AuthenticatedAdminKeuanganRoute: typeof AuthenticatedAdminKeuanganRoute
+  AuthenticatedAdminProdukDigitalRoute: typeof AuthenticatedAdminProdukDigitalRoute
   AuthenticatedAdminKontenRoute: typeof AuthenticatedAdminKontenRoute
   AuthenticatedAdminLanggananRoute: typeof AuthenticatedAdminLanggananRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
@@ -2096,6 +2136,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
   AuthenticatedQuizRoute: typeof AuthenticatedQuizRouteWithChildren
   AuthenticatedRantaiIngatanRoute: typeof AuthenticatedRantaiIngatanRoute
+  AuthenticatedTukarPoinRoute: typeof AuthenticatedTukarPoinRoute
   AuthenticatedReferralRoute: typeof AuthenticatedReferralRoute
   AuthenticatedSimulasiRoute: typeof AuthenticatedSimulasiRouteWithChildren
   AuthenticatedStudyItemRoute: typeof AuthenticatedStudyItemRoute
@@ -2118,6 +2159,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminImportExportRoute: AuthenticatedAdminImportExportRoute,
   AuthenticatedAdminKelasRoute: AuthenticatedAdminKelasRoute,
   AuthenticatedAdminKeuanganRoute: AuthenticatedAdminKeuanganRoute,
+  AuthenticatedAdminProdukDigitalRoute: AuthenticatedAdminProdukDigitalRoute,
   AuthenticatedAdminKontenRoute: AuthenticatedAdminKontenRoute,
   AuthenticatedAdminLanggananRoute: AuthenticatedAdminLanggananRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
@@ -2158,6 +2200,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedQuizRoute: AuthenticatedQuizRouteWithChildren,
   AuthenticatedRantaiIngatanRoute: AuthenticatedRantaiIngatanRoute,
+  AuthenticatedTukarPoinRoute: AuthenticatedTukarPoinRoute,
   AuthenticatedReferralRoute: AuthenticatedReferralRoute,
   AuthenticatedSimulasiRoute: AuthenticatedSimulasiRouteWithChildren,
   AuthenticatedStudyItemRoute: AuthenticatedStudyItemRoute,

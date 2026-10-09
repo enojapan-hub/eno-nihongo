@@ -5740,6 +5740,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      mark_material_learned_atomic: {
+        Args: {
+          p_item_id: string
+          p_item_type: Database["public"]["Enums"]["content_skill"]
+          p_level: Database["public"]["Enums"]["jlpt_level"]
+        }
+        Returns: boolean
+      }
       pending_translation_work: {
         Args: { p_limit: number; p_source_type: string }
         Returns: {

@@ -1,23 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import {
-  BookOpenCheck,
   CheckCircle2,
   Clock3,
   Flame,
-  Languages,
-  ListChecks,
   RefreshCcw,
   Target,
-  Type,
   Zap,
   ChevronRight,
-  BrainCircuit,
   CalendarDays,
-  Shuffle,
-  RotateCcw,
-  Play,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,10 +18,6 @@ import {
   type AdaptiveTask,
   type AdaptiveTaskType,
 } from "@/lib/adaptive-plan";
-import { analyzeMastery, type MasteryReview } from "@/lib/mastery-analysis";
-import { masteryTrainingHref } from "@/lib/mastery-training";
-import { supabase } from "@/integrations/supabase/client";
-import { getAuthUser } from "@/lib/auth-user";
 import { fetchMembershipAccess } from "@/lib/membership";
 import {
   fetchLatestSimulation,
@@ -42,7 +29,6 @@ import {
 } from "@/lib/learning-hub";
 import type { Level } from "@/lib/learn-queries";
 import { PremiumBadge } from "@/components/membership/PremiumBadge";
-import { PremiumUpgradeDialog } from "@/components/membership/PremiumUpgradeDialog";
 
 export const Route = createFileRoute("/_authenticated/target")({
   head: () => ({ meta: [{ title: "Target — ENO NIHONGO" }] }),
@@ -58,46 +44,6 @@ const fallback: Partial<Record<AdaptiveTaskType, string>> = {
   listening: "/listening",
 };
 
-async function fetchWeakness(level: Level) {
-  const { data: u } = await getAuthUser();
-  if (!u.user) return [];
-  const [{ data: reviews, error }, { data: reading, error: readingError }] = await Promise.all([
-    supabase
-      .from("flashcard_reviews")
-      .select("item_type,item_id,rating,direction,aspect,used_hint,response_ms")
-      .eq("user_id", u.user.id)
-      .eq("level", level)
-      .order("created_at", { ascending: false })
-      .limit(500),
-    supabase
-      .from("learning_activity")
-      .select("metadata")
-      .eq("user_id", u.user.id)
-      // content_id/correct/content_type tersimpan di kolom metadata (jsonb), bukan kolom tersendiri.
-      .eq("metadata->>content_type", "reading")
-      .eq("activity_type", "quiz_answered")
-      .order("created_at", { ascending: false })
-      .limit(200),
-  ]);
-  if (error) throw error;
-  const base = (reviews ?? []) as MasteryReview[];
-  if (readingError) return analyzeMastery(base);
-  const dokkai: MasteryReview[] = (reading ?? [])
-    .map((r) =>
-      r.metadata && typeof r.metadata === "object" && !Array.isArray(r.metadata) ? r.metadata : {},
-    )
-    .filter((m) => String(m["level"] ?? "") === level)
-    .map((m) => ({
-      item_type: "reading",
-      item_id: String(m["content_id"]),
-      rating: m["correct"] ? 2 : 0,
-      aspect: "context",
-      direction: null,
-      used_hint: false,
-      response_ms: null,
-    }));
-  return analyzeMastery([...base, ...dokkai]);
-}
 function timeLabel(s: number) {
   const m = Math.floor(s / 60);
   return m < 60 ? `${m}m` : `${Math.floor(m / 60)}j ${m % 60}m`;
@@ -186,7 +132,6 @@ function SectionTitle({ children, note }: { children: React.ReactNode; note?: st
 }
 
 function TargetPage() {
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const adaptive = useQuery({
     queryKey: ["adaptive-plan"],
     queryFn: fetchAdaptivePlan,
@@ -207,13 +152,6 @@ function TargetPage() {
   const plan = adaptive.data,
     level = (plan?.targetLevel ?? "N5") as Level,
     planActive = Boolean(plan?.active);
-  const weakness = useQuery({
-    queryKey: ["target-weakness-v2", level],
-    queryFn: () => fetchWeakness(level),
-    enabled: !!plan,
-    staleTime: 30000,
-    refetchInterval: 60000,
-  });
   const mastery = useQuery({
     queryKey: ["target-mastery", level],
     queryFn: () => fetchMastery(level),
@@ -252,45 +190,6 @@ function TargetPage() {
     metrics.data?.dueReviewCount ?? 0,
     tasks.find((t) => t.task_type === "review")?.suggestions?.length ?? 0,
   );
-  const weak = weakness.data?.[0];
-  const kiokuRecommended = Boolean(
-    tasks.find((t) => t.task_type === "review")?.metadata?.["kiokuRecommended"],
-  );
-  const weakHref =
-    weak?.itemType === "reading"
-      ? "/dokkai"
-      : kiokuRecommended
-        ? "/kioku"
-        : weak
-          ? masteryTrainingHref({ itemType: weak.itemType, aspect: weak.aspect })
-          : "/hafalan";
-  const slug = level.toLowerCase();
-  const quickPractice = [
-    {
-      label: "Kanji",
-      description: "Arti & pemahaman",
-      icon: Type,
-      quizSlug: `latihan-${slug}-kanji`,
-    },
-    {
-      label: "Kotoba",
-      description: "Arti & penggunaan",
-      icon: Languages,
-      quizSlug: `latihan-${slug}-vocabulary`,
-    },
-    {
-      label: "Bunpou",
-      description: "Pola tata bahasa",
-      icon: BookOpenCheck,
-      quizSlug: `latihan-${slug}-grammar`,
-    },
-    {
-      label: "Campuran",
-      description: "Berbagai kategori",
-      icon: Shuffle,
-      quizSlug: `latihan-${slug}`,
-    },
-  ];
   const weeklyMap = new Map((weekly.data?.rows ?? []).map((r) => [r.taskType, r]));
   const todayInfo = weekly.data?.days.find((d) => d.isToday);
   const restDay = Boolean(todayInfo) && !todayInfo?.active;
@@ -574,81 +473,7 @@ function TargetPage() {
             </section>
 
             <section>
-              <SectionTitle>Perlu Perhatian</SectionTitle>
-              <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 p-3 text-amber-950 dark:border-amber-500/20 dark:bg-amber-500/[.08] dark:text-foreground">
-                <div className="flex items-start gap-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                    <BrainCircuit className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    {weakness.isLoading ? (
-                      <div className="h-12 animate-pulse rounded-lg bg-amber-100/60" />
-                    ) : weakness.isError ? (
-                      <>
-                        <p className="text-[12px] font-bold text-foreground">
-                          Analisis sementara tidak tersedia
-                        </p>
-                        <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                          Progres belajar tetap tersimpan. Coba muat ulang halaman.
-                        </p>
-                      </>
-                    ) : weak ? (
-                      <>
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                              Kelemahan terbesar
-                            </p>
-                            <p className="mt-0.5 text-[12px] font-bold text-foreground">
-                              {weak.label}
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-amber-100 px-2 py-1 text-[9px] font-black text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                            {weak.mastery}%
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                          Dihitung dari {weak.total} jawaban/review belajar pada jenis materi dan
-                          aspek ini.
-                        </p>
-                        <div className="mt-2 flex gap-2">
-                          {locked ? (
-                            <button
-                              type="button"
-                              onClick={() => setUpgradeOpen(true)}
-                              className="rounded-xl bg-emerald-700 px-3 py-2 text-[9px] font-bold text-white dark:bg-primary dark:text-primary-foreground"
-                            >
-                              Latih Sekarang
-                            </button>
-                          ) : (
-                            <a
-                              href={weakHref}
-                              className="rounded-xl bg-emerald-700 px-3 py-2 text-[9px] font-bold text-white dark:bg-primary dark:text-primary-foreground"
-                            >
-                              Latih Sekarang
-                            </a>
-                          )}
-                          <a
-                            href="/peta-kelemahan"
-                            className="rounded-xl border border-border bg-card px-3 py-2 text-[9px] font-bold text-foreground hover:bg-muted"
-                          >
-                            Lihat analisis
-                          </a>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-[12px] font-bold text-foreground">
-                          Belum ada kelemahan terdeteksi
-                        </p>
-                        <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                          Analisis muncul setelah kamu mengerjakan beberapa review atau soal Dokkai.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <SectionTitle>Belajar Tertunda</SectionTitle>
               <Link
                 to="/target-tertunda"
                 className="mt-2 flex items-center gap-3 rounded-2xl border bg-card p-4 transition hover:border-primary/30 hover:bg-primary/[.025]"
@@ -664,94 +489,12 @@ function TargetPage() {
                       : "Tidak ada materi tertunda"}
                   </span>
                 </span>
-                {(metrics.data?.errorReviewCount ?? 0) > 0 && (
-                  <span className="rounded-full bg-destructive/10 px-2 py-1 text-[9px] font-bold text-destructive">
-                    +{metrics.data?.errorReviewCount} salah
-                  </span>
-                )}
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </Link>
             </section>
 
-            <section>
-              <SectionTitle
-                note={`Latihan singkat ${level} · 10 soal acak dari bank soal yang tersedia.`}
-              >
-                Latihan Cepat
-              </SectionTitle>
-              <Card className="overflow-hidden rounded-[1.7rem] border-primary/10">
-                <CardContent className="p-3">
-                  <div className="mb-3 flex items-center justify-between rounded-2xl bg-primary/[.055] px-3 py-2.5">
-                    <div>
-                      <p className="text-[10px] font-black">Pilih latihan</p>
-                      <p className="mt-0.5 text-[8px] text-muted-foreground">
-                        Hasil latihan tersimpan ke progres belajarmu.
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[9px] font-black text-primary">
-                      {level}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {quickPractice.map(({ label, description, icon: Icon, quizSlug }) => (
-                      <Link
-                        key={label}
-                        to="/quiz/$slug"
-                        params={{ slug: quizSlug }}
-                        className="group rounded-2xl border bg-card p-3 transition hover:border-primary/30 hover:bg-primary/[.025] active:scale-[.99]"
-                      >
-                        <div className="flex items-start justify-between">
-                          <span className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">
-                            <Icon className="size-4" />
-                          </span>
-                          <Play className="mt-1 size-3.5 text-muted-foreground transition group-hover:text-primary" />
-                        </div>
-                        <p className="mt-2.5 text-[11px] font-bold">{label}</p>
-                        <p className="mt-0.5 text-[8px] text-muted-foreground">{description}</p>
-                        <p className="mt-2 text-[8px] font-semibold text-primary">10 soal</p>
-                      </Link>
-                    ))}
-                  </div>
-                  <Link
-                    to="/hafalan"
-                    className="mt-2 flex items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/[.045] p-3 transition hover:bg-amber-500/[.075]"
-                  >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-600">
-                      <RotateCcw className="size-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[11px] font-bold">Review Kesalahan</span>
-                      <span className="mt-0.5 block text-[8px] text-muted-foreground">
-                        {(metrics.data?.errorReviewCount ?? 0) > 0
-                          ? `${metrics.data?.errorReviewCount} kesalahan siap dipelajari ulang`
-                          : "Belum ada kesalahan yang perlu diulang"}
-                      </span>
-                    </span>
-                    {(metrics.data?.errorReviewCount ?? 0) > 0 && (
-                      <span className="rounded-full bg-amber-500/15 px-2 py-1 text-[9px] font-black text-amber-700 dark:text-amber-300">
-                        {metrics.data?.errorReviewCount}
-                      </span>
-                    )}
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                  </Link>
-                  <Link
-                    to="/quiz"
-                    className="mt-3 flex items-center justify-center gap-1 text-[9px] font-bold text-muted-foreground hover:text-primary"
-                  >
-                    <ListChecks className="size-3" />
-                    Lihat semua kategori latihan
-                    <ChevronRight className="size-3" />
-                  </Link>
-                </CardContent>
-              </Card>
-            </section>
           </>
         )}
-        <PremiumUpgradeDialog
-          open={upgradeOpen}
-          onOpenChange={setUpgradeOpen}
-          feature="Adaptive Planner"
-        />
       </div>
     </AppShell>
   );

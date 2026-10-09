@@ -19,11 +19,11 @@ import { DailyNewLimit } from "@/components/learn/DailyNewLimit";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { fetchGrammarList, fetchKanjiList, fetchMyProgress, type Level } from "@/lib/learn-queries";
 import { fetchVocabCategoryCount, fetchVocabListResilient } from "@/lib/vocab-resilient";
+import { VOCAB_PRIMARY_CATEGORIES } from "@/lib/vocabulary-taxonomy";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchContinueLearning,
-  fetchTargetMetrics,
   kindLabel,
   type ContinueItem,
 } from "@/lib/learning-hub";
@@ -38,37 +38,26 @@ const norm = (v: unknown) =>
 const pct = (a: number, b: number) => (b ? Math.min(100, Math.round((a / b) * 100)) : 0);
 type CategoryCountRow = { category_slug: string; item_count: number | string };
 async function fetchExtra(level: Level) {
-  const { data: cats, error } = await supabase
-    .from("vocabulary_categories")
-    .select("id,slug,canonical_slug,label_ja,label_id,name_id,sort_order")
-    .eq("is_active", true)
-    .order("sort_order");
-  if (error) throw error;
-  if (!cats?.length) return [];
-  // Tabel vocabulary_category_links tidak dapat dibaca langsung oleh pengguna (RLS tanpa policy);
-  // hitungan semua kategori diambil dalam satu RPC. Bila RPC batch belum tersedia, fallback ke
-  // satu RPC per kategori (perilaku lama).
   const batch = await supabase.rpc(
-    "get_vocabulary_category_counts" as never,
-    {
-      p_level: level,
-    } as never,
+    "get_vocabulary_primary_category_counts" as never,
+    { p_level: level } as never,
   );
   const batchRows = batch.error ? null : (batch.data as unknown as CategoryCountRow[] | null);
   const bySlug = new Map((batchRows ?? []).map((r) => [r.category_slug, Number(r.item_count)]));
   const counts = batchRows
-    ? cats.map((x) => bySlug.get(String(x.canonical_slug || x.slug)) ?? 0)
+    ? VOCAB_PRIMARY_CATEGORIES.map((x) => bySlug.get(x.slug) ?? 0)
     : await Promise.all(
-        cats.map((x) => fetchVocabCategoryCount(level, String(x.canonical_slug || x.slug))),
+        VOCAB_PRIMARY_CATEGORIES.map((x) => fetchVocabCategoryCount(level, x.slug)),
       );
-  return cats
-    .map((x, i: number) => ({
-      id: x.id,
-      slug: x.canonical_slug || x.slug,
-      label: x.label_id || x.name_id || x.label_ja || x.slug,
+  return {
+    categories: VOCAB_PRIMARY_CATEGORIES.map((x, i) => ({
+      slug: x.slug,
+      labelJa: x.labelJa,
+      label: x.label,
+      hint: x.hint,
       count: counts[i] ?? 0,
-    }))
-    .filter((x) => x.count > 0);
+    })),
+  };
 }
 function BelajarPage() {
   const [search, setSearch] = useState(() =>
@@ -99,7 +88,7 @@ function BelajarPage() {
     queryFn: fetchMyProgress,
     enabled: ready,
   });
-  // 38 hitungan kategori (satu RPC per kategori) hanya dimuat saat bagiannya mendekati layar.
+  // Sepuluh kategori baku dimuat saat bagian Kotoba Tambahan mendekati layar.
   const [extraNear, setExtraNear] = useState(false);
   const extraRef = useCallback((node: HTMLElement | null) => {
     if (!node) return;
@@ -127,11 +116,6 @@ function BelajarPage() {
     queryKey: ["hub-continue", level],
     queryFn: () => fetchContinueLearning(level!),
     enabled: ready,
-    staleTime: 15000,
-  });
-  const metrics = useQuery({
-    queryKey: ["target-live-metrics"],
-    queryFn: fetchTargetMetrics,
     staleTime: 15000,
   });
   const rows = progress.data?.progress ?? [];
@@ -308,31 +292,9 @@ function BelajarPage() {
             ) : (
               <div className="space-y-4">
                 <ContinueCard level={level} loading={cont.isLoading} item={cont.data ?? null} />
-                <section className="grid grid-cols-2 gap-2">
-                  <Link
-                    to="/kioku"
-                    search={{ mode: "daily" }}
-                    className="rounded-2xl border border-primary/20 bg-primary/[.05] p-3 transition-colors hover:bg-primary/[.08]"
-                  >
-                    <p className="text-[12px] font-black text-primary">Review Hari Ini</p>
-                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                      Prioritas jatuh tempo, materi lemah, dan miskonsepsi.
-                    </p>
-                  </Link>
-                  <Link
-                    to="/kioku"
-                    search={{ mode: "boss" }}
-                    className="rounded-2xl border bg-card p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <p className="text-[12px] font-black">Boss Review</p>
-                    <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
-                      Uji campuran untuk memastikan ingatan kuat tetap bertahan.
-                    </p>
-                  </Link>
-                </section>
                 <DailyNewLimit />
+                <FlashcardCard />
                 <KiokuCard />
-                <FlashcardCard loading={metrics.isLoading} due={metrics.data?.dueReviewCount} />
                 <section>
                   <h2 className="mb-2 px-1 text-[13px] font-bold">Dasar Bahasa Jepang</h2>
                   <Link
@@ -434,44 +396,7 @@ function BelajarPage() {
                     ))}
                   </div>
                 </section>
-                <section ref={extraRef} className="rounded-2xl border bg-card p-3">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="grid size-8 place-items-center rounded-xl bg-violet-100 text-violet-600">
-                      <Tags className="size-4" />
-                    </span>
-                    <div>
-                      <p className="text-[12px] font-bold">Kotoba Tambahan {level}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Kata benda, kerja, sifat, keterangan, tema, dan lainnya
-                      </p>
-                    </div>
-                  </div>
-                  {extra.isLoading || extra.isPending ? (
-                    <p className="py-2 text-center text-[10px] text-muted-foreground">
-                      Memuat kategori…
-                    </p>
-                  ) : extra.isError ? (
-                    <p className="py-2 text-center text-[10px] text-muted-foreground">
-                      Kategori belum dapat dimuat.
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {(extra.data ?? []).map((cat) => (
-                        <Link
-                          key={cat.id}
-                          to="/kotoba"
-                          search={{ category: String(cat.slug) }}
-                          className="flex min-w-0 items-center justify-between gap-2 rounded-xl bg-muted/45 px-2.5 py-2"
-                        >
-                          <span className="truncate text-[10px] font-medium">{cat.label}</span>
-                          <span className="rounded-full bg-background px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                            {cat.count}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </section>
+                
               </div>
             )}
           </>
@@ -579,8 +504,7 @@ function KiokuCard() {
   );
 }
 
-function FlashcardCard({ loading, due }: { loading: boolean; due: number | undefined }) {
-  const has = (due ?? 0) > 0;
+function FlashcardCard() {
   return (
     <Link to="/hafalan" className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-700">
@@ -589,17 +513,13 @@ function FlashcardCard({ loading, due }: { loading: boolean; due: number | undef
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-bold">Flashcard</p>
         <p className="mt-0.5 text-[10px] text-muted-foreground">
-          {loading
-            ? "Memuat kartu…"
-            : has
-              ? `${due} kartu perlu direview`
-              : "Tidak ada kartu jatuh tempo"}
+          Hafalkan materi yang sudah kamu pelajari sebelum mengujinya di Kioku.
         </p>
       </div>
       <span
-        className={`shrink-0 rounded-xl px-3 py-2 text-[11px] font-bold ${has ? "bg-emerald-700 text-white dark:bg-primary dark:text-primary-foreground" : "border bg-background"}`}
+        className={`shrink-0 rounded-xl px-3 py-2 text-[11px] font-bold $border bg-background`}
       >
-        {has ? "Mulai Review" : "Buka Flashcard"}
+        Buka Flashcard
       </span>
     </Link>
   );

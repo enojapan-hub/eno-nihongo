@@ -152,9 +152,9 @@ function DashboardPage() {
     month: "long",
   }).format(new Date());
   const quickActions = [
-    { label: "Kioku", to: "/kioku", icon: Brain },
+    { label: "Materi", to: "/belajar", icon: BookOpen },
     { label: "Flashcard", to: "/hafalan", icon: Layers3 },
-    { label: "Quiz", to: "/quiz", icon: CheckCircle2 },
+    { label: "Kioku", to: "/kioku", icon: Brain },
     { label: "Simulasi", to: "/simulasi", icon: Trophy },
   ] as const;
   return (

@@ -33,6 +33,8 @@ import {
   fetchVocabLessonCounts,
   fetchVocabLessonPage,
   fetchVocabSenses,
+  fetchVocabSubcategoryCount,
+  fetchVocabSubcategoryPage,
   pickUsageNote,
   VOCAB_PAGE_SIZE,
 } from "@/lib/vocab-resilient";
@@ -47,11 +49,16 @@ import { normalizeJapaneseSpacing, normalizeRomaji } from "@/lib/japanese-spacin
 import { exampleRomaji, wordRomaji } from "@/lib/romaji";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { learnedActionLabel } from "@/lib/material-progress";
+import { formatVocabularyClass, vocabularySubcategories } from "@/lib/vocabulary-taxonomy";
 // Referensi stabil agar efek tidak terpicu tiap render saat data pelajaran belum dimuat.
 const NO_LESSONS: Awaited<ReturnType<typeof fetchVocabLessonCounts>> = [];
 export const Route = createFileRoute("/_authenticated/kotoba")({
-  validateSearch: (search: Record<string, unknown>): { category?: string; id?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { category?: string; subcategory?: string; id?: string } => ({
     ...(typeof search["category"] === "string" ? { category: search["category"] } : {}),
+    ...(typeof search["subcategory"] === "string" ? { subcategory: search["subcategory"] } : {}),
     ...(typeof search["id"] === "string" ? { id: search["id"] } : {}),
   }),
   component: KotobaPage,
@@ -86,6 +93,7 @@ function speak(t: string, onError?: () => void) {
 function KotobaPage() {
   const params = new URLSearchParams(window.location.search),
     category = params.get("category")?.trim() || null,
+    subcategory = params.get("subcategory")?.trim() || null,
     directId = params.get("id")?.trim() || null;
   const { data: targetLevel, isLoading: levelLoading } = useQuery({
     queryKey: ["target-level"],
@@ -149,23 +157,35 @@ function KotobaPage() {
     enabled: ready && !!category,
     staleTime: 10 * 60 * 1000,
   });
+  const subcategoryCount = useQuery({
+    queryKey: ["vocab-subcategory-count", level, subcategory],
+    queryFn: () => fetchVocabSubcategoryCount(level, category!, subcategory!),
+    enabled: ready && !!category && !!subcategory,
+    staleTime: 10 * 60 * 1000,
+  });
   const fontSizes = LIST_FONT_SIZES[clampFontStep(fontStep)] ?? LIST_FONT_SIZES[LIST_FONT_DEFAULT]!;
-  const currentCount = category
-    ? Number(categoryCount.data ?? 0)
-    : Number(lessonCounts.find((x) => x.lesson_number === lesson)?.word_count ?? 0);
+  const currentCount = subcategory
+    ? Number(subcategoryCount.data ?? 0)
+    : category
+      ? Number(categoryCount.data ?? 0)
+      : Number(lessonCounts.find((x) => x.lesson_number === lesson)?.word_count ?? 0);
   const {
     data = [],
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: category
-      ? ["vocab-category", level, category, page]
-      : ["vocab-lesson", level, lesson, page],
+    queryKey: subcategory
+      ? ["vocab-subcategory", level, category, subcategory, page]
+      : category
+        ? ["vocab-category", level, category, page]
+        : ["vocab-lesson", level, lesson, page],
     queryFn: () =>
-      category
-        ? fetchVocabCategoryPage(level, category, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
-        : fetchVocabLessonPage(level, lesson!, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE),
+      subcategory
+        ? fetchVocabSubcategoryPage(level, category!, subcategory, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
+        : category
+          ? fetchVocabCategoryPage(level, category, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE)
+          : fetchVocabLessonPage(level, lesson!, page * VOCAB_PAGE_SIZE, VOCAB_PAGE_SIZE),
     enabled: ready && (!!category || lesson != null),
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -177,22 +197,26 @@ function KotobaPage() {
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
-  const cards = data as VocabRow[];
+  const cards = data as unknown as VocabRow[];
   useEffect(() => {
     if (!ready || currentCount <= (page + 1) * VOCAB_PAGE_SIZE) return;
     const nextPage = page + 1;
     const offset = nextPage * VOCAB_PAGE_SIZE;
     void qc.prefetchQuery({
-      queryKey: category
-        ? ["vocab-category", level, category, nextPage]
-        : ["vocab-lesson", level, lesson, nextPage],
+      queryKey: subcategory
+        ? ["vocab-subcategory", level, category, subcategory, nextPage]
+        : category
+          ? ["vocab-category", level, category, nextPage]
+          : ["vocab-lesson", level, lesson, nextPage],
       queryFn: () =>
-        category
-          ? fetchVocabCategoryPage(level, category, offset, VOCAB_PAGE_SIZE)
-          : fetchVocabLessonPage(level, lesson!, offset, VOCAB_PAGE_SIZE),
+        subcategory
+          ? fetchVocabSubcategoryPage(level, category!, subcategory, offset, VOCAB_PAGE_SIZE)
+          : category
+            ? fetchVocabCategoryPage(level, category, offset, VOCAB_PAGE_SIZE)
+            : fetchVocabLessonPage(level, lesson!, offset, VOCAB_PAGE_SIZE),
       staleTime: 10 * 60 * 1000,
     });
-  }, [category, currentCount, lesson, level, page, qc, ready]);
+  }, [category, subcategory, currentCount, lesson, level, page, qc, ready]);
   const { data: directItem } = useQuery({
     queryKey: ["vocab-direct", directId],
     queryFn: () => fetchVocabById(directId!),
@@ -280,16 +304,16 @@ function KotobaPage() {
       );
       return { previous };
     },
-    onError: (_e, _id, ctx) => {
+    onError: () => {
       toast.error(
         navigator.onLine
-          ? "Progress gagal disimpan. Coba lagi."
-          : "Kamu sedang offline. Progress belum tersimpan.",
+          ? "Progress gagal disimpan. Status akan diperiksa ulang."
+          : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
-      if (ctx) qc.setQueryData(["mastered-items", "vocabulary", level], ctx.previous);
+      void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
     },
-    onSuccess: () => {
-      toast.success("Progress tersimpan");
+    onSuccess: (changed) => {
+      if (changed) toast.success("Progress tersimpan");
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
@@ -311,16 +335,20 @@ function KotobaPage() {
       );
       return { previous };
     },
-    onError: (_e, _id, ctx) => {
+    onError: () => {
+      // The atomic RPC rolls back progress and activity together on failure.
+      // Reconcile optimistic state with the server instead of restoring stale data.
       toast.error(
         navigator.onLine
-          ? "Progress gagal disimpan. Coba lagi."
-          : "Kamu sedang offline. Progress belum tersimpan.",
+          ? "Progress gagal disimpan. Status materi akan diperiksa ulang."
+          : "Koneksi terputus. Periksa kembali status materi saat online.",
       );
-      if (ctx) qc.setQueryData(["mastered-items", "vocabulary", level], ctx.previous);
+      void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
+      void qc.invalidateQueries({ queryKey: ["my-progress"] });
+      void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
     },
-    onSuccess: () => {
-      toast.success("Progress tersimpan");
+    onSuccess: (changed) => {
+      if (changed) toast.success("Progress tersimpan");
       void qc.invalidateQueries({ queryKey: ["mastered-items", "vocabulary", level] });
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
       void qc.invalidateQueries({ queryKey: ["dashboard-live"] });
@@ -476,6 +504,27 @@ function KotobaPage() {
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-3.5 size-4" />
+              </div>
+            )}
+            {category && vocabularySubcategories(category).length > 0 && (
+              <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                <Link
+                  to="/kotoba"
+                  search={{ category }}
+                  className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (!subcategory ? "border-primary bg-primary text-primary-foreground" : "bg-card")}
+                >
+                  Semua
+                </Link>
+                {vocabularySubcategories(category).map((item) => (
+                  <Link
+                    key={item.slug}
+                    to="/kotoba"
+                    search={{ category, subcategory: item.slug }}
+                    className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (subcategory === item.slug ? "border-primary bg-primary text-primary-foreground" : "bg-card")}
+                  >
+                    {item.labelJa} · {item.label}
+                  </Link>
+                ))}
               </div>
             )}
             <div className="mb-2 flex items-center justify-between gap-2">
@@ -751,10 +800,7 @@ function Detail({
           <p className="mt-1 pr-2 text-lg font-semibold leading-7">{item.meaning_id}</p>
         </section>
         <div className="mt-2 grid grid-cols-2 gap-2">
-          <Info
-            label="Kelas Kata"
-            value={item.part_of_speech || senses[0]?.part_of_speech || "—"}
-          />
+          <ClassInfo value={item.part_of_speech || senses[0]?.part_of_speech || null} />
           <Info label="Arti Inggris" value={item.meaning_en || "—"} />
         </div>
         <section className="mt-2 rounded-2xl bg-primary/[.07] p-4">
@@ -801,7 +847,7 @@ function Detail({
             <p className="mt-2 text-xs text-muted-foreground">Contoh kalimat belum tersedia.</p>
           )}
         </section>
-        <ItemMasteryCard itemType="vocabulary" itemId={item.id} />
+        <ItemMasteryCard itemType="vocabulary" itemId={item.id} learned={learned} />
         <div className="mt-3 border-t bg-background px-1.5 py-1">
           <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
             <Button
@@ -830,12 +876,14 @@ function Detail({
             <Button
               disabled={learnPending || learned}
               onClick={onLearn}
+              variant={learned ? "secondary" : "default"}
+              aria-label={learned ? "Sudah dipelajari" : "Tandai dipelajari"}
               className="h-9 min-w-0 rounded-full px-2 text-[11px] transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
             >
               <Check
                 className={`mr-1 size-3.5 transition-transform duration-150 ${learned ? "scale-110" : ""} motion-reduce:transition-none`}
               />
-              <span className="truncate">Dipelajari</span>
+              <span className="truncate">{learnedActionLabel(learned)}</span>
             </Button>
             <Button
               variant="ghost"
@@ -849,6 +897,22 @@ function Detail({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+function ClassInfo({ value }: { value: string | null }) {
+  const { labels, details } = formatVocabularyClass(value);
+  return (
+    <div className="rounded-2xl bg-primary/[.07] p-4">
+      <p className="text-[12px] font-bold text-primary">Kelas Kata</p>
+      <p className="mt-1 break-words leading-5">
+        <span className="text-[14px] font-semibold">{labels.join(" · ") || "Lainnya"}</span>
+        {details.length > 0 && (
+          <span className="ml-1.5 text-[10px] font-medium text-muted-foreground">
+            {details.join(" · ")}
+          </span>
+        )}
+      </p>
     </div>
   );
 }

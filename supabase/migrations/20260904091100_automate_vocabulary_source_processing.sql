@@ -157,12 +157,25 @@ $$;
 revoke all on function public.process_vocabulary_source_batch(integer) from public, anon, authenticated;
 grant execute on function public.process_vocabulary_source_batch(integer) to postgres, service_role;
 
-select cron.unschedule(jobid)
-from cron.job
-where jobname = 'eno_vocabulary_source_worker';
-
-select cron.schedule(
-  'eno_vocabulary_source_worker',
-  '*/5 * * * *',
-  $$select public.process_vocabulary_source_batch(100);$$
-);
+-- pg_cron is optional on isolated local test databases.
+DO $$
+DECLARE
+  v_jobid bigint;
+BEGIN
+  IF to_regclass('cron.job') IS NULL
+     OR to_regprocedure('cron.schedule(text,text,text)') IS NULL
+     OR to_regprocedure('cron.unschedule(bigint)') IS NULL THEN
+    RETURN;
+  END IF;
+  FOR v_jobid IN
+    SELECT jobid FROM cron.job WHERE jobname = 'eno_vocabulary_source_worker'
+  LOOP
+    PERFORM cron.unschedule(v_jobid);
+  END LOOP;
+  PERFORM cron.schedule(
+    'eno_vocabulary_source_worker',
+    '*/5 * * * *',
+    'select public.process_vocabulary_source_batch(100);'
+  );
+END;
+$$;

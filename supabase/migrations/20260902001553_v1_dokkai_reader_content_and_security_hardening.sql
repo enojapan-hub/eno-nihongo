@@ -58,4 +58,5 @@ from (values
 ('N1','Kemampuan apa yang dibutuhkan selain memiliki pengetahuan?','["Menghafal tanpa berpikir","Menyesuaikan dan memperbaiki penggunaan pengetahuan","Menghindari masalah","Membaca lebih cepat saja"]',1,'Penulis menekankan kemampuan menggunakan pengetahuan sesuai keadaan dan memperbaikinya.','c3f62150-6856-4e9e-b8a8-2368bf8c1594'),
 ('N1','Bagaimana pengetahuan menjadi alat untuk mengambil keputusan?','["Dengan hanya menghafalnya","Dengan menerapkan pada masalah nyata dan merefleksikan hasilnya","Dengan menghindari pengalaman","Dengan membaca satu buku"]',1,'Penerapan dan refleksi berulang membuat pengetahuan menjadi alat mengambil keputusan.','c3f62150-6856-4e9e-b8a8-2368bf8c1594')
 ) as x(level,prompt,choices,correct_index,explanation,passage_id)
-where not exists (select 1 from public.questions q where q.passage_id=x.passage_id::uuid and q.prompt=x.prompt);
+where exists (select 1 from public.reading_passages rp where rp.id=x.passage_id::uuid)
+  and not exists (select 1 from public.questions q where q.passage_id=x.passage_id::uuid and q.prompt=x.prompt);

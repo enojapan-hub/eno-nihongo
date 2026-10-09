@@ -4,6 +4,8 @@ import {
   CalendarDays,
   Edit3,
   Flame,
+  Gift,
+  Coins,
   Globe2,
   Settings,
   Sparkles,
@@ -160,6 +162,18 @@ function ProfilePage() {
             <Row icon={CalendarDays} label="Target waktu" value={targetLabel} />
           </CardContent>
         </Card>
+        <Button asChild variant="outline" className="w-full rounded-xl border-primary/20 bg-primary/5 text-primary">
+          <Link to="/referral">
+            <Gift className="mr-2 size-4" />
+            Ajak Teman
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="w-full rounded-xl">
+          <Link to="/tukar-poin">
+            <Coins className="mr-2 size-4" />
+            Tukar Poin
+          </Link>
+        </Button>
         <Button asChild variant="outline" className="w-full rounded-xl">
           <Link to="/pengaturan">
             <Settings className="mr-2 size-4" />

@@ -1,0 +1,156 @@
+name: PR140 Database Integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - 'src/lib/learn-queries.ts'
+      - 'src/routes/_authenticated/kotoba.tsx'
+      - '.github/workflows/pr140-db-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Use isolated local ports
+        run: |
+          cat >> supabase/config.toml <<'TOML'
+          [api]
+          port = 55421
+          [db]
+          port = 55422
+          shadow_port = 55420
+          [studio]
+          port = 55423
+          [inbucket]
+          port = 55424
+          TOML
+      - name: Isolate referral migrations from unrelated legacy history
+        run: |
+          mkdir -p /tmp/eno-legacy-migrations
+          mv supabase/migrations/*.sql /tmp/eno-legacy-migrations/
+          cp supabase/tests/pr140_referral_fixture.sql supabase/migrations/20260101000000_ci_referral_fixture.sql
+          cp /tmp/eno-legacy-migrations/20261008054434_reward_economy_v1.sql supabase/migrations/
+          cp /tmp/eno-legacy-migrations/20261008090000_atomic_material_learned.sql supabase/migrations/
+          cp /tmp/eno-legacy-migrations/20261008221500_secure_referral_reward.sql supabase/migrations/
+      - name: Start isolated Supabase services
+        run: supabase start --exclude studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
+      - name: Apply repository migrations in order
+        run: supabase db reset --local --yes
+      - name: Check referral and redemption functions
+        run: |
+          eval "$(supabase status -o env | grep '^DB_URL=' | sed 's/^/export /')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regprocedure('public.award_referral_signup(text)') IS NULL THEN
+              RAISE EXCEPTION 'Missing referral signup function';
+            END IF;
+            IF to_regprocedure('public.redeem_points_for_premium(integer)') IS NULL THEN
+              RAISE EXCEPTION 'Missing points redemption function';
+            END IF;
+            IF to_regprocedure('public.activate_referral_reward()') IS NULL THEN
+              RAISE EXCEPTION 'Missing referral reward trigger function';
+            END IF;
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger WHERE tgname='trg_activate_referral_reward'
+              AND tgrelid='public.learning_activity'::regclass AND NOT tgisinternal
+            ) THEN
+              RAISE EXCEPTION 'Missing referral activation trigger';
+            END IF;
+          END $$;
+          SQL
+      - name: Run referral security regression checks
+        run: |
+          eval "$(supabase status -o env | grep '^DB_URL=' | sed 's/^/export /')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          BEGIN;
+          DO $$
+          DECLARE
+            v_def text;
+          BEGIN
+            -- A client must never invoke the reward trigger directly.
+            IF has_function_privilege('authenticated', 'public.activate_referral_reward()', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Reward trigger callable by authenticated users';
+            END IF;
+            IF has_function_privilege('anon', 'public.activate_referral_reward()', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Reward trigger callable by anonymous users';
+            END IF;
+            IF NOT has_function_privilege('authenticated', 'public.award_referral_signup(text)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Referral signup RPC unavailable';
+            END IF;
+            IF has_function_privilege('anon', 'public.award_referral_signup(text)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Anonymous referral signup allowed';
+            END IF;
+            IF has_function_privilege('anon', 'public.mark_material_learned_atomic(public.content_skill,uuid,public.jlpt_level)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Anonymous atomic learning allowed';
+            END IF;
+            IF NOT has_function_privilege('authenticated', 'public.mark_material_learned_atomic(public.content_skill,uuid,public.jlpt_level)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Authenticated atomic learning unavailable';
+            END IF;
+            IF has_function_privilege('anon', 'public.redeem_points_for_premium(integer)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Anonymous redemption allowed';
+            END IF;
+            SELECT pg_get_functiondef('public.activate_referral_reward()'::regprocedure) INTO v_def;
+            IF position('eno.validated_material_learning' in v_def)=0 THEN
+              RAISE EXCEPTION 'Referral activation missing validated learning guard';
+            END IF;
+          END $$;
+          -- Both user-facing RPCs must reject requests without a user identity.
+          DO $$
+          BEGIN
+            PERFORM public.award_referral_signup('ENO-INVALID');
+            RAISE EXCEPTION 'Referral accepted without login';
+          EXCEPTION WHEN raise_exception THEN
+            IF SQLERRM <> 'not_authenticated' THEN RAISE; END IF;
+          END $$;
+          DO $$
+          BEGIN
+            PERFORM public.redeem_points_for_premium(1000);
+            RAISE EXCEPTION 'Redemption accepted without login';
+          EXCEPTION WHEN raise_exception THEN
+            IF SQLERRM <> 'not_authenticated' THEN RAISE; END IF;
+          END $$;
+          DO $$
+          BEGIN
+            PERFORM public.mark_material_learned_atomic('kanji', '33333333-3333-4333-8333-333333333333', 'N5');
+            RAISE EXCEPTION 'Atomic learning accepted without login';
+          EXCEPTION WHEN raise_exception THEN
+            IF SQLERRM <> 'login_required' THEN RAISE; END IF;
+          END $$;
+          ROLLBACK;
+          SQL
+      - name: Verify final atomic learning function retains referral guard
+        run: |
+          eval "$(supabase status -o env | grep '^DB_URL=' | sed 's/^/export /')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE v_def text;
+          BEGIN
+            SELECT pg_get_functiondef('public.mark_material_learned_atomic(public.content_skill,uuid,public.jlpt_level)'::regprocedure) INTO v_def;
+            IF position('eno.validated_material_learning' in v_def)=0 THEN
+              RAISE EXCEPTION 'Atomic learning missing validated referral marker';
+            END IF;
+            IF position('record_learning_activity' in v_def)=0 THEN
+              RAISE EXCEPTION 'Atomic learning no longer records activity';
+            END IF;
+          END $$;
+          SQL
+      - name: Verify referral and premium transactions
+        run: |
+          eval "$(supabase status -o env | grep '^DB_URL=' | sed 's/^/export /')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pr140_referral_transactions.sql
+      - name: Stop isolated services
+        if: always()
+        run: supabase stop --no-backup

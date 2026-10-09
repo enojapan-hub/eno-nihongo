@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Eye, EyeOff, Volume2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, RotateCcw, Sparkles, Volume2, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 
 export const Route = createFileRoute("/_authenticated/kana")({
@@ -118,6 +118,169 @@ const yoon: K[] = [
   ["ぴゅ", "ピュ", "pyu"],
   ["ぴょ", "ピョ", "pyo"],
 ].map(([h = "", k = "", r = ""]) => ({ h, k, r }));
+
+type PracticeScript = "h" | "k" | "mix";
+type PracticeMode = "kana-romaji" | "romaji-kana" | "similar" | "audio-kana";
+type PracticeSet = "basic" | "voiced" | "yoon" | "all";
+type PracticeQuestion = {
+  prompt: string;
+  answer: string;
+  options: string[];
+  script: "h" | "k";
+  source: K;
+};
+
+const confusing: Array<[string, string]> = [
+  ["シ", "ツ"],
+  ["ソ", "ン"],
+  ["ぬ", "め"],
+  ["れ", "わ"],
+  ["さ", "き"],
+  ["ク", "ケ"],
+  ["ウ", "ワ"],
+];
+
+function shuffle<T>(values: T[]) {
+  return [...values].sort(() => Math.random() - 0.5);
+}
+
+function buildQuestion(pool: K[], script: PracticeScript, mode: PracticeMode): PracticeQuestion {
+  const chosenScript: "h" | "k" = script === "mix" ? (Math.random() < 0.5 ? "h" : "k") : script;
+  const source = shuffle(pool)[0]!;
+  if (mode === "similar") {
+    const pairs = confusing.filter(([a, b]) =>
+      chosenScript === "h" ? /[ぁ-ゖ]/.test(a + b) : /[ァ-ヺ]/.test(a + b),
+    );
+    const pair = shuffle(pairs)[0];
+    if (pair) {
+      const answer = Math.random() < 0.5 ? pair[0] : pair[1];
+      const row = pool.find((x) => x[chosenScript] === answer);
+      if (row) {
+        const alternatives = shuffle(pool.filter((x) => x !== row)).slice(0, 2).map((x) => x[chosenScript]);
+        return { prompt: row.r, answer, options: shuffle([answer, pair.find((x) => x !== answer)!, ...alternatives]).slice(0, 4), script: chosenScript, source: row };
+      }
+    }
+  }
+  if (mode === "romaji-kana" || mode === "audio-kana") {
+    const answer = source[chosenScript];
+    const options = shuffle(pool.filter((x) => x.r !== source.r)).slice(0, 3).map((x) => x[chosenScript]);
+    return { prompt: source.r, answer, options: shuffle([answer, ...options]), script: chosenScript, source };
+  }
+  const answer = source.r;
+  const options = shuffle(pool.filter((x) => x.r !== source.r)).slice(0, 3).map((x) => x.r);
+  return { prompt: source[chosenScript], answer, options: shuffle([answer, ...options]), script: chosenScript, source };
+}
+
+function KanaPractice({ pool }: { pool: K[] }) {
+  const [script, setScript] = useState<PracticeScript>("h");
+  const [mode, setMode] = useState<PracticeMode>("kana-romaji");
+  const [set, setSet] = useState<PracticeSet>("all");
+  const [weakOnly, setWeakOnly] = useState(false);
+  const [mistakes, setMistakes] = useState<K[]>([]);
+  const [active, setActive] = useState(false);
+  const [question, setQuestion] = useState<PracticeQuestion | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [correct, setCorrect] = useState(0);
+  const [answered, setAnswered] = useState(0);
+  const total = 10;
+  const setPool = set === "basic" ? basic : set === "voiced" ? voiced : set === "yoon" ? yoon : pool;
+  const practicePool = weakOnly && mistakes.length >= 4 ? mistakes : setPool;
+
+  const next = (nextMode = mode, nextScript = script) => {
+    setQuestion(buildQuestion(practicePool, nextScript, nextMode));
+    setSelected(null);
+  };
+  const start = () => {
+    setCorrect(0);
+    setAnswered(0);
+    setActive(true);
+    next();
+  };
+  const choose = (value: string) => {
+    if (!question || selected) return;
+    setSelected(value);
+    setAnswered((v) => v + 1);
+    if (value === question.answer) setCorrect((v) => v + 1);
+    else setMistakes((rows) => rows.some((x) => x.r === question.source.r) ? rows : [...rows, question.source]);
+  };
+  const advance = () => {
+    if (answered >= total) {
+      setActive(false);
+      setQuestion(null);
+      setSelected(null);
+      return;
+    }
+    next();
+  };
+
+  if (!active || !question) {
+    return (
+      <section className="rounded-2xl border border-primary/20 bg-primary/[.04] p-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="size-4" /></span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[13px] font-black">Latihan Kana</h2>
+            <p className="mt-0.5 text-[9px] leading-4 text-muted-foreground">Kenali huruf dari dua arah dan latih bentuk yang sering tertukar.</p>
+          </div>
+          {answered > 0 && <span className="text-[9px] font-bold text-primary">{correct}/{answered}</span>}
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+          {([["h","Hiragana"],["k","Katakana"],["mix","Campuran"]] as const).map(([value,label]) => (
+            <button key={value} type="button" onClick={() => setScript(value)} className={`rounded-lg px-1 py-2 text-[9px] font-bold ${script === value ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{label}</button>
+          ))}
+        </div>
+        <div className="mt-2 grid grid-cols-4 gap-1 rounded-xl bg-muted p-1">
+          {([["basic","Dasar"],["voiced","Dakuten"],["yoon","Yōon"],["all","Semua"]] as const).map(([value,label]) => (
+            <button key={value} type="button" onClick={() => { setSet(value); setWeakOnly(false); }} className={`rounded-lg px-1 py-2 text-[8px] font-bold ${set === value && !weakOnly ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{label}</button>
+          ))}
+        </div>
+        {mistakes.length >= 4 && <button type="button" onClick={() => setWeakOnly((v) => !v)} className={`mt-2 min-h-9 w-full rounded-xl border text-[9px] font-bold ${weakOnly ? "border-primary/30 bg-primary/10 text-primary" : "bg-card"}`}>Huruf Lemah · {mistakes.length}</button>}
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          {([["kana-romaji","Kana → Romaji"],["romaji-kana","Romaji → Kana"],["similar","Mirip"],["audio-kana","Audio → Kana"]] as const).map(([value,label]) => (
+            <button key={value} type="button" onClick={() => setMode(value)} className={`min-h-10 rounded-xl border px-2 text-[9px] font-bold ${mode === value ? "border-primary/30 bg-primary/10 text-primary" : "bg-card"}`}>{label}</button>
+          ))}
+        </div>
+        {answered >= total && <div className="mt-3 rounded-xl border bg-card p-3 text-center"><p className="text-[10px] font-black">Hasil terakhir · {correct}/{total}</p><p className="mt-1 text-[9px] text-muted-foreground">{mistakes.length ? `Perlu latihan: ${mistakes.slice(0, 8).map((x) => x.h + "/" + x.k).join(", ")}` : "Tidak ada huruf lemah pada sesi terakhir."}</p>{mistakes.length >= 4 && <button type="button" onClick={() => { setWeakOnly(true); start(); }} className="mt-2 min-h-9 rounded-xl border border-primary/30 bg-primary/10 px-4 text-[9px] font-bold text-primary">Latih yang salah</button>}</div>}
+        <button type="button" onClick={start} className="mt-3 min-h-10 w-full rounded-xl bg-primary px-4 text-[10px] font-bold text-primary-foreground">Mulai 10 Soal</button>
+      </section>
+    );
+  }
+
+  const finished = answered >= total && selected;
+  const playQuestion = () => speakKana(question.source[question.script], () => undefined);
+  return (
+    <section className="rounded-2xl border bg-card p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold text-primary">Latihan Kana</p>
+        <span className="text-[9px] text-muted-foreground">{Math.min(answered + (selected ? 0 : 1), total)} / {total}</span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, (answered / total) * 100)}%` }} /></div>
+      <div className="py-6 text-center">
+        <p className="text-[9px] text-muted-foreground">{mode === "kana-romaji" ? "Apa bacaan kana ini?" : mode === "romaji-kana" ? "Pilih kana yang benar" : mode === "audio-kana" ? "Dengarkan lalu pilih kana" : "Pilih bentuk kana yang benar"}</p>
+        {mode === "audio-kana" ? <button type="button" onClick={playQuestion} className="mx-auto mt-3 grid size-14 place-items-center rounded-full bg-primary/10 text-primary" aria-label="Putar audio kana"><Volume2 className="size-6" /></button> : <p lang={mode === "kana-romaji" ? "ja" : undefined} className={`mt-2 font-black ${mode === "kana-romaji" ? "font-jp text-[48px]" : "text-[24px]"}`}>{question.prompt}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {question.options.map((option) => {
+          const isAnswer = option === question.answer;
+          const isSelected = option === selected;
+          const state = selected ? (isAnswer ? "border-primary bg-primary/10 text-primary" : isSelected ? "border-destructive/40 bg-destructive/5 text-destructive" : "bg-card") : "bg-card hover:bg-muted/50";
+          return <button key={option} type="button" disabled={Boolean(selected)} onClick={() => choose(option)} className={`min-h-12 rounded-xl border px-3 text-[13px] font-bold ${state}`}>{option}</button>;
+        })}
+      </div>
+      {selected && (
+        <div className="mt-3">
+          <p className={`flex items-center justify-center gap-1.5 text-[10px] font-bold ${selected === question.answer ? "text-primary" : "text-destructive"}`}>
+            {selected === question.answer ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
+            {selected === question.answer ? "Benar" : `Jawaban: ${question.answer}`}
+          </p>
+          <button type="button" onClick={advance} className="mt-3 min-h-10 w-full rounded-xl bg-primary text-[10px] font-bold text-primary-foreground">{finished ? `Lihat hasil · ${correct}/${total}` : "Selanjutnya"}</button>
+        </div>
+      )}
+      <button type="button" onClick={() => { setActive(false); setQuestion(null); setSelected(null); }} className="mt-2 flex min-h-9 w-full items-center justify-center gap-1 text-[9px] font-semibold text-muted-foreground"><RotateCcw className="size-3.5" /> Ganti latihan</button>
+    </section>
+  );
+}
+
 function speakKana(text: string, onError: () => void) {
   if (!("speechSynthesis" in window)) {
     onError();
@@ -229,6 +392,7 @@ function KanaPage() {
             {romaji ? "Sembunyikan" : "Tampilkan"} romaji
           </button>
         </div>
+        <KanaPractice pool={[...basic, ...voiced, ...yoon]} />
         {audioError && (
           <p
             role="alert"
