@@ -386,16 +386,25 @@ export async function markItemLearned(input: {
 }) {
   // The database function commits progress and activity in one transaction.
   // Keep the RPC signature explicit to support generated types from older schemas.
-  const atomicRpc = supabase.rpc as unknown as (
-    name: "mark_material_learned_atomic",
-    args: { p_item_type: LearnableItemType; p_item_id: string; p_level: Level },
-  ) => Promise<{ data: boolean | null; error: { message: string } | null }>;
-  const { data, error } = await atomicRpc("mark_material_learned_atomic", {
+  const { data, error } = await supabase.rpc("mark_material_learned_atomic", {
     p_item_type: input.itemType,
     p_item_id: input.itemId,
     p_level: input.level,
   });
   if (error) throw new Error(error.message);
+  // Confirm the server persisted the state before updating the UI.
+  const userId = await currentUserId();
+  const { data: saved, error: verifyError } = await supabase
+    .from("user_item_progress")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("item_type", input.itemType)
+    .eq("item_id", input.itemId)
+    .maybeSingle();
+  if (verifyError) throw new Error(verifyError.message);
+  if (!saved || !["learning", "review", "mastered"].includes(saved.status)) {
+    throw new Error("Progres belum tersimpan di database. Silakan coba lagi.");
+  }
   return data === true;
 }
 export async function addItemToReview(input: {

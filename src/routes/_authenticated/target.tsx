@@ -62,8 +62,7 @@ function kindFor(t: AdaptiveTaskType) {
             : "review";
 }
 function studyHref(task: AdaptiveTask, id: string) {
-  if (task.task_type === "review")
-    return task.metadata?.["kiokuRecommended"] ? "/kioku" : "/hafalan";
+  if (task.task_type === "review") return "/hafalan";
   const ids = (task.suggestions ?? []).map((x) => x.id).join(",");
   return `/study-item?kind=${kindFor(task.task_type)}&id=${encodeURIComponent(id)}&queue=${encodeURIComponent(ids)}`;
 }
