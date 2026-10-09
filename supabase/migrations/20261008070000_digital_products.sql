@@ -1,5 +1,5 @@
 -- Produk Digital ENO NIHONGO.
--- PR140 only. Do not apply to production until payment/email activation is approved.
+-- Prelaunch: only admin/owner can access products. Buyer access and checkout remain disabled until separately approved.
 
 create table if not exists public.digital_products (
   id uuid primary key default gen_random_uuid(),
@@ -48,7 +48,7 @@ grant select on public.digital_product_purchases to authenticated;
 
 create policy digital_products_read on public.digital_products
 for select to authenticated using (
-  status='published' or public.current_app_role() = any(array['admin','owner'])
+  public.current_app_role() = any(array['admin','owner'])
 );
 create policy digital_products_admin_insert on public.digital_products
 for insert to authenticated with check (public.current_app_role() = any(array['admin','owner']));
