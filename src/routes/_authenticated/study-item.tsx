@@ -140,7 +140,8 @@ function StudyItemPage() {
     mutationFn: async () => {
       if (!q.data?.level) return;
       const type = q.data.kind;
-      await markItemLearned({ itemType: type, itemId: q.data.id, level: q.data.level });
+      const saved = await markItemLearned({ itemType: type, itemId: q.data.id, level: q.data.level });
+      if (!saved) throw new Error("Materi sudah memiliki progres. Muat ulang untuk melihat status terbaru.");
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["adaptive-plan"] });
@@ -238,6 +239,11 @@ function StudyItemPage() {
                   "Tandai selesai"
                 )}
               </Button>
+            )}
+            {learned.isError && (
+              <p role="alert" className="mt-2 text-xs text-destructive">
+                {learned.error instanceof Error ? learned.error.message : "Gagal menyimpan progres. Coba lagi."}
+              </p>
             )}
             <div className="mt-3 grid grid-cols-2 gap-2">
               {prev ? (
