@@ -140,8 +140,7 @@ function StudyItemPage() {
     mutationFn: async () => {
       if (!q.data?.level) return;
       const type = q.data.kind;
-      const saved = await markItemLearned({ itemType: type, itemId: q.data.id, level: q.data.level });
-      if (!saved) throw new Error("Materi sudah memiliki progres. Muat ulang untuk melihat status terbaru.");
+      await markItemLearned({ itemType: type, itemId: q.data.id, level: q.data.level });
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["adaptive-plan"] });
