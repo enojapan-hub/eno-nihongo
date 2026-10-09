@@ -376,7 +376,7 @@ function KiokuPage() {
             {session && !session.finished && (
               <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">Selesaikan sesi tersimpan terlebih dahulu. Progresmu tetap aman saat kembali ke menu.</p>
             )}
-            {!session && <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {!(session && !session.finished) && <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
                 <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
