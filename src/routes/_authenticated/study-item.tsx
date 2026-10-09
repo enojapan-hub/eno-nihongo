@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Check, Volume2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { ContinueToFlashcard } from "@/components/learn/ContinueToFlashcard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { markItemLearned, type Level } from "@/lib/learn-queries";
@@ -241,6 +242,7 @@ function StudyItemPage() {
                 )}
               </Button>
             )}
+            {isCurrentSuccess && <ContinueToFlashcard />}
             {mutationForCurrentItem && learned.isError && (
               <p role="alert" className="mt-2 text-xs text-destructive">
                 {learned.error instanceof Error ? learned.error.message : "Gagal menyimpan progres. Coba lagi."}

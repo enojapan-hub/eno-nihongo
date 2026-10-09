@@ -38,7 +38,6 @@ const fallback: Partial<Record<AdaptiveTaskType, string>> = {
   new_kanji: "/kanji",
   new_vocabulary: "/kotoba",
   new_grammar: "/bunpo",
-  review: "/hafalan",
   quiz: "/quiz",
   reading: "/dokkai",
   listening: "/listening",
@@ -66,15 +65,41 @@ function studyHref(task: AdaptiveTask, id: string) {
   if (task.task_type === "new_kanji") return `/kanji?id=${encodeURIComponent(id)}`;
   if (task.task_type === "new_vocabulary") return `/kotoba?id=${encodeURIComponent(id)}`;
   if (task.task_type === "new_grammar") return `/bunpo?id=${encodeURIComponent(id)}`;
-  if (task.task_type === "review") return "/hafalan";
   const ids = (task.suggestions ?? []).map((x) => x.id).join(",");
   return `/study-item?kind=${kindFor(task.task_type)}&id=${encodeURIComponent(id)}&queue=${encodeURIComponent(ids)}`;
 }
+const reviewDetailPath = { kanji: "/kanji", vocabulary: "/kotoba", grammar: "/bunpo" } as const;
+/**
+ * Where a task card leads. Review opens the detail page of the material to repeat (never a
+ * flashcard or Kioku); with nothing to review it returns null so the card shows an empty state.
+ */
+function taskHref(task: AdaptiveTask): string | null {
+  if (task.task_type === "review") {
+    const item = (task.suggestions ?? []).find((s) => s.itemType);
+    return item?.itemType
+      ? `${reviewDetailPath[item.itemType]}?id=${encodeURIComponent(item.id)}`
+      : null;
+  }
+  const first = task.suggestions?.[0];
+  return first ? studyHref(task, first.id) : fallback[task.task_type] || "/belajar";
+}
+const REVIEW_EMPTY = "Belum ada materi untuk diulang";
 function CompactTask({ task }: { task: AdaptiveTask; locked?: boolean; onUpgrade?: () => void }) {
   const done = Math.min(task.completed_count, task.target_count),
-    p = task.target_count ? Math.min(100, (done / task.target_count) * 100) : 0,
-    first = task.suggestions?.[0];
-  const href = first ? studyHref(task, first.id) : fallback[task.task_type] || "/belajar";
+    p = task.target_count ? Math.min(100, (done / task.target_count) * 100) : 0;
+  const href = taskHref(task);
+  if (!href)
+    return (
+      <div className="min-h-[112px] rounded-2xl border border-dashed bg-card p-3">
+        <span className="grid size-8 place-items-center rounded-xl bg-muted text-muted-foreground">
+          <CheckCircle2 className="size-4" />
+        </span>
+        <p className="mt-2 truncate text-[11px] font-semibold">
+          {adaptiveTaskLabels[task.task_type]}
+        </p>
+        <p className="mt-0.5 text-[9px] text-muted-foreground">{REVIEW_EMPTY}</p>
+      </div>
+    );
   return (
     <a
       href={href}
@@ -177,12 +202,9 @@ function TargetPage() {
   const locked = !membership.isLoading && !membership.data?.hasPremiumAccess;
   const tasks = plan?.tasks ?? [];
   const pending = tasks.filter((t) => t.target_count > 0 && t.completed_count < t.target_count);
-  const nextTask = pending[0];
-  const nextHref = nextTask
-    ? nextTask.suggestions?.[0]
-      ? studyHref(nextTask, nextTask.suggestions[0].id)
-      : fallback[nextTask.task_type] || "/belajar"
-    : "/belajar";
+  // Skip a review task with nothing to repeat so "Lanjutkan" never lands on an empty step.
+  const nextTask = pending.find((t) => taskHref(t) !== null);
+  const nextHref = (nextTask && taskHref(nextTask)) || "/belajar";
   const core = (mastery.data ?? []).filter(
     (r) => r.kind === "kanji" || r.kind === "vocabulary" || r.kind === "grammar",
   );
@@ -383,9 +405,18 @@ function TargetPage() {
                     <div className="space-y-2.5">
                       {tasks.map((t) => {
                         const done = Math.min(t.completed_count, t.target_count);
-                        const href = t.suggestions?.[0]
-                          ? studyHref(t, t.suggestions[0].id)
-                          : fallback[t.task_type] || "/belajar";
+                        const href = taskHref(t);
+                        if (!href)
+                          return (
+                            <div key={t.id} className="flex items-center gap-3">
+                              <span className="w-20 shrink-0 text-[11px] font-semibold">
+                                {adaptiveTaskLabels[t.task_type]}
+                              </span>
+                              <span className="flex-1 text-[10px] text-muted-foreground">
+                                {REVIEW_EMPTY}
+                              </span>
+                            </div>
+                          );
                         return (
                           <a key={t.id} href={href} className="flex items-center gap-3">
                             <span className="w-20 shrink-0 text-[11px] font-semibold">

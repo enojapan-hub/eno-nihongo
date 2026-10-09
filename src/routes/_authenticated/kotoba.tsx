@@ -23,6 +23,7 @@ import {
 } from "@/lib/list-font";
 import { AppShell } from "@/components/layout/AppShell";
 import { ItemMasteryCard } from "@/components/learn/ItemMasteryCard";
+import { ContinueToFlashcard } from "@/components/learn/ContinueToFlashcard";
 import { Button } from "@/components/ui/button";
 import { fetchTargetLevel } from "@/lib/target-level";
 import {
@@ -449,6 +450,7 @@ function KotobaPage() {
             onReview={() => reviewMutation.mutate(selected.id)}
             onLearn={() => learned.mutate(selected.id)}
             mutationError={reviewMutation.isError || learned.isError}
+            learnSaved={learned.isSuccess && learned.variables === selected.id}
             detailLoading={sensesLoading}
             detailError={!!sensesError}
             onRetryDetail={() =>
@@ -689,6 +691,7 @@ function Detail({
   onReview,
   onLearn,
   mutationError,
+  learnSaved,
   detailLoading,
   detailError,
   onRetryDetail,
@@ -710,6 +713,7 @@ function Detail({
   onReview: () => void;
   onLearn: () => void;
   mutationError: boolean;
+  learnSaved: boolean;
   detailLoading: boolean;
   detailError: boolean;
   onRetryDetail: () => void;
@@ -848,6 +852,7 @@ function Detail({
           )}
         </section>
         <ItemMasteryCard itemType="vocabulary" itemId={item.id} learned={learned} />
+        {learnSaved && <ContinueToFlashcard />}
         <div className="mt-3 border-t bg-background px-1.5 py-1">
           <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
             <Button

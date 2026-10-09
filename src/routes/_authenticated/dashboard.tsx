@@ -46,6 +46,8 @@ import {
 import { premiumStatus } from "@/lib/premium-countdown";
 import { PremiumBadge } from "@/components/membership/PremiumBadge";
 import { HomeMemorySummary } from "@/components/learn/HomeMemorySummary";
+import { profileCard } from "@/lib/social/profile-card-state";
+import { useSocialMe } from "@/components/social/social-queries";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Home — ENO NIHONGO" }] }),
@@ -100,6 +102,7 @@ function DashboardPage() {
     staleTime: 30_000,
   });
   const profile = data?.profile;
+  const socialMe = useSocialMe();
   const me = leaderboard.data?.find((u) => u.userId === profile?.id);
   const name = profile?.display_name?.trim() || "Pembelajar";
   const privilegedRole = ["owner", "admin", "editor", "teacher"].includes(profile?.role ?? "");
@@ -162,7 +165,13 @@ function DashboardPage() {
       <div className="mx-auto max-w-3xl space-y-5 pb-6">
         <section className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex items-center gap-3">
-            <div className="relative shrink-0">
+            <button
+              type="button"
+              aria-label="Lihat pratinjau profil"
+              disabled={!profile?.id}
+              onClick={() => profile?.id && profileCard.open(profile.id, { preview: true })}
+              className="relative shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -174,11 +183,13 @@ function DashboardPage() {
                   {name.slice(0, 1).toUpperCase()}
                 </div>
               )}
-            </div>
+            </button>
             <div className="min-w-0">
               <p className="text-xs text-muted-foreground">{greeting},</p>
               <h1 className="truncate text-xl font-bold tracking-tight">{name}</h1>
-              <p className="mt-0.5 text-[11px] capitalize text-muted-foreground">{todayLabel}</p>
+              {socialMe.data?.username && (
+                <p className="truncate text-[11px] text-muted-foreground">@{socialMe.data.username}</p>
+              )}
               {premium && (
                 <p
                   data-testid="premium-status"
@@ -193,6 +204,7 @@ function DashboardPage() {
                   )}
                 </p>
               )}
+              <p className="mt-0.5 text-[11px] capitalize text-muted-foreground">{todayLabel}</p>
             </div>
           </div>
           <Link

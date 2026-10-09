@@ -141,32 +141,44 @@ function KiokuPage() {
     resetExerciseUi();
   }, [ready, userId]);
 
-  const startBoss = useCallback(async () => {
-    if (!userId || loading) return;
-    if (session && !session.finished) {
-      resetExerciseUi();
-      setShowSession(true);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const next = await prefetchSession(userId, Date.now(), { mode: "boss" });
-      if (next.exercises.length === 0) {
-        setError("Belum ada materi yang dapat diuji.");
+  // Starts (or resumes) a session directly from the menu, without an extra navigation step.
+  const startMode = useCallback(
+    async (target: "daily" | "boss") => {
+      if (!userId || loading) return;
+      if (session && !session.finished) {
+        resetExerciseUi();
+        setShowSession(true);
         return;
       }
-      saveSession(window.localStorage, userId, next);
-      setSession(next);
-      setShowSession(true);
-      setReady(null);
-      resetExerciseUi();
-    } catch {
-      setError("Gagal memulai Uji Ingatan. Coba lagi.");
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, loading, session]);
+      setLoading(true);
+      setError(null);
+      try {
+        const next = await prefetchSession(userId, Date.now(), { mode: target });
+        if (next.exercises.length === 0) {
+          setError(
+            target === "daily"
+              ? "Belum ada materi untuk Latihan Hari Ini."
+              : "Belum ada materi yang dapat diuji.",
+          );
+          return;
+        }
+        saveSession(window.localStorage, userId, next);
+        setSession(next);
+        setShowSession(true);
+        setReady(null);
+        resetExerciseUi();
+      } catch {
+        setError(
+          target === "daily"
+            ? "Gagal memulai Latihan Hari Ini. Coba lagi."
+            : "Gagal memulai Uji Ingatan. Coba lagi.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userId, loading, session],
+  );
 
   // Local-first: state + outbox (sync localStorage write) only; the network flush is fire-and-forget.
   const record = useCallback(
@@ -404,15 +416,15 @@ function KiokuPage() {
               <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">Selesaikan sesi tersimpan terlebih dahulu. Progresmu tetap aman saat kembali ke menu.</p>
             )}
             {!(session && !session.finished) && <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <a href="/kioku?mode=daily" className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3">
+              <button type="button" disabled={loading || !userId} onClick={() => void startMode("daily")} className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3 text-left disabled:opacity-50">
                 <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
-              </a>
+              </button>
               <button type="button" disabled={loading || !ready || ready.exercises.length === 0} onClick={start} className="rounded-2xl border-2 border-primary bg-primary p-4 text-left text-primary-foreground shadow-md disabled:opacity-50">
                 <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> {mode === "daily" ? "Mulai Latihan Hari Ini" : mode === "boss" ? "Mulai Uji Ingatan" : "Mulai Kioku"}</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : mode === "daily" ? "Mode harian dipilih. Mulai latihan yang paling perlu sekarang." : mode === "boss" ? "Mode uji dipilih. Mulai sesi campuran untuk menguji daya ingat." : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
               </button>
-              <button type="button" disabled={loading || !userId} onClick={() => void startBoss()} className="rounded-2xl border bg-card p-3 text-left disabled:opacity-50">
+              <button type="button" disabled={loading || !userId} onClick={() => void startMode("boss")} className="rounded-2xl border bg-card p-3 text-left disabled:opacity-50">
                 <p className="flex items-center gap-1.5 text-[11px] font-black"><ShieldCheck className="size-3.5 text-primary" /> Uji Ingatan</p>
                 <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Uji campuran untuk memastikan ingatan kuat tetap bertahan.</p>
               </button>

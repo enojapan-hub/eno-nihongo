@@ -215,6 +215,15 @@ function HafalanPage() {
     started = useRef(Date.now()),
     pointerStart = useRef(0),
     dragging = useRef(false);
+  // Ratings are saved in the background; Kioku is offered only once every save has succeeded.
+  const [pendingSaves, setPendingSaves] = useState(0),
+    [failedSaves, setFailedSaves] = useState(0),
+    saveRun = useRef(0);
+  function resetSaveTracking() {
+    saveRun.current += 1;
+    setPendingSaves(0);
+    setFailedSaves(0);
+  }
   const source = useMemo<Card[]>(() => {
     const a: Card[] = [];
     (kanji.data ?? []).forEach((x) => a.push(...buildKanjiMasteryCards(x)));
@@ -375,6 +384,7 @@ function HafalanPage() {
     setDragX(0);
     setSwiping(false);
     localStorage.removeItem(SESSION_KEY);
+    resetSaveTracking();
     started.current = Date.now();
   }
   function startQuick() {
@@ -408,11 +418,19 @@ function HafalanPage() {
     setDragX(0);
     setSwiping(false);
     started.current = Date.now();
+    const run = saveRun.current;
+    setPendingSaves((n) => n + 1);
     void rate(ratedCard, level, r, ratedHint, responseMs)
       .then(() => {
         void qc.invalidateQueries({ queryKey: ["my-progress"] });
       })
-      .catch((e) => console.error("Gagal menyimpan review hafalan", e));
+      .catch((e) => {
+        console.error("Gagal menyimpan review hafalan", e);
+        if (run === saveRun.current) setFailedSaves((n) => n + 1);
+      })
+      .finally(() => {
+        if (run === saveRun.current) setPendingSaves((n) => Math.max(0, n - 1));
+      });
   }
   function swipe(r: 0 | 2, direction: -1 | 1) {
     if (!revealed || rating || undoing || quickExpired || (study === "quick" && !quickStarted))
@@ -476,6 +494,7 @@ function HafalanPage() {
     }
   }
   function retry() {
+    resetSaveTracking();
     setRetryWrong(true);
     setIndex(0);
     setResults([]);
@@ -629,6 +648,20 @@ function HafalanPage() {
                 <RotateCcw className="mr-1 inline size-3" /> Sesi baru
               </button>
             </div>
+            {pendingSaves > 0 ? (
+              <p className="mt-3 text-[10px] text-muted-foreground">Menyimpan penilaian…</p>
+            ) : failedSaves > 0 ? (
+              <p role="alert" className="mt-3 text-[10px] text-destructive">
+                {failedSaves} penilaian gagal disimpan. Periksa koneksi lalu ulangi sesi sebelum lanjut ke Kioku.
+              </p>
+            ) : results.length > 0 ? (
+              <a
+                href="/kioku"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[10px] font-bold text-primary"
+              >
+                <Brain className="size-3.5" /> Lanjut ke Kioku
+              </a>
+            ) : null}
           </section>
         ) : card ? (
           <>
