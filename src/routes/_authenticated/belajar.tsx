@@ -295,10 +295,6 @@ function BelajarPage() {
                 <DailyNewLimit />
                 <FlashcardCard />
                 <KiokuCard />
-                <div className="grid grid-cols-2 gap-2">
-                  <Link to="/referral" className="rounded-2xl border bg-card p-4 text-center text-xs font-bold">Ajak Teman</Link>
-                  <Link to="/tukar-poin" className="rounded-2xl border bg-card p-4 text-center text-xs font-bold">Tukar Poin</Link>
-                </div>
                 <section>
                   <h2 className="mb-2 px-1 text-[13px] font-bold">Dasar Bahasa Jepang</h2>
                   <Link
