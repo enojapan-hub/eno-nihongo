@@ -12,7 +12,7 @@ Status: Referral & Reward DIIMPLEMENTASIKAN; Royal Arena dan Community TIDAK ADA
 ## BELUM DIPUTUSKAN
 - Royal Arena: konsep, aturan, hadiah, data.
 - Community: apakah halaman sendiri atau memakai komponen sosial yang ada; moderasi.
-- Riwayat referral di UI.
+- Desain final riwayat referral. Versi fungsional baca-saja DIIMPLEMENTASI di `/referral` (BELUM TERUJI di build/browser): baris `referrals` milik sendiri, tanpa nilai hadiah atau aturan baru.
 
 ## SIAP DIIMPLEMENTASI
 - Tidak ada.

@@ -14,7 +14,7 @@ Status: Poin/XP/Leaderboard DIIMPLEMENTASIKAN; Achievements/Badge Tantangan TIDA
 
 ## KETIDAKKONSISTENAN
 - DIPERBAIKI (belum diuji di browser): kartu "Tukar Poin Premium ... Segera" di `leaderboard.tsx` kini tautan aktif ke `/tukar-poin`.
-- `tukar-poin.tsx` memakai client Supabase `@/lib/supabase/client` berbeda dari halaman lain (`@/integrations/supabase/client`).
+- Dikoreksi 2026-10-11: `@/lib/supabase/client` hanya re-export dari `@/integrations/supabase/client`, jadi klien yang dipakai sama. Bukan ketidakkonsistenan.
 
 ## BELUM DIPUTUSKAN
 - Seluruh Achievements/Badge Tantangan: daftar, kriteria, hadiah, tampilan galeri, data (tabel/RPC baru dan migration).
