@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { wordRomaji } from "@/lib/romaji";
 
 const TOTAL = 10;
 const OPTIONS = 4;
@@ -25,16 +26,33 @@ async function fetchWords(script: Script): Promise<Word[]> {
     .filter("term", "match", PATTERN[script])
     .limit(300);
   if (error) throw error;
-  const seen = new Set<string>();
-  const words: Word[] = [];
-  for (const row of data ?? []) {
+  return toPracticeWords(data ?? []);
+}
+
+type VocabRow = { id: string; term: string; romaji: string | null; meaning_id: string | null };
+
+/** Keeps only words whose stored reading is verifiably correct; exported for tests. */
+export function toPracticeWords(rows: VocabRow[]): Word[] {
+  // One entry per written word; homonyms keep all their published meanings.
+  const byTerm = new Map<string, Word>();
+  for (const row of rows) {
     const romaji = String(row.romaji ?? "").trim().toLowerCase();
     // Short words keep this a kana reading drill rather than a vocabulary test.
-    if (!romaji || row.term.length > 6 || seen.has(row.term)) continue;
-    seen.add(row.term);
-    words.push({ id: row.id, term: row.term, romaji, meaning: row.meaning_id });
+    if (!romaji || row.term.length > 6) continue;
+    // The stored reading must agree with the app's own kana→romaji conversion, so a
+    // mis-entered romaji can never become the "correct" answer.
+    const derived = wordRomaji(row.term).replace(/\s+/g, "");
+    if (!derived || derived !== romaji.replace(/\s+/g, "")) continue;
+    const meaning = String(row.meaning_id ?? "").trim();
+    if (!meaning) continue;
+    const existing = byTerm.get(row.term);
+    if (existing) {
+      if (!existing.meaning.split(" / ").includes(meaning)) existing.meaning += ` / ${meaning}`;
+      continue;
+    }
+    byTerm.set(row.term, { id: row.id, term: row.term, romaji, meaning });
   }
-  return words;
+  return [...byTerm.values()];
 }
 
 function shuffle<T>(items: T[]): T[] {

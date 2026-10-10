@@ -255,7 +255,14 @@ function DashboardPage() {
             label="Poin"
           />
           <CompactStat icon={Flame} value={String(me?.streak ?? 0)} label="Hari" />
-          <CompactStat icon={Target} value={level} label="Target" />
+          <Link
+            to="/edit-profil"
+            hash="planner"
+            aria-label={`Level JLPT ${level}: buka Adaptive Study Planner`}
+            className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <CompactStat icon={Target} value={level} label="Target" />
+          </Link>
         </section>
         <div className="px-1">
           <div className="flex items-center justify-between text-[10px]">
