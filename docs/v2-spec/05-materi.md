@@ -14,7 +14,7 @@ Status: DIIMPLEMENTASIKAN sebagian sesuai desain v2 tertulis; Kanji/Kotoba/Chōk
 
 ## KETIDAKKONSISTENAN
 - DIPERBAIKI: katalog `/belajar` kini menautkan kartu Dokkai (`/dokkai`) dan Choukai (`/choukai`) sesuai ketersediaan aktual (sebelumnya terkunci "Segera hadir"). Keputusan final owner: audio yang hilang bukan blocker; Chōkai tetap menampilkan materi valid yang ada.
-- Chōkai: `choukai.tsx` memakai audio bila ada dan TTS hanya bila audio kosong; item tanpa audio dan tanpa transkrip tidak ditampilkan. Penandaan "Segera Hadir" per latihan yang membutuhkan audio valid belum dikerjakan (BELUM TERUJI cakupan datanya; butuh cek data `listening_items` read-only).
+- Chōkai (DIIMPLEMENTASIKAN, commit lokal setelah 8813a10): item tanpa `audio_url` ditandai "Segera Hadir · audio sedang disiapkan"; tombol Dengarkan/Ulangi, pilihan jawaban, Periksa Jawaban, dan "Tandai selesai" dinonaktifkan; TTS tidak lagi dipakai. Transkrip tetap dapat dibuka. Item dengan audio valid berfungsi seperti sebelumnya. Data (baca-saja, semua level): `listening_items` total N5=3, N4=30, N3=2, N2=32, N1=6; yang berstatus published hanya 2/1/1/1/1, jumlah published ber-audio belum dipisahkan.
 
 ## BELUM DIPUTUSKAN
 - Desain layar Kanji, Kotoba, Chōkai v2 (tidak ada desain tertulis).
