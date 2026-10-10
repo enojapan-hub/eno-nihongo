@@ -1,13 +1,14 @@
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Clock3 } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fetchPassages } from "@/lib/learn-queries";
 import { fetchTargetLevel } from "@/lib/target-level";
+import { readDokkaiPosition, type DokkaiLastPosition } from "@/lib/dokkai-position";
 
 export const Route = createFileRoute("/_authenticated/dokkai")({ component: DokkaiPage });
 
@@ -22,6 +23,8 @@ function DokkaiPage() {
     enabled: Boolean(level) && !isDetailRoute,
   });
   const passages = useMemo(() => (data ?? []).filter((p) => p.level === level), [data, level]);
+  const [last, setLast] = useState<DokkaiLastPosition | null>(null);
+  useEffect(() => setLast(readDokkaiPosition()), []);
 
   // /dokkai/$id is a child route. The parent must render Outlet here;
   // otherwise clicking "Baca lengkap" keeps rendering the Dokkai list.
@@ -53,6 +56,20 @@ function DokkaiPage() {
           </div>
         </div>
 
+        {last && last.level === level && passages.some((x) => x.id === last.id) && (
+          <a
+            href={`/dokkai/${encodeURIComponent(last.id)}`}
+            className="mb-4 flex items-center gap-3 rounded-2xl border bg-card p-4 transition hover:border-primary/30"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] font-semibold text-primary">Lanjutkan membaca</span>
+              <span lang="ja" className="block truncate font-jp text-[14px] font-semibold">
+                {last.title}
+              </span>
+            </span>
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+          </a>
+        )}
         {target.isLoading && (
           <p className="py-8 text-center text-[12px] text-muted-foreground">Memuat level profil…</p>
         )}
