@@ -6,6 +6,7 @@ import {
   Flame,
   Gift,
   Coins,
+  Receipt,
   Globe2,
   Settings,
   Sparkles,
@@ -172,6 +173,12 @@ function ProfilePage() {
           <Link to="/tukar-poin">
             <Coins className="mr-2 size-4" />
             Tukar Poin
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="w-full rounded-xl">
+          <Link to="/riwayat-pembelian">
+            <Receipt className="mr-2 size-4" />
+            Riwayat Pembelian
           </Link>
         </Button>
         <Button asChild variant="outline" className="w-full rounded-xl">

@@ -68,6 +68,7 @@ import { Route as AuthenticatedQuizRouteImport } from './routes/_authenticated/q
 import { Route as AuthenticatedRantaiIngatanRouteImport } from './routes/_authenticated/rantai-ingatan'
 import { Route as AuthenticatedReferralRouteImport } from './routes/_authenticated/referral'
 import { Route as AuthenticatedTukarPoinRouteImport } from './routes/_authenticated/tukar-poin'
+import { Route as AuthenticatedRiwayatPembelianRouteImport } from './routes/_authenticated/riwayat-pembelian'
 import { Route as AuthenticatedSimulasiRouteImport } from './routes/_authenticated/simulasi'
 import { Route as AuthenticatedStudyItemRouteImport } from './routes/_authenticated/study-item'
 import { Route as AuthenticatedTargetRouteImport } from './routes/_authenticated/target'
@@ -415,6 +416,11 @@ const AuthenticatedTukarPoinRoute = AuthenticatedTukarPoinRouteImport.update({
   path: '/tukar-poin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRiwayatPembelianRoute = AuthenticatedRiwayatPembelianRouteImport.update({
+  id: '/riwayat-pembelian',
+  path: '/riwayat-pembelian',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
   id: '/referral',
   path: '/referral',
@@ -692,6 +698,7 @@ export interface FileRoutesByFullPath {
   '/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/referral': typeof AuthenticatedReferralRoute
   '/tukar-poin': typeof AuthenticatedTukarPoinRoute
+  '/riwayat-pembelian': typeof AuthenticatedRiwayatPembelianRoute
   '/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
   '/study-item': typeof AuthenticatedStudyItemRoute
   '/target': typeof AuthenticatedTargetRoute
@@ -790,6 +797,7 @@ export interface FileRoutesByTo {
   '/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/referral': typeof AuthenticatedReferralRoute
   '/tukar-poin': typeof AuthenticatedTukarPoinRoute
+  '/riwayat-pembelian': typeof AuthenticatedRiwayatPembelianRoute
   '/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
   '/study-item': typeof AuthenticatedStudyItemRoute
   '/target': typeof AuthenticatedTargetRoute
@@ -890,6 +898,7 @@ export interface FileRoutesById {
   '/_authenticated/rantai-ingatan': typeof AuthenticatedRantaiIngatanRoute
   '/_authenticated/referral': typeof AuthenticatedReferralRoute
   '/_authenticated/tukar-poin': typeof AuthenticatedTukarPoinRoute
+  '/_authenticated/riwayat-pembelian': typeof AuthenticatedRiwayatPembelianRoute
   '/_authenticated/simulasi': typeof AuthenticatedSimulasiRouteWithChildren
   '/_authenticated/study-item': typeof AuthenticatedStudyItemRoute
   '/_authenticated/target': typeof AuthenticatedTargetRoute
@@ -990,6 +999,7 @@ export interface FileRouteTypes {
     | '/rantai-ingatan'
     | '/referral'
     | '/tukar-poin'
+    | '/riwayat-pembelian'
     | '/simulasi'
     | '/study-item'
     | '/target'
@@ -1088,6 +1098,7 @@ export interface FileRouteTypes {
     | '/rantai-ingatan'
     | '/referral'
     | '/tukar-poin'
+    | '/riwayat-pembelian'
     | '/simulasi'
     | '/study-item'
     | '/target'
@@ -1187,6 +1198,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rantai-ingatan'
     | '/_authenticated/referral'
     | '/_authenticated/tukar-poin'
+    | '/_authenticated/riwayat-pembelian'
     | '/_authenticated/simulasi'
     | '/_authenticated/study-item'
     | '/_authenticated/target'
@@ -1657,6 +1669,13 @@ declare module '@tanstack/react-router' {
       path: '/tukar-poin'
       fullPath: '/tukar-poin'
       preLoaderRoute: typeof AuthenticatedTukarPoinRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/riwayat-pembelian': {
+      id: '/_authenticated/riwayat-pembelian'
+      path: '/riwayat-pembelian'
+      fullPath: '/riwayat-pembelian'
+      preLoaderRoute: typeof AuthenticatedRiwayatPembelianRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/referral': {
@@ -2137,6 +2156,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQuizRoute: typeof AuthenticatedQuizRouteWithChildren
   AuthenticatedRantaiIngatanRoute: typeof AuthenticatedRantaiIngatanRoute
   AuthenticatedTukarPoinRoute: typeof AuthenticatedTukarPoinRoute
+  AuthenticatedRiwayatPembelianRoute: typeof AuthenticatedRiwayatPembelianRoute
   AuthenticatedReferralRoute: typeof AuthenticatedReferralRoute
   AuthenticatedSimulasiRoute: typeof AuthenticatedSimulasiRouteWithChildren
   AuthenticatedStudyItemRoute: typeof AuthenticatedStudyItemRoute
@@ -2201,6 +2221,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQuizRoute: AuthenticatedQuizRouteWithChildren,
   AuthenticatedRantaiIngatanRoute: AuthenticatedRantaiIngatanRoute,
   AuthenticatedTukarPoinRoute: AuthenticatedTukarPoinRoute,
+  AuthenticatedRiwayatPembelianRoute: AuthenticatedRiwayatPembelianRoute,
   AuthenticatedReferralRoute: AuthenticatedReferralRoute,
   AuthenticatedSimulasiRoute: AuthenticatedSimulasiRouteWithChildren,
   AuthenticatedStudyItemRoute: AuthenticatedStudyItemRoute,

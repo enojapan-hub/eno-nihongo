@@ -11,7 +11,7 @@ Status: Premium DIIMPLEMENTASIKAN; Riwayat Pembelian TIDAK ADA; Duitku dibekukan
 - Tabel `payment_orders` hanya dirujuk oleh create-invoice dan callback.
 
 ## BELUM DIPUTUSKAN
-- Riwayat Pembelian: tidak ada UI. Butuh desain, kolom yang ditampilkan, kebijakan RLS baca-sendiri `payment_orders`, penanganan order pending (batal/ulang).
+- Riwayat Pembelian: UI baca-saja `/riwayat-pembelian` DIIMPLEMENTASI (BELUM TERUJI di build/browser): pesanan dari `payment_orders` dan hadiah dari `reward_grants`, hanya baris milik sendiri. RLS baca-sendiri `payment_orders_select_own` sudah ada di Production (tanpa migration). Masih diputuskan owner: penanganan order pending (batal/ulang) dan desain final.
 - Halaman kembali Duitku: apakah membaca status order.
 - Kapan dan bagaimana Duitku diaktifkan (kode tampak lengkap; pembekuan adalah keputusan owner, bukan penanda di kode).
 - Penyatuan sumber harga landing dan `public-plans.ts`.
