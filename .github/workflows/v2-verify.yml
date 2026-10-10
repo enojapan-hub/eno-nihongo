@@ -1,0 +1,74 @@
+name: V2 verification (branch)
+
+# Verifikasi branch v2/** tanpa PR ke main dan tanpa menyentuh Production.
+# Tidak memakai secret. Tidak melakukan commit atau push apa pun.
+on:
+  push:
+    branches: ["v2/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Lint
+        run: bun run lint
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Test
+        run: bun run test
+      - name: Build (regenerates src/routeTree.gen.ts)
+        run: bun run build
+      - name: routeTree.gen.ts must match the committed file
+        run: |
+          if git diff --quiet -- src/routeTree.gen.ts; then
+            echo "routeTree.gen.ts sama dengan hasil generator resmi." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "routeTree.gen.ts BERBEDA dari hasil generator resmi. Commit versi hasil generate." | tee -a "$GITHUB_STEP_SUMMARY"
+            git --no-pager diff -- src/routeTree.gen.ts | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+      - name: Routes registered
+        run: |
+          for r in "/_authenticated/riwayat-pembelian" "/_authenticated/referral"; do
+            grep -q "'$r'" src/routeTree.gen.ts || { echo "Route $r tidak terdaftar"; exit 1; }
+          done
+          test -f src/routes/_authenticated/riwayat-pembelian.tsx
+          echo "Route Riwayat Pembelian dan Referral terdaftar." | tee -a "$GITHUB_STEP_SUMMARY"
+
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pgbench and psql
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client postgresql-contrib >/dev/null
+          echo "/usr/lib/postgresql/16/bin" >> "$GITHUB_PATH"
+      - name: Migration harness (skema minimal, bukan salinan Production)
+        run: bash supabase/tests/v2-integrity/run.sh | tee -a "$GITHUB_STEP_SUMMARY"
