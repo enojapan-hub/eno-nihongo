@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Headphones, Play, RotateCcw, Square, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import type { Level } from "@/lib/learn-queries";
+import { hasValidChoukaiAudio } from "@/lib/choukai-audio";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { markContentMastered } from "@/lib/progress-actions";
 
@@ -90,7 +91,6 @@ function ChoukaiPage() {
     questions = questionsQ.data ?? [];
   const [active, setActive] = useState<string | null>(null),
     [showTranscript, setShowTranscript] = useState<Record<string, boolean>>({}),
-    [speech, setSpeech] = useState<SpeechSynthesisUtterance | null>(null),
     [completed, setCompleted] = useState<Record<string, boolean>>({}),
     [answers, setAnswers] = useState<Record<string, number>>({}),
     [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -108,36 +108,20 @@ function ChoukaiPage() {
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
     },
   });
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
   const stop = () => {
-    window.speechSynthesis?.cancel();
     document
       .querySelectorAll<HTMLAudioElement>("audio[data-choukai-audio]")
       .forEach((a) => a.pause());
-    if (speech) speech.onend = null;
-    setSpeech(null);
     setActive(null);
   };
   const play = (item: Item) => {
     stop();
-    if (item.audio_url) {
-      const a = document.getElementById(`audio-${item.id}`) as HTMLAudioElement | null;
-      if (a) {
-        a.currentTime = 0;
-        void a.play();
-        setActive(item.id);
-        return;
-      }
-    }
-    if (!item.transcript_jp || !window.speechSynthesis) return;
-    const u = new SpeechSynthesisUtterance(item.transcript_jp);
-    u.lang = "ja-JP";
-    u.rate = 0.85;
-    u.onend = () => setActive(null);
-    u.onerror = () => setActive(null);
-    setSpeech(u);
+    if (!hasValidChoukaiAudio(item)) return;
+    const a = document.getElementById(`audio-${item.id}`) as HTMLAudioElement | null;
+    if (!a) return;
+    a.currentTime = 0;
+    void a.play();
     setActive(item.id);
-    window.speechSynthesis.speak(u);
   };
   return (
     <AppShell
@@ -201,7 +185,7 @@ function ChoukaiPage() {
             done = checked[item.id],
             correct = qs.filter((q) => answers[q.id] === Number(q.correct_index)).length,
             // Latihan menyimak membutuhkan audio valid; tanpa audio_url latihan ditandai "Segera Hadir".
-            noAudio = !item.audio_url?.trim();
+            noAudio = !hasValidChoukaiAudio(item);
           return (
             <Card key={item.id} className="overflow-hidden shadow-none">
               <CardHeader>
@@ -216,11 +200,11 @@ function ChoukaiPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {item.audio_url && (
+                {!noAudio && (
                   <audio
                     id={`audio-${item.id}`}
                     data-choukai-audio
-                    src={item.audio_url}
+                    src={item.audio_url?.trim() ?? undefined}
                     onPlay={() => setActive(item.id)}
                     onEnded={() => setActive(null)}
                     onPause={() => setActive((v) => (v === item.id ? null : v))}
