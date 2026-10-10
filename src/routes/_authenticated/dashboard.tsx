@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowRight,
@@ -9,7 +8,6 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
-  Crown,
   Flame,
   Gem,
   Headphones,
@@ -35,16 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LEVELS, type Level } from "@/lib/learn-queries";
 import { fetchMembership } from "@/lib/membership";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { premiumStatus } from "@/lib/premium-countdown";
-import { PremiumBadge } from "@/components/membership/PremiumBadge";
 import { HomeMemorySummary } from "@/components/learn/HomeMemorySummary";
 import { profileCard } from "@/lib/social/profile-card-state";
 import { useSocialMe } from "@/components/social/social-queries";
@@ -63,7 +52,6 @@ const materialMeta = [
 ] as const;
 
 function DashboardPage() {
-  const [showPlannerUpgrade, setShowPlannerUpgrade] = useState(false);
   const fetchAccount = useServerFn(getMyAccount);
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-account"],
@@ -105,9 +93,7 @@ function DashboardPage() {
   const socialMe = useSocialMe();
   const me = leaderboard.data?.find((u) => u.userId === profile?.id);
   const name = profile?.display_name?.trim() || "Pembelajar";
-  const privilegedRole = ["owner", "admin", "editor", "teacher"].includes(profile?.role ?? "");
   const premium = premiumStatus(membership.data, profile?.role, new Date());
-  const plannerLocked = !privilegedRole && membership.data?.plan === "free";
   const completed = adaptive.data?.completed ?? 0;
   const target = adaptive.data?.target ?? 0;
   const percent = target ? Math.min(100, (completed / target) * 100) : 0;
@@ -216,22 +202,7 @@ function DashboardPage() {
           </Link>
         </section>
 
-        <Card
-          className={`overflow-hidden rounded-3xl border-primary/20 bg-gradient-to-br from-primary/[.10] via-card to-card shadow-sm ${plannerLocked ? "cursor-pointer" : ""}`}
-          onClick={plannerLocked ? () => setShowPlannerUpgrade(true) : undefined}
-          onKeyDown={
-            plannerLocked
-              ? (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    setShowPlannerUpgrade(true);
-                  }
-                }
-              : undefined
-          }
-          role={plannerLocked ? "button" : undefined}
-          tabIndex={plannerLocked ? 0 : undefined}
-        >
+        <Card className="overflow-hidden rounded-3xl border-primary/20 bg-gradient-to-br from-primary/[.10] via-card to-card shadow-sm">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -239,7 +210,6 @@ function DashboardPage() {
                   <span className="text-[11px] font-bold uppercase tracking-wide text-primary">
                     Belajar Hari Ini
                   </span>
-                  {plannerLocked && <PremiumBadge />}
                 </div>
                 <h2 className="mt-1.5 text-lg font-bold leading-snug">
                   {targetDone
@@ -247,20 +217,16 @@ function DashboardPage() {
                     : continueLesson.data?.title || "Mulai target belajar hari ini"}
                 </h2>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {plannerLocked
-                    ? "Buka Adaptive Study Planner dengan Premium."
-                    : targetDone
+                  {targetDone
                       ? "Bagus. Lanjutkan dengan review atau latihan tambahan."
                       : "Rencana belajar disesuaikan dengan progres dan target JLPT Anda."}
                 </p>
               </div>
               <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
-                {plannerLocked ? <Crown className="size-5" /> : <Target className="size-5" />}
+                <Target className="size-5" />
               </span>
             </div>
-            {!plannerLocked && (
-              <>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-primary/10">
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-primary/10">
                   <div
                     className="h-full rounded-full bg-primary"
                     style={{ width: `${percent}%` }}
@@ -278,8 +244,6 @@ function DashboardPage() {
                     <ArrowRight className="ml-1.5 size-4" />
                   </Link>
                 </Button>
-              </>
-            )}
           </CardContent>
         </Card>
 
@@ -442,35 +406,6 @@ function DashboardPage() {
           </div>
           <JlptStatusBar />
         </section>
-        <Dialog open={showPlannerUpgrade} onOpenChange={setShowPlannerUpgrade}>
-          <DialogContent className="w-[calc(100%-2rem)] max-w-sm rounded-3xl p-5">
-            <DialogHeader className="text-left">
-              <span className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
-                <Crown className="size-5" />
-              </span>
-              <DialogTitle className="pt-2 text-lg font-black">
-                Adaptive Planner adalah fitur Premium
-              </DialogTitle>
-              <DialogDescription className="text-xs leading-5">
-                Premium menyusun target harian sesuai level, waktu belajar, dan progresmu—supaya
-                kamu tahu apa yang perlu dipelajari berikutnya.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2 sm:flex-col sm:space-x-0">
-              <Button asChild className="w-full rounded-xl">
-                <Link to="/paket">Lihat Paket Premium</Link>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full rounded-xl"
-                onClick={() => setShowPlannerUpgrade(false)}
-              >
-                Nanti saja
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
       <InstallPrompt />
     </AppShell>

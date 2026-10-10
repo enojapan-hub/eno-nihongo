@@ -18,7 +18,6 @@ import {
   type AdaptiveTask,
   type AdaptiveTaskType,
 } from "@/lib/adaptive-plan";
-import { fetchMembershipAccess } from "@/lib/membership";
 import {
   fetchLatestSimulation,
   fetchMastery,
@@ -28,7 +27,12 @@ import {
   type MasteryRow,
 } from "@/lib/learning-hub";
 import type { Level } from "@/lib/learn-queries";
-import { PremiumBadge } from "@/components/membership/PremiumBadge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/_authenticated/target")({
   head: () => ({ meta: [{ title: "Target — ENO NIHONGO" }] }),
@@ -166,11 +170,6 @@ function TargetPage() {
     staleTime: 30000,
     refetchInterval: 30000,
   });
-  const membership = useQuery({
-    queryKey: ["membership-access"],
-    queryFn: fetchMembershipAccess,
-    staleTime: 30000,
-  });
   const metrics = useQuery({
     queryKey: ["target-live-metrics"],
     queryFn: fetchTargetMetrics,
@@ -199,7 +198,6 @@ function TargetPage() {
     enabled: !!planId,
     staleTime: 15000,
   });
-  const locked = !membership.isLoading && !membership.data?.hasPremiumAccess;
   const tasks = plan?.tasks ?? [];
   const pending = tasks.filter((t) => t.target_count > 0 && t.completed_count < t.target_count);
   // Skip a review task with nothing to repeat so "Lanjutkan" never lands on an empty step.
@@ -221,314 +219,400 @@ function TargetPage() {
   const masteryFor = (kind: MasteryRow["kind"]) =>
     (mastery.data ?? []).find((r) => r.kind === kind);
 
+  const reviewTask = tasks.find((t) => t.task_type === "review");
+  const reviewHref = reviewTask ? taskHref(reviewTask) : null;
+  const weekDays = weekly.data?.days ?? [];
+  const activeDays = weekDays.filter((d) => d.active);
+  const studiedDays = activeDays.filter((d) => d.done > 0).length;
+  const weekTarget = activeDays.reduce((n, d) => n + d.target, 0);
+  const weekDone = activeDays.reduce((n, d) => n + Math.min(d.done, d.target), 0);
+  const nextSuggestion = nextTask?.suggestions?.[0];
+
   return (
     <AppShell compact title="Target">
-      <div className="mx-auto max-w-3xl space-y-5 eno-rise">
-        <section>
-          <div className="mb-1 flex items-center gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[.12em] text-emerald-800 dark:text-primary">
-              Target Utama
-            </p>
-            {locked && <PremiumBadge />}
-          </div>
+      <div className="mx-auto max-w-3xl space-y-3 eno-rise">
+        <h1 className="px-1 text-[20px] font-black tracking-tight">Target Belajar</h1>
+        <Accordion type="multiple" defaultValue={["harian"]} className="space-y-3">
+          <AccordionItem value="harian" className="rounded-2xl border bg-card px-4">
+            <AccordionTrigger className="text-[13px] font-bold">Target Harian</AccordionTrigger>
+            <AccordionContent className="space-y-4">
+              <section>
+                <SectionTitle>Rencana Belajar</SectionTitle>
           <Card className="rounded-2xl">
-            <CardContent className="p-4">
-              {adaptive.isLoading ? (
-                <div className="h-24 animate-pulse rounded-xl bg-muted/50" />
-              ) : planActive ? (
-                <>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h1 className="text-[20px] font-bold">
-                        JLPT {level}
-                        {plan?.targetDate ? ` · ${monthYear(plan.targetDate)}` : ""}
-                      </h1>
-                      <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-primary">
-                        <CalendarDays className="size-3.5" />
-                        {plan?.daysLeft ?? 0} hari lagi
-                      </p>
-                    </div>
-                    <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
-                      <Target className="size-5" />
-                    </span>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex items-end justify-between">
-                      <p className="text-[28px] font-black leading-none">
-                        {mastery.isLoading ? "…" : `${pctOf(coreMastered, coreTotal)}%`}
-                      </p>
-                      <p className="text-[9px] text-muted-foreground">
-                        {coreMastered}/{coreTotal} item dikuasai
-                      </p>
-                    </div>
-                    <div className="mt-2 flex">
-                      <Bar value={pctOf(coreMastered, coreTotal)} />
-                    </div>
-                    <p className="mt-1.5 text-[9px] leading-relaxed text-muted-foreground">
-                      Penguasaan Kotoba, Kanji, dan Bunpou {level} (status "dikuasai"). Ini bukan
-                      prediksi kelulusan; kesiapan JLPT penuh menunggu data retensi, Dokkai, Chōkai,
-                      dan simulasi.
-                    </p>
-                  </div>
-                  {simulation.data && (
-                    <p className="mt-3 rounded-xl bg-muted/45 px-3 py-2 text-[10px]">
-                      Simulasi terakhir #{String(simulation.data.examNo).padStart(2, "0")}:{" "}
-                      <b>{simulation.data.total}/180</b> ·{" "}
-                      {simulation.data.passed ? "lulus" : "belum lulus"}
-                    </p>
-                  )}
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                    <Stat
-                      icon={<Flame className="size-4" />}
-                      value={metrics.data?.streak ?? 0}
-                      label="Streak"
-                    />
-                    <Stat
-                      icon={<Zap className="size-4" />}
-                      value={metrics.data?.xpToday ?? 0}
-                      label="XP hari ini"
-                    />
-                    <Stat
-                      icon={<Clock3 className="size-4" />}
-                      value={timeLabel(metrics.data?.activeSecondsToday ?? 0)}
-                      label="Waktu"
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="text-center">
-                  <p className="text-[13px] font-bold">Belum ada target belajar aktif</p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Atur level JLPT, tanggal ujian, dan waktu belajar agar planner bisa menyusun
-                    target harian.
-                  </p>
-                  <a
-                    href="/pengaturan"
-                    className="mt-3 inline-block rounded-xl bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground"
-                  >
-                    Atur target
-                  </a>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-
-        {planActive && (
-          <>
-            <section>
-              <SectionTitle note="Rencana mingguan (Senin–Minggu, WIB) dari planner: beban dibagi ke hari belajar aktif; tugas yang terlewat dibagi ulang ke hari aktif berikutnya, maksimal 1,5× per hari.">
-                Target Minggu Ini
-              </SectionTitle>
-              <Card className="rounded-2xl">
-                <CardContent className="space-y-3 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] font-semibold">
-                      {weekly.data?.studyDays ?? plan?.studyDaysPerWeek ?? 7} hari belajar / minggu
-                    </p>
-                    <a
-                      href="/edit-profil"
-                      className="text-[10px] font-semibold text-primary underline-offset-2 hover:underline"
-                    >
-                      Ubah
-                    </a>
-                  </div>
-                  <div className="grid grid-cols-7 gap-1" aria-label="Hari belajar minggu ini">
-                    {(weekly.data?.days ?? []).map((d) => {
-                      const full = d.active && d.target > 0 && d.done >= d.target;
-                      return (
-                        <div
-                          key={d.date}
-                          className={`rounded-lg border px-0.5 py-1.5 text-center ${d.isToday ? "border-primary ring-1 ring-primary/40" : "border-border"} ${d.active ? (full ? "bg-emerald-700 text-white dark:bg-primary dark:text-primary-foreground" : "bg-primary/10") : "bg-muted/40 opacity-60"}`}
-                        >
-                          <p className="text-[9px] font-bold">{d.label}</p>
-                          <p className="mt-0.5 text-[8px] tabular-nums">
-                            {d.active
-                              ? d.target > 0
-                                ? `${Math.round(Math.min(100, (d.done / d.target) * 100))}%`
-                                : "–"
-                              : "istirahat"}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="space-y-2.5">
-                    {weeklyRows.map(({ label, taskType }) => {
-                      const r = weeklyMap.get(taskType);
-                      return (
-                        <div key={taskType} className="flex items-center gap-3">
-                          <span className="w-16 text-[11px] font-semibold">{label}</span>
-                          <Bar value={pctOf(r?.done ?? 0, r?.target ?? 0)} />
-                          <span className="w-16 text-right text-[10px] tabular-nums text-muted-foreground">
-                            {weekly.isLoading ? "…" : r ? `${r.done} / ${r.target}` : "–"}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {["Dokkai", "Chōkai"].map((l) => (
-                    <div key={l} className="flex items-center gap-3">
-                      <span className="w-16 text-[11px] font-semibold text-muted-foreground">
-                        {l}
-                      </span>
-                      <span className="flex-1 text-[9px] text-muted-foreground">
-                        Belum dijadwalkan oleh planner
+              <CardContent className="p-4">
+                {adaptive.isLoading ? (
+                  <div className="h-24 animate-pulse rounded-xl bg-muted/50" />
+                ) : planActive ? (
+                  <>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h1 className="text-[20px] font-bold">
+                          JLPT {level}
+                          {plan?.targetDate ? ` · ${monthYear(plan.targetDate)}` : ""}
+                        </h1>
+                        <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+                          <CalendarDays className="size-3.5" />
+                          {plan?.daysLeft ?? 0} hari lagi
+                        </p>
+                      </div>
+                      <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
+                        <Target className="size-5" />
                       </span>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </section>
-
-            <section>
-              <SectionTitle>Target Hari Ini</SectionTitle>
-              {restDay && !tasks.length ? (
-                <Card className="rounded-2xl">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-[13px] font-bold">Hari istirahat</p>
+                    <div className="mt-4">
+                      <div className="flex items-end justify-between">
+                        <p className="text-[28px] font-black leading-none">
+                          {mastery.isLoading ? "…" : `${pctOf(coreMastered, coreTotal)}%`}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground">
+                          {coreMastered}/{coreTotal} item dikuasai
+                        </p>
+                      </div>
+                      <div className="mt-2 flex">
+                        <Bar value={pctOf(coreMastered, coreTotal)} />
+                      </div>
+                      <p className="mt-1.5 text-[9px] leading-relaxed text-muted-foreground">
+                        Penguasaan Kotoba, Kanji, dan Bunpou {level} (status "dikuasai"). Ini bukan
+                        prediksi kelulusan; kesiapan JLPT penuh menunggu data retensi, Dokkai, Chōkai,
+                        dan simulasi.
+                      </p>
+                    </div>
+                    {simulation.data && (
+                      <p className="mt-3 rounded-xl bg-muted/45 px-3 py-2 text-[10px]">
+                        Simulasi terakhir #{String(simulation.data.examNo).padStart(2, "0")}:{" "}
+                        <b>{simulation.data.total}/180</b> ·{" "}
+                        {simulation.data.passed ? "lulus" : "belum lulus"}
+                      </p>
+                    )}
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                      <Stat
+                        icon={<Flame className="size-4" />}
+                        value={metrics.data?.streak ?? 0}
+                        label="Streak"
+                      />
+                      <Stat
+                        icon={<Zap className="size-4" />}
+                        value={metrics.data?.xpToday ?? 0}
+                        label="XP hari ini"
+                      />
+                      <Stat
+                        icon={<Clock3 className="size-4" />}
+                        value={timeLabel(metrics.data?.activeSecondsToday ?? 0)}
+                        label="Waktu"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-[13px] font-bold">Belum ada target belajar aktif</p>
                     <p className="mt-1 text-[10px] text-muted-foreground">
-                      Hari ini bukan hari belajar di rencana mingguanmu. Mau belajar ekstra? Buka
-                      Materi kapan saja.
+                      Atur level JLPT, tanggal ujian, dan waktu belajar agar planner bisa menyusun
+                      target harian.
                     </p>
                     <a
-                      href="/belajar"
-                      className="mt-3 inline-block rounded-xl border px-4 py-2 text-[11px] font-bold"
+                      href="/pengaturan"
+                      className="mt-3 inline-block rounded-xl bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground"
                     >
-                      Buka Materi
+                      Atur target
                     </a>
-                  </CardContent>
-                </Card>
-              ) : tasks.length ? (
-                <Card className="rounded-2xl">
-                  <CardContent className="p-4">
-                    <div className="space-y-2.5">
-                      {tasks.map((t) => {
-                        const done = Math.min(t.completed_count, t.target_count);
-                        const href = taskHref(t);
-                        if (!href)
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+              </section>
+              {planActive && (
+                <section>
+                  <SectionTitle>Target Hari Ini</SectionTitle>
+              {restDay && !tasks.length ? (
+                    <Card className="rounded-2xl">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-[13px] font-bold">Hari istirahat</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          Hari ini bukan hari belajar di rencana mingguanmu. Mau belajar ekstra? Buka
+                          Materi kapan saja.
+                        </p>
+                        <a
+                          href="/belajar"
+                          className="mt-3 inline-block rounded-xl border px-4 py-2 text-[11px] font-bold"
+                        >
+                          Buka Materi
+                        </a>
+                      </CardContent>
+                    </Card>
+                  ) : tasks.length ? (
+                    <Card className="rounded-2xl">
+                      <CardContent className="p-4">
+                        <div className="space-y-2.5">
+                          {tasks.map((t) => {
+                            const done = Math.min(t.completed_count, t.target_count);
+                            const href = taskHref(t);
+                            if (!href)
+                              return (
+                                <div key={t.id} className="flex items-center gap-3">
+                                  <span className="w-20 shrink-0 text-[11px] font-semibold">
+                                    {adaptiveTaskLabels[t.task_type]}
+                                  </span>
+                                  <span className="flex-1 text-[10px] text-muted-foreground">
+                                    {REVIEW_EMPTY}
+                                  </span>
+                                </div>
+                              );
+                            return (
+                              <a key={t.id} href={href} className="flex items-center gap-3">
+                                <span className="w-20 shrink-0 text-[11px] font-semibold">
+                                  {adaptiveTaskLabels[t.task_type]}
+                                </span>
+                                <Bar value={pctOf(done, t.target_count)} />
+                                <span className="w-14 text-right text-[10px] tabular-nums text-muted-foreground">
+                                  {done} / {t.target_count}
+                                </span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                        {nextTask ? (
+                          <a
+                            href={nextHref}
+                            className="mt-4 block rounded-xl bg-emerald-700 px-4 py-3 text-center text-[12px] font-bold text-white dark:bg-primary dark:text-primary-foreground"
+                          >
+                            Lanjutkan Target Hari Ini
+                            <span className="mt-0.5 block text-[9px] font-medium">
+                              Berikutnya: {adaptiveTaskLabels[nextTask.task_type]}
+                            </span>
+                          </a>
+                        ) : (
+                          <div className="mt-4 rounded-xl bg-primary/10 px-4 py-3 text-center text-[12px] font-bold text-primary">
+                            Target hari ini selesai 🎉
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card>
+                      <CardContent className="p-4 text-[11px] text-muted-foreground">
+                        Planner sedang menyiapkan rencana hari ini.
+                      </CardContent>
+                    </Card>
+                  )}
+                </section>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+          {planActive && (
+            <>
+              <AccordionItem value="mingguan" className="rounded-2xl border bg-card px-4">
+                <AccordionTrigger className="text-[13px] font-bold">Target Mingguan</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                  <p className="px-1 text-[9px] text-muted-foreground">
+                    Rencana mingguan (Senin–Minggu, WIB) dari planner: beban dibagi ke hari belajar aktif; tugas yang terlewat dibagi ulang ke hari aktif berikutnya, maksimal 1,5× per hari.
+                  </p>
+                  <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] font-semibold">
+                          {weekly.data?.studyDays ?? plan?.studyDaysPerWeek ?? 7} hari belajar / minggu
+                        </p>
+                        <a
+                          href="/edit-profil"
+                          className="text-[10px] font-semibold text-primary underline-offset-2 hover:underline"
+                        >
+                          Ubah
+                        </a>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1" aria-label="Hari belajar minggu ini">
+                        {(weekly.data?.days ?? []).map((d) => {
+                          const full = d.active && d.target > 0 && d.done >= d.target;
                           return (
-                            <div key={t.id} className="flex items-center gap-3">
-                              <span className="w-20 shrink-0 text-[11px] font-semibold">
-                                {adaptiveTaskLabels[t.task_type]}
-                              </span>
-                              <span className="flex-1 text-[10px] text-muted-foreground">
-                                {REVIEW_EMPTY}
+                            <div
+                              key={d.date}
+                              className={`rounded-lg border px-0.5 py-1.5 text-center ${d.isToday ? "border-primary ring-1 ring-primary/40" : "border-border"} ${d.active ? (full ? "bg-emerald-700 text-white dark:bg-primary dark:text-primary-foreground" : "bg-primary/10") : "bg-muted/40 opacity-60"}`}
+                            >
+                              <p className="text-[9px] font-bold">{d.label}</p>
+                              <p className="mt-0.5 text-[8px] tabular-nums">
+                                {d.active
+                                  ? d.target > 0
+                                    ? `${Math.round(Math.min(100, (d.done / d.target) * 100))}%`
+                                    : "–"
+                                  : "istirahat"}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="space-y-2.5">
+                        {weeklyRows.map(({ label, taskType }) => {
+                          const r = weeklyMap.get(taskType);
+                          return (
+                            <div key={taskType} className="flex items-center gap-3">
+                              <span className="w-16 text-[11px] font-semibold">{label}</span>
+                              <Bar value={pctOf(r?.done ?? 0, r?.target ?? 0)} />
+                              <span className="w-16 text-right text-[10px] tabular-nums text-muted-foreground">
+                                {weekly.isLoading ? "…" : r ? `${r.done} / ${r.target}` : "–"}
                               </span>
                             </div>
                           );
-                        return (
-                          <a key={t.id} href={href} className="flex items-center gap-3">
-                            <span className="w-20 shrink-0 text-[11px] font-semibold">
-                              {adaptiveTaskLabels[t.task_type]}
-                            </span>
-                            <Bar value={pctOf(done, t.target_count)} />
-                            <span className="w-14 text-right text-[10px] tabular-nums text-muted-foreground">
-                              {done} / {t.target_count}
-                            </span>
-                          </a>
-                        );
-                      })}
-                    </div>
-                    {nextTask ? (
-                      <a
-                        href={nextHref}
-                        className="mt-4 block rounded-xl bg-emerald-700 px-4 py-3 text-center text-[12px] font-bold text-white dark:bg-primary dark:text-primary-foreground"
-                      >
-                        Lanjutkan Target Hari Ini
-                        <span className="mt-0.5 block text-[9px] font-medium">
-                          Berikutnya: {adaptiveTaskLabels[nextTask.task_type]}
-                        </span>
-                      </a>
-                    ) : (
-                      <div className="mt-4 rounded-xl bg-primary/10 px-4 py-3 text-center text-[12px] font-bold text-primary">
-                        Target hari ini selesai 🎉
+                        })}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardContent className="p-4 text-[11px] text-muted-foreground">
-                    Planner sedang menyiapkan rencana hari ini.
-                  </CardContent>
-                </Card>
-              )}
-            </section>
-
-            <section>
-              <SectionTitle note="Angka nyata dari progres belajar (status dikuasai / total materi level ini).">
-                Penguasaan
-              </SectionTitle>
-              <Card className="rounded-2xl">
-                <CardContent className="space-y-2.5 p-4">
-                  {mastery.isLoading ? (
-                    <div className="h-24 animate-pulse rounded-xl bg-muted/50" />
-                  ) : (
-                    (["vocabulary", "kanji", "grammar", "reading"] as const).map((kind) => {
-                      const r = masteryFor(kind);
-                      if (!r || r.total === 0)
-                        return (
-                          <div key={kind} className="flex items-center gap-3">
-                            <span className="w-16 text-[11px] font-semibold text-muted-foreground">
-                              {kindLabel[kind]}
-                            </span>
-                            <span className="flex-1 text-[9px] text-muted-foreground">
-                              Materi belum tersedia
-                            </span>
-                          </div>
-                        );
-                      return (
-                        <div key={kind} className="flex items-center gap-3">
-                          <span className="w-16 text-[11px] font-semibold">{kindLabel[kind]}</span>
-                          <Bar value={pctOf(r.mastered, r.total)} />
-                          <span className="w-24 text-right text-[10px] tabular-nums text-muted-foreground">
-                            {r.mastered}/{r.total} · {pctOf(r.mastered, r.total)}%
+                      {["Dokkai", "Chōkai"].map((l) => (
+                        <div key={l} className="flex items-center gap-3">
+                          <span className="w-16 text-[11px] font-semibold text-muted-foreground">
+                            {l}
+                          </span>
+                          <span className="flex-1 text-[9px] text-muted-foreground">
+                            Belum dijadwalkan oleh planner
                           </span>
                         </div>
-                      );
-                    })
-                  )}
-                  <div className="flex items-center gap-3">
-                    <span className="w-16 text-[11px] font-semibold text-muted-foreground">
-                      Chōkai
-                    </span>
-                    <span className="flex-1 text-[9px] text-muted-foreground">
-                      Segera hadir — konten audio sedang disiapkan
-                    </span>
+                      ))}
                   </div>
-                  {coreLearned > 0 && (
-                    <p className="pt-1 text-[9px] text-muted-foreground">
-                      {coreLearned} item Kotoba/Kanji/Bunpou sudah mulai dipelajari.
-                    </p>
+                  <section>
+                    <SectionTitle>Ringkasan Mingguan</SectionTitle>
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <Stat
+                        icon={<CheckCircle2 className="size-4" />}
+                        value={weekly.isLoading ? "…" : `${studiedDays}/${activeDays.length}`}
+                        label="Hari belajar"
+                      />
+                      <Stat
+                        icon={<Target className="size-4" />}
+                        value={weekly.isLoading ? "…" : `${pctOf(weekDone, weekTarget)}%`}
+                        label="Target tercapai"
+                      />
+                    </div>
+                  </section>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="jadwal" className="rounded-2xl border bg-card px-4">
+                <AccordionTrigger className="text-[13px] font-bold">Jadwal &amp; Evaluasi</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                  <section>
+                    <SectionTitle note="Hari belajar dan istirahat sesuai rencanamu.">Jadwal Belajar</SectionTitle>
+                    <div className="grid grid-cols-7 gap-1">
+                      {weekDays.map((d) => (
+                        <div
+                          key={d.date}
+                          className={`rounded-lg border px-0.5 py-1.5 text-center ${d.isToday ? "border-primary" : "border-border"} ${d.active ? "bg-primary/10" : "bg-muted/40"}`}
+                        >
+                          <p className="text-[9px] font-bold">{d.label}</p>
+                          <p className="mt-0.5 text-[8px]">{d.active ? "Belajar" : "Libur"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                  <section>
+                    <SectionTitle note="Materi yang disarankan berdasarkan target dan progres.">Materi Berikutnya</SectionTitle>
+                    {nextTask ? (
+                      <a href={nextHref} className="flex items-center gap-3 rounded-2xl border p-3 transition hover:border-primary/30">
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[12px] font-semibold">{adaptiveTaskLabels[nextTask.task_type]}</span>
+                          {nextSuggestion && (
+                            <span className="block truncate text-[10px] text-muted-foreground">{nextSuggestion.label}</span>
+                          )}
+                        </span>
+                        <span className="text-[11px] font-bold text-primary">Mulai Belajar</span>
+                      </a>
+                    ) : (
+                      <p className="rounded-2xl border p-3 text-[10px] text-muted-foreground">Tidak ada materi berikutnya untuk hari ini.</p>
+                    )}
+                  </section>
+                  <section>
+                    <SectionTitle note="Angka nyata dari progres belajar (status dikuasai / total materi level ini).">Penguasaan</SectionTitle>
+                    <div className="space-y-2.5">
+                  {mastery.isLoading ? (
+                        <div className="h-24 animate-pulse rounded-xl bg-muted/50" />
+                      ) : (
+                        (["vocabulary", "kanji", "grammar", "reading"] as const).map((kind) => {
+                          const r = masteryFor(kind);
+                          if (!r || r.total === 0)
+                            return (
+                              <div key={kind} className="flex items-center gap-3">
+                                <span className="w-16 text-[11px] font-semibold text-muted-foreground">
+                                  {kindLabel[kind]}
+                                </span>
+                                <span className="flex-1 text-[9px] text-muted-foreground">
+                                  Materi belum tersedia
+                                </span>
+                              </div>
+                            );
+                          return (
+                            <div key={kind} className="flex items-center gap-3">
+                              <span className="w-16 text-[11px] font-semibold">{kindLabel[kind]}</span>
+                              <Bar value={pctOf(r.mastered, r.total)} />
+                              <span className="w-24 text-right text-[10px] tabular-nums text-muted-foreground">
+                                {r.mastered}/{r.total} · {pctOf(r.mastered, r.total)}%
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 text-[11px] font-semibold text-muted-foreground">
+                          Chōkai
+                        </span>
+                        <span className="flex-1 text-[9px] text-muted-foreground">
+                          Segera hadir — konten audio sedang disiapkan
+                        </span>
+                      </div>
+                      {coreLearned > 0 && (
+                        <p className="pt-1 text-[9px] text-muted-foreground">
+                          {coreLearned} item Kotoba/Kanji/Bunpou sudah mulai dipelajari.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+                  <section>
+                    <SectionTitle>Hasil Simulasi Terakhir</SectionTitle>
+                    {simulation.data ? (
+                      <p className="rounded-2xl border px-3 py-2.5 text-[11px]">
+                        Simulasi #{String(simulation.data.examNo).padStart(2, "0")} ·{" "}
+                        <b>{simulation.data.total}/180</b> ·{" "}
+                        {simulation.data.passed ? "lulus" : "belum lulus"}
+                      </p>
+                    ) : (
+                      <p className="rounded-2xl border p-3 text-[10px] text-muted-foreground">Belum ada simulasi untuk level ini.</p>
+                    )}
+                  </section>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="review" className="rounded-2xl border bg-card px-4">
+                <AccordionTrigger className="text-[13px] font-bold">Review &amp; Tertunda</AccordionTrigger>
+                <AccordionContent className="space-y-3">
+                  {reviewHref ? (
+                    <a href={reviewHref} className="flex items-center gap-3 rounded-2xl border p-4 transition hover:border-primary/30">
+                      <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                        <RefreshCcw className="size-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[12px] font-semibold">Review &amp; Latihan</span>
+                        <span className="mt-0.5 block text-[9px] text-muted-foreground">
+                          {reviewTask?.suggestions?.length ?? 0} materi perlu diulang
+                        </span>
+                      </span>
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                    </a>
+                  ) : (
+                    <p className="rounded-2xl border p-4 text-[10px] text-muted-foreground">{REVIEW_EMPTY}</p>
                   )}
-                </CardContent>
-              </Card>
-            </section>
-
-            <section>
-              <SectionTitle>Belajar Tertunda</SectionTitle>
               <Link
-                to="/target-tertunda"
-                className="mt-2 flex items-center gap-3 rounded-2xl border bg-card p-4 transition hover:border-primary/30 hover:bg-primary/[.025]"
-              >
-                <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <RefreshCcw className="size-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[12px] font-semibold">Belajar Tertunda</span>
-                  <span className="mt-0.5 block text-[9px] text-muted-foreground">
-                    {overdueCount > 0
-                      ? `${overdueCount} materi dari hari sebelumnya perlu diselesaikan`
-                      : "Tidak ada materi tertunda"}
-                  </span>
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </Link>
-            </section>
-
-          </>
-        )}
+                    to="/target-tertunda"
+                    className="mt-2 flex items-center gap-3 rounded-2xl border bg-card p-4 transition hover:border-primary/30 hover:bg-primary/[.025]"
+                  >
+                    <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                      <RefreshCcw className="size-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12px] font-semibold">Belajar Tertunda</span>
+                      <span className="mt-0.5 block text-[9px] text-muted-foreground">
+                        {overdueCount > 0
+                          ? `${overdueCount} materi dari hari sebelumnya perlu diselesaikan`
+                          : "Tidak ada materi tertunda"}
+                      </span>
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                </AccordionContent>
+              </AccordionItem>
+            </>
+          )}
+        </Accordion>
       </div>
     </AppShell>
   );

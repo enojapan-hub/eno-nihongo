@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, Eye, EyeOff, RotateCcw, Sparkles, Volume2, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { WordReadingPractice } from "@/components/learn/WordReadingPractice";
 
 export const Route = createFileRoute("/_authenticated/kana")({
   head: () => ({ meta: [{ title: "Hiragana & Katakana — ENO NIHONGO" }] }),
@@ -404,6 +405,7 @@ function KanaPage() {
         </div>}
         {!practicePage && <button type="button" onClick={() => showPractice(true)} className="w-full rounded-2xl bg-primary px-4 py-4 text-sm font-bold text-primary-foreground">Mulai Latihan Kana →</button>}
         {practicePage && <KanaPractice pool={[...basic, ...voiced, ...yoon]} />}
+        {practicePage && <WordReadingPractice />}
         {!practicePage && <>
         {audioError && (
           <p
