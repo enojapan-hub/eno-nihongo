@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Activity, ArrowLeft, ArrowRight, BarChart3, BrainCircuit, CheckCircle2, Lightbulb, LifeBuoy, RefreshCw, ShieldCheck, Sparkles, XCircle } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, BarChart3, BrainCircuit, CheckCircle2, Lightbulb, LifeBuoy, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { FeatureGuide } from "@/components/learn/FeatureGuide";
 import { PremiumUpgradeDialog } from "@/components/membership/PremiumUpgradeDialog";
@@ -29,6 +29,40 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FLUSH_EVERY = 5;
 const FLUSH_INTERVAL_MS = 15000;
 const AUTO_ADVANCE_MS = 700;
+
+/** Locked v2 mode catalog. Modes without an approved specification stay disabled ("Segera hadir"). */
+const KIOKU_MODE_GROUPS: Array<{
+  title: string;
+  modes: Array<{ name: string; desc?: string; start?: "daily" | "normal" | "boss" }>;
+}> = [
+  {
+    title: "Belajar Cerdas",
+    modes: [
+      { name: "Latihan Harian", desc: "Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.", start: "daily" },
+      { name: "Latihan Adaptif", desc: "Mesin memilih latihan berdasarkan kondisi ingatanmu.", start: "normal" },
+      { name: "Memory Rescue" },
+      { name: "Memory Missions" },
+    ],
+  },
+  {
+    title: "Uji Kemampuan",
+    modes: [
+      { name: "Uji Ingatan Kuat", desc: "Uji campuran untuk memastikan ingatan kuat tetap bertahan.", start: "boss" },
+      { name: "Recall Challenge" },
+      { name: "Susun Kalimat" },
+      { name: "Contrast Challenge" },
+    ],
+  },
+  {
+    title: "Tantangan & Kompetisi",
+    modes: [
+      { name: "ENO Rush" },
+      { name: "Memory Battle" },
+      { name: "Memory Transfer" },
+      { name: "Memory Laboratory" },
+    ],
+  },
+];
 
 type Answer = {
   correct: boolean;
@@ -152,7 +186,7 @@ function KiokuPage() {
 
   // Starts (or resumes) a session directly from the menu, without an extra navigation step.
   const startMode = useCallback(
-    async (target: "daily" | "boss") => {
+    async (target: "daily" | "normal" | "boss") => {
       if (!userId || loading) return;
       if (session && !session.finished) {
         resetExerciseUi();
@@ -167,7 +201,7 @@ function KiokuPage() {
           setError(
             target === "daily"
               ? "Belum ada materi untuk Latihan Hari Ini."
-              : "Belum ada materi yang dapat diuji.",
+              : "Belum ada materi yang dapat dilatih atau diuji.",
           );
           return;
         }
@@ -180,7 +214,7 @@ function KiokuPage() {
         setError(
           target === "daily"
             ? "Gagal memulai Latihan Hari Ini. Coba lagi."
-            : "Gagal memulai Uji Ingatan. Coba lagi.",
+            : "Gagal memulai latihan. Coba lagi.",
         );
       } finally {
         setLoading(false);
@@ -487,20 +521,36 @@ function KiokuPage() {
             {session && !session.finished && (
               <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">Selesaikan sesi tersimpan terlebih dahulu. Progresmu tetap aman saat kembali ke menu.</p>
             )}
-            {!(session && !session.finished) && <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <button type="button" disabled={loading || !userId} onClick={() => void startMode("daily")} className="rounded-2xl border border-primary/25 bg-primary/[.07] p-3 text-left disabled:opacity-50">
-                <p className="flex items-center gap-1.5 text-[11px] font-black text-primary"><Sparkles className="size-3.5" /> Latihan Hari Ini</p>
-                <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Prioritas jatuh tempo, bagian lemah, dan miskonsepsi.</p>
-              </button>
-              <button type="button" disabled={loading || !ready || ready.exercises.length === 0} onClick={start} className="rounded-2xl border-2 border-primary bg-primary p-4 text-left text-primary-foreground shadow-md disabled:opacity-50">
-                <p className="flex items-center gap-1.5 text-[11px] font-black"><BrainCircuit className="size-3.5" /> {mode === "daily" ? "Mulai Latihan Hari Ini" : mode === "boss" ? "Mulai Uji Ingatan" : "Mulai Kioku"}</p>
-                <p className="mt-1 text-[8px] leading-relaxed text-primary-foreground/80">{loading ? "Menyiapkan latihan…" : mode === "daily" ? "Mode harian dipilih. Mulai latihan yang paling perlu sekarang." : mode === "boss" ? "Mode uji dipilih. Mulai sesi campuran untuk menguji daya ingat." : "Mesin memilih latihan berdasarkan kondisi ingatanmu."}</p>
-              </button>
-              <button type="button" disabled={loading || !userId} onClick={() => void startMode("boss")} className="rounded-2xl border bg-card p-3 text-left disabled:opacity-50">
-                <p className="flex items-center gap-1.5 text-[11px] font-black"><ShieldCheck className="size-3.5 text-primary" /> Uji Ingatan</p>
-                <p className="mt-1 text-[8px] leading-relaxed text-muted-foreground">Uji campuran untuk memastikan ingatan kuat tetap bertahan.</p>
-              </button>
-            </section>}
+            {!(session && !session.finished) && (
+              <div className="space-y-4">
+                {KIOKU_MODE_GROUPS.map((group) => (
+                  <section key={group.title}>
+                    <h2 className="mb-2 px-1 text-[13px] font-black">{group.title}</h2>
+                    <div className="grid grid-cols-2 gap-2">
+                      {group.modes.map((m) =>
+                        m.start ? (
+                          <button
+                            key={m.name}
+                            type="button"
+                            disabled={loading || !userId}
+                            onClick={() => void startMode(m.start!)}
+                            className="rounded-2xl border border-primary/25 bg-primary/[.06] p-3 text-left disabled:opacity-50"
+                          >
+                            <p className="text-[12px] font-black text-primary">{m.name}</p>
+                            <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{m.desc}</p>
+                          </button>
+                        ) : (
+                          <div key={m.name} aria-disabled="true" className="rounded-2xl border bg-card/60 p-3">
+                            <p className="text-[12px] font-bold text-muted-foreground">{m.name}</p>
+                            <p className="mt-1 text-[9px] text-muted-foreground">Segera hadir</p>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            )}
               </>
             )}
             {tab === "analisis" && (
