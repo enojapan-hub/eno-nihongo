@@ -39,3 +39,11 @@ LULUS (dijalankan dan berhasil) | GAGAL | BELUM TERUJI (tidak dijalankan) | SEGE
 
 ## Catatan sumber
 Isi tiap modul disusun dari survei baca-saja terhadap kode (checkpoint `5b92fd0`) dan keputusan owner yang tercatat di sesi. Survei tidak membuka definisi SQL setiap RPC; butir yang belum diverifikasi harus dicek sebelum dijadikan dasar implementasi. Desain visual final tidak tersedia dalam repository dan belum dimasukkan.
+
+## Audit integritas Production (read-only, 2026-10-10)
+Dijalankan terhadap database "Eno japan hub" hanya dengan SELECT katalog. Migration `20261020000000_v2_integrity_hardening.sql` disiapkan LOKAL dan BELUM diterapkan.
+- `user_item_progress`: trigger `award_item_activity` dan `force_mastered_progress` di Production hanya `return new` / set `updated_at` (isi migration lama berbeda dari database). Menulis progres TIDAK memberi XP/poin. Klien tetap dapat menulis status progres miliknya sendiri (RLS own-row).
+- `record_learning_activity`: search_path tersimpan sebagai satu identifier `"pg_catalog,public,auth"` (tidak dapat dieksploitasi, tetapi salah; diperbaiki di migration). Cek duplikasi XP `lesson_completed` mendahului lock baris `user_stats`, sehingga panggilan paralel dapat memberi +5 XP berulang untuk materi yang sama (race; diperbaiki dengan advisory lock).
+- `user_item_progress`: `anon` memegang seluruh hak tabel dan `authenticated` memegang TRUNCATE/TRIGGER/REFERENCES (RLS tidak berlaku untuk TRUNCATE). Dicabut di migration.
+- `enroll_in_class`: tidak ada di migration; dicatat identik dengan Production. Catatan terbuka: `on conflict ... set status='active'` dapat mengaktifkan kembali baris berstatus non-aktif. Kosakata status belum didefinisikan dan `class_enrollments` kosong, sehingga perilaku tidak diubah.
+- Test: typecheck/lint/test/build BELUM TERUJI (registry npm 403). Migration BELUM TERUJI di database terisolasi.
