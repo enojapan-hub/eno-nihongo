@@ -202,8 +202,8 @@ function SimulationPage() {
                 Ujian bulanan mengikuti level profil.
               </p>
               {a?.monthlyExam ? (
-                <Button className="mt-3 h-9 w-full rounded-full text-[10px]">
-                  Ikuti Monthly Exam
+                <Button asChild className="mt-3 h-9 w-full rounded-full text-[10px]">
+                  <Link to="/eno-exam">Ikuti Monthly Exam</Link>
                 </Button>
               ) : (
                 <Button asChild className="mt-3 h-9 w-full rounded-full text-[10px]">

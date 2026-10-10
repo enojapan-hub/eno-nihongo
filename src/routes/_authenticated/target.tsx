@@ -310,7 +310,7 @@ function TargetPage() {
                       target harian.
                     </p>
                     <a
-                      href="/pengaturan"
+                      href="/edit-profil#planner"
                       className="mt-3 inline-block rounded-xl bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground"
                     >
                       Atur target

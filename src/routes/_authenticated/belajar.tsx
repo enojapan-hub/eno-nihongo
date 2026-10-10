@@ -9,7 +9,6 @@ import {
   FileText,
   Headphones,
   Layers,
-  Lock,
   NotebookTabs,
   PlayCircle,
   Search,
@@ -360,25 +359,33 @@ function BelajarPage() {
                     {[
                       {
                         label: "Dokkai",
+                        to: "/dokkai" as const,
+                        meta: "Latihan membaca",
                         icon: NotebookTabs,
                         tone: "bg-orange-100 text-orange-600",
                       },
-                      { label: "Choukai", icon: Headphones, tone: "bg-sky-100 text-sky-600" },
-                    ].map(({ label, icon: Icon, tone }) => (
-                      <div
+                      {
+                        label: "Choukai",
+                        to: "/choukai" as const,
+                        meta: "Latihan menyimak",
+                        icon: Headphones,
+                        tone: "bg-sky-100 text-sky-600",
+                      },
+                    ].map(({ label, to, meta, icon: Icon, tone }) => (
+                      <Link
                         key={label}
-                        aria-disabled="true"
-                        className="flex min-w-0 cursor-not-allowed flex-col rounded-2xl border bg-card/60 p-3"
+                        to={to}
+                        className="flex min-w-0 flex-col rounded-2xl border bg-card p-3"
                       >
                         <div className="flex items-start justify-between">
                           <span className={`grid size-11 place-items-center rounded-xl ${tone}`}>
                             <Icon className="size-5" />
                           </span>
-                          <Lock className="size-4 text-muted-foreground" />
+                          <ArrowUpRight className="size-4 text-muted-foreground" />
                         </div>
-                        <p className="mt-2 text-[13px] font-bold">{label}</p>
-                        <p className="text-[10px] text-muted-foreground">Segera hadir</p>
-                      </div>
+                        <p className="mt-2 text-[13px] font-bold">{label} {level}</p>
+                        <p className="text-[10px] text-muted-foreground">{meta}</p>
+                      </Link>
                     ))}
                   </div>
                 </section>
