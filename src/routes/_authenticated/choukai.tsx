@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Headphones, Play, RotateCcw, Square, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import type { Level } from "@/lib/learn-queries";
+import { hasValidChoukaiAudio } from "@/lib/choukai-audio";
 import { fetchTargetLevel } from "@/lib/target-level";
 import { markContentMastered } from "@/lib/progress-actions";
 
@@ -90,7 +91,6 @@ function ChoukaiPage() {
     questions = questionsQ.data ?? [];
   const [active, setActive] = useState<string | null>(null),
     [showTranscript, setShowTranscript] = useState<Record<string, boolean>>({}),
-    [speech, setSpeech] = useState<SpeechSynthesisUtterance | null>(null),
     [completed, setCompleted] = useState<Record<string, boolean>>({}),
     [answers, setAnswers] = useState<Record<string, number>>({}),
     [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -108,36 +108,20 @@ function ChoukaiPage() {
       void qc.invalidateQueries({ queryKey: ["my-progress"] });
     },
   });
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
   const stop = () => {
-    window.speechSynthesis?.cancel();
     document
       .querySelectorAll<HTMLAudioElement>("audio[data-choukai-audio]")
       .forEach((a) => a.pause());
-    if (speech) speech.onend = null;
-    setSpeech(null);
     setActive(null);
   };
   const play = (item: Item) => {
     stop();
-    if (item.audio_url) {
-      const a = document.getElementById(`audio-${item.id}`) as HTMLAudioElement | null;
-      if (a) {
-        a.currentTime = 0;
-        void a.play();
-        setActive(item.id);
-        return;
-      }
-    }
-    if (!item.transcript_jp || !window.speechSynthesis) return;
-    const u = new SpeechSynthesisUtterance(item.transcript_jp);
-    u.lang = "ja-JP";
-    u.rate = 0.85;
-    u.onend = () => setActive(null);
-    u.onerror = () => setActive(null);
-    setSpeech(u);
+    if (!hasValidChoukaiAudio(item)) return;
+    const a = document.getElementById(`audio-${item.id}`) as HTMLAudioElement | null;
+    if (!a) return;
+    a.currentTime = 0;
+    void a.play();
     setActive(item.id);
-    window.speechSynthesis.speak(u);
   };
   return (
     <AppShell
@@ -158,8 +142,8 @@ function ChoukaiPage() {
                 {level && <Badge variant="secondary">{level}</Badge>}
               </div>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Audio, soal, hasil dan transkrip mengikuti level profil. Audio sumber
-                diprioritaskan; TTS Jepang hanya dipakai bila audio belum tersedia.
+                Audio, soal, hasil dan transkrip mengikuti level profil. Latihan yang belum
+                memiliki audio ditandai Segera Hadir dan belum dapat dimulai.
               </p>
             </div>
           </div>
@@ -199,14 +183,16 @@ function ChoukaiPage() {
         {items.map((item) => {
           const qs = questions.filter((q) => q.listening_id === item.id),
             done = checked[item.id],
-            correct = qs.filter((q) => answers[q.id] === Number(q.correct_index)).length;
+            correct = qs.filter((q) => answers[q.id] === Number(q.correct_index)).length,
+            // Latihan menyimak membutuhkan audio valid; tanpa audio_url latihan ditandai "Segera Hadir".
+            noAudio = !hasValidChoukaiAudio(item);
           return (
             <Card key={item.id} className="overflow-hidden shadow-none">
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="mb-1 text-xs text-primary">
-                      {item.audio_url ? "Audio sumber" : "TTS dari transkrip"}
+                      {noAudio ? "Segera Hadir · audio sedang disiapkan" : "Audio sumber"}
                     </p>
                     <CardTitle className="text-base leading-6">{item.title}</CardTitle>
                   </div>
@@ -214,11 +200,11 @@ function ChoukaiPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {item.audio_url && (
+                {!noAudio && (
                   <audio
                     id={`audio-${item.id}`}
                     data-choukai-audio
-                    src={item.audio_url}
+                    src={item.audio_url?.trim() ?? undefined}
                     onPlay={() => setActive(item.id)}
                     onEnded={() => setActive(null)}
                     onPause={() => setActive((v) => (v === item.id ? null : v))}
@@ -231,7 +217,7 @@ function ChoukaiPage() {
                   <Button
                     type="button"
                     onClick={() => (active === item.id ? stop() : play(item))}
-                    disabled={!item.audio_url && !item.transcript_jp}
+                    disabled={noAudio}
                   >
                     {active === item.id ? (
                       <>
@@ -249,7 +235,7 @@ function ChoukaiPage() {
                     type="button"
                     variant="outline"
                     onClick={() => play(item)}
-                    disabled={!item.audio_url && !item.transcript_jp}
+                    disabled={noAudio}
                   >
                     <RotateCcw className="mr-2 size-4" />
                     Ulangi
@@ -266,6 +252,11 @@ function ChoukaiPage() {
                 {qs.length > 0 && (
                   <section className="space-y-4 rounded-2xl border p-4">
                     <h3 className="text-sm font-semibold">Pertanyaan</h3>
+                    {noAudio && (
+                      <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground">
+                        Segera Hadir: latihan ini dibuka setelah audio tersedia.
+                      </p>
+                    )}
                     {qs.map((q, qi) => (
                       <div key={q.id}>
                         <p className="text-sm font-medium">
@@ -278,7 +269,7 @@ function ChoukaiPage() {
                             return (
                               <button
                                 key={ci}
-                                disabled={done}
+                                disabled={done || noAudio}
                                 onClick={() => setAnswers((v) => ({ ...v, [q.id]: ci }))}
                                 className={`w-full rounded-xl border px-3 py-2 text-left text-xs ${done && isCorrect ? "border-primary bg-primary/10" : done && chosen && !isCorrect ? "border-destructive bg-destructive/5" : chosen ? "border-primary bg-primary/5" : ""}`}
                               >
@@ -317,7 +308,7 @@ function ChoukaiPage() {
                     {!done ? (
                       <Button
                         className="w-full rounded-full"
-                        disabled={qs.some((q) => answers[q.id] === undefined)}
+                        disabled={noAudio || qs.some((q) => answers[q.id] === undefined)}
                         onClick={() => {
                           const score = qs.length
                             ? qs.filter((q) => answers[q.id] === Number(q.correct_index)).length /
@@ -365,7 +356,7 @@ function ChoukaiPage() {
                     type="button"
                     className="h-10 w-full rounded-full text-[11px]"
                     variant={completed[item.id] ? "secondary" : "default"}
-                    disabled={completed[item.id] || completeMutation.isPending}
+                    disabled={noAudio || completed[item.id] || completeMutation.isPending}
                     onClick={() => completeMutation.mutate(item)}
                   >
                     {completed[item.id] ? (

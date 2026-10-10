@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, ChevronDown, Pause, Volume2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Clock3, Pause, RotateCcw, Volume2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { fetchPassageDetail, fetchPassages, type Level } from "@/lib/learn-queries";
@@ -9,6 +9,7 @@ import { fetchTargetLevel } from "@/lib/target-level";
 import { markContentMastered } from "@/lib/progress-actions";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthUser } from "@/lib/auth-user";
+import { readDokkaiPosition, saveDokkaiPosition } from "@/lib/dokkai-position";
 
 export const Route = createFileRoute("/_authenticated/dokkai/$id")({ component: DokkaiDetail });
 type FuriganaPassage = {
@@ -77,6 +78,10 @@ function speakJapanese(text: string, onEnd?: () => void) {
   window.speechSynthesis.speak(u);
   return true;
 }
+function formatClock(totalSeconds: number) {
+  const s = Math.max(0, totalSeconds);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 function DokkaiDetail() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
@@ -110,6 +115,9 @@ function DokkaiDetail() {
   const [checked, setChecked] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [selectedWord, setSelectedWord] = useState<Annotation | null>(null);
+  // Mode Ujian hides reading aids and runs a timer from the passage's estimated duration.
+  const [mode, setMode] = useState<"belajar" | "ujian">("belajar");
+  const [remaining, setRemaining] = useState<number | null>(null);
   const touch = useRef<number | null>(null);
   useEffect(
     () => () => {
@@ -135,6 +143,41 @@ function DokkaiDetail() {
   );
   const paragraphs = useMemo(() => splitParagraphs(body), [body]);
   const furiganaParagraphs = useMemo(() => splitParagraphs(furiganaBody), [furiganaBody]);
+  const estimatedMinutes = Number(p?.estimated_minutes ?? 0) || null;
+  const exam = mode === "ujian";
+  const aidsOn = !exam;
+  // Remember where the learner stopped reading (this device), and restore it on return.
+  useEffect(() => {
+    if (!p) return;
+    const saved = readDokkaiPosition();
+    if (saved?.id === id && saved.scrollY > 0) window.scrollTo({ top: saved.scrollY });
+    let t: number | undefined;
+    const save = () =>
+      saveDokkaiPosition({
+        id,
+        title: p.title,
+        level: String(p.level),
+        scrollY: Math.round(window.scrollY),
+        at: Date.now(),
+      });
+    const onScroll = () => {
+      window.clearTimeout(t);
+      t = window.setTimeout(save, 400);
+    };
+    save();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("scroll", onScroll);
+      save();
+    };
+  }, [id, p]);
+  useEffect(() => {
+    if (!exam || remaining === null || checked) return;
+    if (remaining <= 0) return;
+    const t = window.setTimeout(() => setRemaining((r) => (r === null ? r : r - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [exam, remaining, checked]);
   const recordReadingSignals = async () => {
     const { data: u } = await getAuthUser();
     if (!u.user || !p) return;
@@ -207,8 +250,37 @@ function DokkaiDetail() {
       : 1;
     if (score >= 0.8 && !completeMutation.isPending) completeMutation.mutate();
   };
+  const timeUp = exam && remaining !== null && remaining <= 0;
+  useEffect(() => {
+    if (timeUp && !checked) {
+      setChecked(true);
+      void recordReadingSignals();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once when the exam timer ends
+  }, [timeUp]);
+  const startMode = (next: "belajar" | "ujian") => {
+    setMode(next);
+    setAnswers({});
+    setChecked(false);
+    setSelectedWord(null);
+    setRemaining(next === "ujian" && estimatedMinutes ? estimatedMinutes * 60 : null);
+  };
+  const retryWrong = () => {
+    setAnswers((a) =>
+      Object.fromEntries(
+        Object.entries(a).filter(([qid, v]) => {
+          const q = questions.find((x) => x.id === qid);
+          return q ? v === Number(q.correct_index) : false;
+        }),
+      ),
+    );
+    setChecked(false);
+  };
+  const wrongCount = checked
+    ? questions.filter((q) => answers[q.id] !== undefined && answers[q.id] !== Number(q.correct_index)).length
+    : 0;
   const renderInteractive = (text: string) => {
-    if (!annotations.length) return renderFurigana(text);
+    if (!annotations.length || !aidsOn) return showFurigana && aidsOn ? renderFurigana(text) : cleanJapanese(text);
     const words = [...annotations].sort((a, b) => b.surface.length - a.surface.length);
     const pattern = new RegExp(
       `(${words.map((w) => w.surface.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
@@ -280,7 +352,7 @@ function DokkaiDetail() {
               文章の長さ：{enriched?.difficulty || enriched?.category || "belum tersedia"}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className={`flex shrink-0 items-center gap-1 ${exam ? "invisible" : ""}`}>
             <span className="text-[9px] text-muted-foreground">Furigana</span>
             <button
               type="button"
@@ -291,7 +363,32 @@ function DokkaiDetail() {
             </button>
           </div>
         </div>
-        <div className="mb-3 flex items-center justify-end gap-1">
+        <div className="mb-2 grid grid-cols-2 gap-1 rounded-full bg-muted/60 p-1" role="tablist" aria-label="Mode Dokkai">
+          {(["belajar", "ujian"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="tab"
+              aria-selected={mode === m}
+              onClick={() => startMode(m)}
+              className={`min-h-8 rounded-full text-[10px] font-bold ${mode === m ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+            >
+              {m === "belajar" ? "Mode Belajar" : "Mode Ujian"}
+            </button>
+          ))}
+        </div>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Clock3 className="size-3.5" />
+            {exam && remaining !== null
+              ? timeUp
+                ? "Waktu habis"
+                : `Sisa ${formatClock(remaining)}`
+              : estimatedMinutes
+                ? `Estimasi ${estimatedMinutes} menit`
+                : "Estimasi durasi belum tersedia"}
+          </span>
+          <div className="flex items-center gap-1">
           <button
             onClick={() => setFontSize((v) => Math.max(0.82, Number((v - 0.1).toFixed(2))))}
             className="grid size-7 place-items-center rounded-full border text-[9px]"
@@ -310,6 +407,7 @@ function DokkaiDetail() {
           >
             A+
           </button>
+          </div>
         </div>
         <article
           lang="ja"
@@ -319,7 +417,7 @@ function DokkaiDetail() {
           {paragraphs.length ? (
             paragraphs.map((paragraph, index) => {
               const reading =
-                showFurigana && furiganaParagraphs[index] ? furiganaParagraphs[index] : paragraph;
+                aidsOn && showFurigana && furiganaParagraphs[index] ? furiganaParagraphs[index] : paragraph;
               return (
                 <section key={index} className="mb-3 last:mb-0">
                   <div className="flex items-start gap-2">
@@ -348,7 +446,7 @@ function DokkaiDetail() {
             </div>
           )}
         </article>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] text-muted-foreground">
+        {aidsOn && <div className="mt-2 flex flex-wrap items-center gap-3 text-[9px] text-muted-foreground">
           <span>
             <span className="font-semibold text-primary">Furigana</span> tampil di atas Kanji
           </span>
@@ -356,8 +454,8 @@ function DokkaiDetail() {
             Kotoba
           </span>
           <span>= bisa diketuk</span>
-        </div>
-        {selectedWord && (
+        </div>}
+        {aidsOn && selectedWord && (
           <div className="mt-3 rounded-xl border bg-card p-3 text-[10px]">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -387,7 +485,7 @@ function DokkaiDetail() {
           </div>
         )}
         <div className="mt-5 space-y-2">
-          <details className="group rounded-xl border bg-card px-3 py-2.5">
+          {aidsOn && <details className="group rounded-xl border bg-card px-3 py-2.5">
             <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">
               Arti Seluruh Bagian
               <ChevronDown className="size-4 transition group-open:rotate-180" />
@@ -399,8 +497,8 @@ function DokkaiDetail() {
                 ),
               )}
             </p>
-          </details>
-          <details className="group rounded-xl border bg-card px-3 py-2.5">
+          </details>}
+          <details open={exam || undefined} className="group rounded-xl border bg-card px-3 py-2.5">
             <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">
               Pertanyaan
               <ChevronDown className="size-4 transition group-open:rotate-180" />
@@ -421,6 +519,7 @@ function DokkaiDetail() {
                         <button
                           key={ci}
                           type="button"
+                          disabled={timeUp}
                           onClick={() => {
                             setAnswers((a) => ({ ...a, [q.id]: ci }));
                             setChecked(false);
@@ -431,12 +530,24 @@ function DokkaiDetail() {
                         </button>
                       ))}
                     </div>
-                    {checked && answers[q.id] !== undefined && (
-                      <p className="mt-2 text-[9px] text-muted-foreground">
-                        {answers[q.id] === Number(q.correct_index)
-                          ? "Benar."
-                          : q.explanation_id || "Belum tepat. Baca kembali bagian terkait."}
-                      </p>
+                    {checked && (
+                      <div className="mt-2 text-[9px] leading-4">
+                        {answers[q.id] === Number(q.correct_index) ? (
+                          <p className="font-semibold text-primary">Benar.</p>
+                        ) : (
+                          <p className="font-semibold text-destructive">
+                            {answers[q.id] === undefined ? "Tidak dijawab." : "Belum tepat."} Jawaban
+                            benar: {String.fromCharCode(65 + Number(q.correct_index))}.
+                          </p>
+                        )}
+                        {q.explanation_id ? (
+                          <p className="mt-0.5 text-muted-foreground">{q.explanation_id}</p>
+                        ) : (
+                          answers[q.id] !== Number(q.correct_index) && (
+                            <p className="mt-0.5 text-muted-foreground">Baca kembali bagian terkait.</p>
+                          )
+                        )}
+                      </div>
                     )}
                   </div>
                 ))
@@ -459,9 +570,15 @@ function DokkaiDetail() {
                   )}
                 </Button>
               )}
+              {wrongCount > 0 && !timeUp && (
+                <Button variant="outline" className="h-9 w-full rounded-full text-[10px]" onClick={retryWrong}>
+                  <RotateCcw className="mr-1.5 size-3.5" />
+                  Ulangi soal yang salah ({wrongCount})
+                </Button>
+              )}
             </div>
           </details>
-          <details className="group rounded-xl border bg-card px-3 py-2.5">
+          {aidsOn && <details className="group rounded-xl border bg-card px-3 py-2.5">
             <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold">
               Kosakata Penting
               <ChevronDown className="size-4 transition group-open:rotate-180" />
@@ -492,7 +609,7 @@ function DokkaiDetail() {
                 </p>
               )}
             </div>
-          </details>
+          </details>}
         </div>
         {questions.length === 0 && (
           <Button

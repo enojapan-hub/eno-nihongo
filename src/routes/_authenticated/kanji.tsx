@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ContinueToFlashcard } from "@/components/learn/ContinueToFlashcard";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -652,6 +653,7 @@ function KanjiPage() {
                 </section>
               )}
               <ItemMasteryCard itemType="kanji" itemId={item.id} learned={Boolean(learned[item.id])} />
+              {mutation.isSuccess && mutation.variables === item.id && <ContinueToFlashcard />}
               <div className="mt-3 border-t bg-background px-1.5 py-1">
                 <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
                   <Button

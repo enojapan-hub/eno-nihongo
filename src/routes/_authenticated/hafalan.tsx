@@ -1,7 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Brain, Clock3, Lightbulb, RotateCcw, Undo2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Brain,
+  CheckCircle2,
+  Clock3,
+  Lightbulb,
+  RotateCcw,
+  Undo2,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { fetchGrammarList, fetchKanjiList, type Level } from "@/lib/learn-queries";
 import { fetchVocabListResilient } from "@/lib/vocab-resilient";
@@ -38,6 +49,8 @@ type Card = {
   aspect?: MasteryAspect | undefined;
 };
 const labels = ["Lupa", "Sulit", "Ingat", "Mudah"] as const;
+const ratingIcons = [XCircle, AlertCircle, CheckCircle2, Zap] as const;
+const ratingIconClass = ["text-red-500", "text-amber-500", "text-muted-foreground", "text-emerald-500"] as const;
 const SESSION_KEY = "eno-hafalan-session-v5",
   QUICK_SECONDS = 300,
   SWIPE_THRESHOLD = 86;
@@ -215,6 +228,15 @@ function HafalanPage() {
     started = useRef(Date.now()),
     pointerStart = useRef(0),
     dragging = useRef(false);
+  // Ratings are saved in the background; Kioku is offered only once every save has succeeded.
+  const [pendingSaves, setPendingSaves] = useState(0),
+    [failedSaves, setFailedSaves] = useState(0),
+    saveRun = useRef(0);
+  function resetSaveTracking() {
+    saveRun.current += 1;
+    setPendingSaves(0);
+    setFailedSaves(0);
+  }
   const source = useMemo<Card[]>(() => {
     const a: Card[] = [];
     (kanji.data ?? []).forEach((x) => a.push(...buildKanjiMasteryCards(x)));
@@ -375,6 +397,7 @@ function HafalanPage() {
     setDragX(0);
     setSwiping(false);
     localStorage.removeItem(SESSION_KEY);
+    resetSaveTracking();
     started.current = Date.now();
   }
   function startQuick() {
@@ -408,11 +431,19 @@ function HafalanPage() {
     setDragX(0);
     setSwiping(false);
     started.current = Date.now();
+    const run = saveRun.current;
+    setPendingSaves((n) => n + 1);
     void rate(ratedCard, level, r, ratedHint, responseMs)
       .then(() => {
         void qc.invalidateQueries({ queryKey: ["my-progress"] });
       })
-      .catch((e) => console.error("Gagal menyimpan review hafalan", e));
+      .catch((e) => {
+        console.error("Gagal menyimpan review hafalan", e);
+        if (run === saveRun.current) setFailedSaves((n) => n + 1);
+      })
+      .finally(() => {
+        if (run === saveRun.current) setPendingSaves((n) => Math.max(0, n - 1));
+      });
   }
   function swipe(r: 0 | 2, direction: -1 | 1) {
     if (!revealed || rating || undoing || quickExpired || (study === "quick" && !quickStarted))
@@ -476,6 +507,7 @@ function HafalanPage() {
     }
   }
   function retry() {
+    resetSaveTracking();
     setRetryWrong(true);
     setIndex(0);
     setResults([]);
@@ -629,6 +661,20 @@ function HafalanPage() {
                 <RotateCcw className="mr-1 inline size-3" /> Sesi baru
               </button>
             </div>
+            {pendingSaves > 0 ? (
+              <p className="mt-3 text-[10px] text-muted-foreground">Menyimpan penilaian…</p>
+            ) : failedSaves > 0 ? (
+              <p role="alert" className="mt-3 text-[10px] text-destructive">
+                {failedSaves} penilaian gagal disimpan. Periksa koneksi lalu ulangi sesi sebelum lanjut ke Kioku.
+              </p>
+            ) : results.length > 0 ? (
+              <a
+                href="/kioku"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[10px] font-bold text-primary"
+              >
+                <Brain className="size-3.5" /> Lanjut ke Kioku
+              </a>
+            ) : null}
           </section>
         ) : card ? (
           <>
@@ -699,7 +745,7 @@ function HafalanPage() {
                         style={{ opacity: dragX > 0 ? dragOpacity : 0 }}
                         className="pointer-events-none absolute right-5 top-5 rotate-6 rounded-lg border-2 border-emerald-500 px-3 py-1 text-[14px] font-black tracking-wider text-emerald-600"
                       >
-                        HAFAL
+                        INGAT
                       </span>
                     </>
                   )}
@@ -746,7 +792,7 @@ function HafalanPage() {
                             </p>
                           )}
                           <p className="mt-4 text-[10px] font-medium text-muted-foreground">
-                            ← geser Lupa · geser Hafal →
+                            ← geser Lupa · geser Ingat →
                           </p>
                         </div>
                       )}
@@ -773,7 +819,7 @@ function HafalanPage() {
                         onClick={() => setRevealed(true)}
                         className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[11px] font-bold text-primary-foreground"
                       >
-                        Lihat Jawaban
+                        Tampilkan Jawaban
                       </button>
                     </div>
                     <button
@@ -784,18 +830,25 @@ function HafalanPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
+                    <p className="text-center text-[10px] font-semibold">
+                      Seberapa baik kamu mengingat kata ini?
+                    </p>
                     <div className="grid grid-cols-4 gap-1.5">
-                      {labels.map((x, i) => (
-                        <button
-                          key={x}
-                          disabled={rating || undoing || swiping}
-                          onClick={() => choose(i as Rating)}
-                          className="min-h-11 rounded-xl border bg-card py-2.5 text-[11px] font-bold shadow-sm active:scale-95 disabled:opacity-50"
-                        >
-                          {rating ? "…" : x}
-                        </button>
-                      ))}
+                      {labels.map((x, i) => {
+                        const Icon = ratingIcons[i];
+                        return (
+                          <button
+                            key={x}
+                            disabled={rating || undoing || swiping}
+                            onClick={() => choose(i as Rating)}
+                            className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl border bg-card py-1.5 text-[11px] font-bold shadow-sm active:scale-95 disabled:opacity-50"
+                          >
+                            {Icon && <Icon className={`size-3.5 ${ratingIconClass[i]}`} />}
+                            {rating ? "…" : x}
+                          </button>
+                        );
+                      })}
                     </div>
                     {typed && (
                       <p className="truncate text-center text-[10px] text-muted-foreground">

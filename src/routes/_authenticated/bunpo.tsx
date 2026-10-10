@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ContinueToFlashcard } from "@/components/learn/ContinueToFlashcard";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, Info, Star } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { ItemMasteryCard } from "@/components/learn/ItemMasteryCard";
 import { Button } from "@/components/ui/button";
@@ -588,7 +589,11 @@ function BunpoPage() {
                   </p>
                 </DetailSection>
                 <DetailSection title="Struktur / Rumus">
-                  <div className="mb-1.5 rounded-md bg-muted/50 px-2 py-1.5 text-[12px] leading-5 text-muted-foreground">
+                  <details className="mb-1.5">
+                    <summary className="ml-auto flex w-fit cursor-pointer select-none items-center gap-1 text-[12px] font-semibold text-muted-foreground">
+                      <Info className="size-3.5" /> Panduan
+                    </summary>
+                  <div className="mt-1 rounded-md bg-muted/50 px-2 py-1.5 text-[12px] leading-5 text-muted-foreground">
                     <span className="font-semibold text-foreground">Singkatan:</span> KK = Kata
                     Kerja · KB = Kata Benda · KS-i = Kata Sifat-i · KS-na = Kata Sifat-na · KKet =
                     Kata Keterangan · KT = Kata Tempat · KW = Kata Waktu · KBil = Kata Bilangan ·
@@ -597,6 +602,7 @@ function BunpoPage() {
                     <span className="font-semibold text-foreground">Simbol:</span>{" "}
                     <del>coretan</del> = buang · + = tambahkan · → = hasil/perubahan
                   </div>
+                  </details>
                   {structures.length ? (
                     structures.map((s, i) => (
                       <p key={i} lang="ja" className="font-jp">
@@ -697,6 +703,7 @@ function BunpoPage() {
                 </DetailSection>
               </div>
               <ItemMasteryCard itemType="grammar" itemId={item.id} learned={Boolean(learned[item.id])} />
+              {mutation.isSuccess && mutation.variables === item.id && <ContinueToFlashcard />}
               <div className="mt-3 border-t bg-background px-1.5 py-1">
                 <div className="mx-auto grid max-w-none grid-cols-[36px_1fr_auto_1fr_36px] items-center gap-1">
                   <Button

@@ -252,10 +252,14 @@ function Detail() {
               <Button
                 size="lg"
                 className="h-11 flex-1 rounded-full bg-[#48bdb2] text-sm text-white hover:bg-[#3da99f]"
-                disabled={busy}
+                disabled={busy || Number(c.price) > 0}
                 onClick={enroll}
               >
-                {busy ? "Mendaftarkan…" : Number(c.price) > 0 ? "Daftar" : "Gabung Gratis"}
+                {busy
+                  ? "Mendaftarkan…"
+                  : Number(c.price) > 0
+                    ? "Pendaftaran belum dibuka"
+                    : "Gabung Gratis"}
                 <ArrowRight className="ml-2 size-5" />
               </Button>
             )}

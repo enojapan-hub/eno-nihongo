@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ArrowUpRight,
   BookOpen,
+  Brain,
   ChevronRight,
   FileText,
   Headphones,
@@ -10,7 +12,6 @@ import {
   NotebookTabs,
   PlayCircle,
   Search,
-  Sparkles,
   Tags,
   X,
 } from "lucide-react";
@@ -293,8 +294,6 @@ function BelajarPage() {
               <div className="space-y-4">
                 <ContinueCard level={level} loading={cont.isLoading} item={cont.data ?? null} />
                 <DailyNewLimit />
-                <FlashcardCard />
-                <KiokuCard />
                 <section>
                   <h2 className="mb-2 px-1 text-[13px] font-bold">Dasar Bahasa Jepang</h2>
                   <Link
@@ -318,7 +317,7 @@ function BelajarPage() {
                 </section>
                 <section>
                   <h2 className="mb-2 px-1 text-[13px] font-bold">Materi JLPT {level}</h2>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {cards.map((card) => {
                       const Icon = card.icon;
                       const p = pct(card.done, card.total);
@@ -326,74 +325,75 @@ function BelajarPage() {
                         <Link
                           key={card.to}
                           to={card.to}
-                          className="flex items-center gap-3 rounded-2xl border bg-card px-3 py-3"
+                          className="flex min-w-0 flex-col rounded-2xl border bg-card p-3"
                         >
-                          <span
-                            className={`grid size-12 shrink-0 place-items-center rounded-xl ${card.tone}`}
-                          >
-                            {typeof Icon === "string" ? (
-                              <span className="font-jp text-[26px] font-bold">{Icon}</span>
-                            ) : (
-                              <Icon className="size-6" />
-                            )}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex justify-between gap-2">
-                              <p className="text-[12px] font-bold">
-                                {card.label}
-                                {card.showLevel ? ` ${level}` : ""}
-                              </p>
-                              <ChevronRight className="size-4 text-muted-foreground" />
-                            </div>
-                            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                              {card.meta}
-                            </p>
-                            {card.total > 0 && (
-                              <div className="mt-2 flex items-center gap-2">
-                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                                  <div
-                                    className="h-full rounded-full bg-primary"
-                                    style={{ width: `${p}%` }}
-                                  />
-                                </div>
-                                <span className="w-8 text-right text-[10px]">{p}%</span>
-                              </div>
-                            )}
+                          <div className="flex items-start justify-between">
+                            <span className={`grid size-11 place-items-center rounded-xl ${card.tone}`}>
+                              {typeof Icon === "string" ? (
+                                <span className="font-jp text-[22px] font-bold">{Icon}</span>
+                              ) : (
+                                <Icon className="size-5" />
+                              )}
+                            </span>
+                            <ArrowUpRight className="size-4 text-muted-foreground" />
                           </div>
+                          <p className="mt-2 truncate text-[13px] font-bold">
+                            {card.label}
+                            {card.showLevel ? ` ${level}` : ""}
+                          </p>
+                          <p className="truncate text-[10px] text-muted-foreground">{card.meta}</p>
+                          {card.total > 0 && (
+                            <>
+                              <div className="mt-2 flex items-center justify-between text-[10px]">
+                                <span className="font-semibold">{p}%</span>
+                                <span className="text-muted-foreground">Dipelajari</span>
+                              </div>
+                              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                                <div className="h-full rounded-full bg-primary" style={{ width: `${p}%` }} />
+                              </div>
+                            </>
+                          )}
                         </Link>
                       );
                     })}
                     {[
                       {
                         label: "Dokkai",
+                        to: "/dokkai" as const,
+                        meta: "Latihan membaca",
                         icon: NotebookTabs,
                         tone: "bg-orange-100 text-orange-600",
                       },
-                      { label: "Choukai", icon: Headphones, tone: "bg-sky-100 text-sky-600" },
-                    ].map(({ label, icon: Icon, tone }) => (
-                      <div
+                      {
+                        label: "Choukai",
+                        to: "/choukai" as const,
+                        meta: "Latihan menyimak",
+                        icon: Headphones,
+                        tone: "bg-sky-100 text-sky-600",
+                      },
+                    ].map(({ label, to, meta, icon: Icon, tone }) => (
+                      <Link
                         key={label}
-                        aria-disabled="true"
-                        className="flex cursor-not-allowed items-center gap-3 rounded-2xl border bg-card/60 px-3 py-3"
+                        to={to}
+                        className="flex min-w-0 flex-col rounded-2xl border bg-card p-3"
                       >
-                        <span className={`grid size-12 place-items-center rounded-xl ${tone}`}>
-                          <Icon className="size-6" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[12px] font-bold">
-                              {label} {level}
-                            </p>
-                            <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                              Segera hadir
-                            </span>
-                          </div>
-                          <p className="mt-1 text-[10px] text-muted-foreground">
-                            Sedang disempurnakan sebelum dibuka untuk belajar.
-                          </p>
+                        <div className="flex items-start justify-between">
+                          <span className={`grid size-11 place-items-center rounded-xl ${tone}`}>
+                            <Icon className="size-5" />
+                          </span>
+                          <ArrowUpRight className="size-4 text-muted-foreground" />
                         </div>
-                      </div>
+                        <p className="mt-2 text-[13px] font-bold">{label} {level}</p>
+                        <p className="text-[10px] text-muted-foreground">{meta}</p>
+                      </Link>
                     ))}
+                  </div>
+                </section>
+                <section>
+                  <h2 className="mb-2 px-1 text-[13px] font-bold">Latihan &amp; Ingatan</h2>
+                  <div className="grid grid-cols-2 gap-2">
+                    <FlashcardCard />
+                    <KiokuCard />
                   </div>
                 </section>
                 
@@ -480,47 +480,28 @@ function ContinueCard({
 
 function KiokuCard() {
   return (
-    <section className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-4 text-white">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="flex items-center gap-1.5 text-[15px] font-black">
-            <Sparkles className="size-4" />
-            ENO Kioku
-          </p>
-          <p className="mt-0.5 text-[11px] text-white">Latihan ingatan adaptif</p>
-          <p className="mt-2 text-[10px] text-emerald-50">Kotoba · Kanji · Bunpou</p>
-        </div>
-        <Link
-          to="/kioku"
-          className="shrink-0 rounded-xl bg-[#f0fdf4] px-3.5 py-2 text-[11px] font-bold text-[#065f46]"
-        >
-          Buka Menu Kioku
-        </Link>
+    <Link to="/kioku" className="flex min-w-0 flex-col rounded-2xl border bg-card p-3">
+      <div className="flex items-start justify-between gap-2">
+        <Brain className="size-5 text-primary" />
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold">Premium</span>
       </div>
-      <p className="mt-3 text-[10px] leading-relaxed text-emerald-50">
-        Mesin adaptif memilih latihan berdasarkan retensi, kesalahan, konteks, dan tahap ingatanmu.
-      </p>
-    </section>
+      <p className="mt-2 text-[13px] font-bold">ENO Kioku</p>
+      <p className="text-[10px] text-muted-foreground">Uji dan tingkatkan daya ingat</p>
+      <span className="mt-2 text-[11px] font-bold text-primary">Buka ENO Kioku →</span>
+    </Link>
   );
 }
 
 function FlashcardCard() {
   return (
-    <Link to="/hafalan" className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3">
-      <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-700">
-        <Layers className="size-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-bold">Flashcard</p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground">
-          Hafalkan materi yang sudah kamu pelajari sebelum mengujinya di Kioku.
-        </p>
+    <Link to="/hafalan" className="flex min-w-0 flex-col rounded-2xl border bg-card p-3">
+      <div className="flex items-start justify-between gap-2">
+        <Layers className="size-5 text-primary" />
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold">Gratis</span>
       </div>
-      <span
-        className={`shrink-0 rounded-xl px-3 py-2 text-[11px] font-bold $border bg-background`}
-      >
-        Buka Flashcard
-      </span>
+      <p className="mt-2 text-[13px] font-bold">Flashcard</p>
+      <p className="text-[10px] text-muted-foreground">Hafalkan materi yang sudah dipelajari</p>
+      <span className="mt-2 text-[11px] font-bold text-primary">Mulai latihan →</span>
     </Link>
   );
 }

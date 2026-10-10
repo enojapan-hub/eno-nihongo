@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Check, Volume2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { ContinueToFlashcard } from "@/components/learn/ContinueToFlashcard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { markItemLearned, type Level } from "@/lib/learn-queries";
@@ -137,10 +138,9 @@ function StudyItemPage() {
   });
   const qc = useQueryClient();
   const learned = useMutation({
-    mutationFn: async () => {
-      if (!q.data?.level) return;
-      const type = q.data.kind;
-      await markItemLearned({ itemType: type, itemId: q.data.id, level: q.data.level });
+    mutationFn: async (selected: Item) => {
+      if (!selected.level) throw new Error("Level materi tidak tersedia.");
+      await markItemLearned({ itemType: selected.kind, itemId: selected.id, level: selected.level });
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["adaptive-plan"] });
@@ -148,6 +148,9 @@ function StudyItemPage() {
     },
   });
   const item = q.data;
+  const mutationForCurrentItem = learned.variables?.id === item?.id;
+  const isCurrentPending = mutationForCurrentItem && learned.isPending;
+  const isCurrentSuccess = mutationForCurrentItem && learned.isSuccess;
   const idx = p.queue.indexOf(p.id),
     prev = idx > 0 ? p.queue[idx - 1] : null,
     next = idx >= 0 && idx < p.queue.length - 1 ? p.queue[idx + 1] : null;
@@ -226,10 +229,10 @@ function StudyItemPage() {
             {["kanji", "vocabulary", "grammar"].includes(item.kind) && (
               <Button
                 className="mt-3 w-full rounded-full"
-                disabled={learned.isPending || learned.isSuccess}
-                onClick={() => learned.mutate()}
+                disabled={isCurrentPending || isCurrentSuccess}
+                onClick={() => learned.mutate(item)}
               >
-                {learned.isSuccess ? (
+                {isCurrentSuccess ? (
                   <>
                     <Check className="mr-2 size-4" />
                     Selesai
@@ -238,6 +241,12 @@ function StudyItemPage() {
                   "Tandai selesai"
                 )}
               </Button>
+            )}
+            {isCurrentSuccess && <ContinueToFlashcard />}
+            {mutationForCurrentItem && learned.isError && (
+              <p role="alert" className="mt-2 text-xs text-destructive">
+                {learned.error instanceof Error ? learned.error.message : "Gagal menyimpan progres. Coba lagi."}
+              </p>
             )}
             <div className="mt-3 grid grid-cols-2 gap-2">
               {prev ? (

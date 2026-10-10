@@ -9,7 +9,13 @@ import {
 
 export type AdaptiveTaskType =
   "new_kanji" | "new_vocabulary" | "new_grammar" | "review" | "quiz" | "reading" | "listening";
-export type AdaptiveSuggestion = { id: string; label: string; subtitle?: string | null };
+export type AdaptiveSuggestion = {
+  id: string;
+  label: string;
+  subtitle?: string | null;
+  /** Set for review suggestions so Target can open the matching material detail. */
+  itemType?: "kanji" | "vocabulary" | "grammar";
+};
 export type AdaptiveTask = {
   id: string;
   task_type: AdaptiveTaskType;
@@ -93,6 +99,7 @@ async function itemSuggestion(
     return data
       ? {
           id: r.item_id,
+          itemType: "kanji",
           label: String(data.character ?? "Kanji"),
           subtitle: `${prefix} · ${data.meaning_id ?? "Kanji"}`,
         }
@@ -107,6 +114,7 @@ async function itemSuggestion(
     return data
       ? {
           id: r.item_id,
+          itemType: "vocabulary",
           label: String(data.term ?? "Kosakata"),
           subtitle: `${prefix} · ${data.meaning_id ?? "Kosakata"}`,
         }
@@ -121,6 +129,7 @@ async function itemSuggestion(
     return data
       ? {
           id: r.item_id,
+          itemType: "grammar",
           label: String(data.pattern ?? "Bunpou"),
           subtitle: `${prefix} · ${data.meaning_id ?? "Bunpou"}`,
         }

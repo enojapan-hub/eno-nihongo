@@ -3,7 +3,7 @@ import { IdentityBadges } from "@/components/social/IdentityBadges";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Flame, Gift, Medal, Trophy, Sparkles, LockKeyhole } from "lucide-react";
+import { Crown, Flame, Gift, Medal, Trophy, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -294,21 +294,22 @@ function LeaderboardPage() {
                 )}
               </CardContent>
             </Card>
-            <Card className="rounded-2xl border-primary/15 bg-primary/[.03]">
-              <CardContent className="flex items-center gap-3 p-3">
-                <Sparkles className="size-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold">Tukar Poin Premium</p>
-                  <p className="text-[8px] text-muted-foreground">
-                    Fitur penukaran sedang dipersiapkan.
-                  </p>
-                </div>
-                <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[8px] font-bold text-muted-foreground">
-                  <LockKeyhole className="size-2.5" />
-                  Segera
-                </span>
-              </CardContent>
-            </Card>
+            <Link to="/tukar-poin" className="block">
+              <Card className="rounded-2xl border-primary/15 bg-primary/[.03]">
+                <CardContent className="flex items-center gap-3 p-3">
+                  <Sparkles className="size-4 text-primary" />
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold">Tukar Poin Premium</p>
+                    <p className="text-[8px] text-muted-foreground">
+                      Tukar poin belajar dengan Premium.
+                    </p>
+                  </div>
+                  <span className="rounded-full border px-2 py-1 text-[8px] font-bold text-primary">
+                    Buka
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
           </>
         ) : (
           <>

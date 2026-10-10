@@ -453,7 +453,7 @@ function EditProfilePage() {
                 </select>
               </label>
             </div>
-            <div className="rounded-2xl border border-primary/15 bg-primary/[.05] p-4">
+            <div id="planner" className="scroll-mt-20 rounded-2xl border border-primary/15 bg-primary/[.05] p-4">
               <div className="flex items-start gap-3">
                 <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
                   <Sparkles className="size-4" />
