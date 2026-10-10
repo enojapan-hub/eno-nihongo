@@ -1,0 +1,1 @@
+create function public.record_learning_activity(p_activity_type text, p_points integer default 0, p_xp integer default 0, p_metadata jsonb default '{}'::jsonb) returns public.user_learning_stats language plpgsql security definer set search_path to 'pg_catalog,public,auth' as $$ begin return null; end $$;

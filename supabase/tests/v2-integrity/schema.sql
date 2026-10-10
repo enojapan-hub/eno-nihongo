@@ -1,0 +1,18 @@
+create schema auth;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('app.uid',true),'')::uuid $$;
+create table public.profiles(id uuid primary key, display_name text, avatar_url text, target_level text, ui_language text);
+create table public.kanji(id uuid primary key, is_published bool);
+create table public.vocabulary(id uuid primary key, is_published bool);
+create table public.grammar_points(id uuid primary key, is_published bool);
+create table public.reading_passages(id uuid primary key, is_published bool);
+create table public.listening_items(id uuid primary key, is_published bool);
+create table public.user_stats(user_id uuid primary key, total_xp int default 0, reward_points int default 0, current_streak int default 0, longest_streak int default 0, last_activity_date date, updated_at timestamptz);
+create table public.user_learning_stats(user_id uuid primary key, display_name text, avatar_url text, jlpt_level text, ui_language text, xp int default 0, total_points int default 0, study_minutes int default 0, lessons_completed int default 0, current_streak int default 0, longest_streak int default 0, last_activity_at timestamptz, updated_at timestamptz);
+create table public.learning_activity(id bigserial primary key, user_id uuid, activity_type text, points int, xp int, metadata jsonb);
+create table public.user_item_progress(id bigserial primary key, user_id uuid, status text);
+alter table public.user_item_progress enable row level security;
+create policy progress_own_all on public.user_item_progress for all to authenticated using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
+grant all on all tables in schema public to anon, authenticated;
+create table public.classes(id uuid primary key, capacity int, price numeric, status text);
+create table public.class_enrollments(class_id uuid, user_id uuid, status text, primary key(class_id,user_id));
+grant usage on schema public, auth to anon, authenticated;
