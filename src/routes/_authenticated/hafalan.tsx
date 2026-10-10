@@ -1,7 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Brain, Clock3, Lightbulb, RotateCcw, Undo2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Brain,
+  CheckCircle2,
+  Clock3,
+  Lightbulb,
+  RotateCcw,
+  Undo2,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { fetchGrammarList, fetchKanjiList, type Level } from "@/lib/learn-queries";
 import { fetchVocabListResilient } from "@/lib/vocab-resilient";
@@ -38,6 +49,8 @@ type Card = {
   aspect?: MasteryAspect | undefined;
 };
 const labels = ["Lupa", "Sulit", "Ingat", "Mudah"] as const;
+const ratingIcons = [XCircle, AlertCircle, CheckCircle2, Zap] as const;
+const ratingIconClass = ["text-red-500", "text-amber-500", "text-muted-foreground", "text-emerald-500"] as const;
 const SESSION_KEY = "eno-hafalan-session-v5",
   QUICK_SECONDS = 300,
   SWIPE_THRESHOLD = 86;
@@ -732,7 +745,7 @@ function HafalanPage() {
                         style={{ opacity: dragX > 0 ? dragOpacity : 0 }}
                         className="pointer-events-none absolute right-5 top-5 rotate-6 rounded-lg border-2 border-emerald-500 px-3 py-1 text-[14px] font-black tracking-wider text-emerald-600"
                       >
-                        HAFAL
+                        INGAT
                       </span>
                     </>
                   )}
@@ -779,7 +792,7 @@ function HafalanPage() {
                             </p>
                           )}
                           <p className="mt-4 text-[10px] font-medium text-muted-foreground">
-                            ← geser Lupa · geser Hafal →
+                            ← geser Lupa · geser Ingat →
                           </p>
                         </div>
                       )}
@@ -806,7 +819,7 @@ function HafalanPage() {
                         onClick={() => setRevealed(true)}
                         className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[11px] font-bold text-primary-foreground"
                       >
-                        Lihat Jawaban
+                        Tampilkan Jawaban
                       </button>
                     </div>
                     <button
@@ -817,18 +830,25 @@ function HafalanPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
+                    <p className="text-center text-[10px] font-semibold">
+                      Seberapa baik kamu mengingat kata ini?
+                    </p>
                     <div className="grid grid-cols-4 gap-1.5">
-                      {labels.map((x, i) => (
-                        <button
-                          key={x}
-                          disabled={rating || undoing || swiping}
-                          onClick={() => choose(i as Rating)}
-                          className="min-h-11 rounded-xl border bg-card py-2.5 text-[11px] font-bold shadow-sm active:scale-95 disabled:opacity-50"
-                        >
-                          {rating ? "…" : x}
-                        </button>
-                      ))}
+                      {labels.map((x, i) => {
+                        const Icon = ratingIcons[i];
+                        return (
+                          <button
+                            key={x}
+                            disabled={rating || undoing || swiping}
+                            onClick={() => choose(i as Rating)}
+                            className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl border bg-card py-1.5 text-[11px] font-bold shadow-sm active:scale-95 disabled:opacity-50"
+                          >
+                            {Icon && <Icon className={`size-3.5 ${ratingIconClass[i]}`} />}
+                            {rating ? "…" : x}
+                          </button>
+                        );
+                      })}
                     </div>
                     {typed && (
                       <p className="truncate text-center text-[10px] text-muted-foreground">

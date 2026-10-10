@@ -221,9 +221,9 @@ function KanaPractice({ pool }: { pool: K[] }) {
           <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Sparkles className="size-4" /></span>
           <div className="min-w-0 flex-1">
             <h2 className="text-[13px] font-black">Latihan Kana</h2>
-            <p className="mt-0.5 text-[9px] leading-4 text-muted-foreground">Kenali huruf dari dua arah dan latih bentuk yang sering tertukar.</p>
+            <p className="mt-0.5 text-[9px] leading-4 text-muted-foreground">Pilih jenis latihan. Kenali huruf dari dua arah dan latih bentuk yang sering tertukar.</p>
           </div>
-          {answered > 0 && <span className="text-[9px] font-bold text-primary">{correct}/{answered}</span>}
+          <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-[9px] font-semibold">{total} soal / sesi</span>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
           {([["h","Hiragana"],["k","Katakana"],["mix","Campuran"]] as const).map(([value,label]) => (
@@ -236,9 +236,14 @@ function KanaPractice({ pool }: { pool: K[] }) {
           ))}
         </div>
         {mistakes.length >= 4 && <button type="button" onClick={() => setWeakOnly((v) => !v)} className={`mt-2 min-h-9 w-full rounded-xl border text-[9px] font-bold ${weakOnly ? "border-primary/30 bg-primary/10 text-primary" : "bg-card"}`}>Huruf Lemah · {mistakes.length}</button>}
-        <div className="mt-2 grid grid-cols-2 gap-1.5">
-          {([["kana-romaji","Kana → Romaji"],["romaji-kana","Romaji → Kana"],["similar","Mirip"],["audio-kana","Audio → Kana"]] as const).map(([value,label]) => (
-            <button key={value} type="button" onClick={() => setMode(value)} className={`min-h-10 rounded-xl border px-2 text-[9px] font-bold ${mode === value ? "border-primary/30 bg-primary/10 text-primary" : "bg-card"}`}>{label}</button>
+        <div role="radiogroup" aria-label="Jenis latihan" className="mt-3 space-y-1">
+          {([["kana-romaji","Kana → Romaji"],["romaji-kana","Romaji → Kana"],["similar","Huruf Mirip"],["audio-kana","Audio → Kana"]] as const).map(([value,label]) => (
+            <button key={value} type="button" role="radio" aria-checked={mode === value} onClick={() => setMode(value)} className="flex min-h-10 w-full items-center gap-3 rounded-xl px-1 text-left text-[13px] font-semibold">
+              <span className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${mode === value ? "border-primary" : "border-muted-foreground/40"}`}>
+                {mode === value && <span className="size-2.5 rounded-full bg-primary" />}
+              </span>
+              {label}
+            </button>
           ))}
         </div>
         {answered >= total && <div className="mt-3 rounded-xl border bg-card p-3 text-center"><p className="text-[10px] font-black">Hasil terakhir · {correct}/{total}</p><p className="mt-1 text-[9px] text-muted-foreground">{mistakes.length ? `Perlu latihan: ${mistakes.slice(0, 8).map((x) => x.h + "/" + x.k).join(", ")}` : "Tidak ada huruf lemah pada sesi terakhir."}</p>{mistakes.length >= 4 && <button type="button" onClick={() => { setWeakOnly(true); start(); }} className="mt-2 min-h-9 rounded-xl border border-primary/30 bg-primary/10 px-4 text-[9px] font-bold text-primary">Latih yang salah</button>}</div>}
@@ -298,11 +303,15 @@ function Grid({
   items,
   script,
   romaji,
+  selected,
+  onSelect,
   onAudioError,
 }: {
   items: K[];
   script: "h" | "k";
   romaji: boolean;
+  selected: K | null;
+  onSelect: (item: K) => void;
   onAudioError: () => void;
 }) {
   return (
@@ -311,9 +320,13 @@ function Grid({
         <button
           type="button"
           key={`${x.r}-${i}`}
-          onClick={() => speakKana(x[script], onAudioError)}
-          aria-label={`Putar bunyi ${x[script]}, ${x.r}`}
-          className="group min-h-[68px] rounded-2xl border bg-card px-1 py-2.5 text-center shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-primary/[.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+          onClick={() => {
+            onSelect(x);
+            speakKana(x[script], onAudioError);
+          }}
+          aria-label={`Pilih ${x[script]}, ${x.r}`}
+          aria-pressed={selected === x}
+          className={`group min-h-[68px] rounded-2xl border ${selected === x ? "border-primary bg-primary/[.07]" : "bg-card"} px-1 py-2.5 text-center shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-primary/[.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
         >
           <p lang="ja" className="font-jp text-[26px] font-semibold leading-8">
             {x[script]}
@@ -340,6 +353,8 @@ function KanaPage() {
       () => typeof window === "undefined" || localStorage.getItem("eno:kana:romaji") !== "0",
     ),
     [audioError, setAudioError] = useState(false);
+  const [group, setGroup] = useState<"basic" | "voiced" | "yoon">("basic");
+  const [picked, setPicked] = useState<K | null>(null);
   const setScript = (next: "h" | "k") => {
     setScriptState(next);
     const url = new URL(window.location.href);
@@ -360,93 +375,109 @@ function KanaPage() {
       localStorage.setItem("eno:kana:romaji", next ? "1" : "0");
       return next;
     });
+  const groups = { basic, voiced, yoon } as const;
+  const groupLabel = { basic: "Dasar", voiced: "Dakuten", yoon: "Yōon" } as const;
+  const groupItems = groups[group];
+  const tabClass = (on: boolean) =>
+    `min-h-10 rounded-full text-[12px] font-bold ${on ? "bg-muted shadow-sm" : "text-muted-foreground"}`;
   return (
     <AppShell compact title="Hiragana & Katakana">
-      <div className="mx-auto w-full max-w-lg space-y-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <Link
-          to="/belajar"
-          className="inline-flex items-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-[10px] font-bold text-foreground"
-        >
-          <ArrowLeft className="size-4" /> Kembali ke Materi
-        </Link>
-        {practicePage && <button type="button" onClick={() => showPractice(false)} className="w-full rounded-xl border bg-card px-4 py-3 text-left text-sm font-semibold"><ArrowLeft className="mr-2 inline size-4" />Kembali ke daftar Kana</button>}
-        <section className="rounded-2xl border bg-card p-4 shadow-sm">
-          <h1 className="text-[22px] font-black tracking-tight">Hiragana & Katakana</h1>
-          <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
-            Tekan setiap huruf untuk mendengar pengucapannya. Dasar kana lengkap dan tidak terikat
-            level JLPT.
-          </p>
-        </section>
-        {!practicePage && <div className="flex gap-2">
-          <div className="grid flex-1 grid-cols-2 rounded-xl bg-muted p-1">
-            <button
-              type="button"
-              onClick={() => setScript("h")}
-              className={`rounded-lg py-2 text-[11px] font-bold ${script === "h" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-            >
-              Hiragana
+      <div className="mx-auto w-full max-w-lg space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <section className="rounded-3xl border bg-card p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <Link to="/belajar" aria-label="Kembali ke Materi" className="mt-1 text-muted-foreground">
+              <ArrowLeft className="size-5" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-[22px] font-black tracking-tight">Hiragana &amp; Katakana</h1>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">Dasar membaca bahasa Jepang</p>
+            </div>
+          </div>
+          <div role="tablist" aria-label="Mode Kana" className="mt-4 grid grid-cols-2 gap-1">
+            <button type="button" role="tab" aria-selected={!practicePage} onClick={() => showPractice(false)} className={tabClass(!practicePage)}>
+              Belajar Huruf
             </button>
-            <button
-              type="button"
-              onClick={() => setScript("k")}
-              className={`rounded-lg py-2 text-[11px] font-bold ${script === "k" ? "bg-background shadow-sm" : "text-muted-foreground"}`}
-            >
-              Katakana
+            <button type="button" role="tab" aria-selected={practicePage} onClick={() => showPractice(true)} className={tabClass(practicePage)}>
+              Latihan Kana
             </button>
           </div>
-          <button
-            type="button"
-            onClick={toggleRomaji}
-            className="flex min-h-11 items-center gap-1.5 rounded-xl border bg-card px-3 text-[11px] font-semibold shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            {romaji ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            {romaji ? "Sembunyikan" : "Tampilkan"} romaji
-          </button>
-        </div>}
-        {!practicePage && <button type="button" onClick={() => showPractice(true)} className="w-full rounded-2xl bg-primary px-4 py-4 text-sm font-bold text-primary-foreground">Mulai Latihan Kana →</button>}
+          {!practicePage && (
+            <>
+              <div className="mt-3 grid grid-cols-2 gap-1">
+                <button type="button" onClick={() => setScript("h")} className={tabClass(script === "h")}>
+                  Hiragana · <span lang="ja">あ</span>
+                </button>
+                <button type="button" onClick={() => setScript("k")} className={tabClass(script === "k")}>
+                  Katakana · <span lang="ja">ア</span>
+                </button>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <p className="text-[11px] text-muted-foreground">Tekan huruf untuk melihat bacaannya.</p>
+                <button
+                  type="button"
+                  onClick={toggleRomaji}
+                  aria-pressed={romaji}
+                  className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-primary"
+                >
+                  {romaji ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+                  Romaji {romaji ? "aktif" : "nonaktif"}
+                </button>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-1">
+                {(["basic", "voiced", "yoon"] as const).map((g) => (
+                  <button key={g} type="button" onClick={() => setGroup(g)} className={tabClass(group === g)}>
+                    {groupLabel[g]}
+                  </button>
+                ))}
+              </div>
+              {audioError && (
+                <p role="alert" className="mt-3 rounded-xl bg-destructive/5 p-3 text-center text-[11px] text-destructive">
+                  Audio tidak tersedia di perangkat ini.
+                </p>
+              )}
+              <div className="mt-3">
+                <Grid
+                  items={groupItems}
+                  script={script}
+                  romaji={romaji}
+                  selected={picked}
+                  onSelect={setPicked}
+                  onAudioError={() => setAudioError(true)}
+                />
+              </div>
+              {picked && (
+                <section className="mt-3 rounded-2xl border border-primary/20 bg-primary/[.05] p-3">
+                  <div className="flex items-center gap-3">
+                    <span lang="ja" className="grid size-16 shrink-0 place-items-center rounded-2xl bg-background font-jp text-[30px] font-bold">
+                      {picked[script]}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] text-muted-foreground">Huruf terpilih</p>
+                      <p className="text-[20px] font-black">{picked.r}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Pasangan: <span lang="ja">{picked[script === "h" ? "k" : "h"]}</span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => speakKana(picked[script], () => setAudioError(true))}
+                      aria-label={`Putar bunyi ${picked[script]}`}
+                      className="grid size-10 place-items-center rounded-full text-primary"
+                    >
+                      <Volume2 className="size-5" />
+                    </button>
+                  </div>
+                </section>
+              )}
+              <p className="mt-3 rounded-xl bg-primary/5 p-3 text-[10px] leading-4 text-muted-foreground">
+                Catatan: っ / ッ menandai konsonan rangkap, sedangkan ー umum dipakai di Katakana untuk
+                memanjangkan bunyi vokal.
+              </p>
+            </>
+          )}
+        </section>
         {practicePage && <KanaPractice pool={[...basic, ...voiced, ...yoon]} />}
         {practicePage && <WordReadingPractice />}
-        {!practicePage && <>
-        {audioError && (
-          <p
-            role="alert"
-            className="rounded-xl bg-destructive/5 p-3 text-center text-[11px] text-destructive"
-          >
-            Audio tidak tersedia di perangkat ini.
-          </p>
-        )}
-        <section>
-          <h2 className="mb-2 text-[12px] font-bold">Gojūon · Dasar</h2>
-          <Grid
-            items={basic}
-            script={script}
-            romaji={romaji}
-            onAudioError={() => setAudioError(true)}
-          />
-        </section>
-        <section>
-          <h2 className="mb-2 text-[12px] font-bold">Dakuten & Handakuten</h2>
-          <Grid
-            items={voiced}
-            script={script}
-            romaji={romaji}
-            onAudioError={() => setAudioError(true)}
-          />
-        </section>
-        <section>
-          <h2 className="mb-2 text-[12px] font-bold">Yōon · Kombinasi kecil ゃゅょ</h2>
-          <Grid
-            items={yoon}
-            script={script}
-            romaji={romaji}
-            onAudioError={() => setAudioError(true)}
-          />
-        </section>
-        <p className="rounded-xl bg-primary/5 p-3 text-[10px] leading-4 text-muted-foreground">
-          Catatan: っ / ッ menandai konsonan rangkap, sedangkan ー umum dipakai di Katakana untuk
-          memanjangkan bunyi vokal.
-        </p>
-        </>}
       </div>
     </AppShell>
   );
