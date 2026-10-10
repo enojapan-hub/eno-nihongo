@@ -27,7 +27,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { parseMyReports, reportCategoryLabel, reportStatusInfo } from "@/lib/my-reports";
 import { AppShell } from "@/components/layout/AppShell";
 import { OFFICIAL_CONTACTS } from "@/lib/official-contacts";
 import { Card, CardContent } from "@/components/ui/card";
@@ -112,6 +113,70 @@ function Info({ title, text, onClose }: { title: string; text: string; onClose: 
     </div>
   );
 }
+const REPORT_TONE = {
+  ok: "bg-primary/10 text-primary",
+  wait: "bg-amber-500/10 text-amber-500",
+  neutral: "bg-muted text-muted-foreground",
+} as const;
+
+function MyReports({ close }: { close: () => void }) {
+  // Dibaca lewat RPC baca-sendiri; tabel content_reports sengaja tidak punya hak klien.
+  const list = useQuery({
+    queryKey: ["my-reports"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_my_reports" as never, { p_limit: 20 } as never);
+      if (error) throw error;
+      return parseMyReports(data);
+    },
+  });
+  return (
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/40 p-4" onClick={close}>
+      <div
+        className="max-h-[80vh] w-full max-w-sm space-y-3 overflow-y-auto rounded-[1.7rem] border bg-background p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between">
+          <div>
+            <h2 className="text-sm font-black">Laporan Saya</h2>
+            <p className="text-[9px] text-muted-foreground">20 laporan terbaru yang kamu kirim.</p>
+          </div>
+          <button onClick={close} aria-label="Tutup">
+            <X className="size-4" />
+          </button>
+        </div>
+        {list.isLoading ? <p className="text-xs text-muted-foreground">Memuat laporan…</p> : null}
+        {list.isError ? (
+          <div role="alert" className="space-y-2">
+            <p className="text-xs text-destructive">Laporan belum dapat dimuat.</p>
+            <button onClick={() => list.refetch()} className="h-9 rounded-xl border px-3 text-xs font-bold">
+              Coba lagi
+            </button>
+          </div>
+        ) : null}
+        {list.data && list.data.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Belum ada laporan.</p>
+        ) : null}
+        {list.data?.map((r) => {
+          const info = reportStatusInfo(r.status);
+          return (
+            <div key={r.id} className="flex items-start justify-between gap-3 border-b py-2 last:border-0">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold">{r.subject}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {reportCategoryLabel(r.category)} ·{" "}
+                  {new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${REPORT_TONE[info.tone]}`}>
+                {info.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 function Report({ close }: { close: () => void }) {
   const [cat, setCat] = useState("bug"),
     [subject, setSubject] = useState(""),
@@ -185,7 +250,8 @@ function Page() {
     [dark, setDark] = useState(() => localStorage.getItem("enonihongo-theme") === "dark"),
     [reminder, setReminder] = useState(false),
     [modal, setModal] = useState<{ title: string; text: string } | null>(null),
-    [report, setReport] = useState(false);
+    [report, setReport] = useState(false),
+    [myReports, setMyReports] = useState(false);
   useEffect(() => {
     void (async () => {
       const {
@@ -351,6 +417,12 @@ function Page() {
           />
           <Row
             icon={LifeBuoy}
+            title="Laporan Saya"
+            desc="Lihat status laporan yang pernah kamu kirim."
+            onClick={() => setMyReports(true)}
+          />
+          <Row
+            icon={LifeBuoy}
             title="Layanan Pelanggan"
             desc={OFFICIAL_CONTACTS.email.address}
             onClick={() => (location.href = OFFICIAL_CONTACTS.email.url)}
@@ -406,6 +478,7 @@ function Page() {
       </div>
       {modal && <Info {...modal} onClose={() => setModal(null)} />}{" "}
       {report && <Report close={() => setReport(false)} />}
+      {myReports && <MyReports close={() => setMyReports(false)} />}
     </AppShell>
   );
 }

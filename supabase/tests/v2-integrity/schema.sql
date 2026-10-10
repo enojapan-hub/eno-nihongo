@@ -16,3 +16,7 @@ grant all on all tables in schema public to anon, authenticated;
 create table public.classes(id uuid primary key, capacity int, price numeric, status text);
 create table public.class_enrollments(class_id uuid, user_id uuid, status text, primary key(class_id,user_id));
 grant usage on schema public, auth to anon, authenticated;
+-- content_reports meniru Production: RLS aktif, policy INSERT saja, TANPA hak tabel untuk klien.
+create table public.content_reports(id uuid primary key default gen_random_uuid(), reporter_id uuid, category text not null default 'content', subject text not null, description text, status text not null default 'open', assigned_to uuid, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), priority text not null default 'normal', resolution_note text, chat_category text, target_user_id uuid);
+alter table public.content_reports enable row level security;
+create policy reports_user_insert on public.content_reports for insert to authenticated with check (reporter_id = (select auth.uid()));
